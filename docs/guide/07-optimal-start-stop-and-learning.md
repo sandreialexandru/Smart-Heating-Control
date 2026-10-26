@@ -32,7 +32,10 @@ You do not have to describe the house (radiators, insulation, boiler). The room
 - it ends when the room reaches the target or the heating stops;
 - it is kept only if it lasted at least 10 minutes, the temperature rose, no
   window was open and it is the cold season (not mode Off or Summer, not outside
-  the season).
+  the season);
+- a restart of Home Assistant does not end it: the episode in progress is saved
+  and goes on if the room still heats after the restart. If the room no longer
+  heats, it is dropped, because it is not known when the heating stopped.
 
 For every episode it notes how many degrees the room rose, in how many minutes,
 and the mean outdoor temperature.

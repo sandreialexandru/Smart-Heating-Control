@@ -361,6 +361,38 @@ class LearningTest(unittest.TestCase):
         )
         self.assertEqual(broken.episodes, [[None, 1.0, 50.0, "a"]])
 
+    def test_episode_in_progress_survives_a_restart(self) -> None:
+        # 20.3 °C at the start, target 22: heating for 7 hours with a restart in between.
+        learner = learning.HeatingRateLearner()
+        self.assertIsNone(learner.observe(self.T0, True, 20.3, 22.0, 14.0, tolerance=0.5))
+        saved = learner.as_dict()
+        self.assertEqual(saved["in_progress"]["temp"], 20.3)
+        again = learning.HeatingRateLearner.from_dict(saved)
+        self.assertEqual(again.episode_start, self.T0)
+        # Still heating after the restart: the same episode goes on.
+        self.assertIsNone(again.observe(self.T0 + timedelta(hours=7), True, 21.4, 22.0, 12.0))
+        minutes = again.observe(self.T0 + timedelta(hours=8), False, 21.4, 19.0, 12.0)
+        self.assertEqual(minutes, 480.0)
+        # 21.4 - 20.3 = 1.1 °C; outdoor mean of the 3 values (14 + 12 + 12) / 3 = 12.7.
+        self.assertEqual(again.episodes[-1][:3], [12.7, 1.1, 480.0])
+        self.assertNotIn("in_progress", again.as_dict())
+
+    def test_restored_episode_dropped_when_not_heating(self) -> None:
+        # Not heating at the first observation after the restart: when the heating
+        # stopped is not known, so the episode is not used.
+        learner = learning.HeatingRateLearner()
+        learner.observe(self.T0, True, 20.3, 22.0, 14.0, tolerance=0.5)
+        again = learning.HeatingRateLearner.from_dict(learner.as_dict())
+        self.assertIsNone(again.observe(self.T0 + timedelta(hours=2), False, 21.0, 22.0, 12.0))
+        self.assertIsNone(again.episode_start)
+        self.assertEqual(again.episodes, [])
+        # Malformed saved data is ignored.
+        for bad in ({"start": "x", "temp": 20.0}, {"start": self.T0.isoformat(), "temp": "nan"}, "x"):
+            restored = learning.HeatingRateLearner.from_dict(
+                {"version": learning.DATA_VERSION, "episodes": [], "in_progress": bad}
+            )
+            self.assertIsNone(restored.episode_start)
+
     def test_episode_starts_at_tolerance(self) -> None:
         # Generic Thermostat with cold_tolerance 0.5: it heats from 0.5 below the target.
         learner = learning.HeatingRateLearner()

@@ -32,7 +32,10 @@ Nu trebuie să spui nimic despre casă (calorifere, izolație, centrală). Camer
 - se termină când camera ajunge la țintă sau încălzirea se oprește;
 - se păstrează doar dacă a durat cel puțin 10 minute, temperatura a crescut,
   nu a fost deschisă nicio fereastră și e sezonul rece (nu modul Oprit sau
-  Vară, nu în afara sezonului).
+  Vară, nu în afara sezonului);
+- o repornire a Home Assistant nu îl termină: episodul în curs se salvează și
+  continuă dacă după repornire camera încă încălzește. Dacă nu mai încălzește,
+  se renunță la el, pentru că nu se știe când s-a oprit încălzirea.
 
 Pentru fiecare episod se notează cu câte grade a urcat camera, în câte minute
 și temperatura medie de afară.

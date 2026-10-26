@@ -191,6 +191,9 @@ class HeatingRateLearner:
     episode_outdoor_sum: float = 0.0
     episode_outdoor_count: int = 0
     episode_disturbed: bool = False
+    # The episode in progress was restored after a restart: it continues only if
+    # the room still heats at the first observation.
+    _restored: bool = False
     _model: HeatingModel | None = None
 
     # ------------------------------------------------------------------ model
@@ -247,6 +250,13 @@ class HeatingRateLearner:
         current, target, outdoor = _finite(current), _finite(target), _finite(outdoor)
         if current is None:
             return None
+        if self._restored:
+            self._restored = False
+            # Not heating any more after the restart: it is not known when the
+            # heating stopped, so the restored episode cannot be measured.
+            if self.episode_start is not None and not heating:
+                self.cancel()
+                return None
         if heating and self.episode_start is None:
             if (
                 target is not None
@@ -301,8 +311,17 @@ class HeatingRateLearner:
 
     # ----------------------------------------------------------- persistence
     def as_dict(self) -> dict:
-        """Serialize."""
-        return {"version": DATA_VERSION, "episodes": self.episodes}
+        """Serialize (with the episode in progress, so a restart does not lose it)."""
+        data: dict = {"version": DATA_VERSION, "episodes": self.episodes}
+        if self.episode_start is not None and self.episode_temp is not None:
+            data["in_progress"] = {
+                "start": self.episode_start.isoformat(),
+                "temp": self.episode_temp,
+                "outdoor_sum": self.episode_outdoor_sum,
+                "outdoor_count": self.episode_outdoor_count,
+                "disturbed": self.episode_disturbed,
+            }
+        return data
 
     @classmethod
     def from_dict(cls, data: dict | None) -> HeatingRateLearner:
@@ -333,7 +352,28 @@ class HeatingRateLearner:
                 except (TypeError, ValueError, IndexError):
                     continue
         obj._keep()
+        obj._restore_in_progress(data.get("in_progress"))
         return obj
+
+    def _restore_in_progress(self, item: object) -> None:
+        """The episode that was in progress at the restart (dropped when malformed)."""
+        if not isinstance(item, dict):
+            return
+        try:
+            start = datetime.fromisoformat(str(item["start"]))
+            temp = float(item["temp"])
+            outdoor_sum = float(item.get("outdoor_sum", 0.0))
+            outdoor_count = int(item.get("outdoor_count", 0))
+        except (KeyError, TypeError, ValueError):
+            return
+        if start.tzinfo is None or not (math.isfinite(temp) and math.isfinite(outdoor_sum)):
+            return
+        self.episode_start = start
+        self.episode_temp = temp
+        self.episode_outdoor_sum = outdoor_sum if outdoor_count > 0 else 0.0
+        self.episode_outdoor_count = max(0, outdoor_count)
+        self.episode_disturbed = bool(item.get("disturbed", False))
+        self._restored = True
 
 
 # ---------------------------------------------------------------------------

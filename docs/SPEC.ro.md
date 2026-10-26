@@ -220,7 +220,7 @@ Un select pentru casă: **Auto / Vacanță / Oprit / Vară**.
 | Verificarea comenzilor | activă | Reîncearcă o dată după 2 min, apoi alertă |
 | Mișcarea robinetelor | oprită | Deschidere completă săptămânală a TRV-urilor, în orice mod (și vara și în afara sezonului); o pauză, o modificare manuală sau o fereastră deschisă o amână pentru mai târziu în aceeași zi; nu cere căldură și perioada ei nu se învață |
 | Baterie descărcată | alertă sub 20 % | TRV-urile și senzorii camerei |
-| Repornire | restaurare | Modificările manuale, vacanța și datele învățate se păstrează |
+| Repornire | restaurare | Modificările manuale, vacanța și datele învățate se păstrează; și episodul de încălzire în curs (continuă dacă după repornire camera încă încălzește, altfel se renunță la el) |
 | Reevaluare periodică | 5 min | Pe lângă evenimente |
 | Valori invalide | refuzate | O valoare de senzor, un atribut sau o valoare salvată care nu e număr (`nan`, `inf`) e tratată ca indisponibilă sau e eliminată; un senzor de temperatură fără unitate e citit în unitatea casei. `set_override` refuză o temperatură care nu e număr și o durată în afara intervalului 0,25–72 h (ca în formular); entitățile vacanței refuză un sfârșit care nu e după început; un profil `set_schedule` greșit dă o eroare clară |
 | Un singur proprietar pe dispozitiv | verificare în formular | Un termostat sau un releu e comandat de o singură cameră (din toate casele); sursa de căldură nu e dispozitivul unei camere; releul unui Generic Thermostat folosit de o cameră nu e nici dispozitiv de cameră, nici sursă de căldură; senzorul exterior nu e senzor de temperatură al unei camere. Senzorii pot fi comuni |

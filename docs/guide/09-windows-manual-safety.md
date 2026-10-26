@@ -197,7 +197,8 @@ repeated often.
 ## Restart of Home Assistant
 
 Kept: manual changes, the vacation and the automatic vacation, the mode, the
-pause, the guests, the heating and cooling learning, the outdoor averages
+pause, the guests, the heating and cooling learning (also the heating episode in
+progress), the outdoor averages
 (including the daily means for the season), the forecast cutoff, the times of
 the last switches of the boiler and relays, and whether the boiler was started
 for frost protection. After a restart the integration continues where it left

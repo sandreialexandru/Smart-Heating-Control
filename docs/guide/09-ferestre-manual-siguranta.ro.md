@@ -198,7 +198,8 @@ câteva ore.
 ## Repornirea Home Assistant
 
 Se păstrează: modificările manuale, vacanța și vacanța automată, modul, pauza,
-oaspeții, învățarea încălzirii și a răcirii, mediile de afară (inclusiv
+oaspeții, învățarea încălzirii și a răcirii (și episodul de încălzire în curs),
+mediile de afară (inclusiv
 mediile zilnice pentru sezon), oprirea după prognoză, timpii ultimelor comutări
 ale centralei și releelor și dacă centrala a fost pornită pentru antiîngheț.
 După repornire, integrarea continuă de unde a rămas.

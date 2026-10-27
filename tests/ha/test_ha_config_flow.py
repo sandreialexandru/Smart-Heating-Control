@@ -84,7 +84,7 @@ async def test_options_heating_adds_zone(hass: HomeAssistant) -> None:
     )
     assert result["step_id"] == "heating_thermostat"
     # climate.trv is not available now: the hysteresis is asked for.
-    assert _keys(result) == {"learn_tolerance", "hysteresis"}
+    assert _keys(result) == {"learn_tolerance", "hysteresis", "trv_boost"}
     result = await flow.async_configure(result["flow_id"], {"learn_tolerance": 0.3})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     zone = next(iter(entry.subentries.values()))

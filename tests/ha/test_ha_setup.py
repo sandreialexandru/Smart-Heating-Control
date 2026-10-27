@@ -1556,6 +1556,9 @@ async def test_trv_boost_temperature_frost_and_pause(
     await hass.services.async_call(
         "select", "select_option", {"entity_id": "select.home_mode", "option": "off"}, blocking=True
     )
+    await hass.async_block_till_done()
+    assert calls[-1].data["temperature"] == 7.0  # the room at 19 °C: no demand
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 7.0})
     await _room_temp(hass, freezer, 6.0)
     assert room.heat_demand
     assert calls[-1].data["temperature"] == 23.0

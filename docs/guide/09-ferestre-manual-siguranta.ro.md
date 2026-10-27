@@ -91,14 +91,16 @@ integrării. Util pentru un TRV la îndemâna copiilor.
 ## Pauza
 
 Comutatorul *Pauză* al casei oprește toate comenzile integrării: nu se schimbă
-nimic pe dispozitive și nu se face calibrarea TRV. Două lucruri rămân active,
-pentru siguranță:
+nimic pe dispozitive și nu se face calibrarea TRV. Rămân active, pentru
+siguranță:
 
 - **antiînghețul**: o cameră prea rece primește căldură (și sursa de căldură e
   pornită pentru ea, apoi oprită);
 - **temperatura maximă**: o temperatură setată peste maxim e coborâtă, iar o
   cameră cu releu sau comandată pornit / oprit e oprită cât e la maxim sau
-  peste.
+  peste;
+- **forțarea TRV**: o forțare rămasă pe TRV-uri când începe pauza e adusă
+  înapoi la țintă o dată (vezi [capitolul 3](03-camere.ro.md)).
 
 În card apare o bandă sus cât timp casa e în pauză. O modificare manuală făcută
 în pauză se păstrează și se trimite după pauză.

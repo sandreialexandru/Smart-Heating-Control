@@ -90,13 +90,15 @@ integration's decision. Useful for a TRV within reach of children.
 ## Pause
 
 The house's *Pause* switch stops every command of the integration: nothing
-changes on the devices and no TRV calibration is done. Two things stay on, for
+changes on the devices and no TRV calibration is done. These stay on, for
 safety:
 
 - **frost protection**: a room that is too cold gets heat (and the heat source
   is started for it, then stopped);
 - **maximum temperature**: a set temperature above the maximum is lowered, and a
-  relay or on / off room is turned off while at the maximum or above.
+  relay or on / off room is turned off while at the maximum or above;
+- **TRV boost**: a boost left on the TRVs when the pause starts is taken back to
+  the target once (see [chapter 3](03-rooms.md)).
 
 The card shows a band at the top while the house is paused. A manual change
 made in a pause is kept and sent after the pause.

@@ -37,6 +37,7 @@ from .const import (
     CALIBRATION_OFFSET,
     COMMAND_HVAC,
     COMMAND_PRESET,
+    COMMAND_TEMPERATURE,
     CONF_ALERT_WINDOW_MINUTES,
     CONF_AREA,
     CONF_BATTERY_THRESHOLD,
@@ -79,6 +80,8 @@ from .const import (
     CONF_SWITCHES,
     CONF_TEMP_AGGREGATION,
     CONF_TEMP_SENSORS,
+    CONF_TRV_BOOST,
+    CONF_TRV_BOOST_TEMP,
     CONF_VALVE_DAY,
     CONF_VALVE_EXERCISE,
     CONF_VALVE_TIME,
@@ -196,6 +199,16 @@ class Room:
         self.command_mode: str = (
             COMMAND_PRESET if self.source == SOURCE_GT else self.config[CONF_COMMAND_MODE]
         )
+        # TRV boost: the heat demand comes from the room sensor (hysteresis) and
+        # the TRVs get the boost temperature while it lasts, the target otherwise.
+        self.boost = (
+            self.source == SOURCE_CLIMATE
+            and self.command_mode == COMMAND_TEMPERATURE
+            and bool(self.config.get(CONF_TRV_BOOST, False))
+        )
+        self._boost_demand = False  # the room asks for heat (boost rooms)
+        self._boosted = False  # the TRVs hold the boost temperature we sent
+        self._boost_base: float | None = None  # the target under the boost (°C)
 
         # Custom level names (when not using Generic Thermostat).
         names = dict(self.config.get(CONF_PRESET_NAMES) or {})
@@ -642,6 +655,7 @@ class Room:
         # From now on the device shows a person's values, not ours: if the person
         # later sets the value we sent before, that is a manual change too.
         self._sent.pop(entity_id, None)
+        self._boosted = False  # the person's value replaced the boost
         if self.house.paused:
             return
         if self.child_lock and self.decision is not None:
@@ -766,7 +780,9 @@ class Room:
             device = round(sum(device_values) / len(device_values), 2)
         self.current_temp = external if external is not None else device
         # Without any temperature a relay cannot be regulated.
-        needs_temp = self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC
+        needs_temp = (
+            self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost
+        )
         self.sensor_failed = self.current_temp is None and (bool(sensors) or needs_temp)
         if self.current_temp is not None:
             self._temp_samples.append((now, self.current_temp))
@@ -810,7 +826,7 @@ class Room:
                 )
             except (TypeError, ValueError):
                 return 0.0
-        if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC:
+        if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost:
             return float(self.config[CONF_HYSTERESIS])
         return float(self.config.get(CONF_LEARN_TOLERANCE, 0.0))
 
@@ -821,6 +837,7 @@ class Room:
         if (
             self.source == SOURCE_SWITCH
             or self.command_mode == COMMAND_HVAC
+            or self.boost
             or self.lacks_hvac_action()
         ):
             return float(self.config[CONF_HYSTERESIS])
@@ -1435,6 +1452,8 @@ class Room:
             pass  # the valves are exercised: no heat is asked for
         elif self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC:
             demand = bool(self._relay_on)
+        elif self.boost:
+            demand = self._boost_demand  # from the room sensor, with the hysteresis
         else:
             hysteresis = float(self.config[CONF_HYSTERESIS])
             for entity_id in self.climates:
@@ -1506,9 +1525,11 @@ class Room:
             self.relay_waiting = None
             self._relay_wait_until = None
             if self.decision is None or self.decision.rule != RULE_OVERRIDE or not self.override:
+                await self._async_boost_without_target(target)
                 return
             stored = self._override_target()
             if stored is None:
+                await self._async_boost_without_target(target)
                 # Changed on the device: set again only after an interruption.
                 if self.override.get("interrupted"):
                     self.override["interrupted"] = False
@@ -1520,14 +1541,95 @@ class Room:
             # Set by the card or a service: kept on the devices (relays regulate around it).
             self.override["interrupted"] = False
             target = stored
+        if self.boost:
+            # The demand first, so the TRVs get the right temperature now.
+            heat = target.kind != KIND_OFF and self._exercise_until is None
+            self._boost_demand = heat and self._boost_wanted(self._resolve_temperature(target))
         sent = False
         if on_off:
             sent = await self._async_apply_relay(target)
         else:
             for entity_id in self.climates:
                 sent |= await self._async_apply_climate(entity_id, target, force)
+        if self.boost:
+            self._boosted = self._boost_demand
+            self._boost_base = (
+                None if target.kind == KIND_OFF else self._target_temperature_of(target)
+            )
         if sent and self.house.options[CONF_VERIFY_COMMANDS]:
             self._schedule_verify(target)
+
+    @property
+    def boost_active(self) -> bool:
+        """The TRVs hold the boost temperature now."""
+        return self.boost and self._boosted
+
+    def _boost_wanted(self, temperature: float | None) -> bool:
+        """The room asks for heat (boost rooms): the room sensor with the hysteresis."""
+        if temperature is None or self.current_temp is None:
+            return False
+        hysteresis = float(self.config[CONF_HYSTERESIS])
+        if self.current_temp <= temperature - hysteresis:
+            return True
+        if self.current_temp >= temperature + hysteresis:
+            return False
+        return self._boost_demand  # between the limits: as it was
+
+    def boost_temperature(self, temperature: float) -> float:
+        """Temperature the TRVs get while the room asks for heat (°C).
+
+        The boost temperature of the room (the maximum of the house when empty),
+        never below the target, never above the maximum of the house nor of the TRVs.
+        """
+        chosen = self.config.get(CONF_TRV_BOOST_TEMP)
+        value = float(chosen) if chosen not in (None, "") else self.max_temp()
+        value = min(value, self.max_temp())
+        device_max = self.device_max_temp()
+        if device_max is not None:
+            value = min(value, device_max)
+        return max(value, temperature)
+
+    def _target_temperature_of(self, target: Target) -> float | None:
+        """Temperature of a target, before the boost."""
+        if target.kind == KIND_TEMPERATURE:
+            return target.temperature
+        if target.kind == KIND_PRESET:
+            return self.level_temp(target.preset or "")
+        return None
+
+    def _climate_temperature(self, target: Target) -> float | None:
+        """Temperature a thermostat gets for ``target`` (with the TRV boost)."""
+        temperature = self._target_temperature_of(target)
+        if temperature is not None and self.boost and self._boost_demand:
+            return self.boost_temperature(temperature)
+        return temperature
+
+    async def _async_boost_without_target(self, target: Target) -> None:
+        """Boost rooms when nothing is sent (pause, no schedule, a change on the TRV).
+
+        A boost we left on the TRVs is taken back to the target, so a TRV never
+        keeps the boost temperature while nobody regulates it; the heat demand
+        follows the room sensor against what the TRV is set to.
+        """
+        if not self.boost:
+            return
+        # Until the TRVs report it, the temperature they hold is the one taken back.
+        temperature = self._resolve_temperature(target)
+        if self._boosted and self._boost_base is not None:
+            temperature = self._boost_base
+            for entity_id in self.climates:
+                state = self.hass.states.get(entity_id)
+                if valid(state):
+                    assert state is not None
+                    await self._send(
+                        entity_id,
+                        "set_temperature",
+                        ATTR_TEMPERATURE,
+                        self._device_value(state, self._boost_base),
+                    )
+        self._boosted = False
+        heat = self._exercise_until is None
+        self._boost_demand = heat and self._boost_wanted(temperature)
 
     async def _async_restore_device(self, entity_id: str, values: dict[str, Any]) -> bool:
         """Set again what a person set on a device (after an interruption).
@@ -1623,11 +1725,7 @@ class Room:
             )
             if name is not None:
                 return state.attributes.get("preset_mode") == name
-        temperature = (
-            target.temperature
-            if target.kind == KIND_TEMPERATURE
-            else self.level_temp(target.preset or "")
-        )
+        temperature = self._climate_temperature(target)
         if temperature is None:
             return True
         # Compared in the unit of the thermostat, as sent.
@@ -1665,11 +1763,7 @@ class Room:
             if name is not None:
                 self.house.clear_alert(f"preset_{self.id}_{target.preset}")
                 return await self._send(entity_id, "set_preset_mode", "preset_mode", name)
-        temperature = (
-            target.temperature
-            if target.kind == KIND_TEMPERATURE
-            else self.level_temp(target.preset or "")
-        )
+        temperature = self._climate_temperature(target)
         if temperature is None:
             self.house.notify(
                 f"preset_{self.id}_{target.preset}",
@@ -2157,7 +2251,7 @@ class Room:
             if not reference and count < needed:
                 return {"code": "rooms_needed", "count": count, "needed": needed}
             return {"code": "source_off"}
-        if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC:
+        if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost:
             if self.relay_waiting:
                 return {"code": f"relay_{self.relay_waiting}"}
             return {

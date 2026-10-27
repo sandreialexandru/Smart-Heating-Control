@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.3.19";
+const CARD_VERSION = "2.3.20";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -191,6 +191,9 @@ const TEXT = {
     level_temps_gt: "Preset temperatures (set in Generic Thermostat)",
     from_device: "thermostat",
     device_preset: "Thermostat preset now",
+    trv_boost: "TRV boost",
+    trv_boost_on: "on • {temp}",
+    trv_boost_off: "{temp} while heating",
     no_preset: "none (manual temperature)",
     active: "active",
     chart_label: "Last 24 hours and the next 12",
@@ -416,6 +419,9 @@ const TEXT = {
     level_temps_gt: "Temperaturile preseturilor (setate în Generic Thermostat)",
     from_device: "din termostat",
     device_preset: "Preset în termostat acum",
+    trv_boost: "Forțare TRV",
+    trv_boost_on: "activă • {temp}",
+    trv_boost_off: "{temp} cât încălzește",
     no_preset: "niciunul (temperatură manuală)",
     active: "activ",
     chart_label: "Ultimele 24 de ore și următoarele 12",
@@ -2010,6 +2016,19 @@ class SmartHeatingControlCard extends HTMLElement {
         ${dl(this._t("room_temp"), esc(this._temp(a.current_temperature)))}
         ${dl(this._t("target"), esc(this._temp(a.target_temperature)))}
         ${devicePreset !== null ? dl(this._t("device_preset"), esc(devicePreset)) : ""}
+        ${
+          a.trv_boost
+            ? dl(
+                this._t("trv_boost"),
+                esc(
+                  this._t(a.trv_boost.active ? "trv_boost_on" : "trv_boost_off").replace(
+                    "{temp}",
+                    this._temp(a.trv_boost.temperature)
+                  )
+                )
+              )
+            : ""
+        }
         ${dl(this._t("adjustments"), esc(offsets))}
       </dl>
       ${

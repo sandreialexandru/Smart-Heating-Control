@@ -119,6 +119,8 @@ from .const import (
     CONF_TEMP_SENSORS,
     CONF_TEMP_UNIT,
     CONF_TRAVEL_TIME,
+    CONF_TRV_BOOST,
+    CONF_TRV_BOOST_TEMP,
     CONF_VACATION_PREHEAT,
     CONF_VALVE_DAY,
     CONF_VALVE_EXERCISE,
@@ -261,6 +263,7 @@ TEMP_ABSOLUTE_KEYS = {
     CONF_FROST_TEMP,
     CONF_MAX_TEMP,
     CONF_NEARBY_TEMP,
+    CONF_TRV_BOOST_TEMP,
     *(f"temp_{p}" for p in PRESETS),
 }
 TEMP_DELTA_KEYS = {
@@ -768,6 +771,38 @@ def _thermostat_schema(d: dict[str, Any], hass: Any) -> vol.Schema:
     # Without hvac_action the heat demand is decided with the hysteresis.
     if _no_hvac_action(hass, d):
         fields[_req(CONF_HYSTERESIS, d, ROOM_DEFAULTS)] = _number(0.1, 3, 0.1, "°C")
+    if _boost_possible(d):
+        fields[_req(CONF_TRV_BOOST, d, ROOM_DEFAULTS)] = _bool()
+    return vol.Schema(fields)
+
+
+def _boost_possible(d: dict[str, Any]) -> bool:
+    """The TRV boost exists for thermostats commanded with a temperature."""
+    return d[CONF_SOURCE] == SOURCE_CLIMATE and d.get(CONF_COMMAND_MODE) == COMMAND_TEMPERATURE
+
+
+def _boost_on(d: dict[str, Any]) -> bool:
+    """The TRV boost is chosen."""
+    return _boost_possible(d) and bool(d.get(CONF_TRV_BOOST, False))
+
+
+def _boost_schema(
+    d: dict[str, Any], hass: Any, low: float, high: float, with_sensors: bool
+) -> vol.Schema:
+    """The boost temperature (empty = maximum of the house), the hysteresis and the sensors.
+
+    ``d`` holds the values as the form shows them; ``low`` / ``high`` (°C) are the
+    frost protection and the maximum of the house.
+    """
+    fields: dict[Any, Any] = {}
+    if with_sensors:
+        fields[_req(CONF_TEMP_SENSORS, d, ROOM_DEFAULTS)] = _entity(
+            "sensor", multiple=True, device_class="temperature"
+        )
+    fields[_opt(CONF_TRV_BOOST_TEMP, d)] = _number(low, high, 0.5, "°C")
+    # Asked on the thermostat step already when the thermostat lacks hvac_action.
+    if not _no_hvac_action(hass, d):
+        fields[_req(CONF_HYSTERESIS, d, ROOM_DEFAULTS)] = _number(0.1, 3, 0.1, "°C")
     return vol.Schema(fields)
 
 
@@ -795,6 +830,10 @@ class _HouseHeatingSteps:
     def _owner_skip(self) -> Skip:
         """(entry, subentry) of the zone being edited, not counted as another owner."""
         return (None, None)
+
+    def _house_limits(self) -> tuple[float, float]:
+        """Frost protection and maximum of the house (°C)."""
+        return float(HOUSE_DEFAULTS[CONF_FROST_TEMP]), float(HOUSE_DEFAULTS[CONF_MAX_TEMP])
 
     async def _async_heating_done(self, data: dict[str, Any] | None) -> Any:
         """Save the zone (None = no heating devices)."""
@@ -883,9 +922,40 @@ class _HouseHeatingSteps:
         schema = _thermostat_schema(_shown(self._zone, self._unit()), self.hass)  # type: ignore[attr-defined]
         if user_input is not None:
             self._zone = _merge(self._zone, schema, _kept(user_input, self._unit()))  # type: ignore[attr-defined]
+            if _boost_on(self._zone):
+                return await self.async_step_heating_boost()
             return await self._async_heating_done(self._zone)
         return self.async_show_form(  # type: ignore[attr-defined]
             step_id="heating_thermostat", data_schema=schema
+        )
+
+    async def async_step_heating_boost(self, user_input: dict[str, Any] | None = None) -> Any:
+        """TRV boost: its temperature, the hysteresis and the room sensors it needs."""
+        low, high = self._house_limits()
+        shown = _shown(self._zone, self._unit())  # type: ignore[attr-defined]
+        if shown.get(CONF_TRV_BOOST_TEMP) is not None:
+            value = float(self._zone[CONF_TRV_BOOST_TEMP])
+            shown = {
+                **shown,
+                **_shown({CONF_TRV_BOOST_TEMP: min(max(value, low), high)}, self._unit()),  # type: ignore[attr-defined]
+            }
+        schema = _boost_schema(shown, self.hass, low, high, True)  # type: ignore[attr-defined]
+        errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {"entity": "", "owner": ""}
+        if user_input is not None:
+            sensors = list(user_input.get(CONF_TEMP_SENSORS) or [])
+            if not sensors:
+                errors[CONF_TEMP_SENSORS] = "boost_sensor_required"
+            elif error := _outdoor_error(self.hass, sensors, placeholders):  # type: ignore[attr-defined]
+                errors[CONF_TEMP_SENSORS] = error
+            else:
+                self._zone = _merge(self._zone, schema, _kept(user_input, self._unit()))  # type: ignore[attr-defined]
+                return await self._async_heating_done(self._zone)
+        return self.async_show_form(  # type: ignore[attr-defined]
+            step_id="heating_boost",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders=placeholders,
         )
 
 
@@ -1016,6 +1086,11 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
     def _unit(self) -> str:
         """Unit the forms of this flow use."""
         return str(self.config_entry.options.get(CONF_TEMP_UNIT, UNIT_CELSIUS))
+
+    def _house_limits(self) -> tuple[float, float]:
+        """Frost protection and maximum of the house (°C)."""
+        options = {**HOUSE_DEFAULTS, **self.config_entry.options}
+        return float(options[CONF_FROST_TEMP]), float(options[CONF_MAX_TEMP])
 
     def _owner_skip(self) -> Skip:
         """The whole-house zone being edited does not count against itself."""
@@ -1339,8 +1414,28 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
         schema = _thermostat_schema(self._shown(), self.hass)
         if user_input is not None:
             self._data = _merge(self._data, schema, self._kept(user_input))
+            if _boost_on(self._data):
+                return await self.async_step_control_boost()
             return await self.async_step_levels()
         return self.async_show_form(step_id="control_thermostat", data_schema=schema)
+
+    async def async_step_control_boost(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """TRV boost: its temperature (empty = maximum of the house) and the hysteresis."""
+        low, high = self._safety_limits()
+        shown = self._shown()
+        if self._data.get(CONF_TRV_BOOST_TEMP) is not None:
+            value = float(self._data[CONF_TRV_BOOST_TEMP])
+            shown = {
+                **shown,
+                **_shown({CONF_TRV_BOOST_TEMP: min(max(value, low), high)}, self._unit()),
+            }
+        schema = _boost_schema(shown, self.hass, low, high, False)
+        if user_input is not None:
+            self._data = _merge(self._data, schema, self._kept(user_input))
+            return await self.async_step_levels()
+        return self.async_show_form(step_id="control_boost", data_schema=schema)
 
     def _safety_limits(self) -> tuple[float, float]:
         """Frost protection and maximum temperature of the house (°C), the limits of a level."""
@@ -1503,6 +1598,8 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
         if user_input is not None:
             if relay and not user_input.get(CONF_TEMP_SENSORS):
                 errors[CONF_TEMP_SENSORS] = "sensor_required"
+            elif _boost_on(self._data) and not user_input.get(CONF_TEMP_SENSORS):
+                errors[CONF_TEMP_SENSORS] = "boost_sensor_required"
             elif error := _outdoor_error(
                 self.hass, list(user_input.get(CONF_TEMP_SENSORS) or []), placeholders
             ):

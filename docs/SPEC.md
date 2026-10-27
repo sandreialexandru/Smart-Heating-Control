@@ -38,6 +38,7 @@ entry for the **house** (people, zones, global mode, shared settings) and one
 | Temperature unit | unit of Home Assistant | °C or °F per house, chosen first at setup and changed with *Reconfigure* (the values are converted). Inside, everything is kept in °C; each device is read and commanded in its own unit, so the house unit may differ from the one of Home Assistant |
 | Heated by | Generic Thermostat | Generic Thermostat, other `climate` entities (TRVs, thermostats) or `switch` / `input_boolean` relays |
 | Command (other thermostats) | temperature | Temperature / preset / on-off via `hvac_mode` |
+| TRV boost | off | Temperature command only. The heat demand comes from the room sensors (required) with the hysteresis; while it lasts the TRVs get the boost temperature (empty = maximum of the house; never below the target, never above the maximum of the house or of the TRVs), otherwise the target. Applies to every heat demand, frost protection included; not to the valve exercise or to devices turned off. A pause takes a boost left on the TRVs back to the target once |
 | External temperature sensors | none | Used instead of the device sensor; several sensors → mean, minimum or median |
 | TRV calibration | off | Offset calculated from the external sensor, or the external temperature written to the TRV input (in the unit of the TRV entity) |
 | Thermostat tolerance | GT: cold tolerance; relays: hysteresis; others: 0 | How far below the target the thermostat lets the room fall before heating; heating episodes are learned from this far below the target |

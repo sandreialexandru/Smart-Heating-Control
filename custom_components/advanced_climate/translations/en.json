@@ -72,12 +72,28 @@
         "title": "Thermostat",
         "data": {
           "learn_tolerance": "Thermostat tolerance",
-          "hysteresis": "Hysteresis"
+          "hysteresis": "Hysteresis",
+          "trv_boost": "Boost TRV temperature while heating"
         },
         "description": "The thermostat keeps the temperature; the integration only sends the level or the temperature.",
         "data_description": {
           "learn_tolerance": "How far below the target the thermostat lets the room fall before heating (its own tolerance). The heating rate is learned from rises that start at least this below the target.",
-          "hysteresis": "This thermostat does not report when it heats (no hvac_action): it counts as heating from this far below its set temperature until this far above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the comfort of the optimal stop."
+          "hysteresis": "This thermostat does not report when it heats (no hvac_action): it counts as heating from this far below its set temperature until this far above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the comfort of the optimal stop.",
+          "trv_boost": "While the room asks for heat, the TRVs get a higher temperature so they stay open until the room is warm; the rest of the time they get the target. The heat demand then comes from the room sensor, with the hysteresis. Needs a temperature sensor in the room."
+        }
+      },
+      "heating_boost": {
+        "title": "TRV boost",
+        "description": "While the room asks for heat the TRVs get the boost temperature, the rest of the time the target. The room asks for heat from target minus the hysteresis until target plus the hysteresis, measured by the room sensor.",
+        "data": {
+          "temperature_sensors": "Temperature sensors",
+          "trv_boost_temperature": "Boost temperature",
+          "hysteresis": "Hysteresis"
+        },
+        "data_description": {
+          "temperature_sensors": "Sensors in the room: the heat demand is decided from them, not from the TRV sensor next to the radiator.",
+          "trv_boost_temperature": "Sent to the TRVs while the room asks for heat, never below the target and never above the maximum temperature of the house or of the TRVs. Empty = the maximum temperature of the house.",
+          "hysteresis": "The room asks for heat below target minus this value and stops above target plus this value, measured by the room sensor."
         }
       }
     },
@@ -87,7 +103,8 @@
       "entity_in_room": "{entity} is already controlled by {owner}. A device can be controlled by one room only.",
       "entity_is_source": "{entity} is the heat source of {owner}. It cannot also be a device of a room.",
       "entity_is_gt_heater": "{entity} is the relay of a Generic Thermostat used by {owner}. It cannot also be controlled here.",
-      "room_sensor_is_outdoor": "{entity} is the outdoor sensor of {owner}. Choose a sensor in the room."
+      "room_sensor_is_outdoor": "{entity} is the outdoor sensor of {owner}. Choose a sensor in the room.",
+      "boost_sensor_required": "The TRV boost needs a temperature sensor of the room."
     },
     "abort": {
       "reconfigure_successful": "Saved."
@@ -275,12 +292,14 @@
         "title": "Thermostat",
         "data": {
           "learn_tolerance": "Thermostat tolerance",
-          "hysteresis": "Hysteresis"
+          "hysteresis": "Hysteresis",
+          "trv_boost": "Boost TRV temperature while heating"
         },
         "description": "The thermostat keeps the temperature; the integration only sends the level or the temperature.",
         "data_description": {
           "learn_tolerance": "How far below the target the thermostat lets the room fall before heating (its own tolerance). The heating rate is learned from rises that start at least this below the target.",
-          "hysteresis": "This thermostat does not report when it heats (no hvac_action): it counts as heating from this far below its set temperature until this far above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the comfort of the optimal stop."
+          "hysteresis": "This thermostat does not report when it heats (no hvac_action): it counts as heating from this far below its set temperature until this far above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the comfort of the optimal stop.",
+          "trv_boost": "While the room asks for heat, the TRVs get a higher temperature so they stay open until the room is warm; the rest of the time they get the target. The heat demand then comes from the room sensor, with the hysteresis. Needs a temperature sensor in the room."
         }
       },
       "presence_details": {
@@ -363,6 +382,20 @@
         "data_description": {
           "override_hours": "How long a manual change is kept."
         }
+      },
+      "heating_boost": {
+        "title": "TRV boost",
+        "description": "While the room asks for heat the TRVs get the boost temperature, the rest of the time the target. The room asks for heat from target minus the hysteresis until target plus the hysteresis, measured by the room sensor.",
+        "data": {
+          "temperature_sensors": "Temperature sensors",
+          "trv_boost_temperature": "Boost temperature",
+          "hysteresis": "Hysteresis"
+        },
+        "data_description": {
+          "temperature_sensors": "Sensors in the room: the heat demand is decided from them, not from the TRV sensor next to the radiator.",
+          "trv_boost_temperature": "Sent to the TRVs while the room asks for heat, never below the target and never above the maximum temperature of the house or of the TRVs. Empty = the maximum temperature of the house.",
+          "hysteresis": "The room asks for heat below target minus this value and stops above target plus this value, measured by the room sensor."
+        }
       }
     },
     "error": {
@@ -376,7 +409,8 @@
       "entity_is_source": "{entity} is the heat source of {owner}. It cannot also be a device of a room.",
       "entity_is_gt_heater": "{entity} is the relay of a Generic Thermostat used by {owner}. It cannot also be controlled here.",
       "outdoor_is_room_sensor": "{entity} is a temperature sensor of {owner}. The outdoor sensor must be a different sensor.",
-      "room_sensor_is_outdoor": "{entity} is the outdoor sensor of {owner}. Choose a sensor in the room."
+      "room_sensor_is_outdoor": "{entity} is the outdoor sensor of {owner}. Choose a sensor in the room.",
+      "boost_sensor_required": "The TRV boost needs a temperature sensor of the room."
     }
   },
   "config_subentries": {
@@ -432,11 +466,13 @@
           "description": "The thermostat keeps the temperature; the integration only sends the level or the temperature.",
           "data": {
             "learn_tolerance": "Thermostat tolerance",
-            "hysteresis": "Hysteresis"
+            "hysteresis": "Hysteresis",
+            "trv_boost": "Boost TRV temperature while heating"
           },
           "data_description": {
             "learn_tolerance": "How far below the target the thermostat lets the room fall before heating (its own tolerance). The heating rate is learned from rises that start at least this below the target.",
-            "hysteresis": "This thermostat does not report when it heats (no hvac_action): it counts as heating from this far below its set temperature until this far above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the comfort of the optimal stop."
+            "hysteresis": "This thermostat does not report when it heats (no hvac_action): it counts as heating from this far below its set temperature until this far above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the comfort of the optimal stop.",
+            "trv_boost": "While the room asks for heat, the TRVs get a higher temperature so they stay open until the room is warm; the rest of the time they get the target. The heat demand then comes from the room sensor, with the hysteresis. Needs a temperature sensor in the room."
           }
         },
         "levels": {
@@ -622,6 +658,18 @@
             "valve_exercise_day": "Day of the valve exercise.",
             "valve_exercise_time": "Time of the valve exercise (best when nobody needs heat)."
           }
+        },
+        "control_boost": {
+          "title": "TRV boost",
+          "description": "While the room asks for heat the TRVs get the boost temperature, the rest of the time the target. The room asks for heat from target minus the hysteresis until target plus the hysteresis, measured by the room sensor.",
+          "data": {
+            "trv_boost_temperature": "Boost temperature",
+            "hysteresis": "Hysteresis"
+          },
+          "data_description": {
+            "trv_boost_temperature": "Sent to the TRVs while the room asks for heat, never below the target and never above the maximum temperature of the house or of the TRVs. Empty = the maximum temperature of the house.",
+            "hysteresis": "The room asks for heat below target minus this value and stops above target plus this value, measured by the room sensor."
+          }
         }
       },
       "abort": {
@@ -636,7 +684,8 @@
         "entity_in_room": "{entity} is already controlled by {owner}. A device can be controlled by one room only.",
         "entity_is_source": "{entity} is the heat source of {owner}. It cannot also be a device of a room.",
         "entity_is_gt_heater": "{entity} is the relay of a Generic Thermostat used by {owner}. It cannot also be controlled here.",
-        "room_sensor_is_outdoor": "{entity} is the outdoor sensor of {owner}. Choose a sensor in the room."
+        "room_sensor_is_outdoor": "{entity} is the outdoor sensor of {owner}. Choose a sensor in the room.",
+        "boost_sensor_required": "The TRV boost needs a temperature sensor of the room."
       }
     }
   },

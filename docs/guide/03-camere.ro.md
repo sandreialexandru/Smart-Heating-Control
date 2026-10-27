@@ -74,6 +74,38 @@ l-ai oprit tu, rămâne oprit.
 | --- | --- | --- |
 | Toleranța termostatului | 0 (0 – 2 °C) | Cât lasă termostatul camera să coboare sub țintă înainte să încălzească (toleranța lui proprie). Învățarea încălzirii pornește de la atât sub țintă. Dacă nu știi, lasă 0. |
 | Histerezis | 0,3 °C | Apare doar dacă termostatul nu raportează când încălzește (`hvac_action`) sau e indisponibil la configurare. Atunci se consideră că încălzește de la histerezis sub temperatura setată până la histerezis peste ea, ca un releu. Se folosește pentru cererea de căldură, centrală, timpul de încălzire, învățare și ca toleranță a opririi anticipate. |
+| Forțează temperatura TRV cât încălzește | oprit | Doar cu comanda *Temperatură*, vezi mai jos. |
+
+### *Temperatură* cu **forțarea TRV**
+
+Un TRV măsoară temperatura lângă calorifer, unde e mai cald decât în cameră, așa
+că se poate închide înainte să se încălzească camera. Cu *Forțează temperatura
+TRV cât încălzește* decide senzorul camerei, iar TRV-ul e ținut deschis cât
+camera are nevoie de căldură:
+
+- camera **cere căldură** de la ținta − histerezis și se oprește la ținta +
+  histerezis, măsurat de **senzorii de temperatură ai camerei** (obligatorii,
+  vezi pasul 5);
+- cât cere căldură, TRV-urile primesc **Temperatura de forțare**; în rest
+  primesc **ținta**, așa că TRV-ul se închide singur și ține camera și când Home
+  Assistant e oprit.
+
+| Câmp | Implicit | Ce face |
+| --- | --- | --- |
+| Temperatura de forțare | gol = temperatura maximă a casei | Trimisă TRV-urilor cât camera cere căldură. Între antiîngheț și maximul casei; niciodată sub țintă și niciodată peste maximul TRV-urilor. |
+| Histerezis | 0,3 °C (0,1 – 3) | Banda cererii de căldură, ca la relee. Se cere aici sau pe pagina de dinainte, când TRV-ul nu raportează `hvac_action`. |
+
+**Exemplu** (valorile alese în formular): ținta 20 °C, histerezis 0,2 °C,
+maximul casei 25 °C, temperatura de forțare goală. La 20 − 0,2 = 19,8 °C în
+cameră, TRV-urile primesc 25 °C; la 20 + 0,2 = 20,2 °C primesc iar 20 °C. Între
+19,8 și 20,2 °C rămâne cum era.
+
+Forțarea se aplică la orice cerere de căldură, și la antiîngheț. La mișcarea
+robinetelor, cu o fereastră deschisă și acțiunea *Oprire* sau în modul Oprit
+cu dispozitive care se pot opri, nu există forțare. În **pauză** nu se trimite
+nimic, doar că o forțare rămasă pe TRV-uri e adusă înapoi la țintă o dată, ca
+niciun TRV să nu rămână forțat cât nu-l reglează nimic. Cardul o arată în
+*Detalii* ca *Forțare TRV*.
 
 ### Generic Thermostat
 
@@ -120,7 +152,7 @@ rămân aceleași: „Lucru” e tot nivelul `home`.
 
 | Câmp | Ce faci |
 | --- | --- |
-| **Senzori de temperatură** | Senzorii din cameră, folosiți în locul senzorului termostatului (mai exacți când termostatul stă lângă calorifer). Gol = senzorul termostatului. **Obligatorii pentru relee**, care nu au senzor (altfel apare *Releele au nevoie de un senzor de temperatură al camerei*). Senzorul exterior al unei case e refuzat. Un senzor care nu raportează unitatea e citit în unitatea casei. |
+| **Senzori de temperatură** | Senzorii din cameră, folosiți în locul senzorului termostatului (mai exacți când termostatul stă lângă calorifer). Gol = senzorul termostatului. **Obligatorii pentru relee**, care nu au senzor (altfel apare *Releele au nevoie de un senzor de temperatură al camerei*), și pentru forțarea TRV (altfel apare *Forțarea TRV are nevoie de un senzor de temperatură al camerei*). Senzorul exterior al unei case e refuzat. Un senzor care nu raportează unitatea e citit în unitatea casei. |
 | **Calibrare TRV** | Doar pentru TRV-uri și doar cu un senzor de cameră. *Offset*: corectează senzorul TRV-ului. *Temperatură externă*: scrie temperatura camerei în TRV (dacă TRV-ul are această intrare). *Oprit* altfel. |
 | **Senzori de ocupare** | Senzori de mișcare / prezență ai camerei: dacă camera e goală un timp, trece pe `eco` chiar dacă e cineva acasă. Gol pentru camerele care urmează doar programul. |
 

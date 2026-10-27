@@ -1445,3 +1445,119 @@ async def test_more_rooms_needed_than_the_house_has(
     assert "boiler_min_rooms" not in house.active_alerts
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def _boost_house(hass, freezer, room: dict, **options):
+    """A house with one TRV room with the TRV boost and a room sensor, no heat source."""
+    await hass.config.async_set_time_zone("Europe/Bucharest")
+    # Monday 12:00 local time: the default schedule asks for home (21 °C).
+    freezer.move_to("2026-10-12 09:00:00+00:00")
+    hass.states.async_set("person.andrei", "home")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        options={"persons": ["person.andrei"], "nearby_zones": [], **options},
+        subentries_data=[
+            {
+                "data": {
+                    "source": "climate",
+                    "climates": ["climate.trv"],
+                    "command_mode": "temperature",
+                    "temperature_sensors": ["sensor.office_temp"],
+                    "trv_boost": True,
+                    "hysteresis": 0.2,
+                    **room,
+                },
+                "subentry_type": SUBENTRY_ROOM,
+                "title": "Office",
+                "unique_id": None,
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
+
+
+async def _room_temp(hass, freezer, value: float) -> None:
+    hass.states.async_set("sensor.office_temp", str(value), {"unit_of_measurement": "°C"})
+    await hass.services.async_call(DOMAIN, "reevaluate", {}, blocking=True)
+    await hass.async_block_till_done()
+
+
+async def test_trv_boost_while_heating(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """The TRV gets the boost temperature while the room sensor asks for heat."""
+    # The TRV sensor next to the radiator is warmer than the room; it reports no
+    # hvac_action: the demand comes from the room sensor anyway.
+    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 23.0, "temperature": 21.0}
+    hass.states.async_set("climate.trv", "heat", trv)
+    hass.states.async_set("sensor.office_temp", "20.9", {"unit_of_measurement": "°C"})
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    entry = await _boost_house(hass, freezer, {})
+    await _tick(hass, freezer, 15)
+    room = next(iter(entry.runtime_data.rooms.values()))
+    # 20.9 is within 21 ± 0.2: no demand, the TRV keeps the target.
+    assert not room.heat_demand
+    assert all(c.data["temperature"] == 21.0 for c in calls)
+    # 20.8 = 21 - 0.2: demand, the TRV gets the maximum of the house (25 °C).
+    await _room_temp(hass, freezer, 20.8)
+    assert room.heat_demand and room.heating
+    assert calls[-1].data["temperature"] == 25.0
+    attrs = hass.states.get("sensor.office_decision").attributes
+    assert attrs["trv_boost"] == {"temperature": 25.0, "active": True}
+    # Inside the band (21.1 < 21.2) it goes on.
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 25.0})
+    await _room_temp(hass, freezer, 21.1)
+    assert room.heat_demand
+    # 21.2 = 21 + 0.2: the demand ends and the TRV gets the target again.
+    await _room_temp(hass, freezer, 21.2)
+    assert not room.heat_demand
+    assert calls[-1].data["temperature"] == 21.0
+    assert hass.states.get("sensor.office_decision").attributes["trv_boost"]["active"] is False
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_trv_boost_temperature_frost_and_pause(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The chosen boost temperature, also for frost protection; a pause takes it back."""
+    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 22.0, "temperature": 21.0}
+    hass.states.async_set("climate.trv", "heat", trv)
+    hass.states.async_set("sensor.office_temp", "20.0", {"unit_of_measurement": "°C"})
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    entry = await _boost_house(hass, freezer, {"trv_boost_temperature": 23.0})
+    await _tick(hass, freezer, 15)
+    room = next(iter(entry.runtime_data.rooms.values()))
+    assert calls[-1].data["temperature"] == 23.0
+    # A level above the boost temperature is sent as it is (never below the target).
+    room.levels["home"] = 24.0
+    await _room_temp(hass, freezer, 20.0)
+    assert calls[-1].data["temperature"] == 24.0
+    room.levels["home"] = 21.0
+    await _room_temp(hass, freezer, 20.0)
+    assert calls[-1].data["temperature"] == 23.0
+    # A pause sends nothing, but the boost left on the TRV is taken back to the target.
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 23.0})
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.home_pause"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert calls[-1].data["temperature"] == 21.0
+    count = len(calls)
+    await _room_temp(hass, freezer, 19.0)
+    assert len(calls) == count  # nothing more while paused
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": "switch.home_pause"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    # Mode off: frost protection (7 °C); the room at 6 °C asks for heat and is boosted.
+    await hass.services.async_call(
+        "select", "select_option", {"entity_id": "select.home_mode", "option": "off"}, blocking=True
+    )
+    await _room_temp(hass, freezer, 6.0)
+    assert room.heat_demand
+    assert calls[-1].data["temperature"] == 23.0
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

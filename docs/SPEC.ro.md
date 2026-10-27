@@ -42,6 +42,7 @@ program).
 | Unitatea de temperatură | unitatea Home Assistant | °C sau °F pentru fiecare casă, aleasă prima la configurare și schimbată cu *Reconfigurează* (valorile sunt convertite). Intern totul se păstrează în °C; fiecare dispozitiv e citit și comandat în unitatea lui, așa că unitatea casei poate fi diferită de cea a Home Assistant |
 | Încălzit de | Generic Thermostat | Generic Thermostat, alte entități `climate` (TRV-uri, termostate) sau relee `switch` / `input_boolean` |
 | Comanda (alte termostate) | temperatură | Temperatură / preset / pornit-oprit prin `hvac_mode` |
+| Forțarea TRV | oprită | Doar cu comanda temperatură. Cererea de căldură vine de la senzorii camerei (obligatorii), cu histerezisul; cât durează, TRV-urile primesc temperatura de forțare (gol = maximul casei; niciodată sub țintă, niciodată peste maximul casei sau al TRV-urilor), altfel ținta. Se aplică la orice cerere de căldură, inclusiv antiînghețul; nu la mișcarea robinetelor sau la dispozitivele oprite. O pauză aduce o forțare rămasă pe TRV-uri înapoi la țintă o dată |
 | Senzori externi de temperatură | niciunul | Folosiți în locul senzorului dispozitivului; mai mulți senzori → medie, minim sau mediană |
 | Calibrare TRV | oprită | Offset calculat din senzorul extern sau temperatura externă scrisă în intrarea TRV-ului (în unitatea entității TRV) |
 | Toleranța termostatului | GT: cold tolerance; relee: histerezis; altele: 0 | Cât lasă termostatul camera să coboare sub țintă înainte să încălzească; episoadele de încălzire se învață de la atât sub țintă |

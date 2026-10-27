@@ -295,6 +295,7 @@ class DecisionSensor(RoomEntity, SensorEntity):
             "max_temperature": _t(room.max_temp(), unit, 1),
             "climate_entities": room.climates,
             "device_preset": room.device_preset(),
+            "trv_boost": _boost(room, unit),
             "device_level": room.level_of_device_preset(room.device_preset()),
             "time_to_target": room.time_to_target(room.house.outdoor_now),
             "stop_forecast": _forecast(room, unit),
@@ -444,6 +445,15 @@ def _per_degree(value: float | None, unit: str) -> float | None:
     if value is None:
         return None
     return round(value / 1.8 if unit == "°F" else value, 1)
+
+
+def _boost(room: Room, unit: str) -> dict[str, Any] | None:
+    """The TRV boost of the room: the temperature and whether it is on now."""
+    if not room.boost:
+        return None
+    base = room.target_temperature
+    temperature = room.boost_temperature(base) if base is not None else None
+    return {"temperature": _t(temperature, unit, 1), "active": room.boost_active}
 
 
 def _forecast(room: Room, unit: str) -> dict[str, Any] | None:

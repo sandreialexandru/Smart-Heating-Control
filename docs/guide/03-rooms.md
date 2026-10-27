@@ -73,6 +73,36 @@ off, it stays off.
 | --- | --- | --- |
 | Thermostat tolerance | 0 (0 – 2 °C) | How far below the target the thermostat lets the room fall before heating (its own tolerance). The heating is learned from rises that start at least this far below the target. If unsure, leave 0. |
 | Hysteresis | 0.3 °C | Only when the thermostat does not report when it heats (`hvac_action`) or is unavailable during the setup. It then counts as heating from hysteresis below its set temperature to hysteresis above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the tolerance of the optimal stop. |
+| Boost TRV temperature while heating | off | Only with the *Temperature* command, see below. |
+
+### *Temperature* with **TRV boost**
+
+A TRV measures the temperature next to the radiator, which is warmer than the
+room, so it may close before the room is warm. With *Boost TRV temperature while
+heating* the room sensor decides instead, and the TRV is kept open while the room
+needs heat:
+
+- the room **asks for heat** at target − hysteresis and stops at target +
+  hysteresis, measured by the **room temperature sensors** (required, see step 5);
+- while it asks for heat, the TRVs get the **Boost temperature**; the rest of
+  the time they get the **target**, so the TRV closes by itself and keeps the
+  room even when Home Assistant is down.
+
+| Field | Default | What it does |
+| --- | --- | --- |
+| Boost temperature | empty = the maximum temperature of the house | Sent to the TRVs while the room asks for heat. Between the frost protection and the maximum of the house; never below the target and never above the maximum of the TRVs. |
+| Hysteresis | 0.3 °C (0.1 – 3) | The band of the heat demand, as for relays. Asked here, or on the previous page when the TRV does not report `hvac_action`. |
+
+**Example** (the values chosen in the form): target 20 °C, hysteresis 0.2 °C,
+maximum of the house 25 °C, boost temperature empty. At 20 − 0.2 = 19.8 °C in
+the room the TRVs get 25 °C; at 20 + 0.2 = 20.2 °C they get 20 °C again. Between
+19.8 and 20.2 °C it stays as it was.
+
+The boost applies to every heat demand, also to frost protection. With the
+valve exercise, a window open with *Turn off*, or mode Off with devices that
+turn off, there is no boost. In a **pause** nothing is sent, except that a boost
+left on the TRVs is taken back to the target once, so no TRV stays boosted while
+nothing regulates it. The card shows it in *Details* as *TRV boost*.
 
 ### Generic Thermostat
 
@@ -118,7 +148,7 @@ roles stay the same: "Work" is still the `home` level.
 
 | Field | What to do |
 | --- | --- |
-| **Temperature sensors** | Sensors in the room, used instead of the thermostat sensor (more accurate when the thermostat sits next to the radiator). Empty = the thermostat sensor. **Required for relays**, which have no sensor (otherwise *Relays need a temperature sensor of the room*). The outdoor sensor of a house is refused. A sensor that reports no unit is read in the unit of the house. |
+| **Temperature sensors** | Sensors in the room, used instead of the thermostat sensor (more accurate when the thermostat sits next to the radiator). Empty = the thermostat sensor. **Required for relays**, which have no sensor (otherwise *Relays need a temperature sensor of the room*), and for the TRV boost (otherwise *The TRV boost needs a temperature sensor of the room*). The outdoor sensor of a house is refused. A sensor that reports no unit is read in the unit of the house. |
 | **TRV calibration** | Only for TRVs and only with a room sensor. *Offset*: corrects the TRV sensor. *External temperature input*: writes the room temperature into the TRV (if it has that input). *Off* otherwise. |
 | **Occupancy sensors** | Motion / presence sensors of the room: when the room is empty for a while it goes to `eco` even if someone is home. Empty for rooms that should only follow the schedule. |
 

@@ -17,6 +17,14 @@ names (`home`, `sleep`, `eco`, `away`, `comfort`, `activity`) and only selects
 the right one; your thermostat keeps working exactly as before. Rooms with TRVs,
 other thermostats or plain relays are supported as well.
 
+> **Beta.** The integration runs every day in one home: a whole-house zone with
+> Generic Thermostat and a relay, presence, the outdoor temperature with the
+> warm-weather cutoff and the forecast, the internal schedule and the learning. TRVs, several rooms, other thermostats, relay rooms,
+> a heat source started by the integration, tariff / PV and °F are covered by
+> the automated tests, but not yet by real homes. If you try them, please
+> [report what you see](https://github.com/sandreialexandru/Smart-Heating-Control/issues/new/choose),
+> good or bad.
+
 ## Features
 
 - **Presence in three states**: *home*, *nearby* (e.g. somewhere in your city)

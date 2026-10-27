@@ -17,8 +17,17 @@ aceleași nume de preseturi (`home`, `sleep`, `eco`, `away`, `comfort`,
 `activity`) și doar îl alege pe cel potrivit; termostatul funcționează exact ca
 înainte. Sunt acceptate și camere cu TRV-uri, alte termostate sau relee simple.
 
-Numele setărilor și ale entităților sunt date mai jos în engleză, ca în
-interfața în engleză; cu Home Assistant în română ele apar traduse.
+Numele setărilor și ale entităților sunt date mai jos în română, ca în
+interfața Home Assistant în română.
+
+> **Beta.** Integrarea rulează zilnic într-o singură casă: o zonă pentru toată
+> casa cu Generic Thermostat și un releu, prezență, temperatura de afară cu
+> oprirea când e cald și prognoza, programul intern și învățarea. TRV-urile, mai multe camere, alte termostate,
+> camerele cu relee, o sursă de căldură pornită de integrare, tariful /
+> fotovoltaicul și °F sunt acoperite de testele automate, dar încă nu de case
+> reale. Dacă le încerci, te rog
+> [spune-mi ce vezi](https://github.com/sandreialexandru/Smart-Heating-Control/issues/new/choose),
+> fie că merge, fie că nu.
 
 ## Funcții
 
@@ -247,7 +256,7 @@ temperatura de afară (o linie dreaptă).
   termostatului sub țintă, așa că se învață și ciclurile care doar mențin
   temperatura. Toleranța este *cold tolerance* al Generic Thermostat,
   *histerezisul* pentru relee și control on / off și setarea de cameră
-  *Thermostat tolerance* pentru alte termostate (implicit 0). Episodul se
+  *Toleranța termostatului* pentru alte termostate (implicit 0). Episodul se
   încheie când se atinge ținta sau se oprește încălzirea; se folosește când
   cererea de căldură a durat cel puțin 10 minute și temperatura a crescut,
   oricât de puțin: se învață și o creștere lentă (poate arăta o problemă, dar
@@ -291,7 +300,7 @@ temperatura de afară (o linie dreaptă).
   îl raportează sunt considerate că încălzesc de la *histerezis* sub
   temperatura setată până la histerezis peste ea, ca un releu (oprirea
   anticipată folosește și ea histerezisul ca toleranță); pentru ele apare
-  setarea *Hysteresis* (și pentru termostatele indisponibile la configurare,
+  setarea *Histerezis* (și pentru termostatele indisponibile la configurare,
   care nu pot fi verificate).
 
 Senzorii *Timp de încălzire* numără la fel: o cameră cât merge sursa ei de
@@ -302,7 +311,7 @@ Senzorul *Viteză de încălzire* arată **minutele pe grad** pentru temperatura
 afară de acum; atributele arată partea fixă (`fixed_minutes`), minutele pe grad
 la −10 / 0 / 10 / 20 °C, schimbarea pe grad de afară, ce termeni se folosesc,
 numărul de episoade (și al celor mari), cât de jos sub țintă începe un episod
-și ultimele episoade. Pornirea anticipată folosește aceeași învățare. Cu *Rooms needed* mai
+și ultimele episoade. Pornirea anticipată folosește aceeași învățare. Cu *Camere necesare pentru pornirea sursei* mai
 mare decât 1, o cameră aflată în pornire anticipată așteaptă până cer căldură
 destule camere, deci poate ajunge la țintă mai târziu.
 
@@ -334,18 +343,18 @@ anticipată, iar valorile de afară salvate înainte se șterg). Coboară nivelu
 confortul nivelului curent la ora din program. Confortul este *toleranța*:
 *cold tolerance* al Generic Thermostat, *histerezisul* pentru relee, control
 on / off și termostatele care nu raportează `hvac_action`, și setarea de cameră
-*Optimal stop tolerance* pentru celelalte termostate (implicit 0).
+*Toleranța opririi anticipate* pentru celelalte termostate (implicit 0).
 Exemplu: home 22 °C până la 22:00, toleranță 0,5 °C, afară 7 °C: dacă camera
 scade de la 22 la 21,5 °C în 40 de minute, sleep începe la 21:20.
 
-- Setarea de cameră *Maximum early stop* este limita; până la primul episod de
+- Setarea de cameră *Oprire anticipată maximă* este limita; până la primul episod de
   răcire nivelul mai mic începe cu atât mai devreme.
 - Odată începută, oprirea anticipată continuă până la ora din program;
   regulile de deasupra programului o pot suprascrie. Dacă înainte de acea oră
   camera coboară sub confortul nivelului curent (s-a răcit mai repede decât a
   învățat), oprirea anticipată se anulează: nivelul curent rămâne până la ora
   din program și oprirea nu mai pornește pentru acea schimbare. Dacă se
-  întâmplă des, micșorează *Maximum early stop*.
+  întâmplă des, micșorează *Oprire anticipată maximă*.
 - Cardul arată temperatura estimată la schimbare (de exemplu *~21.5° la
   22:00*), după răcirea învățată și temperatura de afară așteptată până
   atunci; senzorul *Decizie* o are ca atribut `stop_forecast`.

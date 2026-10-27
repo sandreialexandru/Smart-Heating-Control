@@ -1,0 +1,64 @@
+name: Bug report / Raportează o problemă
+description: Something does not work as expected / Ceva nu merge cum te aștepți
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you! You can write in English or Romanian. / Mulțumesc! Poți scrie în engleză sau română.
+  - type: input
+    id: version
+    attributes:
+      label: Smart Heating Control version / Versiunea
+      description: HACS → Smart Heating Control, or Settings → Devices & services → Smart Heating Control.
+      placeholder: "2.3.19"
+    validations:
+      required: true
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version / Versiunea Home Assistant
+      description: Settings → About.
+      placeholder: "2026.10.2"
+    validations:
+      required: true
+  - type: dropdown
+    id: heating
+    attributes:
+      label: How the room is heated / Cum e încălzită camera
+      multiple: true
+      options:
+        - Generic Thermostat
+        - Other thermostat / TRV (temperature)
+        - Other thermostat / TRV (preset)
+        - Other thermostat (on / off with hvac_mode)
+        - Relay / switch
+        - Heat source (boiler) started by the integration
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened / Ce s-a întâmplat
+      description: What you saw, when (date and time), in which room. The text of the room *Decision* helps.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected / Ce te așteptai să se întâmple
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics / Diagnostice
+      description: |
+        Settings → Devices & services → Smart Heating Control → ⋮ → Download diagnostics, then drag the file here.
+        Setări → Dispozitive și servicii → Smart Heating Control → ⋮ → opțiunea de descărcare a diagnosticelor, apoi trage fișierul aici.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Jurnal
+      description: Lines with `advanced_climate` from Settings → System → Logs.
+      render: text

@@ -98,7 +98,9 @@ maximum of the house 25 °C, boost temperature empty. At 20 − 0.2 = 19.8 °C i
 the room the TRVs get 25 °C; at 20 + 0.2 = 20.2 °C they get 20 °C again. Between
 19.8 and 20.2 °C it stays as it was.
 
-The boost applies to every heat demand, also to frost protection. With the
+The boost applies to every heat demand, also to frost protection. Without the
+boost, a TRV room with temperature sensors is boosted for frost protection only
+(see [chapter 9](09-windows-manual-safety.md#frost-protection)). With the
 valve exercise, a window open with *Turn off*, or mode Off with devices that
 turn off, there is no boost. In a **pause** nothing is sent, except that a boost
 left on the TRVs is taken back to the target once, so no TRV stays boosted while

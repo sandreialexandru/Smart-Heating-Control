@@ -448,8 +448,8 @@ def _per_degree(value: float | None, unit: str) -> float | None:
 
 
 def _boost(room: Room, unit: str) -> dict[str, Any] | None:
-    """The TRV boost of the room: the temperature and whether it is on now."""
-    if not room.boost:
+    """The TRV boost of the room (or for frost protection): the temperature, on now."""
+    if not room.boost and not room.boost_active:
         return None
     base = room.target_temperature
     temperature = room.boost_temperature(base) if base is not None else None

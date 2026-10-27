@@ -183,7 +183,7 @@ def _off(inputs: RoomInputs) -> Target:
 def base_decision(inputs: RoomInputs) -> Decision:
     """Evaluate rules 2-9 (without adjustments and safety)."""
     if inputs.paused:
-        return Decision(RULE_PAUSE, Target(KIND_NONE), "Paused: no commands are sent", key="pause")
+        return Decision(RULE_PAUSE, Target(KIND_NONE), "Paused: only safety commands are sent", key="pause")
     # The valves are exercised in every mode (above all in summer), but not
     # with a window open.
     if inputs.valve_exercise and not inputs.window_open:

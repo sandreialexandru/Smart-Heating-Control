@@ -210,7 +210,7 @@ One select for the house: **Auto / Vacation / Off / Summer**.
 
 | Option | Default | Description |
 | --- | --- | --- |
-| Frost protection | on | Lower limit, also in Off and Pause (GT: its minimum temperature); once heating, it continues until the device stops asking for heat. A room in frost protection starts the heat source on its own (no rooms needed, no reference room, also while paused) |
+| Frost protection | on | Lower limit, also in Off and Pause (GT: its minimum temperature); once heating, it continues until the device stops asking for heat. A room in frost protection starts the heat source on its own (no rooms needed, no reference room, also while paused). TRV rooms with room sensors: decided from the room sensor (below frost protection until it + hysteresis), the TRVs get the maximum of the house (or the boost temperature) meanwhile |
 | Maximum temperature | 25 °C | Upper limit of every target: a level above it is sent as the maximum, a set point above it (manual change, pause) is lowered to it, a relay or hvac_mode room is turned off while the room is at it or above (manual change, pause; it is not turned on again to heat back up), the service and the card stay within it, and a thermostat that rounds to its step gets the step just below the maximum. Shown as the rule *Maximum temperature* |
 | Sensor unavailable | device sensor | External sensor down → device sensor → eco (never above the schedule: a lower level, e.g. away, stays), with alert |
 | Device unavailable | alert after 15 min | The other rooms keep working; also for the heat source (then not even frost protection can heat) |

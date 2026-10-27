@@ -214,7 +214,7 @@ Un select pentru casă: **Auto / Vacanță / Oprit / Vară**.
 
 | Opțiune | Implicit | Descriere |
 | --- | --- | --- |
-| Antiîngheț | activ | Limita de jos, și în modurile Oprit și Pauză (GT: temperatura lui minimă); odată ce încălzește, continuă până când dispozitivul nu mai cere căldură. O cameră în antiîngheț pornește singură sursa de căldură (fără camere necesare, fără camera de referință, și în pauză) |
+| Antiîngheț | activ | Limita de jos, și în modurile Oprit și Pauză (GT: temperatura lui minimă); odată ce încălzește, continuă până când dispozitivul nu mai cere căldură. O cameră în antiîngheț pornește singură sursa de căldură (fără camere necesare, fără camera de referință, și în pauză). Camerele cu TRV-uri și senzori proprii: se decide după senzorul camerei (sub antiîngheț până la el + histerezis), iar TRV-urile primesc între timp maximul casei (sau temperatura de forțare) |
 | Temperatură maximă | 25 °C | Limita de sus a oricărei ținte: un nivel peste ea se trimite ca maxim, o temperatură setată peste ea (modificare manuală, pauză) e coborâtă la ea, o cameră cu releu sau comandată cu hvac_mode e oprită cât temperatura camerei e la maxim sau peste (modificare manuală, pauză; nu e pornită din nou ca să încălzească la loc), serviciul și cardul rămân în limită, iar un termostat care rotunjește la pasul lui primește pasul imediat sub maxim. Apare ca regula *Temperatură maximă* |
 | Senzor indisponibil | senzorul dispozitivului | Senzor extern căzut → senzorul dispozitivului → eco (niciodată peste program: un nivel mai jos, de exemplu away, rămâne), cu alertă |
 | Dispozitiv indisponibil | alertă după 15 min | Celelalte camere funcționează în continuare; și pentru sursa de căldură (atunci nici antiînghețul nu poate încălzi) |

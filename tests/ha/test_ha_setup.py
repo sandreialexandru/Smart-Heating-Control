@@ -1564,3 +1564,37 @@ async def test_trv_boost_temperature_frost_and_pause(
     assert calls[-1].data["temperature"] == 23.0
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_frost_protection_from_the_room_sensor_opens_the_trv(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A TRV reading warmer than the room is boosted for frost protection."""
+    assert await async_setup_component(hass, "input_boolean", {"input_boolean": {"boiler": {}}})
+    # The room at 5 °C, the TRV next to the radiator at 8 °C: idle at 7 °C.
+    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 8.0, "temperature": 7.0,
+           "hvac_action": "idle"}
+    hass.states.async_set("climate.trv", "heat", trv)
+    hass.states.async_set("sensor.office_temp", "5.0", {"unit_of_measurement": "°C"})
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    entry = await _boost_house(
+        hass, freezer, {"trv_boost": False}, boiler_entity="input_boolean.boiler"
+    )
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.home_pause"}, blocking=True
+    )
+    await _tick(hass, freezer, 15)
+    room = next(iter(entry.runtime_data.rooms.values()))
+    assert hass.states.get("sensor.office_decision").state == "frost_protection"
+    assert room.heat_demand and room.frost_demand
+    assert calls[-1].data["temperature"] == 25.0  # the maximum of the house opens the TRV
+    assert hass.states.get("input_boolean.boiler").state == "on"
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 25.0})
+    # Up to frost protection + hysteresis (7 + 0.2) it goes on, then 7 °C again.
+    await _room_temp(hass, freezer, 7.1)
+    assert room.frost_demand
+    await _room_temp(hass, freezer, 7.2)
+    assert not room.heat_demand
+    assert calls[-1].data["temperature"] == 7.0
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

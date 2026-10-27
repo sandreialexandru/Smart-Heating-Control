@@ -90,7 +90,8 @@ interfața Home Assistant în română.
   timpului de încălzire.
 - **Siguranță**: antiîngheț mereu (odată ce încălzește, continuă până când
   dispozitivul nu mai cere căldură; o cameră în antiîngheț pornește singură
-  sursa de căldură, și în pauză), temperatură maximă, verificarea comenzilor
+  sursa de căldură, și în pauză; cu un senzor în cameră se decide după cameră,
+  iar TRV-urile sunt forțate să se deschidă), temperatură maximă, verificarea comenzilor
   cu reîncercare, alerte pentru dispozitive indisponibile, senzori defecți,
   baterii descărcate și ferestre deschise, mișcarea robinetelor TRV.
 - **Vizibilitate**: un senzor *Decizie* pentru fiecare cameră, cu regula
@@ -203,7 +204,7 @@ Regulile sunt evaluate de sus în jos; prima care se aplică decide:
 1. Siguranță (antiîngheț, temperatură maximă) – aplicată mereu, și unei
    modificări manuale și în pauză (un nivel peste maxim se trimite ca maxim);
    antiînghețul pornește singur sursa de căldură
-2. Pauză
+2. Pauză – se trimite doar siguranța (și forțarea TRV e adusă înapoi la țintă)
 3. Mișcarea robinetelor – în orice mod, nu cu o fereastră deschisă
 4. Mod Oprit / Vară / în afara sezonului de încălzire
 5. Fereastră deschisă

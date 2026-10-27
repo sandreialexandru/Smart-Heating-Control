@@ -132,6 +132,15 @@ and the decision shows *Frost protection (sleep is below 7°)*.
 No level can be set below frost protection in the integration: the fields, the
 card and the services have it as their minimum.
 
+**TRVs with a room sensor.** A TRV measures next to the radiator, warmer than
+the room: with the room at 5 °C and the TRV reading 8 °C (example values), a
+TRV set to 7 °C would not open. So in a TRV room with its own temperature
+sensors, frost protection is decided from the room sensor: below the frost
+protection the room asks for heat (the heat source starts) and the TRVs get the
+maximum temperature of the house (or the boost temperature of the room with the
+TRV boost), until the room reaches frost protection + hysteresis. Then they get
+the frost protection temperature again.
+
 ## Maximum temperature
 
 *Maximum temperature* (25 °C by default, between 15 and 35 °C). No target goes

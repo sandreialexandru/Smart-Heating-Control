@@ -100,7 +100,9 @@ maximul casei 25 °C, temperatura de forțare goală. La 20 − 0,2 = 19,8 °C �
 cameră, TRV-urile primesc 25 °C; la 20 + 0,2 = 20,2 °C primesc iar 20 °C. Între
 19,8 și 20,2 °C rămâne cum era.
 
-Forțarea se aplică la orice cerere de căldură, și la antiîngheț. La mișcarea
+Forțarea se aplică la orice cerere de căldură, și la antiîngheț. Fără forțare,
+o cameră cu TRV-uri și senzori de temperatură e forțată doar pentru antiîngheț
+(vezi [capitolul 9](09-ferestre-manual-siguranta.ro.md#antiînghețul)). La mișcarea
 robinetelor, cu o fereastră deschisă și acțiunea *Oprire* sau în modul Oprit
 cu dispozitive care se pot opri, nu există forțare. În **pauză** nu se trimite
 nimic, doar că o forțare rămasă pe TRV-uri e adusă înapoi la țintă o dată, ca

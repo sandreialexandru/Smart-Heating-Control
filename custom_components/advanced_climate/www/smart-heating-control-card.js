@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.3.20";
+const CARD_VERSION = "2.3.21";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -259,7 +259,7 @@ const TEXT = {
     legend_forecast: "forecast",
     est_mark_start: "start ~{time}",
     est_mark_stop: "stop ~{time}",
-    paused_banner: "Pause: no commands are sent (only frost protection and the maximum temperature)",
+    paused_banner: "Pause: only frost protection, the maximum temperature and taking a TRV boost back to the target are sent",
     learn_heat: "Heating learned",
     learn_cool: "Cooling learned",
     learn_none: "learning…",
@@ -292,7 +292,7 @@ const TEXT = {
     wf_window_ignore: "ignore windows above",
     wf_forecast: "use the forecast (needs a weather entity and the cutoff)",
     open_entity: "Open the entity",
-    r_pause: "Paused: no commands are sent",
+    r_pause: "Paused: only safety commands are sent",
     r_valve_exercise: "Valve exercise: valves fully open for a few minutes",
     r_mode_off: "Mode off: frost protection only",
     r_summer: "Summer mode: heating off",
@@ -487,7 +487,7 @@ const TEXT = {
     legend_forecast: "prognoză",
     est_mark_start: "pornire ~{time}",
     est_mark_stop: "oprire ~{time}",
-    paused_banner: "Pauză: nu se trimit comenzi (doar antiîngheț și temperatura maximă)",
+    paused_banner: "Pauză: se trimit doar antiînghețul, temperatura maximă și readucerea forțării TRV la țintă",
     learn_heat: "Învățare încălzire",
     learn_cool: "Învățare răcire",
     learn_none: "se învață…",
@@ -520,7 +520,7 @@ const TEXT = {
     wf_window_ignore: "ignorarea ferestrelor peste",
     wf_forecast: "prognoza (cere o entitate meteo și oprirea când e cald)",
     open_entity: "Deschide entitatea",
-    r_pause: "Pauză: nu se trimit comenzi",
+    r_pause: "Pauză: se trimit doar comenzile de siguranță",
     r_valve_exercise: "Mișcarea robinetelor: robinetele complet deschise câteva minute",
     r_mode_off: "Mod oprit: doar antiîngheț",
     r_summer: "Mod vară: încălzire oprită",

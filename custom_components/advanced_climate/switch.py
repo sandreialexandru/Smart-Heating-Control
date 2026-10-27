@@ -29,7 +29,7 @@ async def async_setup_entry(
 
 
 class PauseSwitch(HouseEntity, SwitchEntity):
-    """Pause: no commands are sent (frost protection still applies)."""
+    """Pause: only safety commands are sent (frost protection, maximum, TRV boost back)."""
 
     def __init__(self, house: House) -> None:
         """Initialize."""

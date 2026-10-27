@@ -1473,6 +1473,8 @@ class Room:
                     demand = True
                 elif current < target + hysteresis and self.heat_demand:
                     demand = True  # between the limits: keep heating
+            # Frost protection from the room sensor (the TRVs are boosted for it).
+            demand = demand or self._boost_demand
         self.heat_demand = demand
         # The room heats only while its heat source runs: its own device (GT,
         # relay, on / off thermostat) and, when one is set, the heat source of
@@ -1541,17 +1543,27 @@ class Room:
             # Set by the card or a service: kept on the devices (relays regulate around it).
             self.override["interrupted"] = False
             target = stored
-        if self.boost:
+        if self._boost_capable:
             # The demand first, so the TRVs get the right temperature now.
             heat = target.kind != KIND_OFF and self._exercise_until is None
-            self._boost_demand = heat and self._boost_wanted(self._resolve_temperature(target))
+            temperature = self._resolve_temperature(target)
+            if self.boost:
+                self._boost_demand = heat and self._boost_wanted(temperature)
+            elif (
+                self._frost_boost_possible()
+                and temperature is not None
+                and temperature <= self.frost_temp() + 1e-9
+            ):
+                self._boost_demand = heat and self._frost_wanted(temperature)
+            else:
+                self._boost_demand = False
         sent = False
         if on_off:
             sent = await self._async_apply_relay(target)
         else:
             for entity_id in self.climates:
                 sent |= await self._async_apply_climate(entity_id, target, force)
-        if self.boost:
+        if self._boost_capable:
             self._boosted = self._boost_demand
             self._boost_base = (
                 None if target.kind == KIND_OFF else self._target_temperature_of(target)
@@ -1561,8 +1573,37 @@ class Room:
 
     @property
     def boost_active(self) -> bool:
-        """The TRVs hold the boost temperature now."""
-        return self.boost and self._boosted
+        """The TRVs hold the boost temperature now (the TRV boost or frost protection)."""
+        return self._boost_capable and self._boosted
+
+    @property
+    def _boost_capable(self) -> bool:
+        """TRVs commanded with a temperature or a preset can be boosted."""
+        return self.source == SOURCE_CLIMATE and self.command_mode != COMMAND_HVAC
+
+    def _frost_boost_possible(self) -> bool:
+        """A TRV room without the boost, with its own room sensor (frost protection).
+
+        The TRV next to the radiator reads warmer than the room: at the frost
+        protection temperature it would not open, so it is boosted like the TRV
+        boost while the room sensor is below the frost protection.
+        """
+        return (
+            not self.boost
+            and self._boost_capable
+            and bool(as_list(self.config.get(CONF_TEMP_SENSORS)))
+            and not self.external_failed
+        )
+
+    def _frost_wanted(self, frost: float) -> bool:
+        """Frost protection demand from the room sensor: below it, until it + hysteresis."""
+        if self.current_temp is None:
+            return False
+        if self.current_temp < frost:
+            return True
+        if self.current_temp >= frost + float(self.config[CONF_HYSTERESIS]):
+            return False
+        return self._boost_demand  # between the limits: as it was
 
     def _boost_wanted(self, temperature: float | None) -> bool:
         """The room asks for heat (boost rooms): the room sensor with the hysteresis."""
@@ -1581,7 +1622,7 @@ class Room:
         The boost temperature of the room (the maximum of the house when empty),
         never below the target, never above the maximum of the house nor of the TRVs.
         """
-        chosen = self.config.get(CONF_TRV_BOOST_TEMP)
+        chosen = self.config.get(CONF_TRV_BOOST_TEMP) if self.boost else None
         value = float(chosen) if chosen not in (None, "") else self.max_temp()
         value = min(value, self.max_temp())
         device_max = self.device_max_temp()
@@ -1600,7 +1641,7 @@ class Room:
     def _climate_temperature(self, target: Target) -> float | None:
         """Temperature a thermostat gets for ``target`` (with the TRV boost)."""
         temperature = self._target_temperature_of(target)
-        if temperature is not None and self.boost and self._boost_demand:
+        if temperature is not None and self._boost_capable and self._boost_demand:
             return self.boost_temperature(temperature)
         return temperature
 
@@ -1611,7 +1652,7 @@ class Room:
         keeps the boost temperature while nobody regulates it; the heat demand
         follows the room sensor against what the TRV is set to.
         """
-        if not self.boost:
+        if not self._boost_capable:
             return
         # Until the TRVs report it, the temperature they hold is the one taken back.
         temperature = self._resolve_temperature(target)
@@ -1629,7 +1670,8 @@ class Room:
                     )
         self._boosted = False
         heat = self._exercise_until is None
-        self._boost_demand = heat and self._boost_wanted(temperature)
+        # Without the TRV boost the demand comes from the TRVs again.
+        self._boost_demand = self.boost and heat and self._boost_wanted(temperature)
 
     async def _async_restore_device(self, entity_id: str, values: dict[str, Any]) -> bool:
         """Set again what a person set on a device (after an interruption).

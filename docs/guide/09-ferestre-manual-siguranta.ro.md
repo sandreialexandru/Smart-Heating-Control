@@ -132,6 +132,15 @@ ridicat la antiîngheț, iar decizia arată *Antiîngheț (sleep e sub 7°)*.
 Niciun nivel nu poate fi setat în integrare sub antiîngheț: câmpurile, cardul
 și serviciile au antiînghețul ca minim.
 
+**TRV-uri cu senzor în cameră.** Un TRV măsoară lângă calorifer, mai cald decât
+în cameră: cu camera la 5 °C și TRV-ul citind 8 °C (valori de exemplu), un TRV
+setat la 7 °C nu s-ar deschide. De aceea, într-o cameră cu TRV-uri și senzori
+de temperatură proprii, antiînghețul se decide după senzorul camerei: sub
+antiîngheț camera cere căldură (pornește sursa de căldură), iar TRV-urile
+primesc temperatura maximă a casei (sau temperatura de forțare a camerei, cu
+forțarea TRV), până când camera ajunge la antiîngheț + histerezis. Apoi primesc
+iar temperatura de antiîngheț.
+
 ## Temperatura maximă
 
 *Temperatură maximă* (implicit 25 °C, între 15 și 35 °C). Nicio țintă nu trece

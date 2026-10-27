@@ -80,7 +80,8 @@ other thermostats or plain relays are supported as well.
   from the heat demand of the rooms, heating time statistics.
 - **Safety**: frost protection always (once it starts heating it continues
   until the device stops asking for heat; a room in frost protection starts
-  the heat source on its own, also while paused), maximum temperature, command
+  the heat source on its own, also while paused; with a room sensor it is
+  decided from the room and the TRVs are boosted to open), maximum temperature, command
   verification with retry, alerts for unavailable devices, failed sensors, low
   batteries and open windows, valve exercise for TRVs.
 - **Visibility**: a *Decision* sensor per room with the winning rule and the
@@ -188,7 +189,7 @@ Rules are evaluated from the top; the first one that applies wins:
 1. Safety (frost protection, maximum temperature) – always applied, also to a
    manual change and in pause (a level above the maximum is sent as the
    maximum); frost protection starts the heat source on its own
-2. Pause
+2. Pause – only safety is sent (and a TRV boost is taken back to the target)
 3. Valve exercise – in every mode, not with a window open
 4. Mode Off / Summer / outside the heating season
 5. Window open

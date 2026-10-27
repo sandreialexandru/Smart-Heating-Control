@@ -139,7 +139,9 @@ de temperatură proprii, antiînghețul se decide după senzorul camerei: sub
 antiîngheț camera cere căldură (pornește sursa de căldură), iar TRV-urile
 primesc temperatura maximă a casei (sau temperatura de forțare a camerei, cu
 forțarea TRV), până când camera ajunge la antiîngheț + histerezis. Apoi primesc
-iar temperatura de antiîngheț.
+iar temperatura de antiîngheț. Histerezisul e setarea camerei; când pașii de
+dinainte nu l-au cerut, pasul *Senzori: detalii* îl cere ca *Histerezis la
+antiîngheț*.
 
 ## Temperatura maximă
 

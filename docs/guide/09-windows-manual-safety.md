@@ -139,7 +139,9 @@ sensors, frost protection is decided from the room sensor: below the frost
 protection the room asks for heat (the heat source starts) and the TRVs get the
 maximum temperature of the house (or the boost temperature of the room with the
 TRV boost), until the room reaches frost protection + hysteresis. Then they get
-the frost protection temperature again.
+the frost protection temperature again. The hysteresis is the room setting; when
+the earlier steps did not ask for it, the *Sensors: details* step asks for it
+as *Frost protection hysteresis*.
 
 ## Maximum temperature
 

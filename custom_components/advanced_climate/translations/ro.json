@@ -587,12 +587,14 @@
           "data": {
             "temperature_aggregation": "Mai mulți senzori",
             "calibration_entities": "Entități de calibrare",
-            "occupancy_minutes": "Eco după lipsă de ocupare de"
+            "occupancy_minutes": "Eco după lipsă de ocupare de",
+            "hysteresis": "Histerezis la antiîngheț"
           },
           "data_description": {
             "temperature_aggregation": "Cu mai mulți senzori: media, cel mai rece sau mediana.",
             "calibration_entities": "Entitățile number ale TRV-urilor (offset sau temperatură externă).",
-            "occupancy_minutes": "Cât timp trebuie să fie camera goală până la eco."
+            "occupancy_minutes": "Cât timp trebuie să fie camera goală până la eco.",
+            "hysteresis": "Senzorul camerei decide antiînghețul: sub el TRV-urile sunt forțate să se deschidă, până la antiîngheț plus această valoare."
           }
         },
         "windows_details": {

@@ -578,3 +578,29 @@ async def test_trv_boost_in_the_room_form(hass: HomeAssistant) -> None:
         result["flow_id"], {"climates": ["climate.hall"], "command_mode": "preset"}
     )
     assert "trv_boost" not in _keys(result)
+
+
+async def test_frost_hysteresis_for_trvs_with_a_room_sensor(hass: HomeAssistant) -> None:
+    """A TRV reporting hvac_action, with a room sensor: the hysteresis is asked for frost."""
+    hass.states.async_set(
+        "climate.trv", "heat", {"hvac_modes": ["heat", "off"], "hvac_action": "idle"}
+    )
+    entry = _house_with_rooms(hass)
+    rooms = hass.config_entries.subentries
+    result = await rooms.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
+    result = await rooms.async_configure(result["flow_id"], {"name": "Office", "source": "climate"})
+    result = await rooms.async_configure(
+        result["flow_id"], {"climates": ["climate.trv"], "command_mode": "temperature"}
+    )
+    # hvac_action is reported: no hysteresis on the thermostat step.
+    assert "hysteresis" not in _keys(result)
+    result = await rooms.async_configure(result["flow_id"], {"learn_tolerance": 0.0})
+    result = await _until(hass, result, rooms, stop={"sensors"})
+    result = await rooms.async_configure(result["flow_id"], {"temperature_sensors": ["sensor.office"]})
+    assert result["step_id"] == "sensors_details"
+    assert "hysteresis" in _keys(result)
+    result = await rooms.async_configure(result["flow_id"], {"hysteresis": 0.5})
+    result = await _until(hass, result, rooms, stop=set())
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    data = next(sub for sub in entry.subentries.values() if sub.title == "Office").data
+    assert data["hysteresis"] == 0.5

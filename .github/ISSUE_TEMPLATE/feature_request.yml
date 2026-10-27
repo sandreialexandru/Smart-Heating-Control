@@ -1,11 +1,11 @@
-name: Idea / Idee
-description: A new function or a change / O funcție nouă sau o schimbare
+name: Idea
+description: A new function or a change
 labels: [enhancement]
 body:
   - type: textarea
     id: idea
     attributes:
-      label: What you would like / Ce ai vrea
-      description: What you want to do and why; your heating setup helps. / Ce vrei să faci și de ce; cum e încălzită casa ajută.
+      label: What you would like
+      description: What you want to do and why; your heating setup helps.
     validations:
       required: true

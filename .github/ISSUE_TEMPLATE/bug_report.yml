@@ -1,15 +1,11 @@
-name: Bug report / Raportează o problemă
-description: Something does not work as expected / Ceva nu merge cum te aștepți
+name: Bug report
+description: Something does not work as expected
 labels: [bug]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Thank you! You can write in English or Romanian. / Mulțumesc! Poți scrie în engleză sau română.
   - type: input
     id: version
     attributes:
-      label: Smart Heating Control version / Versiunea
+      label: Smart Heating Control version
       description: HACS → Smart Heating Control, or Settings → Devices & services → Smart Heating Control.
       placeholder: "2.3.19"
     validations:
@@ -17,7 +13,7 @@ body:
   - type: input
     id: ha_version
     attributes:
-      label: Home Assistant version / Versiunea Home Assistant
+      label: Home Assistant version
       description: Settings → About.
       placeholder: "2026.10.2"
     validations:
@@ -25,7 +21,7 @@ body:
   - type: dropdown
     id: heating
     attributes:
-      label: How the room is heated / Cum e încălzită camera
+      label: How the room is heated
       multiple: true
       options:
         - Generic Thermostat
@@ -39,26 +35,24 @@ body:
   - type: textarea
     id: problem
     attributes:
-      label: What happened / Ce s-a întâmplat
+      label: What happened
       description: What you saw, when (date and time), in which room. The text of the room *Decision* helps.
     validations:
       required: true
   - type: textarea
     id: expected
     attributes:
-      label: What you expected / Ce te așteptai să se întâmple
+      label: What you expected
     validations:
       required: true
   - type: textarea
     id: diagnostics
     attributes:
-      label: Diagnostics / Diagnostice
-      description: |
-        Settings → Devices & services → Smart Heating Control → ⋮ → Download diagnostics, then drag the file here.
-        Setări → Dispozitive și servicii → Smart Heating Control → ⋮ → opțiunea de descărcare a diagnosticelor, apoi trage fișierul aici.
+      label: Diagnostics
+      description: Settings → Devices & services → Smart Heating Control → ⋮ → Download diagnostics, then drag the file here.
   - type: textarea
     id: logs
     attributes:
-      label: Logs / Jurnal
+      label: Logs
       description: Lines with `advanced_climate` from Settings → System → Logs.
       render: text

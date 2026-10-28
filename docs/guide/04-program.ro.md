@@ -21,7 +21,8 @@ de la 22:00 până la sfârșitul zilei. În weekend te trezești la 08:00.
 
 Acesta e și programul implicit al fiecărei camere noi.
 
-- Numele profilului e liber (`workday`, `weekend`, `home_office`, `vineri`…).
+- Numele profilului e liber (`workday`, `weekend`, `home_office`, `vineri`,
+  `sâmbătă`…), și cu diacritice; doar `,` `:` și `#` nu se pot folosi.
 - Nivelul poate fi oricare dintre `home`, `sleep`, `eco`, `away`, `comfort`,
   `activity`, sau numele pe care le-ai dat nivelurilor în setările camerei.
 - Dacă primul interval nu începe la 00:00 (sau la începutul zilei, vezi mai

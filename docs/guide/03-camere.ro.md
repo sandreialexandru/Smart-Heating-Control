@@ -141,7 +141,9 @@ Restul pasului depinde de tip:
 Temperaturile implicite: `home` 21, `sleep` 18, `eco` 17, `away` 12,
 `comfort` 22, `activity` 20 °C. Ele pot fi între antiîngheț și temperatura
 maximă a casei și se pot schimba oricând din card sau din entitățile număr ale
-camerei. Două niveluri nu pot avea același nume.
+camerei. Două niveluri nu pot avea același nume. Un nume poate folosi orice litere
+(și cu diacritice), cifre, spații, `_` și `-`, dar nu `,` `:` sau `#`, pe care le
+folosește formatul programului.
 
 **Exemplu de nume.** Pentru un birou poți numi `home` „Lucru” și `sleep`
 „Închis”. În program scrii atunci `07:00 Lucru, 19:00 Închis`, iar rolurile

@@ -38,8 +38,11 @@ from .const import DAYS_ALL, DAYS_WEEKEND, DAYS_WORKDAY, PRESET_FROST, WEEKDAYS
 PROFILE_WORKDAY = "workday"
 PROFILE_WEEKEND = "weekend"
 
-_PROFILE_RE = re.compile(r"^[a-z0-9_][a-z0-9_ -]*$")
-_SLOT_RE = re.compile(r"^(\d{1,2}):(\d{2})\s+([A-Za-z0-9_ -]+)$")
+# Names may use any letters (ă, ș, ț...), digits, "_", spaces and "-"; the
+# characters of the format (",", ":", "#") cannot be part of a name.
+NAME_RE = re.compile(r"[\w -]+")
+_PROFILE_RE = re.compile(r"^\w[\w -]*$")
+_SLOT_RE = re.compile(r"^(\d{1,2}):(\d{2})\s+([\w -]+)$")
 
 MINUTES_PER_DAY = 24 * 60
 

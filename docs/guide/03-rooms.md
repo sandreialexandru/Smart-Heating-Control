@@ -137,7 +137,9 @@ The rest of the step depends on the kind:
 Default temperatures: `home` 21, `sleep` 18, `eco` 17, `away` 12, `comfort` 22,
 `activity` 20 °C. They can be between the frost protection and the maximum
 temperature of the house and can be changed any time from the card or from the
-room's number entities. Two levels cannot have the same name.
+room's number entities. Two levels cannot have the same name. A name may use any
+letters (also with accents), digits, spaces, `_` and `-`, but not `,` `:` or `#`,
+which the schedule format uses.
 
 **Names example.** For an office you may call `home` "Work" and `sleep`
 "Closed". In the schedule you then write `07:00 Work, 19:00 Closed`, and the

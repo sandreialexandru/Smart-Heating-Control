@@ -690,7 +690,8 @@
         "entity_is_gt_heater": "{entity} is the relay of a Generic Thermostat used by {owner}. It cannot also be controlled here.",
         "room_sensor_is_outdoor": "{entity} is the outdoor sensor of {owner}. Choose a sensor in the room.",
         "boost_sensor_required": "The TRV boost needs a temperature sensor of the room.",
-        "boost_temperature_only": "The TRV boost works only with the Temperature command."
+        "boost_temperature_only": "The TRV boost works only with the Temperature command.",
+        "invalid_level_name": "The level name “{name}” cannot be used in the schedule: use letters, digits, spaces, “_” or “-” (no “,” “:” “#”)."
       }
     }
   },

@@ -166,7 +166,7 @@ from .const import (
     WINDOW_ACTION_OFF,
 )
 from .outdoor import parse_month_day
-from .schedule import ScheduleError, parse_schedule
+from .schedule import NAME_RE, ScheduleError, parse_schedule
 from .util import (
     as_list,
     delta_from_celsius,
@@ -1520,7 +1520,7 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                     low, high, 0.5, "°C"
                 )
         schema = vol.Schema(fields)
-        placeholders = {"presets": ", ".join(device_presets) or "-"}
+        placeholders = {"presets": ", ".join(device_presets) or "-", "name": ""}
         if user_input is not None:
             if uses_presets:
                 chosen = {p: str(user_input.get(f"device_{p}") or "").strip() for p in PRESETS}
@@ -1535,6 +1535,14 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                     if source != SOURCE_GT
                 }
                 values = [n.lower() for n in new_names.values()]
+                bad = next((n for n in new_names.values() if not NAME_RE.fullmatch(n)), None)
+                if bad is not None:
+                    return self.async_show_form(
+                        step_id="levels",
+                        data_schema=schema,
+                        errors={"base": "invalid_level_name"},
+                        description_placeholders={**placeholders, "name": bad},
+                    )
             if len(set(values)) != len(values):
                 return self.async_show_form(
                     step_id="levels",

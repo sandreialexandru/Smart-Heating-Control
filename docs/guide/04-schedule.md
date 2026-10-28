@@ -21,7 +21,8 @@ the end of the day. At the weekend you get up at 08:00.
 
 This is also the default schedule of every new room.
 
-- The profile name is free (`workday`, `weekend`, `home_office`, `friday`…).
+- The profile name is free (`workday`, `weekend`, `home_office`, `friday`…), also
+  with accented letters; only `,` `:` and `#` cannot be used.
 - The level can be any of `home`, `sleep`, `eco`, `away`, `comfort`,
   `activity`, or the names you gave the levels in the room settings.
 - If the first slot does not start at 00:00 (or at the start of the day, see

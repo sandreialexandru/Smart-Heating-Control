@@ -690,7 +690,8 @@
         "entity_is_gt_heater": "{entity} e releul unui Generic Thermostat folosit de {owner}. Nu poate fi comandat și aici.",
         "room_sensor_is_outdoor": "{entity} e senzorul exterior al casei {owner}. Alege un senzor din cameră.",
         "boost_sensor_required": "Forțarea TRV are nevoie de un senzor de temperatură al camerei.",
-        "boost_temperature_only": "Forțarea TRV merge doar cu comanda Temperatură."
+        "boost_temperature_only": "Forțarea TRV merge doar cu comanda Temperatură.",
+        "invalid_level_name": "Numele de nivel „{name}” nu poate fi folosit în program: folosește litere, cifre, spații, „_” sau „-” (fără „,” „:” „#”)."
       }
     }
   },

@@ -103,7 +103,9 @@ siguranță:
   înapoi la țintă o dată (vezi [capitolul 3](03-camere.ro.md)).
 
 În card apare o bandă sus cât timp casa e în pauză. O modificare manuală făcută
-în pauză se păstrează și se trimite după pauză.
+în pauză se păstrează și se aplică după pauză: una din card sau din serviciu se
+trimite atunci, una făcută pe dispozitiv rămâne cum e (blocarea pentru copii nu
+o anulează în pauză).
 
 ## Modurile casei
 

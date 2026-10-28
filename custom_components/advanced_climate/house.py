@@ -441,9 +441,14 @@ class House:
             except Exception:
                 _LOGGER.exception("Error evaluating room %s", room.name)
 
-        await self._async_control_boiler(now)
-        self._check_room_difference()
-        self._check_weather_alerts(now)
+        # An unexpected error of the heat source or of the checks does not stop
+        # the timer, the saving and the update of the entities.
+        try:
+            await self._async_control_boiler(now)
+            self._check_room_difference()
+            self._check_weather_alerts(now)
+        except Exception:
+            _LOGGER.exception("Error controlling the heat source of %s", self.entry.title)
         self._schedule_timer(now)
         self.async_save()
         self.async_notify_listeners()
@@ -1166,7 +1171,7 @@ class House:
                     blocking=True,
                     context=context,
                 )
-        except HomeAssistantError as err:
+        except (HomeAssistantError, ValueError) as err:
             _LOGGER.warning("Could not switch the boiler %s: %s", boiler, err)
             return
         self.boiler_on = want

@@ -115,7 +115,7 @@ data:
 
 ### `advanced_climate.clear_override`
 
-Revine la automat (toate camerele, dacă nu dai o cameră).
+Revine la automat (toate camerele, dacă nu dai o cameră; o cameră care nu există dă o eroare).
 
 ### `advanced_climate.set_vacation`
 

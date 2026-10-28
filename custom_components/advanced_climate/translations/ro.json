@@ -44,12 +44,14 @@
         "data": {
           "climates": "Termostate",
           "switches": "Comutatoare (relee)",
-          "command_mode": "Comandă"
+          "command_mode": "Comandă",
+          "trv_boost": "Forțează temperatura TRV cât încălzește"
         },
         "data_description": {
           "climates": "Termostatul care comandă centrala, de ex. entitatea Generic Thermostat (climate.climate).",
           "switches": "Doar când un releu încălzește casa direct, fără termostat.",
-          "command_mode": "Doar pentru alte termostate decât Generic Thermostat. Diferența e explicată la setările camerei."
+          "command_mode": "Doar pentru alte termostate decât Generic Thermostat. Diferența e explicată la setările camerei.",
+          "trv_boost": "Cât camera cere căldură, TRV-urile primesc o temperatură mai mare, ca să rămână deschise până se încălzește camera; în rest primesc ținta. Cererea de căldură vine atunci de la senzorul camerei, cu histerezisul. Are nevoie de un senzor de temperatură în cameră. Doar cu comanda Temperatură."
         }
       },
       "heating_on_off": {
@@ -72,14 +74,12 @@
         "title": "Termostat",
         "data": {
           "learn_tolerance": "Toleranța termostatului",
-          "hysteresis": "Histerezis",
-          "trv_boost": "Forțează temperatura TRV cât încălzește"
+          "hysteresis": "Histerezis"
         },
         "description": "Termostatul ține temperatura; integrarea doar trimite nivelul sau temperatura.",
         "data_description": {
           "learn_tolerance": "Cât lasă termostatul camera să scadă sub țintă înainte să încălzească (toleranța lui). Viteza de încălzire se învață din urcările care încep cu cel puțin atât sub țintă.",
-          "hysteresis": "Acest termostat nu raportează când încălzește (fără hvac_action): se consideră că încălzește de la atât sub temperatura setată până la atât peste ea, ca un releu. Se folosește pentru cererea de căldură, centrală, timpul de încălzire, învățare și ca toleranță a opririi anticipate.",
-          "trv_boost": "Cât camera cere căldură, TRV-urile primesc o temperatură mai mare, ca să rămână deschise până se încălzește camera; în rest primesc ținta. Cererea de căldură vine atunci de la senzorul camerei, cu histerezisul. Are nevoie de un senzor de temperatură în cameră."
+          "hysteresis": "Acest termostat nu raportează când încălzește (fără hvac_action): se consideră că încălzește de la atât sub temperatura setată până la atât peste ea, ca un releu. Se folosește pentru cererea de căldură, centrală, timpul de încălzire, învățare și ca toleranță a opririi anticipate."
         }
       },
       "heating_boost": {
@@ -104,7 +104,8 @@
       "entity_is_source": "{entity} e sursa de căldură a casei {owner}. Nu poate fi și dispozitivul unei camere.",
       "entity_is_gt_heater": "{entity} e releul unui Generic Thermostat folosit de {owner}. Nu poate fi comandat și aici.",
       "room_sensor_is_outdoor": "{entity} e senzorul exterior al casei {owner}. Alege un senzor din cameră.",
-      "boost_sensor_required": "Forțarea TRV are nevoie de un senzor de temperatură al camerei."
+      "boost_sensor_required": "Forțarea TRV are nevoie de un senzor de temperatură al camerei.",
+      "boost_temperature_only": "Forțarea TRV merge doar cu comanda Temperatură."
     },
     "abort": {
       "reconfigure_successful": "Salvat."
@@ -264,12 +265,14 @@
         "data": {
           "climates": "Termostate",
           "switches": "Comutatoare (relee)",
-          "command_mode": "Comandă"
+          "command_mode": "Comandă",
+          "trv_boost": "Forțează temperatura TRV cât încălzește"
         },
         "data_description": {
           "climates": "Termostatul care comandă centrala, de ex. entitatea Generic Thermostat (climate.climate).",
           "switches": "Doar când un releu încălzește casa direct, fără termostat.",
-          "command_mode": "Doar pentru alte termostate decât Generic Thermostat. Diferența e explicată la setările camerei."
+          "command_mode": "Doar pentru alte termostate decât Generic Thermostat. Diferența e explicată la setările camerei.",
+          "trv_boost": "Cât camera cere căldură, TRV-urile primesc o temperatură mai mare, ca să rămână deschise până se încălzește camera; în rest primesc ținta. Cererea de căldură vine atunci de la senzorul camerei, cu histerezisul. Are nevoie de un senzor de temperatură în cameră. Doar cu comanda Temperatură."
         }
       },
       "heating_on_off": {
@@ -292,14 +295,12 @@
         "title": "Termostat",
         "data": {
           "learn_tolerance": "Toleranța termostatului",
-          "hysteresis": "Histerezis",
-          "trv_boost": "Forțează temperatura TRV cât încălzește"
+          "hysteresis": "Histerezis"
         },
         "description": "Termostatul ține temperatura; integrarea doar trimite nivelul sau temperatura.",
         "data_description": {
           "learn_tolerance": "Cât lasă termostatul camera să scadă sub țintă înainte să încălzească (toleranța lui). Viteza de încălzire se învață din urcările care încep cu cel puțin atât sub țintă.",
-          "hysteresis": "Acest termostat nu raportează când încălzește (fără hvac_action): se consideră că încălzește de la atât sub temperatura setată până la atât peste ea, ca un releu. Se folosește pentru cererea de căldură, centrală, timpul de încălzire, învățare și ca toleranță a opririi anticipate.",
-          "trv_boost": "Cât camera cere căldură, TRV-urile primesc o temperatură mai mare, ca să rămână deschise până se încălzește camera; în rest primesc ținta. Cererea de căldură vine atunci de la senzorul camerei, cu histerezisul. Are nevoie de un senzor de temperatură în cameră."
+          "hysteresis": "Acest termostat nu raportează când încălzește (fără hvac_action): se consideră că încălzește de la atât sub temperatura setată până la atât peste ea, ca un releu. Se folosește pentru cererea de căldură, centrală, timpul de încălzire, învățare și ca toleranță a opririi anticipate."
         }
       },
       "presence_details": {
@@ -410,7 +411,8 @@
       "entity_is_gt_heater": "{entity} e releul unui Generic Thermostat folosit de {owner}. Nu poate fi comandat și aici.",
       "outdoor_is_room_sensor": "{entity} e senzor de temperatură al {owner}. Senzorul exterior trebuie să fie alt senzor.",
       "room_sensor_is_outdoor": "{entity} e senzorul exterior al casei {owner}. Alege un senzor din cameră.",
-      "boost_sensor_required": "Forțarea TRV are nevoie de un senzor de temperatură al camerei."
+      "boost_sensor_required": "Forțarea TRV are nevoie de un senzor de temperatură al camerei.",
+      "boost_temperature_only": "Forțarea TRV merge doar cu comanda Temperatură."
     }
   },
   "config_subentries": {
@@ -439,12 +441,14 @@
           "data": {
             "climates": "Termostate",
             "switches": "Comutatoare (relee)",
-            "command_mode": "Comandă"
+            "command_mode": "Comandă",
+            "trv_boost": "Forțează temperatura TRV cât încălzește"
           },
           "data_description": {
             "climates": "Termostatele camerei. Dacă sunt mai multe în aceeași cameră, primesc toate aceeași comandă.",
             "switches": "Releele care încălzesc camera.",
-            "command_mode": "Temperatură: integrarea trimite temperatura fiecărui nivel (majoritatea TRV-urilor). Preset: fiecare nivel folosește un preset al termostatului, cu temperatura din termostat. Pornit / oprit: termostatul doar e pornit și oprit, integrarea ține temperatura."
+            "command_mode": "Temperatură: integrarea trimite temperatura fiecărui nivel (majoritatea TRV-urilor). Preset: fiecare nivel folosește un preset al termostatului, cu temperatura din termostat. Pornit / oprit: termostatul doar e pornit și oprit, integrarea ține temperatura.",
+            "trv_boost": "Cât camera cere căldură, TRV-urile primesc o temperatură mai mare, ca să rămână deschise până se încălzește camera; în rest primesc ținta. Cererea de căldură vine atunci de la senzorul camerei, cu histerezisul. Are nevoie de un senzor de temperatură în cameră. Doar cu comanda Temperatură."
           }
         },
         "control_on_off": {
@@ -466,13 +470,11 @@
           "description": "Termostatul ține temperatura; integrarea doar trimite nivelul sau temperatura.",
           "data": {
             "learn_tolerance": "Toleranța termostatului",
-            "hysteresis": "Histerezis",
-            "trv_boost": "Forțează temperatura TRV cât încălzește"
+            "hysteresis": "Histerezis"
           },
           "data_description": {
             "learn_tolerance": "Cât lasă termostatul camera să scadă sub țintă înainte să încălzească (toleranța lui). Viteza de încălzire se învață din urcările care încep cu cel puțin atât sub țintă.",
-            "hysteresis": "Acest termostat nu raportează când încălzește (fără hvac_action): se consideră că încălzește de la atât sub temperatura setată până la atât peste ea, ca un releu. Se folosește pentru cererea de căldură, centrală, timpul de încălzire, învățare și ca toleranță a opririi anticipate.",
-            "trv_boost": "Cât camera cere căldură, TRV-urile primesc o temperatură mai mare, ca să rămână deschise până se încălzește camera; în rest primesc ținta. Cererea de căldură vine atunci de la senzorul camerei, cu histerezisul. Are nevoie de un senzor de temperatură în cameră."
+            "hysteresis": "Acest termostat nu raportează când încălzește (fără hvac_action): se consideră că încălzește de la atât sub temperatura setată până la atât peste ea, ca un releu. Se folosește pentru cererea de căldură, centrală, timpul de încălzire, învățare și ca toleranță a opririi anticipate."
           }
         },
         "levels": {
@@ -687,7 +689,8 @@
         "entity_is_source": "{entity} e sursa de căldură a casei {owner}. Nu poate fi și dispozitivul unei camere.",
         "entity_is_gt_heater": "{entity} e releul unui Generic Thermostat folosit de {owner}. Nu poate fi comandat și aici.",
         "room_sensor_is_outdoor": "{entity} e senzorul exterior al casei {owner}. Alege un senzor din cameră.",
-        "boost_sensor_required": "Forțarea TRV are nevoie de un senzor de temperatură al camerei."
+        "boost_sensor_required": "Forțarea TRV are nevoie de un senzor de temperatură al camerei.",
+        "boost_temperature_only": "Forțarea TRV merge doar cu comanda Temperatură."
       }
     }
   },

@@ -34,6 +34,7 @@ heating are skipped.
 | **Thermostats** | The thermostats of the room (for Generic Thermostat and other thermostats / TRVs). Several thermostats in one room all get the same command, e.g. two TRVs on two radiators of the living room. |
 | **Switches (relays)** | The relays that heat the room (only for *Switch*). |
 | **Command** | Only for other thermostats / TRVs, see below. |
+| **Boost TRV temperature while heating** | Only for other thermostats / TRVs with the *Temperature* command (otherwise *The TRV boost works only with the Temperature command*), see step 3. |
 
 At least one device must be picked (otherwise *Select at least one device*).
 
@@ -73,9 +74,11 @@ off, it stays off.
 | --- | --- | --- |
 | Thermostat tolerance | 0 (0 – 2 °C) | How far below the target the thermostat lets the room fall before heating (its own tolerance). The heating is learned from rises that start at least this far below the target. If unsure, leave 0. |
 | Hysteresis | 0.3 °C | Only when the thermostat does not report when it heats (`hvac_action`) or is unavailable during the setup. It then counts as heating from hysteresis below its set temperature to hysteresis above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the tolerance of the optimal stop. |
-| Boost TRV temperature while heating | off | Only with the *Temperature* command, see below. |
 
-### *Temperature* with **TRV boost**
+### *Temperature* with boost: **TRV boost**
+
+With the boost the *Thermostat* page is not shown: the thermostat tolerance and
+the optimal stop tolerance are not used, the hysteresis takes their place.
 
 A TRV measures the temperature next to the radiator, which is warmer than the
 room, so it may close before the room is warm. With *Boost TRV temperature while
@@ -91,7 +94,7 @@ needs heat:
 | Field | Default | What it does |
 | --- | --- | --- |
 | Boost temperature | empty = the maximum temperature of the house | Sent to the TRVs while the room asks for heat. Between the frost protection and the maximum of the house; never below the target and never above the maximum of the TRVs. |
-| Hysteresis | 0.3 °C (0.1 – 3) | The band of the heat demand, as for relays. Asked here, or on the previous page when the TRV does not report `hvac_action`. |
+| Hysteresis | 0.3 °C (0.1 – 3) | The band of the heat demand, as for relays. |
 
 **Example** (the values chosen in the form): target 20 °C, hysteresis 0.2 °C,
 maximum of the house 25 °C, boost temperature empty. At 20 − 0.2 = 19.8 °C in
@@ -218,7 +221,7 @@ With optimal start or stop on, **Optimal start / stop** appears:
 | --- | --- | --- |
 | Maximum early start | 120 min (10 – 1440, i.e. up to 24 h) | The optimal start never begins earlier than this. |
 | Maximum early stop | 30 min (5 – 1440, i.e. up to 24 h) | The optimal stop never begins earlier than this. Until the cooling is learned, the lower level starts exactly this early. |
-| Optimal stop tolerance | 0 (0 – 2 °C) | Only for thermostats that report `hvac_action` and are not Generic Thermostat: how far below the current level the room may fall before the change. 0 = the room must not fall below the level, so it stops early only when warmer than the level. |
+| Optimal stop tolerance | 0 (0 – 2 °C) | Only for thermostats that report `hvac_action`, are not Generic Thermostat and do not use the TRV boost: how far below the current level the room may fall before the change. 0 = the room must not fall below the level, so it stops early only when warmer than the level. |
 
 Details: [chapter 4](04-schedule.md) and
 [chapter 7](07-optimal-start-stop-and-learning.md).

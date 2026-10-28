@@ -44,12 +44,14 @@
         "data": {
           "climates": "Thermostats",
           "switches": "Switches (relays)",
-          "command_mode": "Command"
+          "command_mode": "Command",
+          "trv_boost": "Boost TRV temperature while heating"
         },
         "data_description": {
           "climates": "The thermostat that controls the boiler, e.g. the Generic Thermostat entity (climate.climate).",
           "switches": "Only when a relay heats the house directly, without a thermostat.",
-          "command_mode": "Only for thermostats other than Generic Thermostat. See the room settings for the difference."
+          "command_mode": "Only for thermostats other than Generic Thermostat. See the room settings for the difference.",
+          "trv_boost": "While the room asks for heat, the TRVs get a higher temperature so they stay open until the room is warm; the rest of the time they get the target. The heat demand then comes from the room sensor, with the hysteresis. Needs a temperature sensor in the room. Only with the Temperature command."
         }
       },
       "heating_on_off": {
@@ -72,14 +74,12 @@
         "title": "Thermostat",
         "data": {
           "learn_tolerance": "Thermostat tolerance",
-          "hysteresis": "Hysteresis",
-          "trv_boost": "Boost TRV temperature while heating"
+          "hysteresis": "Hysteresis"
         },
         "description": "The thermostat keeps the temperature; the integration only sends the level or the temperature.",
         "data_description": {
           "learn_tolerance": "How far below the target the thermostat lets the room fall before heating (its own tolerance). The heating rate is learned from rises that start at least this below the target.",
-          "hysteresis": "This thermostat does not report when it heats (no hvac_action): it counts as heating from this far below its set temperature until this far above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the comfort of the optimal stop.",
-          "trv_boost": "While the room asks for heat, the TRVs get a higher temperature so they stay open until the room is warm; the rest of the time they get the target. The heat demand then comes from the room sensor, with the hysteresis. Needs a temperature sensor in the room."
+          "hysteresis": "This thermostat does not report when it heats (no hvac_action): it counts as heating from this far below its set temperature until this far above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the comfort of the optimal stop."
         }
       },
       "heating_boost": {
@@ -104,7 +104,8 @@
       "entity_is_source": "{entity} is the heat source of {owner}. It cannot also be a device of a room.",
       "entity_is_gt_heater": "{entity} is the relay of a Generic Thermostat used by {owner}. It cannot also be controlled here.",
       "room_sensor_is_outdoor": "{entity} is the outdoor sensor of {owner}. Choose a sensor in the room.",
-      "boost_sensor_required": "The TRV boost needs a temperature sensor of the room."
+      "boost_sensor_required": "The TRV boost needs a temperature sensor of the room.",
+      "boost_temperature_only": "The TRV boost works only with the Temperature command."
     },
     "abort": {
       "reconfigure_successful": "Saved."
@@ -264,12 +265,14 @@
         "data": {
           "climates": "Thermostats",
           "switches": "Switches (relays)",
-          "command_mode": "Command"
+          "command_mode": "Command",
+          "trv_boost": "Boost TRV temperature while heating"
         },
         "data_description": {
           "climates": "The thermostat that controls the boiler, e.g. the Generic Thermostat entity (climate.climate).",
           "switches": "Only when a relay heats the house directly, without a thermostat.",
-          "command_mode": "Only for thermostats other than Generic Thermostat. See the room settings for the difference."
+          "command_mode": "Only for thermostats other than Generic Thermostat. See the room settings for the difference.",
+          "trv_boost": "While the room asks for heat, the TRVs get a higher temperature so they stay open until the room is warm; the rest of the time they get the target. The heat demand then comes from the room sensor, with the hysteresis. Needs a temperature sensor in the room. Only with the Temperature command."
         }
       },
       "heating_on_off": {
@@ -292,14 +295,12 @@
         "title": "Thermostat",
         "data": {
           "learn_tolerance": "Thermostat tolerance",
-          "hysteresis": "Hysteresis",
-          "trv_boost": "Boost TRV temperature while heating"
+          "hysteresis": "Hysteresis"
         },
         "description": "The thermostat keeps the temperature; the integration only sends the level or the temperature.",
         "data_description": {
           "learn_tolerance": "How far below the target the thermostat lets the room fall before heating (its own tolerance). The heating rate is learned from rises that start at least this below the target.",
-          "hysteresis": "This thermostat does not report when it heats (no hvac_action): it counts as heating from this far below its set temperature until this far above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the comfort of the optimal stop.",
-          "trv_boost": "While the room asks for heat, the TRVs get a higher temperature so they stay open until the room is warm; the rest of the time they get the target. The heat demand then comes from the room sensor, with the hysteresis. Needs a temperature sensor in the room."
+          "hysteresis": "This thermostat does not report when it heats (no hvac_action): it counts as heating from this far below its set temperature until this far above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the comfort of the optimal stop."
         }
       },
       "presence_details": {
@@ -410,7 +411,8 @@
       "entity_is_gt_heater": "{entity} is the relay of a Generic Thermostat used by {owner}. It cannot also be controlled here.",
       "outdoor_is_room_sensor": "{entity} is a temperature sensor of {owner}. The outdoor sensor must be a different sensor.",
       "room_sensor_is_outdoor": "{entity} is the outdoor sensor of {owner}. Choose a sensor in the room.",
-      "boost_sensor_required": "The TRV boost needs a temperature sensor of the room."
+      "boost_sensor_required": "The TRV boost needs a temperature sensor of the room.",
+      "boost_temperature_only": "The TRV boost works only with the Temperature command."
     }
   },
   "config_subentries": {
@@ -439,12 +441,14 @@
           "data": {
             "climates": "Thermostats",
             "switches": "Switches (relays)",
-            "command_mode": "Command"
+            "command_mode": "Command",
+            "trv_boost": "Boost TRV temperature while heating"
           },
           "data_description": {
             "climates": "The thermostats of this room. Several thermostats in one room all get the same command.",
             "switches": "The relays that heat this room.",
-            "command_mode": "Temperature: the integration sends the temperature of each level (most TRVs). Preset: each level uses a preset of the thermostat, with the thermostat's temperature. On / off: the thermostat is only switched on and off, the integration keeps the temperature."
+            "command_mode": "Temperature: the integration sends the temperature of each level (most TRVs). Preset: each level uses a preset of the thermostat, with the thermostat's temperature. On / off: the thermostat is only switched on and off, the integration keeps the temperature.",
+            "trv_boost": "While the room asks for heat, the TRVs get a higher temperature so they stay open until the room is warm; the rest of the time they get the target. The heat demand then comes from the room sensor, with the hysteresis. Needs a temperature sensor in the room. Only with the Temperature command."
           }
         },
         "control_on_off": {
@@ -466,13 +470,11 @@
           "description": "The thermostat keeps the temperature; the integration only sends the level or the temperature.",
           "data": {
             "learn_tolerance": "Thermostat tolerance",
-            "hysteresis": "Hysteresis",
-            "trv_boost": "Boost TRV temperature while heating"
+            "hysteresis": "Hysteresis"
           },
           "data_description": {
             "learn_tolerance": "How far below the target the thermostat lets the room fall before heating (its own tolerance). The heating rate is learned from rises that start at least this below the target.",
-            "hysteresis": "This thermostat does not report when it heats (no hvac_action): it counts as heating from this far below its set temperature until this far above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the comfort of the optimal stop.",
-            "trv_boost": "While the room asks for heat, the TRVs get a higher temperature so they stay open until the room is warm; the rest of the time they get the target. The heat demand then comes from the room sensor, with the hysteresis. Needs a temperature sensor in the room."
+            "hysteresis": "This thermostat does not report when it heats (no hvac_action): it counts as heating from this far below its set temperature until this far above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the comfort of the optimal stop."
           }
         },
         "levels": {
@@ -687,7 +689,8 @@
         "entity_is_source": "{entity} is the heat source of {owner}. It cannot also be a device of a room.",
         "entity_is_gt_heater": "{entity} is the relay of a Generic Thermostat used by {owner}. It cannot also be controlled here.",
         "room_sensor_is_outdoor": "{entity} is the outdoor sensor of {owner}. Choose a sensor in the room.",
-        "boost_sensor_required": "The TRV boost needs a temperature sensor of the room."
+        "boost_sensor_required": "The TRV boost needs a temperature sensor of the room.",
+        "boost_temperature_only": "The TRV boost works only with the Temperature command."
       }
     }
   },

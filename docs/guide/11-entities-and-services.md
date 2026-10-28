@@ -115,7 +115,7 @@ data:
 
 ### `advanced_climate.clear_override`
 
-Back to automatic (every room, when no room is given).
+Back to automatic (every room, when no room is given; a room that does not exist gives an error).
 
 ### `advanced_climate.set_vacation`
 

@@ -1598,3 +1598,75 @@ async def test_frost_protection_from_the_room_sensor_opens_the_trv(
     assert calls[-1].data["temperature"] == 7.0
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_device_change_in_a_pause_is_kept(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A change made on the thermostat in a pause applies after the pause."""
+    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 20.0, "temperature": 21.0,
+           "hvac_action": "idle"}
+    hass.states.async_set("climate.trv", "heat", trv)
+    entry = await _trv_house(hass, freezer, boiler_entity=None)
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    await _tick(hass, freezer, 15)
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.home_pause"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    # A person sets 23 °C on the TRV during the pause.
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 23.0}, context=Context())
+    await hass.async_block_till_done()
+    room = next(iter(entry.runtime_data.rooms.values()))
+    assert room.override is not None
+    count = len(calls)
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": "switch.home_pause"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.office_decision").state == "manual_override"
+    assert len(calls) == count  # the 23 °C set by hand is not overwritten
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_clear_override_of_an_unknown_room(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A room that does not exist gives an error; without a room every room is cleared."""
+    entry = await _setup(hass, freezer)
+    await _tick(hass, freezer, 15)
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN, "clear_override", {"room": "Nowhere"}, blocking=True
+        )
+    assert err.value.translation_key == "room_not_found"
+    await hass.services.async_call(DOMAIN, "clear_override", {}, blocking=True)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_calibration_entity_with_a_value_that_is_not_a_number(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A calibration entity that is not a number is skipped; the room is still evaluated."""
+    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 20.0, "temperature": 21.0,
+           "hvac_action": "heating"}
+    hass.states.async_set("climate.trv", "heat", trv)
+    hass.states.async_set("sensor.office_temp", "19.0", {"unit_of_measurement": "°C"})
+    hass.states.async_set("number.trv_calibration", "abc", {"min": -5, "max": 5, "step": 0.1})
+    async_mock_service(hass, "climate", "set_temperature")
+    entry = await _boost_house(
+        hass,
+        freezer,
+        {
+            "trv_boost": False,
+            "calibration_mode": "offset",
+            "calibration_entities": ["number.trv_calibration"],
+        },
+    )
+    await _tick(hass, freezer, 15)
+    room = next(iter(entry.runtime_data.rooms.values()))
+    assert room.heat_demand  # evaluated to the end (hvac_action heating)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

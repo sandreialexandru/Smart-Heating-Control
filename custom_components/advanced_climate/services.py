@@ -147,7 +147,8 @@ def _rooms(hass: HomeAssistant, call: ServiceCall, *, required: bool) -> list[Ro
                         entry.config_subentry_id == room.id or entity_id in room.climates
                     ) and room not in rooms:
                         rooms.append(room)
-    if required and not rooms:
+    # A room asked for by name or entity must exist, also where none means all.
+    if (required or wanted or entity_ids) and not rooms:
         raise ServiceValidationError(translation_domain=DOMAIN, translation_key="room_not_found")
     if not wanted and not entity_ids and not required:
         rooms = [room for house in houses for room in house.rooms.values()]

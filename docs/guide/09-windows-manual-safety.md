@@ -101,7 +101,9 @@ safety:
   the target once (see [chapter 3](03-rooms.md)).
 
 The card shows a band at the top while the house is paused. A manual change
-made in a pause is kept and sent after the pause.
+made in a pause is kept and applies after the pause: one from the card or a
+service is sent then, one made on the device stays as it is (the child lock does
+not undo it during the pause).
 
 ## The house modes
 

@@ -622,6 +622,9 @@ def _devices_schema(d: dict[str, Any]) -> vol.Schema:
                 vol.Required(CONF_COMMAND_MODE, default=d[CONF_COMMAND_MODE]): _select(
                     [COMMAND_TEMPERATURE, COMMAND_PRESET, COMMAND_HVAC], "command_mode"
                 ),
+                vol.Required(
+                    CONF_TRV_BOOST, default=bool(d.get(CONF_TRV_BOOST, False))
+                ): _bool(),
             }
         )
     return vol.Schema(
@@ -718,11 +721,15 @@ def _devices_done(d: dict[str, Any], user_input: dict[str, Any]) -> dict[str, st
     key = CONF_SWITCHES if source == SOURCE_SWITCH else CONF_CLIMATES
     if not user_input.get(key):
         return {key: "no_devices"}
+    boost = source == SOURCE_CLIMATE and bool(user_input.get(CONF_TRV_BOOST, False))
+    if boost and user_input.get(CONF_COMMAND_MODE) != COMMAND_TEMPERATURE:
+        return {CONF_TRV_BOOST: "boost_temperature_only"}
     other = CONF_CLIMATES if source == SOURCE_SWITCH else CONF_SWITCHES
     d[key] = list(user_input[key])
     d[other] = []
     if source == SOURCE_CLIMATE:
         d[CONF_COMMAND_MODE] = user_input[CONF_COMMAND_MODE]
+        d[CONF_TRV_BOOST] = boost
     return {}
 
 
@@ -771,8 +778,6 @@ def _thermostat_schema(d: dict[str, Any], hass: Any) -> vol.Schema:
     # Without hvac_action the heat demand is decided with the hysteresis.
     if _no_hvac_action(hass, d):
         fields[_req(CONF_HYSTERESIS, d, ROOM_DEFAULTS)] = _number(0.1, 3, 0.1, "°C")
-    if _boost_possible(d):
-        fields[_req(CONF_TRV_BOOST, d, ROOM_DEFAULTS)] = _bool()
     return vol.Schema(fields)
 
 
@@ -787,7 +792,7 @@ def _boost_on(d: dict[str, Any]) -> bool:
 
 
 def _boost_schema(
-    d: dict[str, Any], hass: Any, low: float, high: float, with_sensors: bool
+    d: dict[str, Any], low: float, high: float, with_sensors: bool
 ) -> vol.Schema:
     """The boost temperature (empty = maximum of the house), the hysteresis and the sensors.
 
@@ -800,9 +805,7 @@ def _boost_schema(
             "sensor", multiple=True, device_class="temperature"
         )
     fields[_opt(CONF_TRV_BOOST_TEMP, d)] = _number(low, high, 0.5, "°C")
-    # Asked on the thermostat step already when the thermostat lacks hvac_action.
-    if not _no_hvac_action(hass, d):
-        fields[_req(CONF_HYSTERESIS, d, ROOM_DEFAULTS)] = _number(0.1, 3, 0.1, "°C")
+    fields[_req(CONF_HYSTERESIS, d, ROOM_DEFAULTS)] = _number(0.1, 3, 0.1, "°C")
     return vol.Schema(fields)
 
 
@@ -883,6 +886,8 @@ class _HouseHeatingSteps:
                     return await self._async_heating_done(z)
                 if _is_on_off(z):
                     return await self.async_step_heating_on_off()
+                if _boost_on(z):
+                    return await self.async_step_heating_boost()
                 return await self.async_step_heating_thermostat()
         return self.async_show_form(  # type: ignore[attr-defined]
             step_id="heating_devices",
@@ -922,8 +927,6 @@ class _HouseHeatingSteps:
         schema = _thermostat_schema(_shown(self._zone, self._unit()), self.hass)  # type: ignore[attr-defined]
         if user_input is not None:
             self._zone = _merge(self._zone, schema, _kept(user_input, self._unit()))  # type: ignore[attr-defined]
-            if _boost_on(self._zone):
-                return await self.async_step_heating_boost()
             return await self._async_heating_done(self._zone)
         return self.async_show_form(  # type: ignore[attr-defined]
             step_id="heating_thermostat", data_schema=schema
@@ -939,7 +942,7 @@ class _HouseHeatingSteps:
                 **shown,
                 **_shown({CONF_TRV_BOOST_TEMP: min(max(value, low), high)}, self._unit()),  # type: ignore[attr-defined]
             }
-        schema = _boost_schema(shown, self.hass, low, high, True)  # type: ignore[attr-defined]
+        schema = _boost_schema(shown, low, high, True)
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {"entity": "", "owner": ""}
         if user_input is not None:
@@ -1385,6 +1388,8 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                     return await self.async_step_levels()
                 if _is_on_off(d):
                     return await self.async_step_control_on_off()
+                if _boost_on(d):
+                    return await self.async_step_control_boost()
                 return await self.async_step_control_thermostat()
         return self.async_show_form(
             step_id="devices",
@@ -1414,8 +1419,6 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
         schema = _thermostat_schema(self._shown(), self.hass)
         if user_input is not None:
             self._data = _merge(self._data, schema, self._kept(user_input))
-            if _boost_on(self._data):
-                return await self.async_step_control_boost()
             return await self.async_step_levels()
         return self.async_show_form(step_id="control_thermostat", data_schema=schema)
 
@@ -1431,7 +1434,7 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                 **shown,
                 **_shown({CONF_TRV_BOOST_TEMP: min(max(value, low), high)}, self._unit()),
             }
-        schema = _boost_schema(shown, self.hass, low, high, False)
+        schema = _boost_schema(shown, low, high, False)
         if user_input is not None:
             self._data = _merge(self._data, schema, self._kept(user_input))
             return await self.async_step_levels()
@@ -1788,6 +1791,7 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
             if (
                 d[CONF_SOURCE] == SOURCE_CLIMATE
                 and not self._on_off()
+                and not _boost_on(d)
                 and not _no_hvac_action(self.hass, d)
             ):
                 fields[_req(CONF_STOP_TOLERANCE, d, ROOM_DEFAULTS)] = _number(0, 2, 0.1, "°C")

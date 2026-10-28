@@ -656,9 +656,9 @@ class Room:
         # later sets the value we sent before, that is a manual change too.
         self._sent.pop(entity_id, None)
         self._boosted = False  # the person's value replaced the boost
-        if self.house.paused:
-            return
-        if self.child_lock and self.decision is not None:
+        # In a pause the change is kept (it applies after the pause); the child
+        # lock does not undo it then, since a pause sends nothing.
+        if self.child_lock and self.decision is not None and not self.house.paused:
             _LOGGER.debug("Room %s: child lock reverts a manual change", self.name)
             self.hass.async_create_task(self._async_apply(self.decision.target, force=True))
             return
@@ -2018,7 +2018,8 @@ class Room:
             step = float_attr(number, "step") or 0.1
             minimum = float_attr(number, "min")
             maximum = float_attr(number, "max")
-            current = float(number.state)
+            if (current := finite(number.state)) is None:
+                continue  # not a number: this entity is skipped
             # The TRV number has its own unit (usually °C).
             number_unit = number.attributes.get("unit_of_measurement") or system_unit(self.hass)
             if mode == CALIBRATION_EXTERNAL:

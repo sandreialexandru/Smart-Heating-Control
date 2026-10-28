@@ -78,13 +78,13 @@ async def test_options_heating_adds_zone(hass: HomeAssistant) -> None:
     result = await flow.async_configure(result["flow_id"], {"next_step_id": "heating"})
     assert result["step_id"] == "heating"
     result = await flow.async_configure(result["flow_id"], {"source": "climate"})
-    assert _keys(result) == {"climates", "command_mode"}
+    assert _keys(result) == {"climates", "command_mode", "trv_boost"}
     result = await flow.async_configure(
         result["flow_id"], {"climates": ["climate.trv"], "command_mode": "temperature"}
     )
     assert result["step_id"] == "heating_thermostat"
     # climate.trv is not available now: the hysteresis is asked for.
-    assert _keys(result) == {"learn_tolerance", "hysteresis", "trv_boost"}
+    assert _keys(result) == {"learn_tolerance", "hysteresis"}
     result = await flow.async_configure(result["flow_id"], {"learn_tolerance": 0.3})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     zone = next(iter(entry.subentries.values()))
@@ -542,42 +542,46 @@ async def test_outdoor_sensor_is_not_a_room_sensor(hass: HomeAssistant) -> None:
 
 
 async def test_trv_boost_in_the_room_form(hass: HomeAssistant) -> None:
-    """The boost is offered for the temperature command and needs a room sensor."""
-    entry = _house_with_rooms(hass)
+    """The boost is chosen with the devices; then only the boost page is asked."""
+    # An outdoor sensor: the optimal stop can be turned on.
+    entry = _house_with_rooms(hass, options={"outdoor_sensor": "sensor.outdoor"})
     rooms = hass.config_entries.subentries
     result = await rooms.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
     result = await rooms.async_configure(result["flow_id"], {"name": "Office", "source": "climate"})
-    result = await rooms.async_configure(
-        result["flow_id"], {"climates": ["climate.trv"], "command_mode": "temperature"}
-    )
-    assert result["step_id"] == "control_thermostat"
     assert "trv_boost" in _keys(result)
-    # climate.trv is not available now: the hysteresis is asked here, not again.
+    # Only with the temperature command.
     result = await rooms.async_configure(
-        result["flow_id"], {"learn_tolerance": 0.0, "hysteresis": 0.2, "trv_boost": True}
+        result["flow_id"],
+        {"climates": ["climate.trv"], "command_mode": "preset", "trv_boost": True},
     )
+    assert result["errors"] == {"trv_boost": "boost_temperature_only"}
+    result = await rooms.async_configure(
+        result["flow_id"],
+        {"climates": ["climate.trv"], "command_mode": "temperature", "trv_boost": True},
+    )
+    # No Thermostat page: the tolerances are not used with the boost.
     assert result["step_id"] == "control_boost"
-    assert _keys(result) == {"trv_boost_temperature"}
-    result = await rooms.async_configure(result["flow_id"], {"trv_boost_temperature": 23})
+    assert _keys(result) == {"trv_boost_temperature", "hysteresis"}
+    result = await rooms.async_configure(
+        result["flow_id"], {"trv_boost_temperature": 23, "hysteresis": 0.2}
+    )
     result = await _until(hass, result, rooms, stop={"sensors"})
     assert result["step_id"] == "sensors"
     result = await rooms.async_configure(result["flow_id"], {})
     assert result["errors"] == {"temperature_sensors": "boost_sensor_required"}
     result = await rooms.async_configure(result["flow_id"], {"temperature_sensors": ["sensor.office"]})
-    result = await _until(hass, result, rooms, stop=set())
+    # The optimal stop tolerance is not asked either.
+    for _ in range(15):
+        if result["type"] is not FlowResultType.FORM:
+            break
+        assert "stop_tolerance" not in _keys(result)
+        data = {"optimal_stop": True} if result["step_id"] == "schedule" else {}
+        result = await rooms.async_configure(result["flow_id"], data)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     data = next(sub for sub in entry.subentries.values() if sub.title == "Office").data
     assert data["trv_boost"] is True
     assert data["trv_boost_temperature"] == 23
     assert data["hysteresis"] == 0.2
-
-    # With the preset command there is no boost.
-    result = await rooms.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
-    result = await rooms.async_configure(result["flow_id"], {"name": "Hall", "source": "climate"})
-    result = await rooms.async_configure(
-        result["flow_id"], {"climates": ["climate.hall"], "command_mode": "preset"}
-    )
-    assert "trv_boost" not in _keys(result)
 
 
 async def test_frost_hysteresis_for_trvs_with_a_room_sensor(hass: HomeAssistant) -> None:

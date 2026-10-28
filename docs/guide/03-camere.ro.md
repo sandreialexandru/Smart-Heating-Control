@@ -34,6 +34,7 @@ de încălzire sunt săriți.
 | **Termostate** | Termostatele camerei (pentru Generic Thermostat și pentru alte termostate / TRV-uri). Mai multe termostate în aceeași cameră primesc toate aceeași comandă, de exemplu două TRV-uri pe două calorifere din sufragerie. |
 | **Comutatoare (relee)** | Releele care încălzesc camera (doar pentru *Comutator*). |
 | **Comandă** | Doar pentru alte termostate / TRV-uri, vezi mai jos. |
+| **Forțează temperatura TRV cât încălzește** | Doar pentru alte termostate / TRV-uri cu comanda *Temperatură* (altfel apare *Forțarea TRV merge doar cu comanda Temperatură*), vezi pasul 3. |
 
 Trebuie ales cel puțin un dispozitiv (altfel apare *Alege cel puțin un
 dispozitiv*).
@@ -74,9 +75,11 @@ l-ai oprit tu, rămâne oprit.
 | --- | --- | --- |
 | Toleranța termostatului | 0 (0 – 2 °C) | Cât lasă termostatul camera să coboare sub țintă înainte să încălzească (toleranța lui proprie). Învățarea încălzirii pornește de la atât sub țintă. Dacă nu știi, lasă 0. |
 | Histerezis | 0,3 °C | Apare doar dacă termostatul nu raportează când încălzește (`hvac_action`) sau e indisponibil la configurare. Atunci se consideră că încălzește de la histerezis sub temperatura setată până la histerezis peste ea, ca un releu. Se folosește pentru cererea de căldură, centrală, timpul de încălzire, învățare și ca toleranță a opririi anticipate. |
-| Forțează temperatura TRV cât încălzește | oprit | Doar cu comanda *Temperatură*, vezi mai jos. |
 
-### *Temperatură* cu **forțarea TRV**
+### *Temperatură* cu forțare: **Forțarea TRV**
+
+Cu forțarea, pagina *Termostat* nu mai apare: toleranța termostatului și
+toleranța opririi anticipate nu se folosesc, histerezisul le ține locul.
 
 Un TRV măsoară temperatura lângă calorifer, unde e mai cald decât în cameră, așa
 că se poate închide înainte să se încălzească camera. Cu *Forțează temperatura
@@ -93,7 +96,7 @@ camera are nevoie de căldură:
 | Câmp | Implicit | Ce face |
 | --- | --- | --- |
 | Temperatura de forțare | gol = temperatura maximă a casei | Trimisă TRV-urilor cât camera cere căldură. Între antiîngheț și maximul casei; niciodată sub țintă și niciodată peste maximul TRV-urilor. |
-| Histerezis | 0,3 °C (0,1 – 3) | Banda cererii de căldură, ca la relee. Se cere aici sau pe pagina de dinainte, când TRV-ul nu raportează `hvac_action`. |
+| Histerezis | 0,3 °C (0,1 – 3) | Banda cererii de căldură, ca la relee. |
 
 **Exemplu** (valorile alese în formular): ținta 20 °C, histerezis 0,2 °C,
 maximul casei 25 °C, temperatura de forțare goală. La 20 − 0,2 = 19,8 °C în
@@ -224,7 +227,7 @@ anticipată**:
 | --- | --- | --- |
 | Anticipare maximă | 120 min (10 – 1440, adică până la 24 h) | Pornirea anticipată nu începe niciodată mai devreme de atât. |
 | Oprire anticipată maximă | 30 min (5 – 1440, adică până la 24 h) | Oprirea anticipată nu începe niciodată mai devreme de atât. Până se învață răcirea, nivelul mai jos începe exact atât de devreme. |
-| Toleranța opririi anticipate | 0 (0 – 2 °C) | Doar pentru termostatele care raportează `hvac_action` și nu sunt Generic Thermostat: cât poate coborî camera sub nivelul curent înainte de schimbare. 0 = camera nu are voie să scadă sub nivel, deci se oprește mai devreme doar când e mai caldă decât nivelul. |
+| Toleranța opririi anticipate | 0 (0 – 2 °C) | Doar pentru termostatele care raportează `hvac_action`, nu sunt Generic Thermostat și nu folosesc forțarea TRV: cât poate coborî camera sub nivelul curent înainte de schimbare. 0 = camera nu are voie să scadă sub nivel, deci se oprește mai devreme doar când e mai caldă decât nivelul. |
 
 Detalii: [capitolul 4](04-program.ro.md) și
 [capitolul 7](07-anticipare-si-invatare.ro.md).

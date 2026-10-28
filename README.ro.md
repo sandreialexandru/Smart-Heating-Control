@@ -121,6 +121,11 @@ testele; rulează și pe cea mai nouă).
 
 ## Configurare
 
+> **Configurator interactiv:** [docs/configurator.html](https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/docs/configurator.html) te duce prin
+> fiecare formular pas cu pas, în engleză sau română, explică fiecare alegere
+> și îți dă un rezumat cu ce ai de setat. Descarcă fișierul și deschide-l într-un
+> browser.
+
 1. **Creează casa**: întâi **unitatea de temperatură** (°C sau °F), apoi
    numele, persoanele, zonele apropiate și regula pentru acasă, apoi
    **încălzirea întregii case** (de exemplu Generic Thermostat-ul tău). Atât e

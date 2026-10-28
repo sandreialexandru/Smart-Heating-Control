@@ -111,6 +111,10 @@ they also run on the newest one).
 
 ## Configuration
 
+> **Interactive configurator:** [docs/configurator.html](https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/docs/configurator.html) walks through
+> every form step by step, in English or Romanian, explains each choice and
+> gives a summary of what to set. Download the file and open it in a browser.
+
 1. **Create the house**: first the **temperature unit** (°C or °F), then the name, people, nearby zones and the home rule, then the
    **heating of the whole house** (e.g. your Generic Thermostat). That is enough
    for a house heated by one thermostat: it becomes the zone *Whole house*

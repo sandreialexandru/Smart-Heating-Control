@@ -10,6 +10,10 @@ când apar, iar fiecare capitol are exemple.
 Dacă vrei doar să pornești repede, citește capitolele 1, 2 și 3. Restul îl poți
 citi când ai nevoie de o funcție anume.
 
+Ca să configurezi pas cu pas, cu o explicație pentru fiecare alegere, folosește
+[configuratorul interactiv](../configurator.html) (descarcă-l și deschide-l
+într-un browser).
+
 ## Cuprins
 
 | Capitol | Despre ce e |

@@ -10,6 +10,10 @@ explained the first time they appear, and every chapter has examples.
 If you only want to get started, read chapters 1, 2 and 3. Read the rest when
 you need a particular feature.
 
+To set up step by step with an explanation for every choice, use the
+[interactive configurator](../configurator.html) (download it and open it in a
+browser).
+
 ## Contents
 
 | Chapter | About |

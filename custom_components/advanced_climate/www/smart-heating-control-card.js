@@ -1135,16 +1135,22 @@ class SmartHeatingControlCard extends HTMLElement {
       return { id, cls: cls || "unknown", name: p?.attributes?.friendly_name || id.split(".")[1], picture: p?.attributes?.entity_picture };
     });
     // A ring in the colour of where the person is (home, nearby, far); the photo when there is one.
-    const avatarList = (links) =>
+    // Several people overlap a little; the compact row shows a few and "+N" for the rest.
+    const avatarList = (links, max = persons.length) =>
       persons
+        .slice(0, persons.length > max ? max - 1 : max)
         .map((p) => {
           const title = `${p.name}: ${this._label(presence, p.cls)}`;
           return `<span class="avatar ${esc(p.cls)} ${links ? "link" : ""}" ${links ? this._more(p.id, title) : `title="${esc(title)}"`}>${
             p.picture ? `<img src="${esc(p.picture)}" alt="">` : esc((String(p.name).trim()[0] || "?").toUpperCase())
           }</span>`;
         })
-        .join("");
+        .join("") +
+      (persons.length > max
+        ? `<span class="avatar more" title="${esc(persons.slice(max - 1).map((p) => p.name).join(", "))}">+${persons.length - max + 1}</span>`
+        : "");
     const avatars = avatarList(true);
+    const overlap = persons.length > 3 ? "overlap" : "";
     const who = persons.map((p) => `${p.name} ${String(this._label(presence, p.cls)).toLowerCase()}`).join(" · ");
 
     const modes = (mode?.attributes?.options || ["auto", "vacation", "off", "summer"])
@@ -1171,7 +1177,7 @@ class SmartHeatingControlCard extends HTMLElement {
     const houseKey = `house-${house.id}`;
     if (this._config.compact && !this._open[houseKey]) {
       return `<button class="crow house-row" data-action="fold" data-key="${esc(houseKey)}" aria-expanded="false">
-          ${persons.length ? `<span class="avatars sm" aria-hidden="true">${avatarList(false)}</span>` : this._icon("home-thermometer-outline")}
+          ${persons.length ? `<span class="avatars sm overlap" aria-hidden="true">${avatarList(false, 3)}</span>` : this._icon("home-thermometer-outline")}
           <span class="cname">${esc(house.name || "")}</span>
           <span class="pill presence-state ${esc(presence?.state)}">${esc(this._label(presence))}</span>
           <span class="pill">${esc(this._label(mode))}</span>
@@ -1244,7 +1250,7 @@ class SmartHeatingControlCard extends HTMLElement {
         <div class="house-head">
           <div class="who">
             ${foldBack}
-            ${avatars ? `<div class="avatars">${avatars}</div>` : ""}
+            ${avatars ? `<div class="avatars ${overlap}">${avatars}</div>` : ""}
             <div class="whotext">
               ${this._houses().length > 1 && house.name ? `<span class="hname">${esc(house.name)}</span>` : ""}
               <span class="pstate">
@@ -3517,8 +3523,11 @@ const STYLE = `
 
   /* house */
   .house-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
-  .avatars { display: flex; gap: 8px; flex: none; padding: 4px; }
+  .who { display: flex; align-items: center; gap: 8px 12px; min-width: 0; flex-wrap: wrap; flex: 1 1 auto; }
+  .avatars { display: flex; gap: 8px; flex: none; padding: 4px; flex-wrap: wrap; row-gap: 10px; }
+  .avatars.overlap { gap: 9px; row-gap: 9px; }
+  .avatars.overlap .avatar { width: 30px; height: 30px; font-size: 0.82em; }
+  .avatar.more { font-size: 0.75em; color: var(--ac-muted); }
   .avatar { --r: var(--ac-line); width: 36px; height: 36px; border-radius: 50%; background: var(--ac-surface-2); display: inline-flex;
     align-items: center; justify-content: center; font-weight: 500; font-size: 0.9em; overflow: hidden; flex: none;
     box-shadow: 0 0 0 2px var(--card-background-color), 0 0 0 4px var(--r); }
@@ -3528,7 +3537,9 @@ const STYLE = `
   .avatar.far { --r: #8a96a3; }
   .avatars.sm { gap: 6px; padding: 3px; }
   .avatars.sm .avatar { width: 24px; height: 24px; font-size: 0.72em; }
-  .whotext { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .avatars.sm.overlap { gap: 7px; flex-wrap: nowrap; }
+  .avatars.sm.overlap .avatar { width: 24px; height: 24px; font-size: 0.72em; }
+  .whotext { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 150px; }
   .hname { font-weight: 600; }
   .pstate { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .pstate .presence-state { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; font-size: 1.05em; background: none; }

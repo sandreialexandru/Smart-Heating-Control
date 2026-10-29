@@ -910,8 +910,10 @@ class SmartHeatingControlCard extends HTMLElement {
     if (!a.rate_learned) return this._t("eta_learning");
     const m = Math.round(a.time_to_target);
     if (m < 60) return `~${m} min`;
-    const h = Math.floor(m / 60);
-    const r = Math.round((m % 60) / 5) * 5;
+    // Above an hour in 5-minute steps; 1 h 58 min is ~2 h (not "1 h 60 min").
+    const total = Math.round(m / 5) * 5;
+    const h = Math.floor(total / 60);
+    const r = total % 60;
     return r ? `~${h} h ${r} min` : `~${h} h`;
   }
 

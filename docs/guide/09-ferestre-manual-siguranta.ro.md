@@ -52,10 +52,11 @@ pe TRV, în aplicație, în Home Assistant, din card sau cu serviciul
 Home Assistant, deci integrarea știe care sunt ale ei. Un dispozitiv care doar
 raportează mai târziu ce i-a trimis integrarea (de exemplu un TRV Zigbee pe
 baterie care se trezește rar) nu e o modificare manuală, nici când raportează o
-comandă mai veche după ce a fost trimisă una nouă: până când dispozitivul
-raportează ultima valoare trimisă, se recunosc și cele vechi (din cel mult
-ultimele 5 minute); după ce o raportează pe ultima, orice altă valoare e o
-modificare manuală.
+valoare mai veche după ce a fost trimisă una nouă: se recunosc și valorile
+trimise în ultimele 5 minute și valoarea pe care o arăta dispozitivul înainte de
+fiecare comandă, până când dispozitivul arată ultima valoare de 2 minute (unele
+TRV-uri arată imediat valoarea nouă, apoi mai raportează o dată pe cea veche);
+după aceea orice altă valoare e o modificare manuală.
 
 **Cât durează** (*Modificările manuale se păstrează*, în opțiunile casei):
 

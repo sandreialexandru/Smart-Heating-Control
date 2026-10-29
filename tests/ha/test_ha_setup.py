@@ -1881,13 +1881,44 @@ async def test_older_values_forgotten_once_the_last_is_confirmed(
     hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 23.0}, context=Context())
     await _tick(hass, freezer, 5)
     assert hass.states.get("binary_sensor.office_manual_change").attributes["origin"] == "card"
-    # ... so a minute later 21 set by hand is a person's change, not the old command.
-    await _tick(hass, freezer, 60)
+    # ... and keeps it for 2 minutes: then 21 set by hand is a person's change,
+    # not the old command.
+    await _tick(hass, freezer, 125)
     hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 21.0}, context=Context())
     await _tick(hass, freezer, 5)
     override = hass.states.get("binary_sensor.office_manual_change").attributes
     assert override["origin"] == "device"
     assert override["description"] == "21.0 °C"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_a_trv_that_bounces_back_once_is_not_manual(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A TRV shows the new value at once, then reports the old one once more (Tuya TS0601)."""
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 18.0, "temperature": 17.0,
+           "target_temp_step": 0.5}
+    entry = await _trv_room(hass, freezer, {"climate.trv": trv})
+    await _tick(hass, freezer, 15)
+    assert calls[-1].data["temperature"] == 21.0
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 21.0}, context=Context())
+    await _tick(hass, freezer, 300)  # 21 confirmed long ago
+    await hass.services.async_call(
+        DOMAIN, "set_override", {"room": "Office", "temperature": 12, "duration_hours": 2},
+        blocking=True,
+    )
+    await _tick(hass, freezer, 5)
+    assert calls[-1].data["temperature"] == 12.0
+    # 12 shown at once, then the old 21 once more, then 12 again.
+    for value in (12.0, 21.0, 12.0):
+        hass.states.async_set("climate.trv", "heat", {**trv, "temperature": value}, context=Context())
+        await _tick(hass, freezer, 10)
+    override = hass.states.get("binary_sensor.office_manual_change").attributes
+    assert override["origin"] == "card"
+    assert override["until"] is not None
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

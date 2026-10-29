@@ -32,9 +32,11 @@ GitHub releases.
 - In a room without a room sensor, a TRV that stops reporting no longer counts
   as an open window (the temperature of the other TRVs is not a drop).
 - A thermostat that reports an older command late (e.g. 21 °C after 12 °C was
-  already sent) is no longer taken for a manual change: until the device reports
-  the last value sent, the older ones of the last 5 minutes are recognised too.
-  A change from the card keeps its duration.
+  already sent), or that shows the new value and then reports the old one once
+  more (e.g. Tuya TS0601), is no longer taken for a manual change: the values
+  sent in the last 5 minutes and the value shown before each command are
+  recognised until the device has shown the last value for 2 minutes. A change
+  from the card keeps its duration.
 
 ### Releases
 

@@ -119,6 +119,7 @@ from .const import (
     RULE_VACATION,
     SCHEDULE_HELPER,
     SENT_RECENT_MINUTES,
+    SENT_STABLE_SECONDS,
     SOURCE_CLIMATE,
     SOURCE_GT,
     SOURCE_SWITCH,
@@ -173,6 +174,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 SENT_RECENT = timedelta(minutes=SENT_RECENT_MINUTES)
+SENT_STABLE = timedelta(seconds=SENT_STABLE_SECONDS)
 
 
 def _close(value: Any, sent: Any, margin: float) -> bool:
@@ -337,6 +339,10 @@ class Room:
         # an older command after a newer one was sent (e.g. 21 °C, then 12 °C for
         # away, and only then the 21 °C); that is not a manual change either.
         self._sent_recent: dict[str, list[tuple[datetime, str, Any]]] = {}
+        # Since when the device shows the last value sent, per value: the older
+        # values are forgotten only after it stayed there a while (some TRVs show
+        # the new value at once and then report the old one once more).
+        self._sent_confirmed: dict[str, dict[str, datetime]] = {}
 
     # ------------------------------------------------------------------
     # Setup
@@ -645,10 +651,15 @@ class Room:
         """
         sent = self._sent.get(entity_id) or {}
         now = dt_util.utcnow()
+        stable = {
+            key
+            for key, since in self._sent_confirmed.get(entity_id, {}).items()
+            if now - since >= SENT_STABLE
+        }
         recent = [
             (key, value)
             for at, key, value in self._sent_recent.get(entity_id, [])
-            if now - at <= SENT_RECENT
+            if now - at <= SENT_RECENT and key not in stable
         ]
         if not sent and not recent:
             return False
@@ -676,27 +687,28 @@ class Room:
         return matched
 
     def _confirm_sent(self, entity_id: str, new: State | None) -> None:
-        """The device reports the last value sent: the older ones are no longer expected.
+        """Note since when the device shows the last value sent.
 
-        Until then an older command may still come late (it is not a manual
-        change); afterwards any other value is a person's, also within the
-        minutes the older values are otherwise kept.
+        Once it has shown it for ``SENT_STABLE`` the older values are no longer
+        expected and any other value is a person's. A report of an older value
+        meanwhile (a device that bounces back once) restarts that time.
         """
         sent = self._sent.get(entity_id)
-        recent = self._sent_recent.get(entity_id)
-        if not sent or not recent or new is None or not valid(new):
+        if not sent or new is None or not valid(new):
             return
-        confirmed = set()
+        confirmed = self._sent_confirmed.setdefault(entity_id, {})
+        now = dt_util.utcnow()
         for key, value in sent.items():
             reported = new.state if key == "state" else new.attributes.get(key)
             if key == ATTR_TEMPERATURE:
                 step = float_attr(new, "target_temp_step")
-                if _close(reported, value, step / 2 + 0.01 if step else 0.05):
-                    confirmed.add(key)
-            elif reported == value:
-                confirmed.add(key)
-        if confirmed:
-            self._sent_recent[entity_id] = [r for r in recent if r[1] not in confirmed]
+                same = _close(reported, value, step / 2 + 0.01 if step else 0.05)
+            else:
+                same = reported == value
+            if same:
+                confirmed.setdefault(key, now)
+            else:
+                confirmed.pop(key, None)
 
     def _handle_manual_change(self, entity_id: str, new: State | None) -> None:
         """Respect a manual change (or revert it with the child lock)."""
@@ -704,6 +716,7 @@ class Room:
         # later sets the value we sent before, that is a manual change too.
         self._sent.pop(entity_id, None)
         self._sent_recent.pop(entity_id, None)
+        self._sent_confirmed.pop(entity_id, None)
         self._boosted = False  # the person's value replaced the boost
         # In a pause the change is kept (it applies after the pause); the child
         # lock does not undo it then, since a pause sends nothing.
@@ -1853,6 +1866,7 @@ class Room:
         if not force and self._matches(state, target):
             return False
         self._sent[entity_id] = {}
+        self._sent_confirmed.pop(entity_id, None)
         modes = list(state.attributes.get("hvac_modes") or [])
         # Turned on only with a mode that heats (no guess when there is none).
         on_mode = heat_mode(modes) if {"heat", "auto"} & set(modes) else None
@@ -1912,13 +1926,24 @@ class Room:
         self, entity_id: str, service: str, key: str, value: Any, field: str | None = None
     ) -> bool:
         """Send one climate command and remember the value it sets."""
+        name = field or key
+        # What the device shows before the command: some TRVs report it once more
+        # after showing the new value, however long ago it was set.
+        before = self.hass.states.get(entity_id)
+        shown = None
+        if valid(before):
+            shown = before.state if name == "state" else before.attributes.get(name)  # type: ignore[union-attr]
         ok = await self._call("climate", service, {ATTR_ENTITY_ID: entity_id, key: value})
         if ok:
-            self._sent.setdefault(entity_id, {})[field or key] = value
+            self._sent.setdefault(entity_id, {})[name] = value
             now = dt_util.utcnow()
             recent = [r for r in self._sent_recent.get(entity_id, []) if now - r[0] <= SENT_RECENT]
-            recent.append((now, field or key, value))
+            if shown is not None and shown != value:
+                recent.append((now, name, shown))
+            recent.append((now, name, value))
             self._sent_recent[entity_id] = recent
+            # A new value: not shown by the device yet.
+            self._sent_confirmed.get(entity_id, {}).pop(name, None)
         return ok
 
     async def _async_apply_relay(self, target: Target) -> bool:
@@ -1966,6 +1991,7 @@ class Room:
                 state = self.hass.states.get(entity_id)
                 on_mode = heat_mode(state.attributes.get("hvac_modes") if valid(state) else None)  # type: ignore[union-attr]
                 self._sent[entity_id] = {}
+                self._sent_confirmed.pop(entity_id, None)
                 ok &= await self._send(
                     entity_id, "set_hvac_mode", "hvac_mode", on_mode if want else STATE_OFF, "state"
                 )

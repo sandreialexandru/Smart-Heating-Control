@@ -1242,6 +1242,7 @@ class SmartHeatingControlCard extends HTMLElement {
                   this._label(presence)
                 )}</span>
                 ${presence?.attributes?.arriving ? `<span class="pill">${this._t("arriving")}</span>` : ""}
+                ${demand?.state === "on" ? `<span class="tstat hot pulse link" ${this._more(e.heat_demand, this._t("demand"))}>${this._icon("fire")}</span>` : ""}
               </span>
               ${who ? `<span class="muted">${esc(who)}</span>` : ""}
             </div>

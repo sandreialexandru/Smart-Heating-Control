@@ -50,6 +50,8 @@ collapsed: true
 
 ## The house part
 
+- A pulsing **flame** next to the presence while the house asks for heat (in
+  every view; a folded room shows it too while it heats).
 - **Presence**, with every person as a round badge (the photo or the initial)
   in the colour of where they are: orange home, green nearby, grey far.
 - Tiles for **the outdoor average** (over the *Average over* hours), the

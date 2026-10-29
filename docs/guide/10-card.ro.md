@@ -50,6 +50,8 @@ collapsed: true
 
 ## Partea casei
 
+- O **flacără** care pulsează lângă prezență cât casa cere căldură (în orice
+  vedere; o cameră pliată o arată și ea cât încălzește).
 - **Prezența**, cu fiecare persoană ca un cerc (poza sau inițiala) în culoarea
   locului unde e: portocaliu acasă, verde aproape, gri departe.
 - Plăci pentru **media temperaturii de afară** (pe orele din *Medie pe*),

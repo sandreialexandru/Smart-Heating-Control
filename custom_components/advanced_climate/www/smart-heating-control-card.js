@@ -807,8 +807,10 @@ class SmartHeatingControlCard extends HTMLElement {
 
   /** Name of a level for the user (custom names included). */
   _presetName(attrs, preset) {
-    if (preset === "frost") return this._t("frost_level");
-    return (attrs.preset_names && attrs.preset_names[preset]) || preset;
+    const name = preset === "frost" ? this._t("frost_level") : (attrs.preset_names && attrs.preset_names[preset]) || preset;
+    // Shown as a name: the first letter capital (Home, Eco, Antiîngheț).
+    const text = String(name ?? "");
+    return text ? text.charAt(0).toLocaleUpperCase(this._lang()) + text.slice(1) : text;
   }
 
   /** Time of a moment; with the weekday when it is not today. */
@@ -983,7 +985,7 @@ class SmartHeatingControlCard extends HTMLElement {
           withTarget
             ? `<span class="gsub ${e && e.target_temperature ? "link" : ""}" ${
                 e && e.target_temperature ? this._more(e.target_temperature) : ""
-              }>${esc(this._t("target_tag").toLowerCase())} ${this._temp(tgt)}</span>`
+              }>${esc(this._t("target_tag"))} ${this._temp(tgt)}</span>`
             : ""
         }</span>
       </span>`;
@@ -1424,7 +1426,7 @@ class SmartHeatingControlCard extends HTMLElement {
         )}</span></span>${status}</span>
         <span class="tile-body">${this._gauge(a, null, 86, false)}
           <span class="tile-info">${this._presetPill(a)}
-            <span class="tsub">${esc(this._t("target_tag").toLowerCase())} ${this._temp(a.target_temperature)}</span>
+            <span class="tsub">${esc(this._t("target_tag"))} ${this._temp(a.target_temperature)}</span>
             ${line ? `<span class="muted">${esc(line)}</span>` : ""}</span>
         </span>
       </button>`;
@@ -3608,8 +3610,9 @@ const STYLE = `
   .pill.preset { background: color-mix(in srgb, var(--c) 22%, transparent); font-weight: 500; }
   .pill.preset .dot, .pill.rule .dot { width: 8px; height: 8px; }
   .fname, .tname { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
-  .tname { flex-direction: column; align-items: flex-start; gap: 4px; }
-  .tile-head { align-items: flex-start !important; }
+  .tname { flex-wrap: nowrap; flex: 1; }
+  .tname .cname { flex: 0 1 auto; }
+  .tname .pill { min-width: 0; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; }
   .banner.teal { background: color-mix(in srgb, #2f9e8f 18%, transparent); border-color: color-mix(in srgb, #2f9e8f 55%, transparent); }
   .banner.teal ha-icon { color: #2f9e8f; }
   .tile-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 0.85em; align-items: flex-start; }

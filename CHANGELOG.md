@@ -20,6 +20,8 @@ GitHub releases.
   mark when both were equal); the target mark is thinner.
 - An alert icon on the folded and the open room while the room has alerts; its
   title lists them, the Details explain them.
+- A new schedule profile keeps only letters, digits, spaces, "_" and "-" in its
+  name (what the integration accepts), instead of being refused at saving.
 
 ### Integration
 
@@ -37,6 +39,10 @@ GitHub releases.
   sent in the last 5 minutes and the value shown before each command are
   recognised until the device has shown the last value for 1 minute. A change
   from the card keeps its duration.
+- A level named like the key of another level (e.g. Eco named "home") no longer
+  turns the schedule around; the room settings refuse such a name.
+- The heat source and the house checks (rooms left cold, weather alerts) are
+  guarded on their own: an error of one does not skip the others.
 
 ### Releases
 

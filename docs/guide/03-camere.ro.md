@@ -136,7 +136,9 @@ Restul pasului depinde de tip:
   nivelului.
 - **Comanda *Temperatură*, *Pornit / oprit* și releele**: pentru fiecare nivel
   un **nume** (cum apare în program și în card; poți lăsa numele implicit) și o
-  **temperatură**.
+  **temperatură**. Un nume nu poate fi numele intern al altui nivel (`home`,
+  `sleep`, `eco`, `away`, `comfort`, `activity`, `frost`): programul folosește
+  aceste nume, deci ar citi alt nivel.
 
 Temperaturile implicite: `home` 21, `sleep` 18, `eco` 17, `away` 12,
 `comfort` 22, `activity` 20 °C. Ele pot fi între antiîngheț și temperatura

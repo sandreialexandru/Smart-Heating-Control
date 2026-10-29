@@ -248,6 +248,11 @@ async def test_room_subentry_flow(hass: HomeAssistant) -> None:
     result = await flow.async_configure(result["flow_id"], {})
     assert result["step_id"] == "levels"
     assert "nearby_temp" not in _keys(result)
+    # Eco named "home" would take the place of home in the schedule: refused.
+    result = await flow.async_configure(
+        result["flow_id"], {"name_home": "Acasă", "name_eco": "home", "nearby_mode": "preset"}
+    )
+    assert result["errors"] == {"base": "level_name_is_key"}
     result = await flow.async_configure(
         result["flow_id"], {"name_home": "Day", "name_sleep": "Night", "nearby_mode": "temperature"}
     )

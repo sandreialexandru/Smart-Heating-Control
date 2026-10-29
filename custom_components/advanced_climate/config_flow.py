@@ -150,6 +150,7 @@ from .const import (
     OVERRIDE_NEXT,
     OVERRIDE_SCOPE_HOUSE,
     OVERRIDE_SCOPE_ROOM,
+    PRESET_FROST,
     PRESETS,
     ROOM_DEFAULTS,
     SCHEDULE_HELPER,
@@ -1542,6 +1543,23 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                         data_schema=schema,
                         errors={"base": "invalid_level_name"},
                         description_placeholders={**placeholders, "name": bad},
+                    )
+                # The key of another level (home, sleep, eco, away, comfort,
+                # activity, frost) would take that level's place in the schedule.
+                taken = next(
+                    (
+                        n
+                        for p, n in new_names.items()
+                        if n.lower() != p and (n.lower() in PRESETS or n.lower() == PRESET_FROST)
+                    ),
+                    None,
+                )
+                if taken is not None:
+                    return self.async_show_form(
+                        step_id="levels",
+                        data_schema=schema,
+                        errors={"base": "level_name_is_key"},
+                        description_placeholders={**placeholders, "name": taken},
                     )
             if len(set(values)) != len(values):
                 return self.async_show_form(

@@ -246,6 +246,11 @@ class Room:
                 self.preset_names = {p: self.preset_map.get(p, p) for p in PRESETS}
         self.aliases: dict[str, str] = {p: p for p in PRESETS}
         for role, name in self.preset_names.items():
+            # A name that is the key of another level (e.g. Eco named "home", or a
+            # device preset "comfort" used for home) never takes that key over:
+            # the schedule keeps the keys, so it would read the wrong level.
+            if name.lower() in PRESETS or name.lower() == PRESET_FROST:
+                continue
             self.aliases[name.lower()] = role
 
         # Schedule

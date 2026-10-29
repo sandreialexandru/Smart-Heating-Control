@@ -1922,3 +1922,18 @@ async def test_a_trv_that_bounces_back_once_is_not_manual(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_a_level_named_like_another_level_keeps_the_schedule(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Eco named "home" (saved before the form refused it) does not turn home into eco."""
+    entry = await _setup(hass, freezer, preset_names={"home": "Acasă", "eco": "home"})
+    await _tick(hass, freezer, 15)
+    decision = hass.states.get("sensor.bedroom_decision")
+    # Monday noon: the default schedule has home.
+    assert decision.attributes["preset"] == "home"
+    assert hass.states.get("sensor.bedroom_target_temperature").state == "21.0"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

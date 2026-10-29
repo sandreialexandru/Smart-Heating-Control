@@ -3370,11 +3370,14 @@ class SmartHeatingControlCard extends HTMLElement {
         break;
       case "add-profile": {
         const input = this.shadowRoot.querySelector(".newprofile");
+        // Only what the integration accepts in a profile name: letters, digits,
+        // spaces (made "_"), "_" and "-"; it starts with a letter or a digit.
         const name = (input?.value || "")
           .trim()
           .toLowerCase()
-          .replace(/[,:#]/g, "")
-          .replace(/\s+/g, "_");
+          .replace(/[^\p{L}\p{N} _-]/gu, "")
+          .replace(/\s+/g, "_")
+          .replace(/^[_-]+/, "");
         if (name && !this._draft[name]) {
           this._draft[name] = [{ time: "00:00", preset: "home" }];
           if (this._draftDays) this._draftDays[name] = { days: guessDays(name), enabled: false };

@@ -132,7 +132,9 @@ The rest of the step depends on the kind:
   for a level, leave the field empty and the level's temperature is sent.
 - **Command *Temperature*, *On / off* and relays**: for every level a **name**
   (how it appears in the schedule and the card; you may keep the default name)
-  and a **temperature**.
+  and a **temperature**. A name cannot be the internal name of another level
+  (`home`, `sleep`, `eco`, `away`, `comfort`, `activity`, `frost`): the schedule
+  uses those names, so it would read the wrong level.
 
 Default temperatures: `home` 21, `sleep` 18, `eco` 17, `away` 12, `comfort` 22,
 `activity` 20 °C. They can be between the frost protection and the maximum

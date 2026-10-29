@@ -443,12 +443,16 @@ class House:
 
         # An unexpected error of the heat source or of the checks does not stop
         # the timer, the saving and the update of the entities.
+        # Each on its own: an error of one does not skip the others.
         try:
             await self._async_control_boiler(now)
+        except Exception:
+            _LOGGER.exception("Error controlling the heat source of %s", self.entry.title)
+        try:
             self._check_room_difference()
             self._check_weather_alerts(now)
         except Exception:
-            _LOGGER.exception("Error controlling the heat source of %s", self.entry.title)
+            _LOGGER.exception("Error in the checks of %s", self.entry.title)
         self._schedule_timer(now)
         self.async_save()
         self.async_notify_listeners()

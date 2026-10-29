@@ -98,7 +98,8 @@ header:
   house *Schedule day starts at*, e.g. 00 → 24 or 04 → 04), with the time now.
 If a room below its target does not heat, the card says why (*Not heating: …*,
 see [chapter 8](08-heat-source-and-energy.md#when-a-room-below-its-target-does-not-heat)).
-The *Back to automatic* button clears a manual change.
+While there is a manual change, an **Automatic** button first in the row of
+buttons under the chart clears it (back to automatic).
 
 Under the chart, buttons open the sections **Set for a while**, **Schedule**,
 **Levels** and **Details**, each on its own (several can be open at once); an

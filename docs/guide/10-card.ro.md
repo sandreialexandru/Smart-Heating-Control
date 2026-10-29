@@ -97,7 +97,8 @@ nivelul lângă arc. Sub antet:
   a casei, de exemplu 00 → 24 sau 04 → 04), cu ora de acum.
 Dacă o cameră sub țintă nu încălzește, cardul spune de ce (*Nu încălzește: …*,
 vezi [capitolul 8](08-sursa-si-energie.ro.md#când-nu-încălzește-o-cameră-sub-țintă)).
-Butonul *Înapoi la automat* anulează o modificare manuală.
+Cât există o modificare manuală, butonul **Automat**, primul din rândul de
+butoane de sub grafic, o anulează (înapoi la automat).
 
 Sub grafic, butoanele deschid secțiunile **Setează temporar**, **Program**,
 **Niveluri** și **Detalii**, fiecare separat (pot fi deschise mai multe deodată);

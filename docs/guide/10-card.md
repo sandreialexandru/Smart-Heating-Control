@@ -99,9 +99,9 @@ header:
 If a room below its target does not heat, the card says why (*Not heating: …*,
 see [chapter 8](08-heat-source-and-energy.md#when-a-room-below-its-target-does-not-heat)).
 While there is a manual change, an **Automatic** button first in the row of
-buttons under the chart clears it (back to automatic).
+buttons under the arc clears it (back to automatic).
 
-Under the chart, buttons open the sections **Set for a while**, **Schedule**,
+Under the arc, buttons open the sections **Set for a while**, **Schedule**,
 **Levels** and **Details**, each on its own (several can be open at once); an
 open section's button stays coloured. A **Lock** button next to them turns the
 child lock of the room on or off (coloured while on). The chart and the

@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.3.30b1";
+const CARD_VERSION = "2.3.30b2";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -1566,13 +1566,14 @@ class SmartHeatingControlCard extends HTMLElement {
       this._eta(a)
     )}</div></div>`;
 
+    // The buttons (and the sections they open) right under the arc, before the day bar and the chart.
     const parts = [
       head,
       hero,
+      this._sectionsHtml(a, e, stateObj),
       this._noHeatHtml(a),
       this._todayHtml(a),
       cfg.show_timeline ? this._timelineHtml(a) : "",
-      this._sectionsHtml(a, e, stateObj),
     ];
     return `<section class="block room open" style="--c:${color}">${parts.join("")}</section>`;
   }

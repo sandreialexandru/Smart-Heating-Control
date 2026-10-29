@@ -425,7 +425,7 @@ Every room also shows its decision, a flame (outlined while it asks for heat, fu
 while it heats; also on the house and on folded rooms) / window / manual change badges, an arc with the room temperature (empty at the frost protection, full at
 the maximum; it only shows the value) and the target, the reason, the time to
 target, the TRV boost when it is on, what the device itself measures, today's
-profile as a bar, and an *Automatic* button (back to automatic) in the row of buttons while there is a manual change. Buttons under the chart open *Set for
+profile as a bar, and an *Automatic* button (back to automatic) in the row of buttons while there is a manual change. Buttons under the arc open *Set for
 a while*, *Schedule* (each profile with its days and an on / off switch; its
 days are chosen in the editor), *Levels* and *Details*, each on its own (several
 at once), and a *Lock* button for the child lock of the room.

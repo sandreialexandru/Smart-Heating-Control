@@ -447,7 +447,7 @@ Fiecare cameră arată și decizia, o flacără (conturată cât cere căldură,
 încălzește; și la casă și la camerele pliate) / insignele pentru fereastră / modificare manuală, un arc cu temperatura camerei (gol la
 antiîngheț, plin la maxim; doar arată valoarea) și ținta, motivul, timpul până
 la țintă, forțarea TRV când e pornită, ce măsoară dispozitivul însuși, profilul
-zilei ca bară și un buton *Automat* (înapoi la automat) în rândul de butoane cât există o modificare manuală. Butoanele de sub grafic deschid *Setează
+zilei ca bară și un buton *Automat* (înapoi la automat) în rândul de butoane cât există o modificare manuală. Butoanele de sub arc deschid *Setează
 temporar*, *Program* (fiecare profil cu zilele lui și un comutator pornit /
 oprit; zilele se aleg în editor), *Niveluri* și *Detalii*, fiecare separat (mai
 multe deodată) și un buton *Blocare* pentru blocarea modificărilor în cameră.

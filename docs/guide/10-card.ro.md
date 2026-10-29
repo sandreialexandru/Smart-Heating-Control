@@ -98,9 +98,9 @@ nivelul lângă arc. Sub antet:
 Dacă o cameră sub țintă nu încălzește, cardul spune de ce (*Nu încălzește: …*,
 vezi [capitolul 8](08-sursa-si-energie.ro.md#când-nu-încălzește-o-cameră-sub-țintă)).
 Cât există o modificare manuală, butonul **Automat**, primul din rândul de
-butoane de sub grafic, o anulează (înapoi la automat).
+butoane de sub arc, o anulează (înapoi la automat).
 
-Sub grafic, butoanele deschid secțiunile **Setează temporar**, **Program**,
+Sub arc, butoanele deschid secțiunile **Setează temporar**, **Program**,
 **Niveluri** și **Detalii**, fiecare separat (pot fi deschise mai multe deodată);
 butonul unei secțiuni deschise rămâne colorat. Butonul **Blocare** de lângă ele
 pornește sau oprește blocarea modificărilor în cameră (colorat cât e pornită).

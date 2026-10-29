@@ -1937,3 +1937,29 @@ async def test_a_level_named_like_another_level_keeps_the_schedule(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_turned_off_by_hand_right_after_on_is_manual(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The integration turns a TRV on; a person turns it off within the minute: manual."""
+    async_mock_service(hass, "climate", "set_temperature")
+    modes = async_mock_service(hass, "climate", "set_hvac_mode")
+    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 18.0, "temperature": 21.0}
+    hass.states.async_set("climate.trv", "off", trv)
+    entry = await _trv_room(hass, freezer, {"climate.trv": trv})
+    hass.states.async_set("climate.trv", "off", trv)
+    await _tick(hass, freezer, 15)
+    assert modes and modes[-1].data["hvac_mode"] == "heat"
+    hass.states.async_set("climate.trv", "heat", trv, context=Context())
+    await _tick(hass, freezer, 10)
+    assert hass.states.get("binary_sensor.office_manual_change").state == "off"
+    # Turned off by hand 20 seconds later: respected as a manual change.
+    hass.states.async_set("climate.trv", "off", trv, context=Context())
+    await _tick(hass, freezer, 10)
+    override = hass.states.get("binary_sensor.office_manual_change").attributes
+    assert override["origin"] == "device"
+    assert override["description"] == "turned off"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

@@ -1933,10 +1933,12 @@ class Room:
         """Send one climate command and remember the value it sets."""
         name = field or key
         # What the device shows before the command: some TRVs report it once more
-        # after showing the new value, however long ago it was set.
+        # after showing the new value, however long ago it was set. Only for the
+        # temperature and the preset: turning a device off by hand right after it
+        # was turned on stays a manual change.
         before = self.hass.states.get(entity_id)
         shown = None
-        if valid(before):
+        if valid(before) and name != "state":
             shown = before.state if name == "state" else before.attributes.get(name)  # type: ignore[union-attr]
         ok = await self._call("climate", service, {ATTR_ENTITY_ID: entity_id, key: value})
         if ok:

@@ -1859,3 +1859,35 @@ async def test_an_older_command_reported_late_is_not_manual(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_older_values_forgotten_once_the_last_is_confirmed(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Once the TRV reports the last command, an older value set by hand is a manual change."""
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 18.0, "temperature": 17.0,
+           "target_temp_step": 0.5}
+    entry = await _trv_room(hass, freezer, {"climate.trv": trv})
+    await _tick(hass, freezer, 15)
+    assert calls[-1].data["temperature"] == 21.0
+    await hass.services.async_call(
+        DOMAIN, "set_override", {"room": "Office", "temperature": 23, "duration_hours": 2},
+        blocking=True,
+    )
+    await _tick(hass, freezer, 5)
+    assert calls[-1].data["temperature"] == 23.0
+    # The TRV confirms 23 (the last command) ...
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 23.0}, context=Context())
+    await _tick(hass, freezer, 5)
+    assert hass.states.get("binary_sensor.office_manual_change").attributes["origin"] == "card"
+    # ... so a minute later 21 set by hand is a person's change, not the old command.
+    await _tick(hass, freezer, 60)
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 21.0}, context=Context())
+    await _tick(hass, freezer, 5)
+    override = hass.states.get("binary_sensor.office_manual_change").attributes
+    assert override["origin"] == "device"
+    assert override["description"] == "21.0 °C"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

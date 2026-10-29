@@ -592,6 +592,8 @@ class Room:
             self._remember_preset_temp(new)
             if self._is_manual_change(event, old, new):
                 self._handle_manual_change(entity_id, new)
+            else:
+                self._confirm_sent(entity_id, new)
         elif entity_id in self.switches:
             if (
                 old is not None
@@ -672,6 +674,29 @@ class Room:
                 return False
             matched = True
         return matched
+
+    def _confirm_sent(self, entity_id: str, new: State | None) -> None:
+        """The device reports the last value sent: the older ones are no longer expected.
+
+        Until then an older command may still come late (it is not a manual
+        change); afterwards any other value is a person's, also within the
+        minutes the older values are otherwise kept.
+        """
+        sent = self._sent.get(entity_id)
+        recent = self._sent_recent.get(entity_id)
+        if not sent or not recent or new is None or not valid(new):
+            return
+        confirmed = set()
+        for key, value in sent.items():
+            reported = new.state if key == "state" else new.attributes.get(key)
+            if key == ATTR_TEMPERATURE:
+                step = float_attr(new, "target_temp_step")
+                if _close(reported, value, step / 2 + 0.01 if step else 0.05):
+                    confirmed.add(key)
+            elif reported == value:
+                confirmed.add(key)
+        if confirmed:
+            self._sent_recent[entity_id] = [r for r in recent if r[1] not in confirmed]
 
     def _handle_manual_change(self, entity_id: str, new: State | None) -> None:
         """Respect a manual change (or revert it with the child lock)."""

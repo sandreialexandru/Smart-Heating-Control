@@ -1127,6 +1127,8 @@ class SmartHeatingControlCard extends HTMLElement {
     const c = 2 * Math.PI * r;
     const arc = c * 0.75;
     const mid = size / 2;
+    // The round end of a line reaches half its width past its length: the value arc is
+    // drawn that much shorter, so it ends exactly at the temperature (and at the target mark when equal).
     const ring = (cls, len) =>
       `<circle cx="${mid}" cy="${mid}" r="${r.toFixed(2)}" class="${cls}" stroke-width="${sw}" stroke-dasharray="${len.toFixed(
         1
@@ -1140,14 +1142,14 @@ class SmartHeatingControlCard extends HTMLElement {
       const p = (rad) => `${(mid + rad * Math.cos(ang)).toFixed(1)} ${(mid + rad * Math.sin(ang)).toFixed(1)}`;
       const [x1, y1] = p(r - sw / 2 - out).split(" ");
       const [x2, y2] = p(r + sw / 2 + out).split(" ");
-      mark = `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="gmark" stroke-width="${size >= 120 ? 3 : 2}"></line>`;
+      mark = `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="gmark" stroke-width="${size >= 120 ? 1.5 : 1}"></line>`;
     }
     const label = `${this._t("room_temp")} ${this._temp(cur)}, ${this._t("target_tag")} ${this._temp(tgt)}`;
     const link = e && e.room_temperature ? this._more(e.room_temperature) : "";
     return `<span class="gauge ${link ? "link" : ""}" style="width:${size}px;height:${size}px;--gs:${size}px" ${link}
         ${link ? "" : 'role="img"'} aria-label="${esc(label)}">
         <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
-          ${ring("gtrack", arc)}${cur !== null ? ring("gvalue", Math.max(0.1, arc * f)) : ""}${mark}
+          ${ring("gtrack", arc)}${cur !== null ? ring("gvalue", Math.max(0.1, arc * f - sw / 2)) : ""}${mark}
         </svg>
         <span class="gcenter"><span class="gnum">${this._temp(cur)}</span>${
           withTarget

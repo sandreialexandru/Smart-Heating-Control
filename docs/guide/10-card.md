@@ -72,7 +72,7 @@ collapsed: true
 The header shows the name, the decision (e.g. *Nearby*, *Schedule*; in the
 colour of the level) and badges for heating (pulsing), open window and manual
 change. The decision stays next to the name in every view (open room, folded
-row, compact tile); the **level** (e.g. *eco*) is shown separately: under the
+row, compact tile); the **level** (e.g. *eco*) is shown separately: next to the
 arc in an open room, next to the target in a folded row, in the tile. Below the
 header:
 

@@ -72,7 +72,7 @@ collapsed: true
 Antetul arată numele, decizia (de exemplu *Aproape*, *Program*; în culoarea
 nivelului) și insignele pentru încălzire (pulsează), fereastră deschisă și
 modificare manuală. Decizia rămâne lângă nume în orice vedere (cameră deschisă,
-rând pliat, placă compactă); **nivelul** (de exemplu *eco*) apare separat: sub
+rând pliat, placă compactă); **nivelul** (de exemplu *eco*) apare separat: lângă
 arc în camera deschisă, lângă țintă în rândul pliat, în placă. Sub antet:
 
 - un **arc** cu temperatura camerei și ținta sub ea; arcul e gol la antiîngheț

@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.3.24";
+const CARD_VERSION = "2.3.25";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -1349,7 +1349,7 @@ class SmartHeatingControlCard extends HTMLElement {
         </div>
         ${badges.length ? `<div class="decision">${badges.join("")}</div>` : ""}
       </div>`;
-    const hero = `<div class="hero"><div class="gcol">${this._gauge(a, e, 140)}${this._presetPill(a)}</div><div class="chips">${this._chipsHtml(
+    const hero = `<div class="hero">${this._gauge(a, e, 140)}<div class="chips">${this._presetPill(a)}${this._chipsHtml(
       a,
       e,
       stateObj,
@@ -3546,7 +3546,16 @@ const STYLE = `
     70% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--ac-hot) 0%, transparent); }
     100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ac-hot) 0%, transparent); }
   }
-  .hero { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .block.room.open { container-type: inline-size; }
+  .hero { display: flex; gap: 16px; align-items: center; }
+  .hero .chips { flex: 1 1 0; }
+  .hero .chips .pill.preset { align-self: flex-start; }
+  @container (max-width: 440px) {
+    .hero { gap: 12px; }
+    .hero .gauge { width: 112px !important; height: 112px !important; --gs: 112px; }
+    .hero .gauge svg { width: 100%; height: 100%; }
+    .hero .chip { font-size: 0.85em; }
+  }
   .gauge { position: relative; display: inline-block; flex: none; }
   .gauge svg { display: block; }
   .gauge .gtrack { fill: none; stroke: color-mix(in srgb, var(--c) 20%, var(--ac-line)); stroke-linecap: round; }
@@ -3554,7 +3563,7 @@ const STYLE = `
   .gcenter { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .gnum { font-size: max(13px, calc(var(--gs) * 0.24)); font-weight: 300; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
   .gsub { font-size: 0.8em; color: var(--ac-muted); margin-top: 5px; }
-  .chips { display: flex; flex-direction: column; gap: 9px; min-width: 0; flex: 1 1 180px; }
+  .chips { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
   .chip { display: inline-flex; align-items: flex-start; gap: 7px; font-size: 0.9em; line-height: 1.35; }
   .chip ha-icon { --mdc-icon-size: 17px; color: var(--c); flex: none; }
   .chip small { display: block; }

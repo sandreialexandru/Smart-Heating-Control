@@ -406,7 +406,7 @@ type: custom:smart-heating-control-card
 | --- | --- | --- |
 | `title` | Heating | Card title (empty string hides it) |
 | `rooms` | all | List of room *Decision* sensors to show |
-| `show_house` | `true` | Presence and people (round badges in the colour of where they are), tiles for the outdoor average (over the *Average over* hours), season, heat demand and heating time, mode (Auto / Vacation / Off / Summer), and a row of buttons: Pause, Guests and Vacation (each opens its own panel), Reevaluate, Automatic (clears all manual changes) |
+| `show_house` | `true` | Presence and people (round badges in the colour of where they are), tiles for the outdoor average (over the *Average over* hours), season, heat demand and heating time, mode (Auto / Vacation / Off / Summer), and a row of buttons: Pause and Guests (on / off; guest mode shows a band at the top), Vacation (opens the dates), Reevaluate, Automatic (clears all manual changes) |
 | `show_rooms` | `true` | The rooms |
 | `show_timeline` | `true` | Chart of the last 24 hours and the next 12: room temperature, target (colored by level), planned levels and the periods when the room heated. Hover, touch or drag on the chart to read the values. Zoom with the buttons (1h, 6h, −, +), double-click, pinch or Ctrl + wheel down to 20 minutes; when zoomed, drag the window in the bar under the chart (or tap a place on it) to move in time |
 | `show_quick_override` | `true` | Set a level or a temperature for a number of hours (empty = the configured rule) |

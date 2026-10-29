@@ -32,8 +32,8 @@ type: custom:smart-heating-control-card
 | `show_levels` | `true` | Temperaturile nivelurilor. |
 | `show_details` | `true` | *Detaliile* camerei. |
 | `show_schedule_editor` | `true` | Editorul programului. |
-| `collapsed` | `false` | Camerele încep pliate (un rând: un arc mic, numele, motivul, ținta); atingi rândul ca să deschizi camera. |
-| `compact` | `false` | O placă pe cameră (arc cu temperatura, nivel, țintă, o iconiță de stare) și un rând pentru casă; atingi ca să deschizi. |
+| `collapsed` | `false` | Camerele încep pliate (un rând: un arc mic, numele cu decizia, motivul, nivelul și ținta); atingi rândul ca să deschizi camera. |
+| `compact` | `false` | O placă pe cameră (numele cu decizia, arc cu temperatura, nivel, țintă, o iconiță de stare) și un rând pentru casă; atingi ca să deschizi. |
 | `runtime_period` | `day` | Timpul de încălzire pe `day`, `week` sau `month` (perioade calendaristice, din statisticile pe termen lung); se schimbă și atingând valoarea în card. |
 
 **Exemplu**: un card doar pentru dormitor, pliat, fără editorul de program:
@@ -55,20 +55,25 @@ collapsed: true
 - Plăci pentru **media temperaturii de afară** (pe orele din *Medie pe*),
   **sezon**, **cererea de căldură** și **timpul de încălzire**.
 - **Modul** (Auto / Vacanță / Oprit / Vară).
-- Un rând de butoane: **Pauză** (pornit / oprit), **Oaspeți** și **Vacanță**
-  (fiecare își deschide panoul: pornirea / oprirea modului oaspeți, datele
-  vacanței), **Reevaluează** și **Automat** (anulează toate modificările
-  manuale). Un buton rămâne colorat cât modul lui e pornit.
+- Un rând de butoane: **Pauză** și **Oaspeți** (pornit / oprit), **Vacanță**
+  (deschide datele vacanței), **Reevaluează** și **Automat** (anulează toate
+  modificările manuale). Un buton rămâne colorat cât modul lui e pornit.
 - **Cald afară**, cât încălzirea e oprită pentru că e cald, cu motivul (media
   măsurată sau prognoza) sau când prognoza lasă încălzirea să pornească (vezi
   [capitolul 6](06-vreme.ro.md)). Nu apare unde nu are efect: modul Oprit sau
   Vară, în afara sezonului, în pauză.
-- O **bandă de pauză** sus, cât casa e în pauză.
+- O **bandă de pauză** sus cât casa e în pauză și o **bandă de oaspeți** cât
+  modul oaspeți e pornit (cu sfârșitul lui, când are unul).
+- În cardul compact, rândul pliat al casei arată persoanele, modul,
+  temperatura de afară și o flacără cât există cerere de căldură.
 
 ## O cameră
 
-Antetul arată numele, decizia (în culoarea nivelului) și insignele pentru
-încălzire (pulsează), fereastră deschisă și modificare manuală. Dedesubt:
+Antetul arată numele, decizia (de exemplu *Aproape*, *Program*; în culoarea
+nivelului) și insignele pentru încălzire (pulsează), fereastră deschisă și
+modificare manuală. Decizia rămâne lângă nume în orice vedere (cameră deschisă,
+rând pliat, placă compactă); **nivelul** (de exemplu *eco*) apare separat: sub
+arc în camera deschisă, lângă țintă în rândul pliat, în placă. Sub antet:
 
 - un **arc** cu temperatura camerei și ținta sub ea; arcul e gol la antiîngheț
   și plin la temperatura maximă a camerei (doar arată temperatura, nu schimbă

@@ -329,10 +329,7 @@ const TEXT = {
     off_tariff_low: "low tariff",
     off_pv_surplus: "solar surplus",
     off_solar_gain: "solar gain",
-    guest_title: "Guest mode",
-    guest_hint: "While it is on, the house counts as Home even if none of the people is home. It turns off by itself after the time set in the house options (0 = it does not).",
-    guest_start: "Turn guest mode on",
-    guest_stop: "Turn guest mode off",
+    guests_banner: "Guest mode: the house counts as Home even if none of the people is home",
     auto_short: "Automatic",
     device_temp: "Device {temp}",
     trv_boost_chip: "TRV boost · {temp}",
@@ -565,10 +562,7 @@ const TEXT = {
     off_tariff_low: "tarif redus",
     off_pv_surplus: "surplus solar",
     off_solar_gain: "câștig solar",
-    guest_title: "Mod oaspeți",
-    guest_hint: "Cât e pornit, casa e considerată Acasă chiar dacă nu e acasă nimeni dintre persoane. Se oprește singur după durata din opțiunile casei (0 = nu se oprește singur).",
-    guest_start: "Pornește modul oaspeți",
-    guest_stop: "Oprește modul oaspeți",
+    guests_banner: "Mod oaspeți: casa e considerată Acasă chiar dacă nu e acasă nimeni dintre persoane",
     auto_short: "Automat",
     device_temp: "Dispozitiv {temp}",
     trv_boost_chip: "Forțare TRV · {temp}",
@@ -849,6 +843,7 @@ class SmartHeatingControlCard extends HTMLElement {
         .map(
           (house) =>
             this._pauseBanner(house) +
+            this._guestBanner(house) +
             (cfg.show_house ? this._houseHtml(house) : "") +
             (cfg.show_rooms
               ? house.rooms.length
@@ -1154,9 +1149,6 @@ class SmartHeatingControlCard extends HTMLElement {
       )}</span></span><span class="v">${esc(value)}</span></div>`;
     const onOff = (s) => (s ? (s.state === "on" ? this._t("on") : this._t("off")) : "–");
     const guestOn = guest?.state === "on";
-    const guestUntil = guest?.attributes?.until
-      ? `<span class="muted">${this._t("until")} ${esc(this._fmtTime(guest.attributes.until))}</span>`
-      : "";
     const isDate = (s) => s && !Number.isNaN(Date.parse(s.state));
     const vacationSet = isDate(vStart) || isDate(vEnd);
     const vacationSummary = vacationSet
@@ -1170,7 +1162,6 @@ class SmartHeatingControlCard extends HTMLElement {
       return `<button class="crow house-row" data-action="fold" data-key="${esc(houseKey)}" aria-expanded="false">
           ${persons.length ? `<span class="avatars sm" aria-hidden="true">${avatarList(false)}</span>` : this._icon("home-thermometer-outline")}
           <span class="cname">${esc(house.name || "")}</span>
-          <span class="pill presence-state ${esc(presence?.state)}">${esc(this._label(presence))}</span>
           <span class="pill">${esc(this._label(mode))}</span>
           ${demand?.state === "on" ? `<span class="cicon hot" title="${esc(this._t("heating"))}">${this._icon("fire")}</span>` : ""}
           <span class="ctemp muted">${this._icon("weather-partly-cloudy")} ${esc(this._temp(outdoor?.state))}</span>
@@ -1187,7 +1178,6 @@ class SmartHeatingControlCard extends HTMLElement {
       "home-search-outline";
 
     // Action buttons: an icon and a short name; Guests and Vacation open their own panel.
-    const guestKey = `guest-${house.id}`;
     const vacKey = `vac-${house.id}`;
     const abtn = (icon, label, attrs, cls = "", title = "") =>
       `<button class="abtn ${cls}" ${attrs} ${title ? `title="${esc(title)}" aria-label="${esc(title)}"` : ""}>${this._icon(
@@ -1199,7 +1189,7 @@ class SmartHeatingControlCard extends HTMLElement {
         ? abtn("pause", this._t("pause"), `data-action="toggle" data-entity="${esc(e.pause)}" role="switch" aria-checked="${pause.state === "on"}"`, pause.state === "on" ? "warn on" : "warn")
         : "",
       guest
-        ? abtn("account-group-outline", this._t("guests"), fold(guestKey), `teal ${guestOn ? "on" : ""} ${this._open[guestKey] ? "open" : ""}`)
+        ? abtn("account-group-outline", this._t("guests"), `data-action="toggle" data-entity="${esc(e.guest_mode)}" role="switch" aria-checked="${guestOn}"`, `teal ${guestOn ? "on" : ""}`)
         : "",
       abtn("airplane", this._t("vacation"), fold(vacKey), `blue ${vacationSet ? "on" : ""} ${this._open[vacKey] ? "open" : ""}`),
       e.reevaluate ? abtn("refresh", this._t("reevaluate"), `data-action="press" data-entity="${esc(e.reevaluate)}"`) : "",
@@ -1208,18 +1198,6 @@ class SmartHeatingControlCard extends HTMLElement {
         : "",
     ].filter(Boolean);
 
-    const guestPanel =
-      guest && this._open[guestKey]
-        ? `<div class="panel teal">
-            <div class="panel-head"><b>${esc(this._t("guest_title"))}</b>${guestUntil}<span class="pill state ${
-              guestOn ? "on" : ""
-            } link" ${this._more(e.guest_mode)}>${esc(guestOn ? this._t("on") : this._t("off"))}</span></div>
-            <p class="hint">${esc(this._t("guest_hint"))}</p>
-            <div class="row wrap">${this._btn(this._t(guestOn ? "guest_stop" : "guest_start"), `data-action="toggle" data-entity="${esc(
-              e.guest_mode
-            )}"`, { icon: guestOn ? "account-off-outline" : "account-group-outline", kind: guestOn ? "" : "primary" })}</div>
-          </div>`
-        : "";
     const vacPanel = this._open[vacKey]
       ? `<div class="panel blue">
           <div class="panel-head"><b>${esc(this._t("vacation"))}</b><span class="muted">${vacationSummary}</span></div>
@@ -1262,7 +1240,6 @@ class SmartHeatingControlCard extends HTMLElement {
                   this._label(presence)
                 )}</span>
                 ${presence?.attributes?.arriving ? `<span class="pill">${this._t("arriving")}</span>` : ""}
-                ${guestOn ? `<span class="pill teal">${esc(this._t("guests"))}</span>` : ""}
               </span>
               ${who ? `<span class="muted">${esc(who)}</span>` : ""}
             </div>
@@ -1277,7 +1254,7 @@ class SmartHeatingControlCard extends HTMLElement {
         </div>
         ${this._cutoffHtml(outdoor, cutoff, e.outdoor_cutoff, mode, season, pause)}
         <div class="hactions" style="--n:${actions.length}">${actions.join("")}</div>
-        ${guestPanel}${vacPanel}
+        ${vacPanel}
       </section>`;
   }
 
@@ -1302,6 +1279,17 @@ class SmartHeatingControlCard extends HTMLElement {
     }
     return `<div class="cutoffline ${reason === "forecast_cold" ? "" : "on"} link" ${this._more(entityId)}>
         <b>${esc(this._t("cutoff"))}:</b> ${esc(text)}</div>`;
+  }
+
+  /** Banner while guest mode is on (the Guests button turns it off), with its end when it has one. */
+  _guestBanner(house) {
+    const guest = this._state(house.entities?.guest_mode);
+    if (guest?.state !== "on") return "";
+    const name = this._houses().length > 1 && house.name ? `${house.name}: ` : "";
+    const until = guest.attributes?.until ? ` (${this._t("until")} ${this._fmtTime(guest.attributes.until)})` : "";
+    return `<div class="banner teal link" ${this._more(house.entities.guest_mode)}>${this._icon("account-group-outline")}<span>${esc(
+      name + this._t("guests_banner") + until
+    )}</span></div>`;
   }
 
   /** Banner while the house is paused (the switch stays the only control). */
@@ -1359,7 +1347,7 @@ class SmartHeatingControlCard extends HTMLElement {
         </div>
         ${badges.length ? `<div class="decision">${badges.join("")}</div>` : ""}
       </div>`;
-    const hero = `<div class="hero">${this._gauge(a, e, 140)}<div class="chips">${this._chipsHtml(
+    const hero = `<div class="hero"><div class="gcol">${this._gauge(a, e, 140)}${this._presetPill(a)}</div><div class="chips">${this._chipsHtml(
       a,
       e,
       stateObj,
@@ -1378,6 +1366,13 @@ class SmartHeatingControlCard extends HTMLElement {
     return `<section class="block room open" style="--c:${color}">${parts.join("")}</section>`;
   }
 
+  /** The level the room is at (its colour and name); a temperature without a level shows only the value. */
+  _presetPill(a, withTarget = false) {
+    const target = withTarget ? ` ${this._temp(a.target_temperature)}` : "";
+    if (!a.preset) return withTarget ? `<span class="pill preset">${this._temp(a.target_temperature)}</span>` : "";
+    return `<span class="pill preset"><span class="dot"></span>${esc(this._presetName(a, a.preset))}${target}</span>`;
+  }
+
   /** Small icons of a folded room: heating, window open, manual change. */
   _statusIcons(a) {
     const icons = [];
@@ -1394,10 +1389,12 @@ class SmartHeatingControlCard extends HTMLElement {
     return `<section class="block room folded" style="--c:${color}">
         <button class="frow" data-action="fold" data-key="room-${esc(a.room_id)}" aria-expanded="false">
           ${this._gauge(a, null, 54, false)}
-          <span class="ftext"><span class="name">${esc(a.room_name)}</span>
+          <span class="ftext"><span class="fname"><span class="name">${esc(a.room_name)}</span><span class="pill rule"><span class="dot"></span>${esc(
+            this._label(stateObj)
+          )}</span></span>
             <span class="freason">${eta ? `${esc(eta)} · ` : ""}${esc(this._reasonText(a))}</span></span>
           ${this._statusIcons(a)}
-          <span class="pill rule">${this._temp(a.target_temperature)}</span>
+          ${this._presetPill(a, true)}
           <span class="chev"></span>
         </button>
       </section>`;
@@ -1420,12 +1417,13 @@ class SmartHeatingControlCard extends HTMLElement {
       : a.window_open
         ? this._t("window")
         : eta || (a.next_change ? `${this._presetName(a, a.next_preset)} · ${this._fmtTime(a.next_change)}` : "");
-    const level = a.preset ? this._presetName(a, a.preset) : this._label(stateObj);
     return `<button class="tile" data-action="fold" data-key="room-${esc(a.room_id)}" aria-expanded="false" style="--c:${color}"
         aria-label="${esc(`${a.room_name}, ${this._temp(a.current_temperature)}, ${this._label(stateObj)}`)}">
-        <span class="tile-head"><span class="cname">${esc(a.room_name)}</span>${status}</span>
+        <span class="tile-head"><span class="tname"><span class="cname">${esc(a.room_name)}</span><span class="pill rule"><span class="dot"></span>${esc(
+          this._label(stateObj)
+        )}</span></span>${status}</span>
         <span class="tile-body">${this._gauge(a, null, 86, false)}
-          <span class="tile-info"><span class="pill rule"><span class="dot"></span>${esc(level)}</span>
+          <span class="tile-info">${this._presetPill(a)}
             <span class="tsub">${esc(this._t("target_tag").toLowerCase())} ${this._temp(a.target_temperature)}</span>
             ${line ? `<span class="muted">${esc(line)}</span>` : ""}</span>
         </span>
@@ -3606,6 +3604,14 @@ const STYLE = `
   .tstat.hot { background: var(--ac-hot); color: #fff; }
   .tstat.warn { background: var(--ac-warn); color: #fff; }
   .tile-body { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .gcol { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; }
+  .pill.preset { background: color-mix(in srgb, var(--c) 22%, transparent); font-weight: 500; }
+  .pill.preset .dot, .pill.rule .dot { width: 8px; height: 8px; }
+  .fname, .tname { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
+  .tname { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .tile-head { align-items: flex-start !important; }
+  .banner.teal { background: color-mix(in srgb, #2f9e8f 18%, transparent); border-color: color-mix(in srgb, #2f9e8f 55%, transparent); }
+  .banner.teal ha-icon { color: #2f9e8f; }
   .tile-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 0.85em; align-items: flex-start; }
   .tile-info .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 

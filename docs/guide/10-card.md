@@ -32,8 +32,8 @@ type: custom:smart-heating-control-card
 | `show_levels` | `true` | The level temperatures. |
 | `show_details` | `true` | The room *Details*. |
 | `show_schedule_editor` | `true` | The schedule editor. |
-| `collapsed` | `false` | Rooms start folded (one row: a small arc, the name, the reason, the target); tap it to open the room. |
-| `compact` | `false` | One tile per room (arc with the temperature, level, target, a status icon) and one row for the house; tap to open. |
+| `collapsed` | `false` | Rooms start folded (one row: a small arc, the name with the decision, the reason, the level and the target); tap it to open the room. |
+| `compact` | `false` | One tile per room (the name with the decision, arc with the temperature, level, target, a status icon) and one row for the house; tap to open. |
 | `runtime_period` | `day` | The heating time per `day`, `week` or `month` (calendar periods, from the long-term statistics); also changed by tapping the value in the card. |
 
 **Example**: a card only for the bedroom, folded, without the schedule editor:
@@ -55,20 +55,26 @@ collapsed: true
 - Tiles for **the outdoor average** (over the *Average over* hours), the
   **season**, the **heat demand** and the **heating time**.
 - The **mode** (Auto / Vacation / Off / Summer).
-- A row of buttons: **Pause** (on / off), **Guests** and **Vacation** (each
-  opens its own panel: guest mode on / off, the vacation dates), **Reevaluate**
-  and **Automatic** (clears all manual changes). A button stays coloured while
-  its mode is on.
+- A row of buttons: **Pause** and **Guests** (on / off), **Vacation** (opens
+  the vacation dates), **Reevaluate** and **Automatic** (clears all manual
+  changes). A button stays coloured while its mode is on.
 - **Warm outside**, while the heating is off because it is warm, with the reason
   (measured average or forecast) or when the forecast lets the heating run (see
   [chapter 6](06-weather.md)). Not shown where it cannot act: mode Off or Summer,
   outside the season, in a pause.
-- A **pause band** at the top, while the house is paused.
+- A **pause band** at the top while the house is paused, and a **guest band**
+  while guest mode is on (with its end, when it has one).
+- In the compact card the folded house row shows the people, the mode, the
+  outdoor temperature and a flame while there is heat demand.
 
 ## A room
 
-The header shows the name, the decision (in the colour of the level) and badges
-for heating (pulsing), open window and manual change. Below it:
+The header shows the name, the decision (e.g. *Nearby*, *Schedule*; in the
+colour of the level) and badges for heating (pulsing), open window and manual
+change. The decision stays next to the name in every view (open room, folded
+row, compact tile); the **level** (e.g. *eco*) is shown separately: under the
+arc in an open room, next to the target in a folded row, in the tile. Below the
+header:
 
 - an **arc** with the room temperature and the target under it; the arc is
   empty at the frost protection and full at the maximum temperature of the room

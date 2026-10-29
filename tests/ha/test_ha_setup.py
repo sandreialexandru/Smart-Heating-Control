@@ -1848,10 +1848,10 @@ async def test_an_older_command_reported_late_is_not_manual(
     assert override["origin"] == "card"
     assert override["until"] is not None
 
-    # After the 5 minutes the same value is a person's change again.
-    await _tick(hass, freezer, 6 * 60)
+    # The TRV then shows 23 (the command sent again); once it has kept it, 21 set
+    # by hand is a person's change again.
     hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 23.0}, context=Context())
-    await _tick(hass, freezer, 5)
+    await _tick(hass, freezer, 6 * 60)
     hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 21.0}, context=Context())
     await _tick(hass, freezer, 5)
     override = hass.states.get("binary_sensor.office_manual_change").attributes

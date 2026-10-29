@@ -980,12 +980,23 @@ class SmartHeatingControlCard extends HTMLElement {
       `<circle cx="${mid}" cy="${mid}" r="${r.toFixed(2)}" class="${cls}" stroke-width="${sw}" stroke-dasharray="${len.toFixed(
         1
       )} ${c.toFixed(1)}" transform="rotate(135 ${mid} ${mid})"></circle>`;
+    // The target as a short mark across the arc (a scale mark, not a handle), on the same scale.
+    let mark = "";
+    if (tgt !== null) {
+      const ft = Math.min(1, Math.max(0, (tgt - lo) / (hi - lo)));
+      const ang = ((135 + 270 * ft) * Math.PI) / 180;
+      const out = size >= 120 ? 4 : 2;
+      const p = (rad) => `${(mid + rad * Math.cos(ang)).toFixed(1)} ${(mid + rad * Math.sin(ang)).toFixed(1)}`;
+      const [x1, y1] = p(r - sw / 2 - out).split(" ");
+      const [x2, y2] = p(r + sw / 2 + out).split(" ");
+      mark = `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="gmark" stroke-width="${size >= 120 ? 3 : 2}"></line>`;
+    }
     const label = `${this._t("room_temp")} ${this._temp(cur)}, ${this._t("target_tag")} ${this._temp(tgt)}`;
     const link = e && e.room_temperature ? this._more(e.room_temperature) : "";
     return `<span class="gauge ${link ? "link" : ""}" style="width:${size}px;height:${size}px;--gs:${size}px" ${link}
         ${link ? "" : 'role="img"'} aria-label="${esc(label)}">
         <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
-          ${ring("gtrack", arc)}${cur !== null ? ring("gvalue", Math.max(0.1, arc * f)) : ""}
+          ${ring("gtrack", arc)}${cur !== null ? ring("gvalue", Math.max(0.1, arc * f)) : ""}${mark}
         </svg>
         <span class="gcenter"><span class="gnum">${this._temp(cur)}</span>${
           withTarget
@@ -3605,6 +3616,7 @@ const STYLE = `
   .gauge svg { display: block; }
   .gauge .gtrack { fill: none; stroke: color-mix(in srgb, var(--c) 20%, var(--ac-line)); stroke-linecap: round; }
   .gauge .gvalue { fill: none; stroke: var(--c); stroke-linecap: round; }
+  .gauge .gmark { stroke: var(--primary-text-color); stroke-linecap: round; filter: drop-shadow(0 0 1.5px var(--card-background-color)); }
   .gcenter { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .gnum { font-size: max(13px, calc(var(--gs) * 0.24)); font-weight: 300; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
   .gsub { font-size: 0.8em; color: var(--ac-muted); margin-top: 5px; }

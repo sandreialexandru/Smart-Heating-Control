@@ -86,7 +86,8 @@ nivelul lângă arc. Sub antet:
 
 - un **arc** cu temperatura camerei și ținta sub ea; arcul e gol la antiîngheț
   și plin la temperatura maximă a camerei (doar arată temperatura, nu schimbă
-  nimic);
+  nimic); o liniuță scurtă de-a curmezișul arcului arată ținta pe aceeași scară
+  (și pe arcurile mici);
 - lângă el **motivul** (în limba cardului), **timpul până la țintă** (de exemplu
   *~35 min*) sau, în timpul unei opriri anticipate, **temperatura estimată la
   schimbare** (*~21.5° la 22:00*), modul oaspeți cât e pornit, **forțarea TRV** când e pornită pentru

@@ -87,7 +87,8 @@ header:
 
 - an **arc** with the room temperature and the target under it; the arc is
   empty at the frost protection and full at the maximum temperature of the room
-  (it only shows the temperature, it does not change anything);
+  (it only shows the temperature, it does not change anything); a short mark
+  across the arc shows the target on the same scale (also on the small arcs);
 - next to it the **reason** (in the card language), the **time to target**
   (e.g. *~35 min*) or, during an optimal stop, the **expected temperature at
   the change** (*~21.5° at 22:00*), guest mode while it is on, the **TRV boost** when it is on for the

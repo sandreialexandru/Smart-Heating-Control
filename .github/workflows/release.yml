@@ -70,6 +70,31 @@ jobs:
           cd custom_components/advanced_climate
           zip -r "$GITHUB_WORKSPACE/advanced_climate.zip" . -x "*/__pycache__/*"
 
+      - name: Release notes from the changelog
+        if: steps.version.outputs.exists == 'false'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BETA: ${{ steps.version.outputs.beta }}
+        run: |
+          # A beta takes the "Unreleased" section of CHANGELOG.md, a release its
+          # own "## <version>" section; without one GitHub writes the notes.
+          python3 - <<'PY'
+          import os, pathlib, re
+          path = pathlib.Path("CHANGELOG.md")
+          text = path.read_text(encoding="utf-8") if path.exists() else ""
+          head = "Unreleased" if os.environ["BETA"] == "true" else os.environ["VERSION"]
+          notes = ""
+          for part in re.split(r"(?m)^## ", text)[1:]:
+              title, _, body = part.partition("\n")
+              words = title.split()
+              if words and words[0] == head:
+                  notes = body.strip()
+                  break
+          if notes:
+              pathlib.Path("notes.md").write_text(notes + "\n", encoding="utf-8")
+          print(notes or "No changelog section: GitHub writes the notes.")
+          PY
+
       - name: Create the release
         if: steps.version.outputs.exists == 'false'
         env:
@@ -79,8 +104,9 @@ jobs:
           BETA: ${{ steps.version.outputs.beta }}
         run: |
           if [[ "$BETA" == "true" ]]; then kind=(--prerelease --latest=false); else kind=(--latest); fi
+          if [[ -f notes.md ]]; then notes=(--notes-file notes.md); else notes=(--generate-notes); fi
           gh release create "$TAG" advanced_climate.zip \
             --target "$SHA" \
             --title "Smart Heating Control $TAG" \
-            --generate-notes \
+            "${notes[@]}" \
             "${kind[@]}"

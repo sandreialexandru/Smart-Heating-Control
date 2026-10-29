@@ -439,8 +439,8 @@ type: custom:smart-heating-control-card
 | `compact` | `false` | O placă pe cameră (arc cu temperatura, nivel, țintă, o iconiță de stare) și un rând pentru casă; atinge ca să deschizi |
 | `runtime_period` | `day` | Timpul de încălzire arătat pentru `day`, `week` sau `month` (perioade calendaristice, din statisticile pe termen lung; atinge valoarea în card ca s-o schimbi). Senzorii *Timp de încălzire* rămân totaluri cumulate |
 
-Fiecare cameră arată și decizia, insignele pentru căldură (*Încălzește*, pulsează, cât sursa de
-căldură merge; *Cere căldură* cât așteaptă) / fereastră / modificare manuală, un arc cu temperatura camerei (gol la
+Fiecare cameră arată și decizia, o flacără (conturată cât cere căldură, plină și pâlpâind cât
+încălzește; și la casă și la camerele pliate) / insignele pentru fereastră / modificare manuală, un arc cu temperatura camerei (gol la
 antiîngheț, plin la maxim; doar arată valoarea) și ținta, motivul, timpul până
 la țintă, forțarea TRV când e pornită, ce măsoară dispozitivul însuși, profilul
 zilei ca bară și *Înapoi la automat*. Butoanele de sub grafic deschid *Setează

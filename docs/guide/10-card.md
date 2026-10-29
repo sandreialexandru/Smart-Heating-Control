@@ -50,9 +50,8 @@ collapsed: true
 
 ## The house part
 
-- A **flame** next to the presence while the house asks for heat (in every
-  view); it pulses while a room really heats (the heat source runs). A room
-  shows its flame the same way: while it asks for heat, pulsing while it heats.
+- The **flame** next to the presence (see below) while the house asks for heat;
+  it flickers while a room of the house really heats.
 - **Presence**, with every person as a round badge (the photo or the initial)
   in the colour of where they are: orange home, green nearby, grey far.
 - Tiles for **the outdoor average** (over the *Average over* hours), the
@@ -74,8 +73,13 @@ collapsed: true
 ## A room
 
 The header shows the name, the decision (e.g. *Nearby*, *Schedule*; in the
-colour of the level) and badges for heat (*Heating*, pulsing, while the heat source runs for the room;
-*Asks for heat* while it waits), open window and manual change. A folded room (row or compact tile) shows only the **level** (e.g. *Eco*) and
+colour of the level) and the flame, open window and manual change badges.
+
+A **flame** shows the heat everywhere (house, open room, folded row, compact
+tile): an outlined circle while there is a demand for heat (*Asks for heat*), a
+full one that flickers while the heat source really runs (*Heating*); the words
+appear when it is touched or hovered.
+ A folded room (row or compact tile) shows only the **level** (e.g. *Eco*) and
 small icons: heating (flame), window open, manual change and guest mode while
 it is on; the decision appears when the room is open, with the level next to
 the arc. Below the

@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.3.27";
+const CARD_VERSION = "2.3.28";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -1173,7 +1173,7 @@ class SmartHeatingControlCard extends HTMLElement {
           <span class="cname">${esc(house.name || "")}</span>
           <span class="pill presence-state ${esc(presence?.state)}">${esc(this._label(presence))}</span>
           <span class="pill">${esc(this._label(mode))}</span>
-          ${demand?.state === "on" ? `<span class="cicon hot" title="${esc(this._t("heating"))}">${this._icon("fire")}</span>` : ""}
+          ${demand?.state === "on" ? this._flame(this._houseHeating(house), null, true) : ""}
           <span class="ctemp muted">${this._icon("weather-partly-cloudy")} ${esc(this._temp(outdoor?.state))}</span>
           <span class="chev"></span>
         </button>`;
@@ -1250,7 +1250,7 @@ class SmartHeatingControlCard extends HTMLElement {
                   this._label(presence)
                 )}</span>
                 ${presence?.attributes?.arriving ? `<span class="pill">${this._t("arriving")}</span>` : ""}
-                ${demand?.state === "on" ? `<span class="tstat hot ${this._houseHeating(house) ? "pulse" : ""} link" ${this._more(e.heat_demand, this._t("demand"))}>${this._icon("fire")}</span>` : ""}
+                ${demand?.state === "on" ? this._flame(this._houseHeating(house), e.heat_demand) : ""}
               </span>
               ${who ? `<span class="muted">${esc(who)}</span>` : ""}
             </div>
@@ -1325,9 +1325,7 @@ class SmartHeatingControlCard extends HTMLElement {
 
     const badges = [];
     // "Heating" (pulsing) while the heat source runs for the room; "Asks for heat" while it waits.
-    if (a.heating) badges.push(`<span class="pill hot pulse link" ${this._more(e.heat_demand)}>${this._icon("fire")}${this._t("heating")}</span>`);
-    else if (a.heat_demand)
-      badges.push(`<span class="pill hot link" ${this._more(e.heat_demand)}>${this._icon("fire")}${this._t("asks_heat")}</span>`);
+    if (a.heat_demand) badges.push(this._flame(!!a.heating, e.heat_demand));
     if (a.window_open)
       badges.push(`<span class="pill warn link" ${this._more(e.window_open)}>${this._icon("window-open-variant")}${this._t("window")}</span>`);
     if (a.override) {
@@ -1386,10 +1384,21 @@ class SmartHeatingControlCard extends HTMLElement {
     return `<span class="pill preset"><span class="dot"></span>${esc(this._presetName(a, a.preset))}${target}</span>`;
   }
 
+  /**
+   * The flame: an outlined circle while there is a demand for heat, a full one
+   * that flickers while the heat source runs. The words are in its title.
+   */
+  _flame(heating, entityId = null, small = false) {
+    const text = this._t(heating ? "heating" : "asks_heat");
+    const link = entityId ? this._more(entityId, text) : `title="${esc(text)}"`;
+    return `<span class="flame ${heating ? "on" : ""} ${small ? "sm" : ""} ${entityId ? "link" : ""}" ${link}
+      aria-label="${esc(text)}">${this._icon("fire")}</span>`;
+  }
+
   /** Small icons of a folded room: heating, window open, manual change. */
   _statusIcons(a) {
     const icons = [];
-    if (a.heat_demand) icons.push(`<span class="cicon hot ${a.heating ? "pulse" : ""}" title="${esc(this._t(a.heating ? "heating" : "asks_heat"))}">${this._icon("fire")}</span>`);
+    if (a.heat_demand) icons.push(this._flame(!!a.heating, null, true));
     if (a.window_open) icons.push(`<span class="cicon warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>`);
     if (a.override) icons.push(`<span class="cicon" title="${esc(`${this._t("override")} ${this._overrideUntil(a)}`)}">${this._icon("hand-back-right-outline")}</span>`);
     if (this._guestOn(a)) icons.push(`<span class="cicon teal" title="${esc(this._t("guests_banner"))}">${this._icon("account-group-outline")}</span>`);
@@ -1431,7 +1440,7 @@ class SmartHeatingControlCard extends HTMLElement {
     const heating = !!a.heating;
     // Every state that applies, as small round icons (heating pulses).
     const status = [
-      a.heat_demand ? `<span class="tstat hot ${heating ? "pulse" : ""}" title="${esc(this._t(heating ? "heating" : "asks_heat"))}">${this._icon("fire")}</span>` : "",
+      a.heat_demand ? this._flame(heating) : "",
       a.window_open ? `<span class="tstat warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>` : "",
       a.override ? `<span class="tstat" title="${esc(this._t("override"))}">${this._icon("hand-back-right-outline")}</span>` : "",
       this._guestOn(a) ? `<span class="tstat teal" title="${esc(this._t("guests_banner"))}">${this._icon("account-group-outline")}</span>` : "",
@@ -3639,6 +3648,18 @@ const STYLE = `
   .tstat.hot { background: var(--ac-hot); color: #fff; }
   .tstat.warn { background: var(--ac-warn); color: #fff; }
   .tstat.teal { background: #2f9e8f; color: #fff; }
+  .flame { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none;
+    color: var(--ac-hot); background: color-mix(in srgb, var(--ac-hot) 10%, transparent); box-shadow: inset 0 0 0 1.5px var(--ac-hot); }
+  .flame ha-icon { --mdc-icon-size: 16px; }
+  .flame.on { background: var(--ac-hot); color: #fff; box-shadow: none; }
+  .flame.on ha-icon { animation: shc-flicker 1.6s ease-in-out infinite; transform-origin: 50% 85%; }
+  .flame.sm { width: 24px; height: 24px; }
+  .flame.sm ha-icon { --mdc-icon-size: 14px; }
+  @keyframes shc-flicker {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    30% { transform: scale(1.1, 1.18) rotate(-4deg); }
+    60% { transform: scale(0.94, 1.04) rotate(3deg); }
+  }
   .tstats { display: inline-flex; gap: 4px; flex: none; }
   .cicon.teal ha-icon { color: #2f9e8f; }
   .cicon { display: inline-flex; border-radius: 50%; }
@@ -3655,7 +3676,7 @@ const STYLE = `
   .tile-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 0.85em; align-items: flex-start; }
   .tile-info .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 
-  @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } * { transition: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .pulse, .flame.on ha-icon { animation: none; } * { transition: none !important; } }
 `;
 
 // ---------------------------------------------------------------------- editor

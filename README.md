@@ -417,8 +417,8 @@ type: custom:smart-heating-control-card
 | `compact` | `false` | One tile per room (arc with the temperature, level, target, a status icon) and one row for the house; tap to open |
 | `runtime_period` | `day` | Heating time shown for `day`, `week` or `month` (calendar periods, from the long-term statistics; tap the value in the card to change it). The *Heating time* sensors stay cumulative totals |
 
-Every room also shows its decision, heating (pulsing) / window / manual change
-badges, an arc with the room temperature (empty at the frost protection, full at
+Every room also shows its decision, heat (*Heating*, pulsing, while the heat source runs; *Asks for
+heat* while it waits) / window / manual change badges, an arc with the room temperature (empty at the frost protection, full at
 the maximum; it only shows the value) and the target, the reason, the time to
 target, the TRV boost when it is on, what the device itself measures, today's
 profile as a bar, and *Back to automatic*. Buttons under the chart open *Set for

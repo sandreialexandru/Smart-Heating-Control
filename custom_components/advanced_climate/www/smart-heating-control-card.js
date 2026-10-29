@@ -13,11 +13,11 @@
  *   show_details: true           # temperatures, heating rate, runtime, adjustments
  *   show_schedule_editor: true
  *   collapsed: false             # rooms start folded (header only)
- *   compact: false               # one row per room (and the house); tap a row to open it
+ *   compact: false               # one tile per room (and a row for the house); tap to open
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.3.26";
+const CARD_VERSION = "2.3.27";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -331,6 +331,7 @@ const TEXT = {
     off_solar_gain: "solar gain",
     guests_banner: "Guest mode: the house counts as Home even if none of the people is home",
     guests_chip: "Guest mode on: the house counts as Home",
+    asks_heat: "Asks for heat",
     auto_short: "Automatic",
     device_temp: "Device {temp}",
     trv_boost_chip: "TRV boost · {temp}",
@@ -565,6 +566,7 @@ const TEXT = {
     off_solar_gain: "câștig solar",
     guests_banner: "Mod oaspeți: casa e considerată Acasă chiar dacă nu e acasă nimeni dintre persoane",
     guests_chip: "Mod oaspeți pornit: casa e considerată Acasă",
+    asks_heat: "Cere căldură",
     auto_short: "Automat",
     device_temp: "Dispozitiv {temp}",
     trv_boost_chip: "Forțare TRV · {temp}",
@@ -979,7 +981,7 @@ class SmartHeatingControlCard extends HTMLElement {
     const label = `${this._t("room_temp")} ${this._temp(cur)}, ${this._t("target_tag")} ${this._temp(tgt)}`;
     const link = e && e.room_temperature ? this._more(e.room_temperature) : "";
     return `<span class="gauge ${link ? "link" : ""}" style="width:${size}px;height:${size}px;--gs:${size}px" ${link}
-        role="img" aria-label="${esc(label)}">
+        ${link ? "" : 'role="img"'} aria-label="${esc(label)}">
         <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
           ${ring("gtrack", arc)}${cur !== null ? ring("gvalue", Math.max(0.1, arc * f)) : ""}
         </svg>
@@ -1092,7 +1094,7 @@ class SmartHeatingControlCard extends HTMLElement {
     const defs = [];
     if (cfg.show_quick_override) defs.push([`quick-${id}`, "quick", "timer-edit-outline", () => this._quickHtml(a, e)]);
     if (cfg.show_schedule_editor) defs.push([`sched-${id}`, "schedule", "calendar-edit", () => this._scheduleHtml(a, stateObj)]);
-    if (cfg.show_levels && Object.keys(e).some((k) => k.startsWith("level_"))) {
+    if (cfg.show_levels && Object.entries(e).some(([k, id]) => k.startsWith("level_") && this._state(id))) {
       defs.push([`levels-${id}`, "levels", "tune-variant", () => this._levelsHtml(a, e)]);
     }
     if (cfg.show_details) defs.push([`details-${id}`, "details", "information-outline", () => this._detailsHtml(a, e)]);
@@ -1248,7 +1250,7 @@ class SmartHeatingControlCard extends HTMLElement {
                   this._label(presence)
                 )}</span>
                 ${presence?.attributes?.arriving ? `<span class="pill">${this._t("arriving")}</span>` : ""}
-                ${demand?.state === "on" ? `<span class="tstat hot pulse link" ${this._more(e.heat_demand, this._t("demand"))}>${this._icon("fire")}</span>` : ""}
+                ${demand?.state === "on" ? `<span class="tstat hot ${this._houseHeating(house) ? "pulse" : ""} link" ${this._more(e.heat_demand, this._t("demand"))}>${this._icon("fire")}</span>` : ""}
               </span>
               ${who ? `<span class="muted">${esc(who)}</span>` : ""}
             </div>
@@ -1322,8 +1324,10 @@ class SmartHeatingControlCard extends HTMLElement {
     if (folded) return this._foldedRow(stateObj, color);
 
     const badges = [];
-    if (a.heating ?? a.heat_demand)
-      badges.push(`<span class="pill hot pulse link" ${this._more(e.heat_demand)}>${this._icon("fire")}${this._t("heating")}</span>`);
+    // "Heating" (pulsing) while the heat source runs for the room; "Asks for heat" while it waits.
+    if (a.heating) badges.push(`<span class="pill hot pulse link" ${this._more(e.heat_demand)}>${this._icon("fire")}${this._t("heating")}</span>`);
+    else if (a.heat_demand)
+      badges.push(`<span class="pill hot link" ${this._more(e.heat_demand)}>${this._icon("fire")}${this._t("asks_heat")}</span>`);
     if (a.window_open)
       badges.push(`<span class="pill warn link" ${this._more(e.window_open)}>${this._icon("window-open-variant")}${this._t("window")}</span>`);
     if (a.override) {
@@ -1385,11 +1389,19 @@ class SmartHeatingControlCard extends HTMLElement {
   /** Small icons of a folded room: heating, window open, manual change. */
   _statusIcons(a) {
     const icons = [];
-    if (a.heating ?? a.heat_demand) icons.push(`<span class="cicon hot" title="${esc(this._t("heating"))}">${this._icon("fire")}</span>`);
+    if (a.heat_demand) icons.push(`<span class="cicon hot ${a.heating ? "pulse" : ""}" title="${esc(this._t(a.heating ? "heating" : "asks_heat"))}">${this._icon("fire")}</span>`);
     if (a.window_open) icons.push(`<span class="cicon warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>`);
     if (a.override) icons.push(`<span class="cicon" title="${esc(`${this._t("override")} ${this._overrideUntil(a)}`)}">${this._icon("hand-back-right-outline")}</span>`);
     if (this._guestOn(a)) icons.push(`<span class="cicon teal" title="${esc(this._t("guests_banner"))}">${this._icon("account-group-outline")}</span>`);
     return icons.join("");
+  }
+
+  /** True while a room of the house heats (every room of it, also those not on this card). */
+  _houseHeating(house) {
+    return this._discover().rooms.some((id) => {
+      const at = this._hass.states[id]?.attributes;
+      return at && at.entry_id === house.id && at.heating;
+    });
   }
 
   /** True while the guest mode of the room's house is on. */
@@ -1416,10 +1428,10 @@ class SmartHeatingControlCard extends HTMLElement {
   /** One tile per room in the compact card: arc, level, target; a tap opens the room. */
   _compactRow(stateObj, color) {
     const a = stateObj.attributes;
-    const heating = a.heating ?? a.heat_demand;
+    const heating = !!a.heating;
     // Every state that applies, as small round icons (heating pulses).
     const status = [
-      heating ? `<span class="tstat hot pulse" title="${esc(this._t("heating"))}">${this._icon("fire")}</span>` : "",
+      a.heat_demand ? `<span class="tstat hot ${heating ? "pulse" : ""}" title="${esc(this._t(heating ? "heating" : "asks_heat"))}">${this._icon("fire")}</span>` : "",
       a.window_open ? `<span class="tstat warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>` : "",
       a.override ? `<span class="tstat" title="${esc(this._t("override"))}">${this._icon("hand-back-right-outline")}</span>` : "",
       this._guestOn(a) ? `<span class="tstat teal" title="${esc(this._t("guests_banner"))}">${this._icon("account-group-outline")}</span>` : "",
@@ -3629,6 +3641,7 @@ const STYLE = `
   .tstat.teal { background: #2f9e8f; color: #fff; }
   .tstats { display: inline-flex; gap: 4px; flex: none; }
   .cicon.teal ha-icon { color: #2f9e8f; }
+  .cicon { display: inline-flex; border-radius: 50%; }
   .tile-body { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .gcol { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; }
   .pill.preset { background: color-mix(in srgb, var(--c) 22%, transparent); font-weight: 500; }
@@ -3694,7 +3707,7 @@ const EDITOR_LABELS = {
     show_details: "Details",
     show_schedule_editor: "Schedule editor",
     collapsed: "Rooms start folded",
-    compact: "Compact: one row per room, tap to open",
+    compact: "Compact: one tile per room, tap to open",
     runtime_period: "Heating time shown for (tap the value in the card to change it)",
   },
   ro: {
@@ -3708,7 +3721,7 @@ const EDITOR_LABELS = {
     show_details: "Detalii",
     show_schedule_editor: "Editor de program",
     collapsed: "Camerele pornesc pliate",
-    compact: "Compact: un rând pe cameră, se deschide la atingere",
+    compact: "Compact: o placă pe cameră, se deschide la atingere",
     runtime_period: "Timpul de încălzire afișat pentru (se schimbă și apăsând valoarea în card)",
   },
 };

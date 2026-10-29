@@ -50,8 +50,9 @@ collapsed: true
 
 ## Partea casei
 
-- O **flacără** care pulsează lângă prezență cât casa cere căldură (în orice
-  vedere; o cameră pliată o arată și ea cât încălzește).
+- O **flacără** lângă prezență cât casa cere căldură (în orice vedere); pulsează
+  cât o cameră chiar încălzește (sursa de căldură merge). Camera își arată
+  flacăra la fel: cât cere căldură, pulsând cât încălzește.
 - **Prezența**, cu fiecare persoană ca un cerc (poza sau inițiala) în culoarea
   locului unde e: portocaliu acasă, verde aproape, gri departe.
 - Plăci pentru **media temperaturii de afară** (pe orele din *Medie pe*),
@@ -73,7 +74,8 @@ collapsed: true
 ## O cameră
 
 Antetul arată numele, decizia (de exemplu *Aproape*, *Program*; în culoarea
-nivelului) și insignele pentru încălzire (pulsează), fereastră deschisă și
+nivelului) și insignele pentru căldură (*Încălzește*, pulsează, cât sursa de
+căldură merge pentru cameră; *Cere căldură* cât așteaptă), fereastră deschisă și
 modificare manuală. O cameră pliată (rând sau placă compactă) arată doar **nivelul** (de exemplu
 *Eco*) și iconițe mici: încălzire (flacără), fereastră deschisă, modificare
 manuală și modul oaspeți cât e pornit; decizia apare când camera e deschisă, cu

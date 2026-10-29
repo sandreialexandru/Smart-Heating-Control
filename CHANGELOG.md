@@ -26,6 +26,9 @@ GitHub releases.
 - Window detection from the temperature: a jump of the room temperature because
   a sensor stopped or came back (or the device sensor took over) no longer
   counts as an open window; a real drop still does.
+- Window detection from the temperature keeps the readings of the whole window
+  (e.g. 30 minutes) however often the temperature is read; before, a busy house
+  could shorten a long window and miss a slow drop.
 
 ### Releases
 

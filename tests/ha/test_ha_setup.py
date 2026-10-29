@@ -1706,3 +1706,54 @@ async def test_a_sensor_that_stops_is_not_an_open_window(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def _read_falling(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, room, minutes: int, every: int = 5
+) -> None:
+    """Read the room every ``every`` seconds while it falls evenly from 20° to 19°."""
+    steps = minutes * 60 // every
+    for i in range(steps + 1):
+        freezer.tick(timedelta(seconds=every))
+        value = round(20.0 - i / steps, 1)
+        hass.states.async_set("sensor.room_temp", f"{value}", {"unit_of_measurement": "°C"})
+        await hass.async_block_till_done()
+        room._update_temperature(dt_util.utcnow())  # a reading on every step, as in a busy house
+
+
+async def test_long_drop_window_with_many_readings(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """1° in 25 minutes with a 30-minute window is an open window, however often it is read."""
+    entry = await _setup(
+        hass, freezer, window_drop_detect=True, window_drop_degrees=1.0, window_drop_minutes=30
+    )
+    room = next(iter(entry.runtime_data.rooms.values()))
+    await _tick(hass, freezer, 15)
+    # 301 readings in 25 minutes (more than the 120 kept before by count).
+    await _read_falling(hass, freezer, room, 25)
+    assert room.current_temp == 19.0
+    assert room._drop_until is not None
+    # Only the readings of the window (plus 15 minutes) are kept, as runs of one value.
+    assert len(room._temp_samples) <= 13
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_slow_drop_is_not_an_open_window(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """1° in 40 minutes with a 30-minute window: at most 0.8° in any 30 minutes, no window."""
+    entry = await _setup(
+        hass, freezer, window_drop_detect=True, window_drop_degrees=1.0, window_drop_minutes=30
+    )
+    room = next(iter(entry.runtime_data.rooms.values()))
+    hass.states.async_set("sensor.room_temp", "20.0", {"unit_of_measurement": "°C"})
+    await _tick(hass, freezer, 15)
+    await _read_falling(hass, freezer, room, 40)
+    assert room.current_temp == 19.0
+    assert room._drop_until is None
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

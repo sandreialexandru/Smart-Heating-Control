@@ -286,7 +286,10 @@ class Room:
         self._window_closed_since: datetime | None = None
         self._window_opened_at: datetime | None = None
         self._window_timer: Callable[[], None] | None = None
-        self._temp_samples: deque[tuple[datetime, float]] = deque(maxlen=120)
+        # Room temperature readings as runs of the same value: [first seen, last seen, value].
+        # Kept by time (the drop window plus 15 minutes), not by count, so a busy
+        # house that reads the temperature often does not shorten the window.
+        self._temp_samples: list[list] = []
         # Which sensors gave the room temperature (a change of them is not a drop).
         self._temp_sources: tuple | None = None
         self._drop_until: datetime | None = None
@@ -796,7 +799,14 @@ class Room:
             self._temp_sources = sources
             self._temp_samples.clear()
         if self.current_temp is not None:
-            self._temp_samples.append((now, self.current_temp))
+            samples = self._temp_samples
+            if samples and samples[-1][2] == self.current_temp:
+                samples[-1][1] = now  # the same value read again
+            else:
+                samples.append([now, now, self.current_temp])
+            keep = timedelta(minutes=float(self.config[CONF_WINDOW_DROP_MINUTES]) + 15)
+            while len(samples) > 1 and now - samples[0][1] > keep:
+                samples.pop(0)
             self._check_temp_drop(now)
 
     def external_temperature(self) -> float | None:
@@ -815,9 +825,12 @@ class Room:
         if self._drop_until is not None and now < self._drop_until:
             return  # already holding
         window = timedelta(minutes=float(self.config[CONF_WINDOW_DROP_MINUTES]))
-        recent = [v for t, v in self._temp_samples if now - t <= window]
-        # The value valid at the start of the window (sensors report on change).
-        before = [(t, v) for t, v in self._temp_samples if now - t > window]
+        # Every value read inside the window (a run that lasted into it counts:
+        # it was the value at the start of the window).
+        recent = [v for _first, last, v in self._temp_samples if now - last <= window]
+        # The value valid just before the window, if it was read at most 15 minutes
+        # before it (sensors report on change; an older value may be stale).
+        before = [(last, v) for _first, last, v in self._temp_samples if now - last > window]
         if before and now - before[-1][0] <= window + timedelta(minutes=15):
             recent.append(before[-1][1])
         if recent and max(recent) - self.current_temp >= float(

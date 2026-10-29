@@ -385,4 +385,6 @@ STARTUP_DELAY: Final = 10  # seconds after HA start before the first command
 VERIFY_DELAY: Final = 120  # seconds before a command is verified
 VALVE_EXERCISE_SECONDS: Final = 300
 TEMP_DROP_HOLD_MINUTES: Final = 15
+# How long a value sent to a thermostat may still come back late as its report.
+SENT_RECENT_MINUTES: Final = 5
 MAX_DECISION_LOG: Final = 100

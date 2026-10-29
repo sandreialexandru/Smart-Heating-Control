@@ -29,7 +29,7 @@ Airing shorter than the open delay is ignored.
   default) *Within* (3 minutes by default) counts as an open window for 15
   minutes. For rooms without sensors. A jump of the room temperature because a
   temperature sensor stopped or came back, or because the room fell back to the
-  sensor of its device, is not a drop: the detection starts again from the new
+  sensor of its device or one of its TRVs stopped, is not a drop: the detection starts again from the new
   value.
 
 **When warm outside**: with *Ignore windows above* (house options), an open
@@ -50,7 +50,9 @@ service. The integration keeps it for a while, then takes over again.
 **How it recognises them.** Commands sent by the integration carry their own
 "context" in Home Assistant, so the integration knows which are its own. A
 device that only reports later what the integration sent it (e.g. a battery
-Zigbee TRV that wakes up rarely) is not a manual change.
+Zigbee TRV that wakes up rarely) is not a manual change, also when it reports
+an older command after a newer one was sent: every value sent in the last 5
+minutes is recognised, not only the last one.
 
 **How long** (*Manual changes are kept*, in the house options):
 

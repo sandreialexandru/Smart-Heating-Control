@@ -29,6 +29,12 @@ GitHub releases.
 - Window detection from the temperature keeps the readings of the whole window
   (e.g. 30 minutes) however often the temperature is read; before, a busy house
   could shorten a long window and miss a slow drop.
+- In a room without a room sensor, a TRV that stops reporting no longer counts
+  as an open window (the temperature of the other TRVs is not a drop).
+- A thermostat that reports an older command late (e.g. 21 °C after 12 °C was
+  already sent) is no longer taken for a manual change: the values sent in the
+  last 5 minutes are recognised, not only the last one. A change from the card
+  keeps its duration.
 
 ### Releases
 

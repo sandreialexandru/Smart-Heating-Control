@@ -1757,3 +1757,105 @@ async def test_slow_drop_is_not_an_open_window(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def _trv_room(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, trvs: dict[str, dict], **room: object
+) -> MockConfigEntry:
+    """A house with one room of TRVs (temperature commands), no room sensor."""
+    await hass.config.async_set_time_zone("Europe/Bucharest")
+    freezer.move_to("2026-10-12 09:00:00+00:00")
+    for entity_id, attrs in trvs.items():
+        hass.states.async_set(entity_id, "heat", attrs)
+    hass.states.async_set("person.andrei", "home")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        options={"persons": ["person.andrei"], "nearby_zones": []},
+        subentries_data=[
+            {
+                "data": {
+                    "source": "climate",
+                    "climates": list(trvs),
+                    "command_mode": "temperature",
+                    **room,
+                },
+                "subentry_type": SUBENTRY_ROOM,
+                "title": "Office",
+                "unique_id": None,
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
+
+
+async def test_a_trv_that_stops_is_not_an_open_window(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Without a room sensor, two TRVs (22 and 19 °C) give 20.5; one stopping is no window."""
+    async_mock_service(hass, "climate", "set_temperature")
+    base = {"hvac_modes": ["heat", "off"], "temperature": 21.0}
+    entry = await _trv_room(
+        hass,
+        freezer,
+        {
+            "climate.trv_1": {**base, "current_temperature": 22.0},
+            "climate.trv_2": {**base, "current_temperature": 19.0},
+        },
+        window_drop_detect=True,
+        window_drop_degrees=1.0,
+        window_drop_minutes=3,
+    )
+    room = next(iter(entry.runtime_data.rooms.values()))
+    await _tick(hass, freezer, 15)
+    assert room.current_temp == 20.5
+
+    hass.states.async_set("climate.trv_1", "unavailable")
+    await _tick(hass, freezer, 30)
+    assert room.current_temp == 19.0
+    assert room._drop_until is None
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_an_older_command_reported_late_is_not_manual(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """21 °C is sent, then another value; the TRV reports the 21 only afterwards: no manual change."""
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 18.0, "temperature": 17.0,
+           "target_temp_step": 0.5}
+    entry = await _trv_room(hass, freezer, {"climate.trv": trv})
+    await _tick(hass, freezer, 15)
+    assert calls[-1].data["temperature"] == 21.0
+
+    # A change from the card for two hours: 23 °C is sent.
+    await hass.services.async_call(
+        DOMAIN, "set_override", {"room": "Office", "temperature": 23, "duration_hours": 2},
+        blocking=True,
+    )
+    await _tick(hass, freezer, 5)
+    assert calls[-1].data["temperature"] == 23.0
+    # Only now the TRV reports the 21 sent before (a sleepy device, its own context).
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 21.0}, context=Context())
+    await _tick(hass, freezer, 5)
+    override = hass.states.get("binary_sensor.office_manual_change").attributes
+    # The change from the card stays, with its duration (not one "on the device").
+    assert override["origin"] == "card"
+    assert override["until"] is not None
+
+    # After the 5 minutes the same value is a person's change again.
+    await _tick(hass, freezer, 6 * 60)
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 23.0}, context=Context())
+    await _tick(hass, freezer, 5)
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 21.0}, context=Context())
+    await _tick(hass, freezer, 5)
+    override = hass.states.get("binary_sensor.office_manual_change").attributes
+    assert override["origin"] == "device"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

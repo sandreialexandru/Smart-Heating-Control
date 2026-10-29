@@ -118,6 +118,7 @@ from .const import (
     RULE_STARTING,
     RULE_VACATION,
     SCHEDULE_HELPER,
+    SENT_RECENT_MINUTES,
     SOURCE_CLIMATE,
     SOURCE_GT,
     SOURCE_SWITCH,
@@ -171,6 +172,7 @@ if TYPE_CHECKING:
     from .house import House
 
 _LOGGER = logging.getLogger(__name__)
+SENT_RECENT = timedelta(minutes=SENT_RECENT_MINUTES)
 
 
 def device_values(state: State) -> dict[str, Any]:
@@ -323,6 +325,10 @@ class Room:
         # Values of the last commands, per device: a device that reports them
         # later (e.g. a sleepy Zigbee TRV) is not a manual change.
         self._sent: dict[str, dict[str, Any]] = {}
+        # Every value sent to a thermostat in the last minutes: a TRV may report
+        # an older command after a newer one was sent (e.g. 21 °C, then 12 °C for
+        # away, and only then the 21 °C); that is not a manual change either.
+        self._sent_recent: dict[str, list[tuple[datetime, str, Any]]] = {}
 
     # ------------------------------------------------------------------
     # Setup
@@ -627,8 +633,14 @@ class Room:
         alone cannot tell them apart from a person. Every changed value we sent
         must match it, and at least one must have been sent.
         """
-        sent = self._sent.get(entity_id)
-        if not sent:
+        sent = self._sent.get(entity_id) or {}
+        now = dt_util.utcnow()
+        recent = [
+            (key, value)
+            for at, key, value in self._sent_recent.get(entity_id, [])
+            if now - at <= SENT_RECENT
+        ]
+        if not sent and not recent:
             return False
         changed: dict[str, Any] = {}
         if old.state != new.state:
@@ -638,18 +650,23 @@ class Room:
                 changed[attr] = new.attributes.get(attr)
         matched = False
         for key, value in changed.items():
-            if key not in sent:
+            candidates = ([sent[key]] if key in sent else []) + [v for k, v in recent if k == key]
+            if not candidates:
                 continue
             if key == ATTR_TEMPERATURE:
                 # The device may round to its own step.
                 step = float_attr(new, "target_temp_step")
                 margin = step / 2 + 0.01 if step else 0.05
-                try:
-                    same = abs(float(value) - float(sent[key])) < margin
-                except (TypeError, ValueError):
-                    same = False
+
+                def close(sent_value: Any) -> bool:
+                    try:
+                        return abs(float(value) - float(sent_value)) < margin
+                    except (TypeError, ValueError):
+                        return False
+
+                same = any(close(c) for c in candidates)
             else:
-                same = value == sent[key]
+                same = value in candidates
             if not same:
                 return False
             matched = True
@@ -660,6 +677,7 @@ class Room:
         # From now on the device shows a person's values, not ours: if the person
         # later sets the value we sent before, that is a manual change too.
         self._sent.pop(entity_id, None)
+        self._sent_recent.pop(entity_id, None)
         self._boosted = False  # the person's value replaced the boost
         # In a pause the change is kept (it applies after the pause); the child
         # lock does not undo it then, since a pause sends nothing.
@@ -777,12 +795,13 @@ class Room:
         external = aggregate(values, self.config[CONF_TEMP_AGGREGATION])
         self.external_failed = bool(sensors) and external is None
         device = None
-        device_values = [
-            v
-            for eid in self.climates
-            if (v := climate_temp(self.hass, self.hass.states.get(eid), "current_temperature"))
-            is not None
-        ]
+        device_reporting = []
+        device_values = []
+        for eid in self.climates:
+            v = climate_temp(self.hass, self.hass.states.get(eid), "current_temperature")
+            if v is not None:
+                device_values.append(v)
+                device_reporting.append(eid)
         if device_values:
             device = round(sum(device_values) / len(device_values), 2)
         self.current_temp = external if external is not None else device
@@ -794,7 +813,7 @@ class Room:
         # When a sensor stops or comes back, or the room falls back to the device
         # sensor, the value jumps: the quick drop (open window) starts again from
         # the new value instead of taking the jump for an open window.
-        sources = tuple(reporting) if external is not None else ("device",)
+        sources = tuple(reporting) if external is not None else ("device", *device_reporting)
         if sources != self._temp_sources:
             self._temp_sources = sources
             self._temp_samples.clear()
@@ -1870,6 +1889,10 @@ class Room:
         ok = await self._call("climate", service, {ATTR_ENTITY_ID: entity_id, key: value})
         if ok:
             self._sent.setdefault(entity_id, {})[field or key] = value
+            now = dt_util.utcnow()
+            recent = [r for r in self._sent_recent.get(entity_id, []) if now - r[0] <= SENT_RECENT]
+            recent.append((now, field or key, value))
+            self._sent_recent[entity_id] = recent
         return ok
 
     async def _async_apply_relay(self, target: Target) -> bool:

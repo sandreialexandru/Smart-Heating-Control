@@ -29,7 +29,7 @@ Aerisirile mai scurte decât întârzierea la deschidere sunt ignorate.
   (implicit 1 °C) în *În* (implicit 3 minute) e tratată ca fereastră deschisă
   15 minute. Pentru camere fără senzori. Un salt al temperaturii camerei pentru
   că un senzor de temperatură s-a oprit sau a revenit, ori pentru că camera a
-  trecut pe senzorul dispozitivului, nu e o scădere: detectarea pornește din nou
+  trecut pe senzorul dispozitivului ori unul dintre TRV-uri s-a oprit, nu e o scădere: detectarea pornește din nou
   de la valoarea nouă.
 
 **Când e cald afară**: cu *Ignoră ferestrele peste* (opțiunile casei), o
@@ -51,7 +51,9 @@ pe TRV, în aplicație, în Home Assistant, din card sau cu serviciul
 **Cum le recunoaște.** Comenzile trimise de integrare au un „context” propriu în
 Home Assistant, deci integrarea știe care sunt ale ei. Un dispozitiv care doar
 raportează mai târziu ce i-a trimis integrarea (de exemplu un TRV Zigbee pe
-baterie care se trezește rar) nu e o modificare manuală.
+baterie care se trezește rar) nu e o modificare manuală, nici când raportează o
+comandă mai veche după ce a fost trimisă una nouă: se recunoaște orice valoare
+trimisă în ultimele 5 minute, nu doar ultima.
 
 **Cât durează** (*Modificările manuale se păstrează*, în opțiunile casei):
 

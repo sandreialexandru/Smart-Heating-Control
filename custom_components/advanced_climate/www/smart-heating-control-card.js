@@ -2562,7 +2562,6 @@ class SmartHeatingControlCard extends HTMLElement {
     )}</dd></div>`;
   }
 
-  /** Alerts of the room and of the whole house, in the language of the card. */
   /** Text of one alert in the language of the card. */
   _alertText(al) {
     const p = al.params || {};
@@ -2589,6 +2588,7 @@ class SmartHeatingControlCard extends HTMLElement {
     )}">${this._icon("alert-outline")}</span>`;
   }
 
+  /** Alerts of the room and of the whole house, in the language of the card. */
   _alertsHtml(a) {
     const alerts = a.alerts || [];
     if (!alerts.length) return "";

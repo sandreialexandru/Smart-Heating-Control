@@ -1,14 +1,19 @@
 name: Release
 
-# Creates a GitHub release (and tag) when the version in manifest.json changes
-# on main, only after every test passed (the Tests workflow). Run it manually
-# from the Actions tab to (re)check.
+# Creates a GitHub release (and tag) when the version in manifest.json changes,
+# only after every test passed (the Tests workflow). Run it manually from the
+# Actions tab to (re)check.
+#
+# main: a stable version (e.g. 2.3.30) becomes a normal release (the latest).
+# dev:  a beta version (e.g. 2.3.30b1) becomes a pre-release, shown in HACS only
+#       to those who turned on the beta versions for this repository.
+# Any other combination (a beta on main, a stable version on dev) is skipped.
 
 on:
   workflow_run:
     workflows: [Tests]
     types: [completed]
-    branches: [main]
+    branches: [main, dev]
   workflow_dispatch:
 
 permissions:
@@ -31,11 +36,19 @@ jobs:
 
       - name: Read version
         id: version
+        env:
+          BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
         run: |
           version=$(python3 -c "import json; print(json.load(open('custom_components/advanced_climate/manifest.json'))['version'])")
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
-          if git rev-parse "v$version" >/dev/null 2>&1; then
+          beta=false
+          if [[ "$version" =~ (a|b|rc)[0-9]+$ ]]; then beta=true; fi
+          echo "beta=$beta" >> "$GITHUB_OUTPUT"
+          if [[ "$BRANCH" == "main" && "$beta" == "true" ]] || [[ "$BRANCH" == "dev" && "$beta" == "false" ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Version $version on $BRANCH: only stable versions are released from main and beta versions from dev."
+          elif git rev-parse "v$version" >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
             echo "Release v$version already exists, nothing to do."
           else
@@ -63,9 +76,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
           SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+          BETA: ${{ steps.version.outputs.beta }}
         run: |
+          if [[ "$BETA" == "true" ]]; then kind=(--prerelease --latest=false); else kind=(--latest); fi
           gh release create "$TAG" advanced_climate.zip \
             --target "$SHA" \
             --title "Smart Heating Control $TAG" \
             --generate-notes \
-            --latest
+            "${kind[@]}"

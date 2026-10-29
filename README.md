@@ -101,6 +101,10 @@ The full specification is in [docs/SPEC.md](docs/SPEC.md) ([Română](docs/SPEC.
 2. Install **Smart Heating Control** and restart Home Assistant.
 3. **Settings → Devices & services → Add integration → Smart Heating Control**.
 
+Beta versions (what comes next, for testing) are GitHub pre-releases, e.g.
+`2.3.30b1`. HACS shows them only if you turn on the beta versions for this
+repository; otherwise you get only the stable releases.
+
 ### Manual
 
 Copy `custom_components/advanced_climate` into your `config/custom_components`

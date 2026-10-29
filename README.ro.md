@@ -111,6 +111,10 @@ Specificația completă este în [docs/SPEC.ro.md](docs/SPEC.ro.md).
 2. Instalează **Smart Heating Control** și repornește Home Assistant.
 3. **Setări → Dispozitive și servicii → Adaugă integrare → Smart Heating Control**.
 
+Versiunile beta (ce urmează, pentru testare) sunt pre-release-uri pe GitHub, de
+exemplu `2.3.30b1`. HACS le arată doar dacă pornești versiunile beta pentru acest
+repository; altfel primești doar release-urile stabile.
+
 ### Manual
 
 Copiază `custom_components/advanced_climate` în folderul

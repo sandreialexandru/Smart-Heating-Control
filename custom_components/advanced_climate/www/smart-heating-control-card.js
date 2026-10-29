@@ -329,6 +329,14 @@ const TEXT = {
     off_tariff_low: "low tariff",
     off_pv_surplus: "solar surplus",
     off_solar_gain: "solar gain",
+    guest_title: "Guest mode",
+    guest_hint: "While it is on, the house counts as Home even if none of the people is home. It turns off by itself after the time set in the house options (0 = it does not).",
+    guest_start: "Turn guest mode on",
+    guest_stop: "Turn guest mode off",
+    auto_short: "Automatic",
+    device_temp: "Device {temp}",
+    trv_boost_chip: "TRV boost · {temp}",
+    trv_boost_chip_off: "TRV boost {temp} while heating",
   },
   ro: {
     title: "Încălzire",
@@ -557,6 +565,14 @@ const TEXT = {
     off_tariff_low: "tarif redus",
     off_pv_surplus: "surplus solar",
     off_solar_gain: "câștig solar",
+    guest_title: "Mod oaspeți",
+    guest_hint: "Cât e pornit, casa e considerată Acasă chiar dacă nu e acasă nimeni dintre persoane. Se oprește singur după durata din opțiunile casei (0 = nu se oprește singur).",
+    guest_start: "Pornește modul oaspeți",
+    guest_stop: "Oprește modul oaspeți",
+    auto_short: "Automat",
+    device_temp: "Dispozitiv {temp}",
+    trv_boost_chip: "Forțare TRV · {temp}",
+    trv_boost_chip_off: "Forțare TRV {temp} cât încălzește",
   },
 };
 
@@ -938,26 +954,159 @@ class SmartHeatingControlCard extends HTMLElement {
     return `${head}: ${parts.join(", ")}`;
   }
 
-  /** Current and target temperature, with the estimate under the target. */
-  _tempPair(current, target, color, eta = "", help = "eta_help", e = {}) {
-    return `<div class="temps">
-        <div class="tval ${e.room_temperature ? "link" : ""}" ${this._more(e.room_temperature)}><span class="tag">${this._t(
-          "now_tag"
-        )}</span><span class="tnum">${this._temp(current)}</span></div>
-        <div class="tval target ${e.target_temperature ? "link" : ""}" style="--c:${color}" ${this._more(
-          e.target_temperature
-        )}><span class="tag">${this._t(
-          "target_tag"
-        )}</span><span class="tnum">${this._temp(target)}</span>${
-          eta
-            ? `<span class="eta" title="${esc(this._t(help))}">${esc(eta)}</span>${
-                eta === this._t("eta_learning") && this._heatDefault(e)
-                  ? `<span class="eta sub">${esc(this._heatDefault(e))}</span>`
-                  : ""
-              }`
+  /**
+   * Arc of the room temperature: full at the maximum temperature, empty at the
+   * frost protection (the limits of the targets). Tapping it opens the sensor.
+   */
+  _gauge(a, e, size, withTarget = true) {
+    const cur = num(a.current_temperature);
+    const tgt = num(a.target_temperature);
+    let lo = num(a.min_temperature) ?? 5;
+    let hi = num(a.max_temperature) ?? 30;
+    if (!(hi > lo)) {
+      lo = 5;
+      hi = 30;
+    }
+    const f = cur === null ? 0 : Math.min(1, Math.max(0, (cur - lo) / (hi - lo)));
+    const sw = size >= 120 ? 11 : size >= 80 ? 8 : 5;
+    const r = size / 2 - sw / 2 - 1;
+    const c = 2 * Math.PI * r;
+    const arc = c * 0.75;
+    const mid = size / 2;
+    const ring = (cls, len) =>
+      `<circle cx="${mid}" cy="${mid}" r="${r.toFixed(2)}" class="${cls}" stroke-width="${sw}" stroke-dasharray="${len.toFixed(
+        1
+      )} ${c.toFixed(1)}" transform="rotate(135 ${mid} ${mid})"></circle>`;
+    const label = `${this._t("room_temp")} ${this._temp(cur)}, ${this._t("target_tag")} ${this._temp(tgt)}`;
+    const link = e && e.room_temperature ? this._more(e.room_temperature) : "";
+    return `<span class="gauge ${link ? "link" : ""}" style="width:${size}px;height:${size}px;--gs:${size}px" ${link}
+        role="img" aria-label="${esc(label)}">
+        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
+          ${ring("gtrack", arc)}${cur !== null ? ring("gvalue", Math.max(0.1, arc * f)) : ""}
+        </svg>
+        <span class="gcenter"><span class="gnum">${this._temp(cur)}</span>${
+          withTarget
+            ? `<span class="gsub ${e && e.target_temperature ? "link" : ""}" ${
+                e && e.target_temperature ? this._more(e.target_temperature) : ""
+              }>${esc(this._t("target_tag").toLowerCase())} ${this._temp(tgt)}</span>`
             : ""
-        }</div>
+        }</span>
+      </span>`;
+  }
+
+  /** Icon of the rule that decides the room. */
+  _ruleIcon(rule) {
+    const icons = {
+      window_open: "window-open-variant",
+      manual_override: "hand-back-right-outline",
+      schedule: "calendar-clock",
+      optimal_start: "calendar-clock",
+      optimal_stop: "calendar-clock",
+      room_unoccupied: "calendar-clock",
+      vacation: "airplane",
+      presence_far: "map-marker-distance",
+      presence_nearby: "map-marker-radius-outline",
+      pause: "pause",
+      mode_off: "power",
+      summer: "weather-sunny",
+      out_of_season: "power",
+      outdoor_cutoff: "weather-sunny",
+      frost_protection: "snowflake",
+      maximum_temperature: "thermometer-high",
+      sensor_fallback: "thermometer-alert",
+      valve_exercise: "valve",
+    };
+    return icons[rule] || "information-outline";
+  }
+
+  /** Lines next to the arc: the reason, the time to target, the TRV boost, the device reading. */
+  _chipsHtml(a, e, stateObj, eta) {
+    const chips = [
+      `<span class="chip">${this._icon(this._ruleIcon(stateObj.state))}<span>${esc(this._reasonText(a))}</span></span>`,
+    ];
+    if (eta) {
+      const sub = eta === this._t("eta_learning") ? this._heatDefault(e) : "";
+      chips.push(
+        `<span class="chip" title="${esc(this._t(a.stop_forecast ? "stop_help" : "eta_help"))}">${this._icon(
+          a.stop_forecast ? "thermometer-chevron-down" : "clock-outline"
+        )}<span>${esc(eta)}${sub ? ` <small>${esc(sub)}</small>` : ""}</span></span>`
+      );
+    }
+    if (!this._config.show_timeline && a.next_change) {
+      chips.push(
+        `<span class="chip">${this._icon("calendar-arrow-right")}<span>${this._t("next")}: ${esc(
+          this._fmtTime(a.next_change)
+        )} → ${esc(this._presetName(a, a.next_preset))}</span></span>`
+      );
+    }
+    if (a.trv_boost) {
+      chips.push(
+        `<span class="chip soft ${a.trv_boost.active ? "on" : ""}">${this._icon("lightning-bolt-outline")}<span>${esc(
+          this._t(a.trv_boost.active ? "trv_boost_chip" : "trv_boost_chip_off").replace("{temp}", this._temp(a.trv_boost.temperature))
+        )}</span></span>`
+      );
+    }
+    // What the device itself measures (a Generic Thermostat reads the room sensor).
+    if (a.source !== "generic_thermostat") {
+      const dev = (a.climate_entities || [])
+        .map((id) => this._state(id))
+        .find((s) => s && num(s.attributes.current_temperature) !== null);
+      if (dev) {
+        chips.push(
+          `<span class="chip soft neutral link" ${this._more(dev.entity_id)}>${this._icon("thermostat")}<span>${esc(
+            this._t("device_temp").replace("{temp}", this._temp(dev.attributes.current_temperature))
+          )}</span></span>`
+        );
+      }
+    }
+    return chips.join("");
+  }
+
+  /** Today's profile as a bar from 00 to 24, with the time now. */
+  _todayHtml(a) {
+    const slots = a.profile && a.schedule ? a.schedule[a.profile] : null;
+    if (!slots || !slots.length) return "";
+    const segs = this._segments(slots)
+      .map(
+        (sg) =>
+          `<i style="left:${(sg.start / 1440) * 100}%;width:${((sg.end - sg.start) / 1440) * 100}%;--c:${
+            PRESET_COLORS[sg.preset] || TEMP_COLOR
+          }" title="${esc(`${this._presetName(a, sg.preset)} ${hhmm(sg.start)}–${hhmm(sg.end % 1440)}`)}"></i>`
+      )
+      .join("");
+    const d = new Date();
+    const now = ((d.getHours() * 60 + d.getMinutes()) / 1440) * 100;
+    return `<div class="today">
+        <span class="tlabel">${esc(this._t("today"))} · ${esc(a.profile)}</span>
+        <div class="tbar">${segs}<b style="left:${now}%"></b></div>
+        <div class="tticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
       </div>`;
+  }
+
+  /** Buttons that open the room sections (independently), then the open sections in a fixed order. */
+  _sectionsHtml(a, e, stateObj) {
+    const cfg = this._config;
+    const id = a.room_id;
+    const defs = [];
+    if (cfg.show_quick_override) defs.push([`quick-${id}`, "quick", "timer-edit-outline", () => this._quickHtml(a, e)]);
+    if (cfg.show_schedule_editor) defs.push([`sched-${id}`, "schedule", "calendar-edit", () => this._scheduleHtml(a, stateObj)]);
+    if (cfg.show_levels && Object.keys(e).some((k) => k.startsWith("level_"))) {
+      defs.push([`levels-${id}`, "levels", "tune-variant", () => this._levelsHtml(a, e)]);
+    }
+    if (cfg.show_details) defs.push([`details-${id}`, "details", "information-outline", () => this._detailsHtml(a, e)]);
+    if (!defs.length) return "";
+    const open = (k) => !!this._open[k] || (k === `sched-${id}` && this._editing === id);
+    const buttons = defs
+      .map(
+        ([k, label, icon]) => `<button class="sbtn ${open(k) ? "on" : ""}" data-action="fold" data-key="${esc(k)}"
+          aria-expanded="${open(k)}">${this._icon(icon)}<span>${esc(this._t(label))}</span></button>`
+      )
+      .join("");
+    const bodies = defs
+      .filter(([k]) => open(k))
+      .map(([, , , html]) => html())
+      .join("");
+    return `<div class="sbtns" style="--n:${defs.length}">${buttons}</div>${bodies}`;
   }
 
   /** House block: presence, outdoor, mode, pause, guests, vacation and buttons. */
@@ -971,19 +1120,26 @@ class SmartHeatingControlCard extends HTMLElement {
     const demand = this._state(e.heat_demand);
     const runtime = this._state(e.heating_runtime);
     const guest = this._state(e.guest_mode);
+    const pause = this._state(e.pause);
     const vStart = this._state(e.vacation_start);
     const vEnd = this._state(e.vacation_end);
 
-    const persons = presence?.attributes?.persons || {};
-    const personList = Object.entries(persons)
-      .map(([id, cls]) => {
-        const p = this._hass.states[id];
-        const name = p?.attributes?.friendly_name || id.split(".")[1];
-        return `<span class="person ${esc(cls || "unknown")}" title="${esc(
-          this._label(presence, cls)
-        )}">${esc(name)}</span>`;
-      })
-      .join("");
+    const persons = Object.entries(presence?.attributes?.persons || {}).map(([id, cls]) => {
+      const p = this._hass.states[id];
+      return { id, cls: cls || "unknown", name: p?.attributes?.friendly_name || id.split(".")[1], picture: p?.attributes?.entity_picture };
+    });
+    // A ring in the colour of where the person is (home, nearby, far); the photo when there is one.
+    const avatarList = (links) =>
+      persons
+        .map((p) => {
+          const title = `${p.name}: ${this._label(presence, p.cls)}`;
+          return `<span class="avatar ${esc(p.cls)} ${links ? "link" : ""}" ${links ? this._more(p.id, title) : `title="${esc(title)}"`}>${
+            p.picture ? `<img src="${esc(p.picture)}" alt="">` : esc((String(p.name).trim()[0] || "?").toUpperCase())
+          }</span>`;
+        })
+        .join("");
+    const avatars = avatarList(true);
+    const who = persons.map((p) => `${p.name} ${String(this._label(presence, p.cls)).toLowerCase()}`).join(" · ");
 
     const modes = (mode?.attributes?.options || ["auto", "vacation", "off", "summer"])
       .map(
@@ -992,11 +1148,12 @@ class SmartHeatingControlCard extends HTMLElement {
       )
       .join("");
 
-    const stat = (label, value, extra = "", entityId = null) =>
-      `<div class="stat ${extra} ${entityId ? "link" : ""}" ${this._more(entityId)}><span class="k">${esc(
+    const stat = (icon, label, value, extra = "", entityId = null) =>
+      `<div class="stat ${extra} ${entityId ? "link" : ""}" ${this._more(entityId)}><span class="k">${this._icon(icon)}<span>${esc(
         label
-      )}</span><span class="v">${esc(value)}</span></div>`;
+      )}</span></span><span class="v">${esc(value)}</span></div>`;
     const onOff = (s) => (s ? (s.state === "on" ? this._t("on") : this._t("off")) : "–");
+    const guestOn = guest?.state === "on";
     const guestUntil = guest?.attributes?.until
       ? `<span class="muted">${this._t("until")} ${esc(this._fmtTime(guest.attributes.until))}</span>`
       : "";
@@ -1011,84 +1168,116 @@ class SmartHeatingControlCard extends HTMLElement {
     const houseKey = `house-${house.id}`;
     if (this._config.compact && !this._open[houseKey]) {
       return `<button class="crow house-row" data-action="fold" data-key="${esc(houseKey)}" aria-expanded="false">
-          ${this._icon("home-thermometer-outline")}
+          ${persons.length ? `<span class="avatars sm" aria-hidden="true">${avatarList(false)}</span>` : this._icon("home-thermometer-outline")}
           <span class="cname">${esc(house.name || "")}</span>
           <span class="pill presence-state ${esc(presence?.state)}">${esc(this._label(presence))}</span>
           <span class="pill">${esc(this._label(mode))}</span>
           ${demand?.state === "on" ? `<span class="cicon hot" title="${esc(this._t("heating"))}">${this._icon("fire")}</span>` : ""}
-          <span class="ctemp muted">${esc(this._outdoorLabel(outdoor))} ${esc(this._temp(outdoor?.state))}</span>
+          <span class="ctemp muted">${this._icon("weather-partly-cloudy")} ${esc(this._temp(outdoor?.state))}</span>
           <span class="chev"></span>
         </button>`;
     }
     const foldBack = this._config.compact
-      ? `<button class="room-title" data-action="fold" data-key="${esc(houseKey)}" aria-expanded="true"><span class="chev open"></span></button>`
+      ? `<button class="room-title" data-action="fold" data-key="${esc(houseKey)}" aria-expanded="true" aria-label="${esc(
+          house.name || ""
+        )}"><span class="chev open"></span></button>`
       : "";
+    const presenceIcon =
+      { home: "home-outline", nearby: "map-marker-radius-outline", far: "map-marker-distance" }[presence?.state] ||
+      "home-search-outline";
+
+    // Action buttons: an icon and a short name; Guests and Vacation open their own panel.
+    const guestKey = `guest-${house.id}`;
+    const vacKey = `vac-${house.id}`;
+    const abtn = (icon, label, attrs, cls = "", title = "") =>
+      `<button class="abtn ${cls}" ${attrs} ${title ? `title="${esc(title)}" aria-label="${esc(title)}"` : ""}>${this._icon(
+        icon
+      )}<span>${esc(label)}</span></button>`;
+    const fold = (key) => `data-action="fold" data-key="${esc(key)}" aria-expanded="${!!this._open[key]}"`;
+    const actions = [
+      pause
+        ? abtn("pause", this._t("pause"), `data-action="toggle" data-entity="${esc(e.pause)}" role="switch" aria-checked="${pause.state === "on"}"`, pause.state === "on" ? "warn on" : "warn")
+        : "",
+      guest
+        ? abtn("account-group-outline", this._t("guests"), fold(guestKey), `teal ${guestOn ? "on" : ""} ${this._open[guestKey] ? "open" : ""}`)
+        : "",
+      abtn("airplane", this._t("vacation"), fold(vacKey), `blue ${vacationSet ? "on" : ""} ${this._open[vacKey] ? "open" : ""}`),
+      e.reevaluate ? abtn("refresh", this._t("reevaluate"), `data-action="press" data-entity="${esc(e.reevaluate)}"`) : "",
+      e.clear_overrides
+        ? abtn("restore", this._t("auto_short"), `data-action="press" data-entity="${esc(e.clear_overrides)}"`, "", this._t("clear_all"))
+        : "",
+    ].filter(Boolean);
+
+    const guestPanel =
+      guest && this._open[guestKey]
+        ? `<div class="panel teal">
+            <div class="panel-head"><b>${esc(this._t("guest_title"))}</b>${guestUntil}<span class="pill state ${
+              guestOn ? "on" : ""
+            } link" ${this._more(e.guest_mode)}>${esc(guestOn ? this._t("on") : this._t("off"))}</span></div>
+            <p class="hint">${esc(this._t("guest_hint"))}</p>
+            <div class="row wrap">${this._btn(this._t(guestOn ? "guest_stop" : "guest_start"), `data-action="toggle" data-entity="${esc(
+              e.guest_mode
+            )}"`, { icon: guestOn ? "account-off-outline" : "account-group-outline", kind: guestOn ? "" : "primary" })}</div>
+          </div>`
+        : "";
+    const vacPanel = this._open[vacKey]
+      ? `<div class="panel blue">
+          <div class="panel-head"><b>${esc(this._t("vacation"))}</b><span class="muted">${vacationSummary}</span></div>
+          <div class="dates">
+            <label class="datefield"><span>${this._t("from")}</span>
+              <input type="datetime-local" data-vac="start" data-house="${esc(house.id)}"
+                value="${esc(toLocalInput(vStart?.state))}"></label>
+            <label class="datefield"><span>${this._t("to")}</span>
+              <input type="datetime-local" data-vac="end" data-house="${esc(house.id)}"
+                value="${esc(toLocalInput(vEnd?.state))}"></label>
+          </div>
+          <p class="hint">${this._t("vacation_hint")}</p>
+          <div class="row wrap">
+            ${this._btn(this._t("set_vacation"), `data-action="vacation" data-house="${esc(house.id)}"`, {
+              icon: "content-save",
+              kind: "primary",
+            })}
+            ${
+              e.clear_vacation && vacationSet
+                ? this._btn(this._t("clear_vacation"), `data-action="press" data-entity="${esc(e.clear_vacation)}"`, {
+                    icon: "close",
+                  })
+                : ""
+            }
+          </div>
+          ${this._error[vacKey] ? `<p class="error">${esc(this._error[vacKey])}</p>` : ""}
+        </div>`
+      : "";
+
     return `
       <section class="block house">
         <div class="house-head">
-          <div>
-            <div class="name">${foldBack}${esc(house.name || "")}</div>
-            <div class="presence">
-              <span class="pill presence-state link ${esc(presence?.state)}" ${this._more(e.presence)}>${esc(
-                this._label(presence)
-              )}</span>
-              ${presence?.attributes?.arriving ? `<span class="pill">${this._t("arriving")}</span>` : ""}
-              ${personList}
+          <div class="who">
+            ${foldBack}
+            ${avatars ? `<div class="avatars">${avatars}</div>` : ""}
+            <div class="whotext">
+              ${this._houses().length > 1 && house.name ? `<span class="hname">${esc(house.name)}</span>` : ""}
+              <span class="pstate">
+                <span class="presence-state link ${esc(presence?.state)}" ${this._more(e.presence)}>${this._icon(presenceIcon)}${esc(
+                  this._label(presence)
+                )}</span>
+                ${presence?.attributes?.arriving ? `<span class="pill">${this._t("arriving")}</span>` : ""}
+                ${guestOn ? `<span class="pill teal">${esc(this._t("guests"))}</span>` : ""}
+              </span>
+              ${who ? `<span class="muted">${esc(who)}</span>` : ""}
             </div>
           </div>
-          <div class="stats">
-            ${stat(this._outdoorLabel(outdoor), this._temp(outdoor?.state), "", e.outdoor_average)}
-            ${stat(this._t("season"), onOff(season), "", e.heating_season)}
-            ${stat(this._t("demand"), onOff(demand), demand?.state === "on" ? "hot" : "", e.heat_demand)}
-            ${runtime ? this._runtimeStat(e.heating_runtime) : ""}
-          </div>
+          <div class="segmented" role="group" aria-label="${esc(this._t("mode"))}">${modes}</div>
         </div>
-        ${this._cutoffHtml(outdoor, cutoff, e.outdoor_cutoff, mode, season, this._state(e.pause))}
-        <div class="label">${this._t("mode")}</div>
-        <div class="segmented" role="group" aria-label="${esc(this._t("mode"))}">${modes}</div>
-        <div class="row wrap">
-          ${this._toggle(e.pause, this._t("pause"))}
-          ${this._toggle(e.guest_mode, this._t("guests"))}${guestUntil}
+        <div class="stats">
+          ${stat("weather-partly-cloudy", this._outdoorLabel(outdoor), this._temp(outdoor?.state), "", e.outdoor_average)}
+          ${stat("calendar-range", this._t("season"), onOff(season), "", e.heating_season)}
+          ${stat("fire", this._t("demand"), onOff(demand), demand?.state === "on" ? "hot" : "", e.heat_demand)}
+          ${runtime ? this._runtimeStat(e.heating_runtime) : ""}
         </div>
-        <details class="fold" data-fold="vac-${esc(house.id)}" ${this._open[`vac-${house.id}`] ? "open" : ""}>
-          <summary><span>${this._t("vacation")}</span><span class="muted">${vacationSummary}</span></summary>
-          <div class="fold-body">
-            <div class="dates">
-              <label class="datefield"><span>${this._t("from")}</span>
-                <input type="datetime-local" data-vac="start" data-house="${esc(house.id)}"
-                  value="${esc(toLocalInput(vStart?.state))}"></label>
-              <label class="datefield"><span>${this._t("to")}</span>
-                <input type="datetime-local" data-vac="end" data-house="${esc(house.id)}"
-                  value="${esc(toLocalInput(vEnd?.state))}"></label>
-            </div>
-            <p class="hint">${this._t("vacation_hint")}</p>
-            <div class="row wrap">
-              ${this._btn(this._t("set_vacation"), `data-action="vacation" data-house="${esc(house.id)}"`, {
-                icon: "content-save",
-                kind: "primary",
-              })}
-              ${
-                e.clear_vacation && vacationSet
-                  ? this._btn(this._t("clear_vacation"), `data-action="press" data-entity="${esc(e.clear_vacation)}"`, {
-                      icon: "close",
-                    })
-                  : ""
-              }
-            </div>
-            ${this._error[`vac-${house.id}`] ? `<p class="error">${esc(this._error[`vac-${house.id}`])}</p>` : ""}
-          </div>
-        </details>
-        <div class="house-actions">
-          ${e.reevaluate ? this._btn(this._t("reevaluate"), `data-action="press" data-entity="${esc(e.reevaluate)}"`, { icon: "refresh", kind: "soft-accent" }) : ""}
-          ${
-            e.clear_overrides
-              ? this._btn(this._t("clear_all"), `data-action="press" data-entity="${esc(e.clear_overrides)}"`, {
-                  icon: "restore",
-                  kind: "soft-warn",
-                })
-              : ""
-          }
-        </div>
+        ${this._cutoffHtml(outdoor, cutoff, e.outdoor_cutoff, mode, season, pause)}
+        <div class="hactions" style="--n:${actions.length}">${actions.join("")}</div>
+        ${guestPanel}${vacPanel}
       </section>`;
   }
 
@@ -1123,7 +1312,7 @@ class SmartHeatingControlCard extends HTMLElement {
     return `<div class="banner">${this._icon("pause-circle-outline")}<span>${esc(name + this._t("paused_banner"))}</span></div>`;
   }
 
-  /** Room block (or one compact row); the details are shown when it is open. */
+  /** Room block (or one compact tile / folded row); the sections are shown when it is open. */
   _roomHtml(stateObj) {
     const cfg = this._config;
     const a = stateObj.attributes;
@@ -1133,11 +1322,13 @@ class SmartHeatingControlCard extends HTMLElement {
       this._open[`room-${key}`] === undefined ? cfg.collapsed || cfg.compact : !this._open[`room-${key}`];
     const color = PRESET_COLORS[a.preset] || "var(--secondary-text-color)";
     if (cfg.compact && folded) return this._compactRow(stateObj, color);
+    if (folded) return this._foldedRow(stateObj, color);
 
     const badges = [];
     if (a.heating ?? a.heat_demand)
-      badges.push(`<span class="pill hot link" ${this._more(e.heat_demand)}>${this._t("heating")}</span>`);
-    if (a.window_open) badges.push(`<span class="pill warn link" ${this._more(e.window_open)}>${this._t("window")}</span>`);
+      badges.push(`<span class="pill hot pulse link" ${this._more(e.heat_demand)}>${this._icon("fire")}${this._t("heating")}</span>`);
+    if (a.window_open)
+      badges.push(`<span class="pill warn link" ${this._more(e.window_open)}>${this._icon("window-open-variant")}${this._t("window")}</span>`);
     if (a.override) {
       const until = this._overrideUntil(a);
       const prefix = stateObj.state === "manual_override" ? "" : `${this._t("override")} `;
@@ -1155,40 +1346,90 @@ class SmartHeatingControlCard extends HTMLElement {
       badges.push(`<span class="pill link wrap" ${this._more(
         e.manual_override,
         a.override.until ? null : this._t("reeval_help")
-      )}>${esc(prefix + until + origin + back)}</span>`);
+      )}>${this._icon("hand-back-right-outline")}${esc(prefix + until + origin + back)}</span>`);
     }
 
     const head = `
       <div class="room-head">
-        <button class="room-title" data-action="fold" data-key="room-${esc(key)}" aria-expanded="${!folded}">
-          <span class="chev ${folded ? "" : "open"}"></span><span class="name">${esc(a.room_name)}</span>
-        </button>
-        ${this._tempPair(
-          a.current_temperature,
-          a.target_temperature,
-          color,
-          this._eta(a),
-          a.stop_forecast ? "stop_help" : "eta_help",
-          e
-        )}
-      </div>
-      <div class="decision"><span class="pill rule link" style="--c:${color}" ${this._more(e.decision)}>${esc(
-        this._label(stateObj)
-      )}</span>${badges.join("")}</div>`;
-
-    if (folded) return `<section class="block room">${head}</section>`;
+        <div class="rh-left">
+          <button class="room-title" data-action="fold" data-key="room-${esc(key)}" aria-expanded="true">
+            <span class="chev open"></span><span class="name">${esc(a.room_name)}</span>
+          </button>
+          <span class="pill rule link" ${this._more(e.decision)}><span class="dot"></span>${esc(this._label(stateObj))}</span>
+        </div>
+        ${badges.length ? `<div class="decision">${badges.join("")}</div>` : ""}
+      </div>`;
+    const hero = `<div class="hero">${this._gauge(a, e, 140)}<div class="chips">${this._chipsHtml(
+      a,
+      e,
+      stateObj,
+      this._eta(a)
+    )}</div></div>`;
 
     const parts = [
-      `<p class="reason">${esc(this._reasonText(a))}</p>`,
+      head,
+      hero,
       this._noHeatHtml(a),
+      this._todayHtml(a),
       cfg.show_timeline ? this._timelineHtml(a) : "",
       this._controlsHtml(a, e),
-      cfg.show_quick_override ? this._quickHtml(a, e) : "",
-      cfg.show_levels ? this._levelsHtml(a, e) : "",
-      cfg.show_schedule_editor ? this._scheduleHtml(a, stateObj) : "",
-      cfg.show_details ? this._detailsHtml(a, e) : "",
+      this._sectionsHtml(a, e, stateObj),
     ];
-    return `<section class="block room">${head}${parts.join("")}</section>`;
+    return `<section class="block room open" style="--c:${color}">${parts.join("")}</section>`;
+  }
+
+  /** Small icons of a folded room: heating, window open, manual change. */
+  _statusIcons(a) {
+    const icons = [];
+    if (a.heating ?? a.heat_demand) icons.push(`<span class="cicon hot" title="${esc(this._t("heating"))}">${this._icon("fire")}</span>`);
+    if (a.window_open) icons.push(`<span class="cicon warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>`);
+    if (a.override) icons.push(`<span class="cicon" title="${esc(`${this._t("override")} ${this._overrideUntil(a)}`)}">${this._icon("hand-back-right-outline")}</span>`);
+    return icons.join("");
+  }
+
+  /** A folded room: small arc, name, reason, target; a tap opens it. */
+  _foldedRow(stateObj, color) {
+    const a = stateObj.attributes;
+    const eta = this._eta(a);
+    return `<section class="block room folded" style="--c:${color}">
+        <button class="frow" data-action="fold" data-key="room-${esc(a.room_id)}" aria-expanded="false">
+          ${this._gauge(a, null, 54, false)}
+          <span class="ftext"><span class="name">${esc(a.room_name)}</span>
+            <span class="freason">${eta ? `${esc(eta)} · ` : ""}${esc(this._reasonText(a))}</span></span>
+          ${this._statusIcons(a)}
+          <span class="pill rule">${this._temp(a.target_temperature)}</span>
+          <span class="chev"></span>
+        </button>
+      </section>`;
+  }
+
+  /** One tile per room in the compact card: arc, level, target; a tap opens the room. */
+  _compactRow(stateObj, color) {
+    const a = stateObj.attributes;
+    const heating = a.heating ?? a.heat_demand;
+    const status = heating
+      ? `<span class="tstat hot pulse" title="${esc(this._t("heating"))}">${this._icon("fire")}</span>`
+      : a.window_open
+        ? `<span class="tstat warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>`
+        : a.override
+          ? `<span class="tstat" title="${esc(this._t("override"))}">${this._icon("hand-back-right-outline")}</span>`
+          : "";
+    const eta = this._eta(a);
+    const line = a.override
+      ? `${this._t("override")} ${this._overrideUntil(a)}`
+      : a.window_open
+        ? this._t("window")
+        : eta || (a.next_change ? `${this._presetName(a, a.next_preset)} · ${this._fmtTime(a.next_change)}` : "");
+    const level = a.preset ? this._presetName(a, a.preset) : this._label(stateObj);
+    return `<button class="tile" data-action="fold" data-key="room-${esc(a.room_id)}" aria-expanded="false" style="--c:${color}"
+        aria-label="${esc(`${a.room_name}, ${this._temp(a.current_temperature)}, ${this._label(stateObj)}`)}">
+        <span class="tile-head"><span class="cname">${esc(a.room_name)}</span>${status}</span>
+        <span class="tile-body">${this._gauge(a, null, 86, false)}
+          <span class="tile-info"><span class="pill rule"><span class="dot"></span>${esc(level)}</span>
+            <span class="tsub">${esc(this._t("target_tag").toLowerCase())} ${this._temp(a.target_temperature)}</span>
+            ${line ? `<span class="muted">${esc(line)}</span>` : ""}</span>
+        </span>
+      </button>`;
   }
 
   /** The reason of the decision in the language of the card (the English text otherwise). */
@@ -1252,25 +1493,6 @@ class SmartHeatingControlCard extends HTMLElement {
         })`
       : "";
     return `${this._t("until_reeval")}${latest}`;
-  }
-
-  /** One line per room: name, rule, now and target; a tap opens the room. */
-  _compactRow(stateObj, color) {
-    const a = stateObj.attributes;
-    const icons = [];
-    if (a.heating ?? a.heat_demand) icons.push(`<span class="cicon hot" title="${esc(this._t("heating"))}">${this._icon("fire")}</span>`);
-    if (a.window_open) icons.push(`<span class="cicon warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>`);
-    if (a.override) icons.push(`<span class="cicon" title="${esc(`${this._t("override")} ${this._overrideUntil(a)}`)}">${this._icon("hand-back-right-outline")}</span>`);
-    return `<button class="crow" data-action="fold" data-key="room-${esc(a.room_id)}" aria-expanded="false" style="--c:${color}">
-        <span class="cbar"></span>
-        <span class="ctext"><span class="cname">${esc(a.room_name)}</span>
-          <span class="crule">${this._eta(a) ? `${esc(this._eta(a))} · ` : ""}${esc(this._label(stateObj))}</span></span>
-        ${icons.join("")}
-        <span class="ctemp"><span class="cnow">${this._temp(a.current_temperature)}</span><span class="carrow">→</span><b>${this._temp(
-          a.target_temperature
-        )}</b></span>
-        <span class="chev"></span>
-      </button>`;
   }
 
   /** Segments of a profile over one day (the last slot continues past midnight). */
@@ -2644,7 +2866,9 @@ class SmartHeatingControlCard extends HTMLElement {
     if (kind === "dt") {
       return `<button class="period" data-action="period" title="${title}"><dt class="stack">${label}</dt><dd>${value}</dd></button>`;
     }
-    return `<button class="stat period" data-action="period" title="${title}"><span class="k stack">${label}</span><span class="v">${value}</span></button>`;
+    return `<button class="stat period" data-action="period" title="${title}"><span class="k">${this._icon(
+      "timer-outline"
+    )}<span class="stack">${label}</span></span><span class="v">${value}</span></button>`;
   }
 
   /** Heating time of the house, as a stat that changes the period when tapped. */
@@ -2652,10 +2876,10 @@ class SmartHeatingControlCard extends HTMLElement {
     return this._runtimeButton(entityId, "stat");
   }
 
-  /** Section that opens and closes; its state survives redraws. */
+  /** An open section of a room (its button opens and closes it). */
   _fold(key, title, content) {
-    return `<details class="fold" data-fold="${esc(key)}" ${this._open[key] ? "open" : ""}>
-      <summary><span>${esc(title)}</span></summary><div class="fold-body">${content}</div></details>`;
+    return `<div class="section" data-section="${esc(key)}"><div class="section-head">${esc(title)}</div>
+      <div class="fold-body">${content}</div></div>`;
   }
 
   // ------------------------------------------------------------------ events
@@ -2967,14 +3191,6 @@ const STYLE = `
   .hint.warn { color: var(--ac-warn); }
   .error { margin: 0; color: var(--error-color, #db4437); font-size: 0.85em; }
 
-  /* house */
-  .house-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  .presence { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
-  .stats { display: grid; grid-auto-flow: column; gap: 18px; align-items: start; }
-  .stat { display: flex; flex-direction: column; gap: 2px; }
-  .stat .k { font-size: 0.75em; color: var(--ac-muted); }
-  .stat .v { font-variant-numeric: tabular-nums; font-weight: 600; }
-  .stat.hot .v { color: var(--ac-hot); }
   button.period { font: inherit; color: inherit; text-align: left; cursor: pointer; border: none; background: none; padding: 0; }
   .details button.period { width: 100%; }
   .stack { display: grid; }
@@ -2983,8 +3199,6 @@ const STYLE = `
   .details button.period dt { font-size: 0.75em; color: var(--ac-muted); }
   .details button.period dd { margin: 2px 0 0; font-variant-numeric: tabular-nums; font-weight: 500; }
   button.period:hover .k, button.period:hover dt { text-decoration: underline dotted; }
-  .stat.warn .v { color: var(--ac-warn); }
-  @media (max-width: 520px) { .stats { grid-auto-flow: row; grid-template-columns: 1fr 1fr; } }
 
   /* pills */
   .pill { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8em; padding: 3px 10px;
@@ -2996,9 +3210,6 @@ const STYLE = `
   .presence-state.home { background: color-mix(in srgb, #f08c00 22%, transparent); }
   .presence-state.nearby { background: color-mix(in srgb, #2f9e8f 22%, transparent); }
   .presence-state.far { background: color-mix(in srgb, #8a96a3 25%, transparent); }
-  .person { font-size: 0.8em; padding: 2px 9px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--ac-line); }
-  .person.home { box-shadow: inset 0 0 0 1.5px #f08c00; }
-  .person.nearby { box-shadow: inset 0 0 0 1.5px #2f9e8f; }
 
   /* buttons */
   .btn { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 0.9em; font-weight: 500;
@@ -3054,20 +3265,11 @@ const STYLE = `
   .numfield.level .lname { color: var(--primary-text-color); }
 
   /* rooms */
-  .room-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
   .room-title { display: inline-flex; align-items: center; gap: 8px; background: none; border: none; padding: 0;
     font: inherit; color: inherit; cursor: pointer; text-align: left; }
   .chev { width: 8px; height: 8px; border-right: 2px solid var(--ac-muted); border-bottom: 2px solid var(--ac-muted);
     transform: rotate(-45deg); transition: transform .15s; }
   .chev.open { transform: rotate(45deg); }
-  .temps { display: flex; gap: 6px; }
-  .tval { display: flex; flex-direction: column; align-items: flex-end; padding: 4px 10px; border-radius: 12px; background: var(--ac-surface); min-width: 64px; }
-  .tval .tag { font-size: 0.68em; color: var(--ac-muted); }
-  .tval .tnum { font-size: 1.45em; font-variant-numeric: tabular-nums; line-height: 1.15; font-weight: 300; }
-  .tval.target { background: color-mix(in srgb, var(--c) 16%, transparent); }
-  .tval.target .tnum { font-weight: 600; }
-  .tval .eta { font-size: 0.68em; color: var(--ac-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .tval .eta.sub { font-size: 0.6em; opacity: 0.85; }
   .toggle.sm { font-size: 0.85em; margin-left: auto; }
   .quickset { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
   .quickset .btn { padding: 7px 12px; }
@@ -3258,7 +3460,6 @@ const STYLE = `
 
   /* compact */
   ha-card.compact { gap: 8px; }
-  .rooms-list { display: flex; flex-direction: column; gap: 6px; }
   .crow { display: flex; align-items: center; gap: 10px; width: 100%; font: inherit; color: var(--primary-text-color);
     background: var(--ac-surface); border: none; border-radius: 12px; padding: 10px 12px; cursor: pointer; text-align: left;
     transition: background .15s; min-height: 48px; box-sizing: border-box; }
@@ -3278,10 +3479,137 @@ const STYLE = `
   .cicon.warn ha-icon { color: var(--ac-warn); }
   .house-row .pill { flex: none; }
   .house-row .ctemp { font-size: 0.85em; }
-  .compact .block.room { border-color: color-mix(in srgb, var(--ac-accent) 35%, var(--ac-line)); }
   @media (max-width: 420px) { .house-row .pill + .pill { display: none; } }
 
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  /* house */
+  .house-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .avatars { display: flex; gap: 8px; flex: none; padding: 4px; }
+  .avatar { --r: var(--ac-line); width: 36px; height: 36px; border-radius: 50%; background: var(--ac-surface-2); display: inline-flex;
+    align-items: center; justify-content: center; font-weight: 500; font-size: 0.9em; overflow: hidden; flex: none;
+    box-shadow: 0 0 0 2px var(--card-background-color), 0 0 0 4px var(--r); }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar.home { --r: #f08c00; }
+  .avatar.nearby { --r: #2f9e8f; }
+  .avatar.far { --r: #8a96a3; }
+  .avatars.sm { gap: 6px; padding: 3px; }
+  .avatars.sm .avatar { width: 24px; height: 24px; font-size: 0.72em; }
+  .whotext { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .hname { font-weight: 600; }
+  .pstate { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .pstate .presence-state { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; font-size: 1.05em; background: none; }
+  .pstate .presence-state ha-icon { --mdc-icon-size: 19px; color: var(--ac-muted); }
+  .pstate .presence-state.home ha-icon { color: #f08c00; }
+  .pstate .presence-state.nearby ha-icon { color: #2f9e8f; }
+  .house-head .segmented { flex: 0 1 280px; min-width: 220px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 8px; }
+  .stat, button.stat.period { display: flex; flex-direction: column; gap: 3px; background: var(--ac-surface-2); border-radius: 10px;
+    padding: 8px 10px; text-align: left; min-width: 0; }
+  .stat .k { display: flex; align-items: center; gap: 5px; font-size: 0.72em; color: var(--ac-muted); min-width: 0; }
+  .stat .k ha-icon { --mdc-icon-size: 14px; flex: none; }
+  .stat .v { font-variant-numeric: tabular-nums; font-size: 1.15em; font-weight: 500; }
+  .stat.hot { background: color-mix(in srgb, var(--ac-hot) 16%, transparent); }
+  .stat.hot .k, .stat.hot .v { color: var(--ac-hot); }
+  .stat.warn .v { color: var(--ac-warn); }
+  .hactions { display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); gap: 6px; }
+  @media (max-width: 420px) { .hactions { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .abtn { --t: var(--ac-accent); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    min-height: 56px; padding: 6px 4px; border-radius: 12px; border: 1px solid var(--ac-line); background: var(--card-background-color);
+    color: var(--primary-text-color); font: inherit; font-size: 0.75em; cursor: pointer; min-width: 0; transition: background .15s, border-color .15s; }
+  .abtn span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .abtn ha-icon { --mdc-icon-size: 20px; }
+  .abtn:hover { background: var(--ac-surface-2); }
+  .abtn.warn { --t: var(--warning-color, #f0ad4e); }
+  .abtn.teal { --t: #2f9e8f; }
+  .abtn.blue { --t: #4a78b5; }
+  .abtn.on, .abtn.open { border-color: var(--t); background: color-mix(in srgb, var(--t) 16%, var(--card-background-color)); }
+  .abtn.on ha-icon { color: var(--t); }
+  .panel { --t: var(--ac-accent); display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 12px;
+    background: color-mix(in srgb, var(--t) 8%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--t) 40%, transparent); }
+  .panel.teal { --t: #2f9e8f; }
+  .panel.blue { --t: #4a78b5; }
+  .panel-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .panel-head > :last-child { margin-left: auto; }
+  .pill.state.on, .pill.teal { background: #2f9e8f; color: #fff; }
+
+  /* rooms */
+  .block.room { background: color-mix(in srgb, var(--c) 6%, var(--card-background-color));
+    border-color: color-mix(in srgb, var(--c) 32%, var(--ac-line)); gap: 14px; }
+  .room-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .rh-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+  .room-title .name { font-size: 1.15em; }
+  .pill.rule .dot { width: 8px; height: 8px; }
+  .pill ha-icon { --mdc-icon-size: 15px; }
+  .pulse { animation: shc-pulse 1.8s ease-out infinite; }
+  @keyframes shc-pulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ac-hot) 55%, transparent); }
+    70% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--ac-hot) 0%, transparent); }
+    100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ac-hot) 0%, transparent); }
+  }
+  .hero { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .gauge { position: relative; display: inline-block; flex: none; }
+  .gauge svg { display: block; }
+  .gauge .gtrack { fill: none; stroke: color-mix(in srgb, var(--c) 20%, var(--ac-line)); stroke-linecap: round; }
+  .gauge .gvalue { fill: none; stroke: var(--c); stroke-linecap: round; }
+  .gcenter { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .gnum { font-size: calc(var(--gs) * 0.24); font-weight: 300; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .gsub { font-size: 0.8em; color: var(--ac-muted); margin-top: 5px; }
+  .chips { display: flex; flex-direction: column; gap: 9px; min-width: 0; flex: 1 1 180px; }
+  .chip { display: inline-flex; align-items: flex-start; gap: 7px; font-size: 0.9em; line-height: 1.35; }
+  .chip ha-icon { --mdc-icon-size: 17px; color: var(--c); flex: none; }
+  .chip small { display: block; }
+  .chip.soft { align-self: flex-start; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 0.82em;
+    background: color-mix(in srgb, var(--c) 16%, transparent); }
+  .chip.soft.on { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 55%, transparent); }
+  .chip.soft.neutral { background: var(--ac-surface-2); }
+  .chip.neutral ha-icon { color: var(--ac-muted); }
+  .today { display: flex; flex-direction: column; gap: 4px; }
+  .tlabel { font-size: 0.72em; color: var(--ac-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .tbar { position: relative; height: 12px; border-radius: 6px; overflow: hidden; background: var(--ac-surface-2); }
+  .tbar i { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--c) 80%, transparent); }
+  .tbar b { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--primary-text-color); }
+  .tticks { display: flex; justify-content: space-between; font-size: 0.68em; color: var(--ac-muted); }
+  .sbtns { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 8px; }
+  @media (max-width: 420px) { .sbtns { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .sbtn { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 6px 8px; border-radius: 12px;
+    border: 1px solid var(--ac-line); background: var(--card-background-color); color: var(--primary-text-color); font: inherit;
+    font-size: 0.85em; font-weight: 500; cursor: pointer; min-width: 0; transition: background .15s, border-color .15s; }
+  .sbtn span { text-align: center; line-height: 1.2; overflow-wrap: anywhere; }
+  .sbtn ha-icon { --mdc-icon-size: 18px; flex: none; }
+  .sbtn:hover { background: var(--ac-surface-2); }
+  .sbtn.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 18%, var(--card-background-color)); }
+  .section { display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: var(--ac-surface);
+    box-shadow: inset 0 0 0 1px var(--ac-line); }
+  .section-head { font-weight: 500; }
+  .section .fold-body { padding-top: 6px; }
+  .block.room.folded { padding: 8px 12px; }
+  .frow { display: flex; align-items: center; gap: 12px; width: 100%; font: inherit; color: inherit; background: none; border: none;
+    padding: 0; cursor: pointer; text-align: left; min-height: 54px; }
+  .ftext { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+  .ftext .name { font-weight: 600; }
+  .freason { font-size: 0.82em; color: var(--ac-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .frow .gnum, .tile .gnum { font-weight: 400; }
+  .frow ha-icon, .frow .cicon ha-icon { --mdc-icon-size: 18px; }
+
+  /* compact tiles */
+  .rooms-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+  .rooms-list > .block { grid-column: 1 / -1; }
+  .tile { display: flex; flex-direction: column; gap: 10px; font: inherit; color: inherit; text-align: left; cursor: pointer; padding: 12px;
+    border-radius: 16px; border: 1px solid color-mix(in srgb, var(--c) 32%, var(--ac-line));
+    background: color-mix(in srgb, var(--c) 7%, var(--card-background-color)); min-width: 0; }
+  .tile:hover { background: color-mix(in srgb, var(--c) 12%, var(--card-background-color)); }
+  .tile-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; min-height: 28px; }
+  .tile .cname { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tstat { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none;
+    background: color-mix(in srgb, var(--c) 22%, transparent); }
+  .tstat ha-icon { --mdc-icon-size: 16px; }
+  .tstat.hot { background: var(--ac-hot); color: #fff; }
+  .tstat.warn { background: var(--ac-warn); color: #fff; }
+  .tile-body { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .tile-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 0.85em; align-items: flex-start; }
+  .tile-info .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+
+  @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } * { transition: none !important; } }
 `;
 
 // ---------------------------------------------------------------------- editor

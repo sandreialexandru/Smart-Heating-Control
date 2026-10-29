@@ -32,8 +32,8 @@ type: custom:smart-heating-control-card
 | `show_levels` | `true` | Temperaturile nivelurilor. |
 | `show_details` | `true` | *Detaliile* camerei. |
 | `show_schedule_editor` | `true` | Editorul programului. |
-| `collapsed` | `false` | Camerele încep pliate; atingi numele ca să o deschizi. |
-| `compact` | `false` | Un rând pe cameră (nume, regulă, acum → țintă) și unul pentru casă; atingi un rând ca să-l deschizi. |
+| `collapsed` | `false` | Camerele încep pliate (un rând: un arc mic, numele, motivul, ținta); atingi rândul ca să deschizi camera. |
+| `compact` | `false` | O placă pe cameră (arc cu temperatura, nivel, țintă, o iconiță de stare) și un rând pentru casă; atingi ca să deschizi. |
 | `runtime_period` | `day` | Timpul de încălzire pe `day`, `week` sau `month` (perioade calendaristice, din statisticile pe termen lung); se schimbă și atingând valoarea în card. |
 
 **Exemplu**: un card doar pentru dormitor, pliat, fără editorul de program:
@@ -50,12 +50,15 @@ collapsed: true
 
 ## Partea casei
 
-- **Prezența** și starea fiecărei persoane.
-- **Media temperaturii de afară** (pe orele din *Medie pe*), **sezonul**,
-  **cererea de căldură**, **timpul de încălzire**.
-- **Modul** (Auto / Vacanță / Oprit / Vară), **Pauză**, **Oaspeți**, datele
-  **vacanței**, butoanele **Reevaluează** și anularea tuturor modificărilor
-  manuale.
+- **Prezența**, cu fiecare persoană ca un cerc (poza sau inițiala) în culoarea
+  locului unde e: portocaliu acasă, verde aproape, gri departe.
+- Plăci pentru **media temperaturii de afară** (pe orele din *Medie pe*),
+  **sezon**, **cererea de căldură** și **timpul de încălzire**.
+- **Modul** (Auto / Vacanță / Oprit / Vară).
+- Un rând de butoane: **Pauză** (pornit / oprit), **Oaspeți** și **Vacanță**
+  (fiecare își deschide panoul: pornirea / oprirea modului oaspeți, datele
+  vacanței), **Reevaluează** și **Automat** (anulează toate modificările
+  manuale). Un buton rămâne colorat cât modul lui e pornit.
 - **Cald afară**, cât încălzirea e oprită pentru că e cald, cu motivul (media
   măsurată sau prognoza) sau când prognoza lasă încălzirea să pornească (vezi
   [capitolul 6](06-vreme.ro.md)). Nu apare unde nu are efect: modul Oprit sau
@@ -64,15 +67,25 @@ collapsed: true
 
 ## O cameră
 
-Antetul arată temperatura acum, ținta, decizia și motivul (în limba cardului),
-plus insignele pentru încălzire, fereastră deschisă și modificare manuală. Sub
-țintă apare **timpul până la țintă** (de exemplu *~35 min*) sau, în timpul unei
-opriri anticipate, **temperatura estimată la schimbare** (*~21.5° la 22:00*).
+Antetul arată numele, decizia (în culoarea nivelului) și insignele pentru
+încălzire (pulsează), fereastră deschisă și modificare manuală. Dedesubt:
+
+- un **arc** cu temperatura camerei și ținta sub ea; arcul e gol la antiîngheț
+  și plin la temperatura maximă a camerei (doar arată temperatura, nu schimbă
+  nimic);
+- lângă el **motivul** (în limba cardului), **timpul până la țintă** (de exemplu
+  *~35 min*) sau, în timpul unei opriri anticipate, **temperatura estimată la
+  schimbare** (*~21.5° la 22:00*), **forțarea TRV** când e pornită pentru
+  cameră și ce măsoară dispozitivul însuși (camerele cu TRV / dispozitive
+  climate);
+- **Azi**: profilul zilei ca bară de la 00 la 24, cu ora de acum.
 Dacă o cameră sub țintă nu încălzește, cardul spune de ce (*Nu încălzește: …*,
 vezi [capitolul 8](08-sursa-si-energie.ro.md#când-nu-încălzește-o-cameră-sub-țintă)).
 Butonul *Înapoi la automat* anulează o modificare manuală.
 
-Secțiunile, în ordine:
+Sub grafic, butoanele deschid secțiunile **Setează temporar**, **Program**,
+**Niveluri** și **Detalii**, fiecare separat (pot fi deschise mai multe deodată);
+butonul unei secțiuni deschise rămâne colorat. Graficul și secțiunile:
 
 ### Graficul
 

@@ -32,8 +32,8 @@ type: custom:smart-heating-control-card
 | `show_levels` | `true` | The level temperatures. |
 | `show_details` | `true` | The room *Details*. |
 | `show_schedule_editor` | `true` | The schedule editor. |
-| `collapsed` | `false` | Rooms start folded; tap the name to open one. |
-| `compact` | `false` | One row per room (name, rule, now → target) and one for the house; tap a row to open it. |
+| `collapsed` | `false` | Rooms start folded (one row: a small arc, the name, the reason, the target); tap it to open the room. |
+| `compact` | `false` | One tile per room (arc with the temperature, level, target, a status icon) and one row for the house; tap to open. |
 | `runtime_period` | `day` | The heating time per `day`, `week` or `month` (calendar periods, from the long-term statistics); also changed by tapping the value in the card. |
 
 **Example**: a card only for the bedroom, folded, without the schedule editor:
@@ -50,11 +50,15 @@ collapsed: true
 
 ## The house part
 
-- **Presence** and the state of every person.
-- **The outdoor average** (over the *Average over* hours), the **season**, the
-  **heat demand**, the **heating time**.
-- The **mode** (Auto / Vacation / Off / Summer), **Pause**, **Guests**, the
-  **vacation** dates, the buttons **Reevaluate** and clear all manual changes.
+- **Presence**, with every person as a round badge (the photo or the initial)
+  in the colour of where they are: orange home, green nearby, grey far.
+- Tiles for **the outdoor average** (over the *Average over* hours), the
+  **season**, the **heat demand** and the **heating time**.
+- The **mode** (Auto / Vacation / Off / Summer).
+- A row of buttons: **Pause** (on / off), **Guests** and **Vacation** (each
+  opens its own panel: guest mode on / off, the vacation dates), **Reevaluate**
+  and **Automatic** (clears all manual changes). A button stays coloured while
+  its mode is on.
 - **Warm outside**, while the heating is off because it is warm, with the reason
   (measured average or forecast) or when the forecast lets the heating run (see
   [chapter 6](06-weather.md)). Not shown where it cannot act: mode Off or Summer,
@@ -63,15 +67,25 @@ collapsed: true
 
 ## A room
 
-The header shows the temperature now, the target, the decision and its reason
-(in the card language), plus badges for heating, open window and manual change.
-Below the target there is the **time to target** (e.g. *~35 min*) or, during an
-optimal stop, the **expected temperature at the change** (*~21.5° at 22:00*).
+The header shows the name, the decision (in the colour of the level) and badges
+for heating (pulsing), open window and manual change. Below it:
+
+- an **arc** with the room temperature and the target under it; the arc is
+  empty at the frost protection and full at the maximum temperature of the room
+  (it only shows the temperature, it does not change anything);
+- next to it the **reason** (in the card language), the **time to target**
+  (e.g. *~35 min*) or, during an optimal stop, the **expected temperature at
+  the change** (*~21.5° at 22:00*), the **TRV boost** when it is on for the
+  room, and what the device itself measures (rooms with TRVs / climate
+  devices);
+- **Today**: the profile of the day as a bar from 00 to 24, with the time now.
 If a room below its target does not heat, the card says why (*Not heating: …*,
 see [chapter 8](08-heat-source-and-energy.md#when-a-room-below-its-target-does-not-heat)).
 The *Back to automatic* button clears a manual change.
 
-The sections, in order:
+Under the chart, buttons open the sections **Set for a while**, **Schedule**,
+**Levels** and **Details**, each on its own (several can be open at once); an
+open section's button stays coloured. The chart and the sections:
 
 ### The chart
 

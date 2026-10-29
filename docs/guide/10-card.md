@@ -66,8 +66,9 @@ collapsed: true
   outside the season, in a pause.
 - A **pause band** at the top while the house is paused, and a **guest band**
   while guest mode is on (with its end, when it has one).
-- In the compact card the folded house row shows the people, the mode, the
-  outdoor temperature and a flame while there is heat demand.
+- In the compact card the folded house row shows the people, the presence
+  (Home / Nearby / Away), the mode, the outdoor temperature and a flame while
+  there is heat demand.
 
 ## A room
 
@@ -84,7 +85,7 @@ header:
   (it only shows the temperature, it does not change anything);
 - next to it the **reason** (in the card language), the **time to target**
   (e.g. *~35 min*) or, during an optimal stop, the **expected temperature at
-  the change** (*~21.5° at 22:00*), the **TRV boost** when it is on for the
+  the change** (*~21.5° at 22:00*), guest mode while it is on, the **TRV boost** when it is on for the
   room, and what the device itself measures (rooms with TRVs / climate
   devices);
 - **Today**: the profile of the day as a bar from 00 to 24, with the time now.

@@ -330,6 +330,7 @@ const TEXT = {
     off_pv_surplus: "solar surplus",
     off_solar_gain: "solar gain",
     guests_banner: "Guest mode: the house counts as Home even if none of the people is home",
+    guests_chip: "Guest mode on: the house counts as Home",
     auto_short: "Automatic",
     device_temp: "Device {temp}",
     trv_boost_chip: "TRV boost · {temp}",
@@ -563,6 +564,7 @@ const TEXT = {
     off_pv_surplus: "surplus solar",
     off_solar_gain: "câștig solar",
     guests_banner: "Mod oaspeți: casa e considerată Acasă chiar dacă nu e acasă nimeni dintre persoane",
+    guests_chip: "Mod oaspeți pornit: casa e considerată Acasă",
     auto_short: "Automat",
     device_temp: "Dispozitiv {temp}",
     trv_boost_chip: "Forțare TRV · {temp}",
@@ -1036,6 +1038,9 @@ class SmartHeatingControlCard extends HTMLElement {
         )} → ${esc(this._presetName(a, a.next_preset))}</span></span>`
       );
     }
+    if (this._guestOn(a)) {
+      chips.push(`<span class="chip guest">${this._icon("account-group-outline")}<span>${esc(this._t("guests_chip"))}</span></span>`);
+    }
     if (a.trv_boost) {
       chips.push(
         `<span class="chip soft ${a.trv_boost.active ? "on" : ""}">${this._icon("lightning-bolt-outline")}<span>${esc(
@@ -1164,6 +1169,7 @@ class SmartHeatingControlCard extends HTMLElement {
       return `<button class="crow house-row" data-action="fold" data-key="${esc(houseKey)}" aria-expanded="false">
           ${persons.length ? `<span class="avatars sm" aria-hidden="true">${avatarList(false)}</span>` : this._icon("home-thermometer-outline")}
           <span class="cname">${esc(house.name || "")}</span>
+          <span class="pill presence-state ${esc(presence?.state)}">${esc(this._label(presence))}</span>
           <span class="pill">${esc(this._label(mode))}</span>
           ${demand?.state === "on" ? `<span class="cicon hot" title="${esc(this._t("heating"))}">${this._icon("fire")}</span>` : ""}
           <span class="ctemp muted">${this._icon("weather-partly-cloudy")} ${esc(this._temp(outdoor?.state))}</span>
@@ -3577,6 +3583,7 @@ const STYLE = `
   .chip.soft.on { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 55%, transparent); }
   .chip.soft.neutral { background: var(--ac-surface-2); }
   .chip.neutral ha-icon { color: var(--ac-muted); }
+  .chip.guest ha-icon { color: #2f9e8f; }
   .today { display: flex; flex-direction: column; gap: 4px; }
   .tlabel { font-size: 0.72em; color: var(--ac-muted); text-transform: uppercase; letter-spacing: 0.06em; }
   .tbar { position: relative; height: 12px; border-radius: 6px; overflow: hidden; background: var(--ac-surface-2); }

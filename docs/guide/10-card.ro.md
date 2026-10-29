@@ -66,8 +66,9 @@ collapsed: true
   Vară, în afara sezonului, în pauză.
 - O **bandă de pauză** sus cât casa e în pauză și o **bandă de oaspeți** cât
   modul oaspeți e pornit (cu sfârșitul lui, când are unul).
-- În cardul compact, rândul pliat al casei arată persoanele, modul,
-  temperatura de afară și o flacără cât există cerere de căldură.
+- În cardul compact, rândul pliat al casei arată persoanele, prezența
+  (Acasă / Aproape / Departe), modul, temperatura de afară și o flacără cât
+  există cerere de căldură.
 
 ## O cameră
 
@@ -83,7 +84,7 @@ nivelul lângă arc. Sub antet:
   nimic);
 - lângă el **motivul** (în limba cardului), **timpul până la țintă** (de exemplu
   *~35 min*) sau, în timpul unei opriri anticipate, **temperatura estimată la
-  schimbare** (*~21.5° la 22:00*), **forțarea TRV** când e pornită pentru
+  schimbare** (*~21.5° la 22:00*), modul oaspeți cât e pornit, **forțarea TRV** când e pornită pentru
   cameră și ce măsoară dispozitivul însuși (camerele cu TRV / dispozitive
   climate);
 - **Azi**: profilul zilei ca bară de la 00 la 24, cu ora de acum.

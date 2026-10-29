@@ -180,7 +180,7 @@ definit; apoi integrarea preia din nou controlul.
 
 | Opțiune | Implicit | Descriere |
 | --- | --- | --- |
-| Detectare | activă | Schimbările făcute de integrare se recunosc după context, sau pentru că dispozitivul doar raportează valorile trimise de integrare (și valorile trimise în ultimele 5 minute și valoarea arătată înainte de fiecare comandă, până când dispozitivul arată ultima valoare de 2 minute: o valoare veche raportată târziu, sau încă o dată după cea nouă, e recunoscută și ea) |
+| Detectare | activă | Schimbările făcute de integrare se recunosc după context, sau pentru că dispozitivul doar raportează valorile trimise de integrare (și valorile trimise în ultimele 5 minute și valoarea arătată înainte de fiecare comandă, până când dispozitivul arată ultima valoare de 1 minut: o valoare veche raportată târziu, sau încă o dată după cea nouă, e recunoscută și ea) |
 | Durată | configurabilă, universală | O singură regulă pentru orice modificare manuală, inclusiv oprirea GT: **durată fixă** (X ore) sau **până la următoarea reevaluare** declanșată de o schimbare (interval, prezență, fereastră, mod). Verificarea periodică nu o încheie |
 | Domeniu | cameră | Toată casa doar când camerele au robinete proprii |
 | Pauză | – | Comutator: nicio comandă, fără calibrarea TRV (antiînghețul și temperatura maximă se aplică în continuare) |

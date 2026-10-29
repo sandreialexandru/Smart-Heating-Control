@@ -176,7 +176,7 @@ the integration takes control again.
 
 | Option | Default | Description |
 | --- | --- | --- |
-| Detection | on | Changes made by the integration are told apart by their context, or because the device only reports the values the integration sent (also the values sent in the last 5 minutes and the value shown before each command, until the device has shown the last value for 2 minutes: an older value reported late, or once more after the new one, is recognised too) |
+| Detection | on | Changes made by the integration are told apart by their context, or because the device only reports the values the integration sent (also the values sent in the last 5 minutes and the value shown before each command, until the device has shown the last value for 1 minute: an older value reported late, or once more after the new one, is recognised too) |
 | Duration | configurable, universal | One rule for every manual change, including turning GT off: **fixed duration** (X hours) or **until the next reevaluation** triggered by a change (slot, presence, window, mode). The periodic check does not end it |
 | Scope | room | Whole house only when rooms have their own valves |
 | Pause | – | Switch: no commands at all, no TRV calibration (frost protection and the maximum temperature still apply) |

@@ -1881,7 +1881,7 @@ async def test_older_values_forgotten_once_the_last_is_confirmed(
     hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 23.0}, context=Context())
     await _tick(hass, freezer, 5)
     assert hass.states.get("binary_sensor.office_manual_change").attributes["origin"] == "card"
-    # ... and keeps it for 2 minutes: then 21 set by hand is a person's change,
+    # ... and keeps it for a minute: then 21 set by hand is a person's change,
     # not the old command.
     await _tick(hass, freezer, 125)
     hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 21.0}, context=Context())

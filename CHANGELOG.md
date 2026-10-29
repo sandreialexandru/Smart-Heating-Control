@@ -35,7 +35,7 @@ GitHub releases.
   already sent), or that shows the new value and then reports the old one once
   more (e.g. Tuya TS0601), is no longer taken for a manual change: the values
   sent in the last 5 minutes and the value shown before each command are
-  recognised until the device has shown the last value for 2 minutes. A change
+  recognised until the device has shown the last value for 1 minute. A change
   from the card keeps its duration.
 
 ### Releases

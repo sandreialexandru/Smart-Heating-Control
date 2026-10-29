@@ -53,7 +53,7 @@ device that only reports later what the integration sent it (e.g. a battery
 Zigbee TRV that wakes up rarely) is not a manual change, also when it reports
 an older value after a newer one was sent: the values sent in the last 5
 minutes and the value the device showed before each command are recognised too,
-until the device has shown the last value for 2 minutes (some TRVs show the new
+until the device has shown the last value for 1 minute (some TRVs show the new
 value at once and then report the old one once more); after that any other value
 is a manual change.
 

@@ -175,6 +175,14 @@ _LOGGER = logging.getLogger(__name__)
 SENT_RECENT = timedelta(minutes=SENT_RECENT_MINUTES)
 
 
+def _close(value: Any, sent: Any, margin: float) -> bool:
+    """True when a reported temperature is a value that was sent (within the step)."""
+    try:
+        return abs(float(value) - float(sent)) < margin
+    except (TypeError, ValueError):
+        return False
+
+
 def device_values(state: State) -> dict[str, Any]:
     """What a person set on a device: mode (or on / off), preset and temperature."""
     values: dict[str, Any] = {"state": state.state}
@@ -657,14 +665,7 @@ class Room:
                 # The device may round to its own step.
                 step = float_attr(new, "target_temp_step")
                 margin = step / 2 + 0.01 if step else 0.05
-
-                def close(sent_value: Any) -> bool:
-                    try:
-                        return abs(float(value) - float(sent_value)) < margin
-                    except (TypeError, ValueError):
-                        return False
-
-                same = any(close(c) for c in candidates)
+                same = any(_close(value, c, margin) for c in candidates)
             else:
                 same = value in candidates
             if not same:

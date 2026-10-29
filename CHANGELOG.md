@@ -21,6 +21,12 @@ GitHub releases.
 - An alert icon on the folded and the open room while the room has alerts; its
   title lists them, the Details explain them.
 
+### Integration
+
+- Window detection from the temperature: a jump of the room temperature because
+  a sensor stopped or came back (or the device sensor took over) no longer
+  counts as an open window; a real drop still does.
+
 ### Releases
 
 - Beta versions are published as pre-releases (e.g. `2.3.30b1`): HACS shows them

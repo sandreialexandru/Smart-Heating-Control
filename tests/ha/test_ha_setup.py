@@ -1670,3 +1670,39 @@ async def test_calibration_entity_with_a_value_that_is_not_a_number(
     assert room.heat_demand  # evaluated to the end (hvac_action heating)
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_a_sensor_that_stops_is_not_an_open_window(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """With two sensors, one that stops moves the mean: no window; a real drop still is one."""
+    hass.states.async_set("sensor.room_temp_2", "22.0", {"unit_of_measurement": "°C"})
+    entry = await _setup(
+        hass,
+        freezer,
+        temperature_sensors=["sensor.room_temp", "sensor.room_temp_2"],
+        window_drop_detect=True,
+        window_drop_degrees=1.0,
+        window_drop_minutes=3,
+    )
+    room = next(iter(entry.runtime_data.rooms.values()))
+    await _tick(hass, freezer, 15)
+    assert room.current_temp == 20.0  # mean of 18 and 22
+
+    # The 22° sensor stops: the room is 18° now (2° less at once), not an open window.
+    hass.states.async_set("sensor.room_temp_2", "unavailable")
+    await _tick(hass, freezer, 30)
+    assert room.current_temp == 18.0
+    assert room._drop_until is None
+
+    # It comes back, then the room really cools by 1.5° within 3 minutes: an open window.
+    hass.states.async_set("sensor.room_temp_2", "22.0", {"unit_of_measurement": "°C"})
+    await _tick(hass, freezer, 30)
+    hass.states.async_set("sensor.room_temp", "16.5", {"unit_of_measurement": "°C"})
+    hass.states.async_set("sensor.room_temp_2", "20.5", {"unit_of_measurement": "°C"})
+    await _tick(hass, freezer, 60)
+    assert room.current_temp == 18.5  # mean of 16.5 and 20.5, 1.5° below 20
+    assert room._drop_until is not None
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

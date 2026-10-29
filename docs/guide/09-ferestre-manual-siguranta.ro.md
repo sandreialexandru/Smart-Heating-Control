@@ -27,7 +27,10 @@ Aerisirile mai scurte decât întârzierea la deschidere sunt ignorate.
   și holul;
 - **Detectarea din temperatură**: o scădere de *Scădere de temperatură*
   (implicit 1 °C) în *În* (implicit 3 minute) e tratată ca fereastră deschisă
-  15 minute. Pentru camere fără senzori.
+  15 minute. Pentru camere fără senzori. Un salt al temperaturii camerei pentru
+  că un senzor de temperatură s-a oprit sau a revenit, ori pentru că camera a
+  trecut pe senzorul dispozitivului, nu e o scădere: detectarea pornește din nou
+  de la valoarea nouă.
 
 **Când e cald afară**: cu *Ignoră ferestrele peste* (opțiunile casei), o
 fereastră deschisă nu reduce încălzirea când temperatura de afară e la acea

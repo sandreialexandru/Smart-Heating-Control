@@ -27,7 +27,10 @@ Airing shorter than the open delay is ignored.
   hall;
 - **detection from the temperature**: a drop of *Temperature drop* (1 °C by
   default) *Within* (3 minutes by default) counts as an open window for 15
-  minutes. For rooms without sensors.
+  minutes. For rooms without sensors. A jump of the room temperature because a
+  temperature sensor stopped or came back, or because the room fell back to the
+  sensor of its device, is not a drop: the detection starts again from the new
+  value.
 
 **When warm outside**: with *Ignore windows above* (house options), an open
 window does not lower the heating when the outdoor temperature is at that value

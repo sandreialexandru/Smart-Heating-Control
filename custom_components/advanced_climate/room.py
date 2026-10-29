@@ -287,6 +287,8 @@ class Room:
         self._window_opened_at: datetime | None = None
         self._window_timer: Callable[[], None] | None = None
         self._temp_samples: deque[tuple[datetime, float]] = deque(maxlen=120)
+        # Which sensors gave the room temperature (a change of them is not a drop).
+        self._temp_sources: tuple | None = None
         self._drop_until: datetime | None = None
         self._last_occupied: datetime | None = None
         self._started_at = dt_util.utcnow()
@@ -763,10 +765,12 @@ class Room:
         """Room temperature from the sensors, else from the thermostats."""
         sensors = as_list(self.config.get(CONF_TEMP_SENSORS))
         values = []
+        reporting = []
         for entity_id in sensors:
             value = temp_state(self.hass, entity_id, self.house.unit)
             if value is not None:
                 values.append(value)
+                reporting.append(entity_id)
         external = aggregate(values, self.config[CONF_TEMP_AGGREGATION])
         self.external_failed = bool(sensors) and external is None
         device = None
@@ -784,6 +788,13 @@ class Room:
             self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost
         )
         self.sensor_failed = self.current_temp is None and (bool(sensors) or needs_temp)
+        # When a sensor stops or comes back, or the room falls back to the device
+        # sensor, the value jumps: the quick drop (open window) starts again from
+        # the new value instead of taking the jump for an open window.
+        sources = tuple(reporting) if external is not None else ("device",)
+        if sources != self._temp_sources:
+            self._temp_sources = sources
+            self._temp_samples.clear()
         if self.current_temp is not None:
             self._temp_samples.append((now, self.current_temp))
             self._check_temp_drop(now)

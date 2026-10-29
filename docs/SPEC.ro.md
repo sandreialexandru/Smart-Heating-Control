@@ -152,7 +152,7 @@ se închide, camera revine la ce spun regulile în acel moment.
 | Întârziere la deschidere | 60 s | Ignoră aerisirile foarte scurte |
 | Întârziere la închidere | 30 s | Așteptare înainte de reluare |
 | Acțiune | antiîngheț | Antiîngheț sau oprit |
-| Detectare după temperatură | oprită | O scădere rapidă (de exemplu 1 °C în 3 min) contează ca fereastră deschisă |
+| Detectare după temperatură | oprită | O scădere rapidă (de exemplu 1 °C în 3 min) contează ca fereastră deschisă; un salt pentru că un senzor de temperatură s-a oprit sau a revenit (ori a preluat senzorul dispozitivului) nu e o scădere: detectarea pornește din nou de la valoarea nouă |
 | Ferestrele altor camere | niciuna | de exemplu ușa de balcon a sufrageriei afectează și holul |
 | Alertă după | 30 min | Notificare cât timp încălzirea contează |
 | Ignoră peste temperatura de afară | oprit | Primăvara / toamna aerisirea nu coboară încălzirea |

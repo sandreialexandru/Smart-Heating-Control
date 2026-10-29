@@ -1382,7 +1382,13 @@ class SmartHeatingControlCard extends HTMLElement {
     if (a.heating ?? a.heat_demand) icons.push(`<span class="cicon hot" title="${esc(this._t("heating"))}">${this._icon("fire")}</span>`);
     if (a.window_open) icons.push(`<span class="cicon warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>`);
     if (a.override) icons.push(`<span class="cicon" title="${esc(`${this._t("override")} ${this._overrideUntil(a)}`)}">${this._icon("hand-back-right-outline")}</span>`);
+    if (this._guestOn(a)) icons.push(`<span class="cicon teal" title="${esc(this._t("guests_banner"))}">${this._icon("account-group-outline")}</span>`);
     return icons.join("");
+  }
+
+  /** True while the guest mode of the room's house is on. */
+  _guestOn(a) {
+    return this._state(a.house_entities?.guest_mode)?.state === "on";
   }
 
   /** A folded room: small arc, name, reason, target; a tap opens it. */
@@ -1392,9 +1398,7 @@ class SmartHeatingControlCard extends HTMLElement {
     return `<section class="block room folded" style="--c:${color}">
         <button class="frow" data-action="fold" data-key="room-${esc(a.room_id)}" aria-expanded="false">
           ${this._gauge(a, null, 54, false)}
-          <span class="ftext"><span class="fname"><span class="name">${esc(a.room_name)}</span><span class="pill rule"><span class="dot"></span>${esc(
-            this._label(stateObj)
-          )}</span></span>
+          <span class="ftext"><span class="fname"><span class="name">${esc(a.room_name)}</span></span>
             ${eta ? `<span class="freason">${esc(eta)}</span>` : ""}</span>
           ${this._statusIcons(a)}
           ${this._presetPill(a, true)}
@@ -1407,13 +1411,13 @@ class SmartHeatingControlCard extends HTMLElement {
   _compactRow(stateObj, color) {
     const a = stateObj.attributes;
     const heating = a.heating ?? a.heat_demand;
-    const status = heating
-      ? `<span class="tstat hot pulse" title="${esc(this._t("heating"))}">${this._icon("fire")}</span>`
-      : a.window_open
-        ? `<span class="tstat warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>`
-        : a.override
-          ? `<span class="tstat" title="${esc(this._t("override"))}">${this._icon("hand-back-right-outline")}</span>`
-          : "";
+    // Every state that applies, as small round icons (heating pulses).
+    const status = [
+      heating ? `<span class="tstat hot pulse" title="${esc(this._t("heating"))}">${this._icon("fire")}</span>` : "",
+      a.window_open ? `<span class="tstat warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>` : "",
+      a.override ? `<span class="tstat" title="${esc(this._t("override"))}">${this._icon("hand-back-right-outline")}</span>` : "",
+      this._guestOn(a) ? `<span class="tstat teal" title="${esc(this._t("guests_banner"))}">${this._icon("account-group-outline")}</span>` : "",
+    ].join("");
     const eta = this._eta(a);
     const line = a.override
       ? `${this._t("override")} ${this._overrideUntil(a)}`
@@ -1422,9 +1426,9 @@ class SmartHeatingControlCard extends HTMLElement {
         : eta || (a.next_change ? `${this._presetName(a, a.next_preset)} · ${this._fmtTime(a.next_change)}` : "");
     return `<button class="tile" data-action="fold" data-key="room-${esc(a.room_id)}" aria-expanded="false" style="--c:${color}"
         aria-label="${esc(`${a.room_name}, ${this._temp(a.current_temperature)}, ${this._label(stateObj)}`)}">
-        <span class="tile-head"><span class="tname"><span class="cname">${esc(a.room_name)}</span><span class="pill rule"><span class="dot"></span>${esc(
-          this._label(stateObj)
-        )}</span></span>${status}</span>
+        <span class="tile-head"><span class="tname"><span class="cname">${esc(a.room_name)}</span></span>${
+          status ? `<span class="tstats">${status}</span>` : ""
+        }</span>
         <span class="tile-body">${this._gauge(a, null, 64, false)}
           <span class="tile-info">${this._presetPill(a)}
             <span class="tsub">${esc(this._t("target_tag"))} ${this._temp(a.target_temperature)}</span>
@@ -3615,6 +3619,9 @@ const STYLE = `
   .tstat ha-icon { --mdc-icon-size: 16px; }
   .tstat.hot { background: var(--ac-hot); color: #fff; }
   .tstat.warn { background: var(--ac-warn); color: #fff; }
+  .tstat.teal { background: #2f9e8f; color: #fff; }
+  .tstats { display: inline-flex; gap: 4px; flex: none; }
+  .cicon.teal ha-icon { color: #2f9e8f; }
   .tile-body { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .gcol { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; }
   .pill.preset { background: color-mix(in srgb, var(--c) 22%, transparent); font-weight: 500; }

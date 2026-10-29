@@ -32,8 +32,8 @@ type: custom:smart-heating-control-card
 | `show_levels` | `true` | The level temperatures. |
 | `show_details` | `true` | The room *Details*. |
 | `show_schedule_editor` | `true` | The schedule editor. |
-| `collapsed` | `false` | Rooms start folded (one row: a small arc, the name with the decision, the time to target, the level and the target); tap it to open the room. |
-| `compact` | `false` | One tile per room (the name with the decision, arc with the temperature, level, target, a status icon) and one row for the house; tap to open. |
+| `collapsed` | `false` | Rooms start folded (one row: a small arc, the name, the time to target, the state icons, the level and the target); tap it to open the room. |
+| `compact` | `false` | One tile per room (the name, the state icons, arc with the temperature, level, target) and one row for the house; tap to open. |
 | `runtime_period` | `day` | The heating time per `day`, `week` or `month` (calendar periods, from the long-term statistics); also changed by tapping the value in the card. |
 
 **Example**: a card only for the bedroom, folded, without the schedule editor:
@@ -73,9 +73,10 @@ collapsed: true
 
 The header shows the name, the decision (e.g. *Nearby*, *Schedule*; in the
 colour of the level) and badges for heating (pulsing), open window and manual
-change. The decision stays next to the name in every view (open room, folded
-row, compact tile); the **level** (e.g. *eco*) is shown separately: next to the
-arc in an open room, next to the target in a folded row, in the tile. Below the
+change. A folded room (row or compact tile) shows only the **level** (e.g. *Eco*) and
+small icons: heating (flame), window open, manual change and guest mode while
+it is on; the decision appears when the room is open, with the level next to
+the arc. Below the
 header:
 
 - an **arc** with the room temperature and the target under it; the arc is

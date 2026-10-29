@@ -32,8 +32,8 @@ type: custom:smart-heating-control-card
 | `show_levels` | `true` | Temperaturile nivelurilor. |
 | `show_details` | `true` | *Detaliile* camerei. |
 | `show_schedule_editor` | `true` | Editorul programului. |
-| `collapsed` | `false` | Camerele încep pliate (un rând: un arc mic, numele cu decizia, timpul până la țintă, nivelul și ținta); atingi rândul ca să deschizi camera. |
-| `compact` | `false` | O placă pe cameră (numele cu decizia, arc cu temperatura, nivel, țintă, o iconiță de stare) și un rând pentru casă; atingi ca să deschizi. |
+| `collapsed` | `false` | Camerele încep pliate (un rând: un arc mic, numele, timpul până la țintă, iconițele de stare, nivelul și ținta); atingi rândul ca să deschizi camera. |
+| `compact` | `false` | O placă pe cameră (numele, iconițele de stare, arc cu temperatura, nivel, țintă) și un rând pentru casă; atingi ca să deschizi. |
 | `runtime_period` | `day` | Timpul de încălzire pe `day`, `week` sau `month` (perioade calendaristice, din statisticile pe termen lung); se schimbă și atingând valoarea în card. |
 
 **Exemplu**: un card doar pentru dormitor, pliat, fără editorul de program:
@@ -73,9 +73,10 @@ collapsed: true
 
 Antetul arată numele, decizia (de exemplu *Aproape*, *Program*; în culoarea
 nivelului) și insignele pentru încălzire (pulsează), fereastră deschisă și
-modificare manuală. Decizia rămâne lângă nume în orice vedere (cameră deschisă,
-rând pliat, placă compactă); **nivelul** (de exemplu *eco*) apare separat: lângă
-arc în camera deschisă, lângă țintă în rândul pliat, în placă. Sub antet:
+modificare manuală. O cameră pliată (rând sau placă compactă) arată doar **nivelul** (de exemplu
+*Eco*) și iconițe mici: încălzire (flacără), fereastră deschisă, modificare
+manuală și modul oaspeți cât e pornit; decizia apare când camera e deschisă, cu
+nivelul lângă arc. Sub antet:
 
 - un **arc** cu temperatura camerei și ținta sub ea; arcul e gol la antiîngheț
   și plin la temperatura maximă a camerei (doar arată temperatura, nu schimbă

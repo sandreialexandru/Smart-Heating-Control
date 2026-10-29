@@ -154,6 +154,7 @@ const TEXT = {
     clear_all: "Clear manual changes",
     child_lock: "Child lock",
     lock_short: "Lock",
+    chart: "Chart",
     next: "Next",
     quick: "Set for a while",
     for_hours: "for",
@@ -390,6 +391,7 @@ const TEXT = {
     clear_all: "Anulează modificările manuale",
     child_lock: "Blocare modificări",
     lock_short: "Blocare",
+    chart: "Grafic",
     next: "Următor",
     quick: "Setează temporar",
     for_hours: "pentru",
@@ -1195,7 +1197,8 @@ class SmartHeatingControlCard extends HTMLElement {
         )}<span>${esc(eta)}${sub ? ` <small>${esc(sub)}</small>` : ""}</span></span>`
       );
     }
-    if (!this._config.show_timeline && a.next_change) {
+    // The next change is in the chart; while the chart is not shown it is a line here.
+    if ((!this._config.show_timeline || !this._open[`chart-${a.room_id}`]) && a.next_change) {
       chips.push(
         `<span class="chip">${this._icon("calendar-arrow-right")}<span>${this._t("next")}: ${esc(
           this._fmtTime(a.next_change)
@@ -1272,6 +1275,8 @@ class SmartHeatingControlCard extends HTMLElement {
     const defs = [];
     if (cfg.show_quick_override) defs.push([`quick-${id}`, "quick", "timer-edit-outline", () => this._quickHtml(a, e)]);
     if (cfg.show_schedule_editor) defs.push([`sched-${id}`, "schedule", "calendar-edit", () => this._scheduleHtml(a, stateObj)]);
+    // The chart opens on its own button (its history is loaded only then).
+    if (cfg.show_timeline) defs.push([`chart-${id}`, "chart", "chart-line", () => this._timelineHtml(a)]);
     if (cfg.show_levels && Object.entries(e).some(([k, id]) => k.startsWith("level_") && this._state(id))) {
       defs.push([`levels-${id}`, "levels", "tune-variant", () => this._levelsHtml(a, e)]);
     }
@@ -1573,7 +1578,6 @@ class SmartHeatingControlCard extends HTMLElement {
       this._sectionsHtml(a, e, stateObj),
       this._noHeatHtml(a),
       this._todayHtml(a),
-      cfg.show_timeline ? this._timelineHtml(a) : "",
     ];
     return `<section class="block room open" style="--c:${color}">${parts.join("")}</section>`;
   }

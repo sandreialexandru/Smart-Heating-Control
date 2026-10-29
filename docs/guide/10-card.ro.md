@@ -27,7 +27,7 @@ type: custom:smart-heating-control-card
 | `rooms` | toate | Lista senzorilor *Decizie* ai camerelor de arătat. |
 | `show_house` | `true` | Partea casei (vezi mai jos). |
 | `show_rooms` | `true` | Camerele. |
-| `show_timeline` | `true` | Graficul fiecărei camere. |
+| `show_timeline` | `true` | Butonul **Grafic** al fiecărei camere (graficul se deschide cu el). |
 | `show_quick_override` | `true` | *Setează temporar*. |
 | `show_levels` | `true` | Temperaturile nivelurilor. |
 | `show_details` | `true` | *Detaliile* camerei. |
@@ -101,14 +101,16 @@ Cât există o modificare manuală, butonul **Automat**, primul din rândul de
 butoane de sub arc, o anulează (înapoi la automat).
 
 Sub arc, butoanele deschid secțiunile **Setează temporar**, **Program**,
-**Niveluri** și **Detalii**, fiecare separat (pot fi deschise mai multe deodată);
+**Grafic**, **Niveluri** și **Detalii**, fiecare separat (pot fi deschise mai multe deodată);
 butonul unei secțiuni deschise rămâne colorat. Butonul **Blocare** de lângă ele
 pornește sau oprește blocarea modificărilor în cameră (colorat cât e pornită).
 Graficul și secțiunile:
 
 ### Graficul
 
-Ultimele 24 de ore și următoarele 12:
+Se deschide cu butonul **Grafic** (istoricul se încarcă doar atunci; cât e
+închis, următoarea schimbare apare lângă arc). Ultimele 24 de ore și
+următoarele 12:
 
 - temperatura camerei;
 - ținta, ca linie în trepte, colorată după nivel;

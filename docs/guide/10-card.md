@@ -27,7 +27,7 @@ type: custom:smart-heating-control-card
 | `rooms` | all | The list of the room *Decision* sensors to show. |
 | `show_house` | `true` | The house part (see below). |
 | `show_rooms` | `true` | The rooms. |
-| `show_timeline` | `true` | The chart of every room. |
+| `show_timeline` | `true` | The **Chart** button of every room (the chart opens with it). |
 | `show_quick_override` | `true` | *Set for a while*. |
 | `show_levels` | `true` | The level temperatures. |
 | `show_details` | `true` | The room *Details*. |
@@ -102,14 +102,16 @@ While there is a manual change, an **Automatic** button first in the row of
 buttons under the arc clears it (back to automatic).
 
 Under the arc, buttons open the sections **Set for a while**, **Schedule**,
-**Levels** and **Details**, each on its own (several can be open at once); an
+**Chart**, **Levels** and **Details**, each on its own (several can be open at once); an
 open section's button stays coloured. A **Lock** button next to them turns the
 child lock of the room on or off (coloured while on). The chart and the
 sections:
 
 ### The chart
 
-The last 24 hours and the next 12:
+Opened with the **Chart** button (its history is loaded only then; while it is
+closed the next change is shown next to the arc). The last 24 hours and the
+next 12:
 
 - the room temperature;
 - the target, as a step line, coloured by level;

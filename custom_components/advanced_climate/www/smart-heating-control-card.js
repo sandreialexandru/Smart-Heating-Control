@@ -1539,6 +1539,8 @@ class SmartHeatingControlCard extends HTMLElement {
     const badges = [];
     // "Heating" (pulsing) while the heat source runs for the room; "Asks for heat" while it waits.
     if (a.heat_demand) badges.push(this._flame(!!a.heating, e.heat_demand));
+    const alertIcon = this._alertIcon(a);
+    if (alertIcon) badges.push(alertIcon);
     if (a.window_open)
       badges.push(`<span class="pill warn link" ${this._more(e.window_open)}>${this._icon("window-open-variant")}${this._t("window")}</span>`);
     if (a.override) {
@@ -1611,6 +1613,7 @@ class SmartHeatingControlCard extends HTMLElement {
   _statusIcons(a) {
     const icons = [];
     if (a.heat_demand) icons.push(this._flame(!!a.heating, null, true));
+    if ((a.alerts || []).length) icons.push(this._alertIcon(a, true));
     if (a.window_open) icons.push(`<span class="cicon warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>`);
     if (a.override) icons.push(`<span class="cicon" title="${esc(`${this._t("override")} ${this._overrideUntil(a)}`)}">${this._icon("hand-back-right-outline")}</span>`);
     if (this._guestOn(a)) icons.push(`<span class="cicon teal" title="${esc(this._t("guests_banner"))}">${this._icon("account-group-outline")}</span>`);
@@ -1653,6 +1656,7 @@ class SmartHeatingControlCard extends HTMLElement {
     // Every state that applies, as small round icons (heating pulses).
     const status = [
       a.heat_demand ? this._flame(heating) : "",
+      this._alertIcon(a),
       a.window_open ? `<span class="tstat warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>` : "",
       a.override ? `<span class="tstat" title="${esc(this._t("override"))}">${this._icon("hand-back-right-outline")}</span>` : "",
       this._guestOn(a) ? `<span class="tstat teal" title="${esc(this._t("guests_banner"))}">${this._icon("account-group-outline")}</span>` : "",
@@ -2559,23 +2563,39 @@ class SmartHeatingControlCard extends HTMLElement {
   }
 
   /** Alerts of the room and of the whole house, in the language of the card. */
+  /** Text of one alert in the language of the card. */
+  _alertText(al) {
+    const p = al.params || {};
+    const code = al.code === "sensor_unavailable" ? `sensor_unavailable_${p.fallback || "device"}` : al.code;
+    let text = code ? this._t(`al_${code}`) : "";
+    if (!text || text === `al_${code}`) text = al.message || "";
+    const values = {
+      ...p,
+      entities: Array.isArray(p.entities) ? p.entities.join(", ") : p.entities,
+      rooms: Array.isArray(p.rooms) ? p.rooms.map(([n, g]) => `${n} (−${g}°)`).join(", ") : p.rooms,
+    };
+    if (al.code === "schedule_gap") values.days = this._gapText(p);
+    if (Array.isArray(p.features)) values.features = p.features.map((f) => this._t(`wf_${f}`)).join(", ");
+    return text.replace(/\{(\w+)\}/g, (m, k) => (values[k] !== undefined ? String(values[k]) : m));
+  }
+
+  /** The alert icon of a room (folded and open); its title lists the alerts, the Details say more. */
+  _alertIcon(a, small = false) {
+    const alerts = a.alerts || [];
+    if (!alerts.length) return "";
+    const text = alerts.map((al) => this._alertText(al)).join("\n");
+    return `<span class="alerticon ${small ? "sm" : ""}" title="${esc(text)}" role="img" aria-label="${esc(
+      `${this._t("alerts")}: ${text}`
+    )}">${this._icon("alert-outline")}</span>`;
+  }
+
   _alertsHtml(a) {
     const alerts = a.alerts || [];
     if (!alerts.length) return "";
     const items = alerts
       .map((al) => {
         const p = al.params || {};
-        const code = al.code === "sensor_unavailable" ? `sensor_unavailable_${p.fallback || "device"}` : al.code;
-        let text = code ? this._t(`al_${code}`) : "";
-        if (!text || text === `al_${code}`) text = al.message || "";
-        const values = {
-          ...p,
-          entities: Array.isArray(p.entities) ? p.entities.join(", ") : p.entities,
-          rooms: Array.isArray(p.rooms) ? p.rooms.map(([n, g]) => `${n} (−${g}°)`).join(", ") : p.rooms,
-        };
-        if (al.code === "schedule_gap") values.days = this._gapText(p);
-        if (Array.isArray(p.features)) values.features = p.features.map((f) => this._t(`wf_${f}`)).join(", ");
-        text = text.replace(/\{(\w+)\}/g, (m, k) => (values[k] !== undefined ? String(values[k]) : m));
+        const text = this._alertText(al);
         const entity = p.entity || (Array.isArray(p.entities) ? p.entities[0] : null);
         return `<li class="${entity ? "link" : ""}" ${this._more(entity)}>${this._icon("alert-outline")}<span>${esc(
           text
@@ -3862,6 +3882,11 @@ const STYLE = `
   .tstat.hot { background: var(--ac-hot); color: #fff; }
   .tstat.warn { background: var(--ac-warn); color: #fff; }
   .tstat.teal { background: #2f9e8f; color: #fff; }
+  .alerticon { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none;
+    background: var(--error-color, #db4437); color: #fff; }
+  .alerticon ha-icon { --mdc-icon-size: 16px; }
+  .alerticon.sm { width: 24px; height: 24px; }
+  .alerticon.sm ha-icon { --mdc-icon-size: 14px; }
   .flame { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none;
     color: var(--ac-hot); background: color-mix(in srgb, var(--ac-hot) 10%, transparent); box-shadow: inset 0 0 0 1.5px var(--ac-hot); }
   .flame ha-icon { --mdc-icon-size: 16px; }

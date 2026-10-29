@@ -32,7 +32,7 @@ type: custom:smart-heating-control-card
 | `show_levels` | `true` | The level temperatures. |
 | `show_details` | `true` | The room *Details*. |
 | `show_schedule_editor` | `true` | The schedule editor. |
-| `collapsed` | `false` | Rooms start folded (one row: a small arc, the name with the decision, the reason, the level and the target); tap it to open the room. |
+| `collapsed` | `false` | Rooms start folded (one row: a small arc, the name with the decision, the time to target, the level and the target); tap it to open the room. |
 | `compact` | `false` | One tile per room (the name with the decision, arc with the temperature, level, target, a status icon) and one row for the house; tap to open. |
 | `runtime_period` | `day` | The heating time per `day`, `week` or `month` (calendar periods, from the long-term statistics); also changed by tapping the value in the card. |
 

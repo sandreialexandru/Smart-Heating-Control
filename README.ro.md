@@ -435,7 +435,7 @@ type: custom:smart-heating-control-card
 | `show_levels` | `true` | Temperaturile nivelurilor (camere fără Generic Thermostat, temperatura fixă pentru *aproape*) |
 | `show_details` | `true` | Temperatura camerei și ținta, încălzirea învățată, timpul de încălzire, ajustările active, temperaturile nivelurilor |
 | `show_schedule_editor` | `true` | Profilurile programului cu editor: orele de început se trag pe bara zilei (pași de 5 minute), un profil se copiază peste altă zi |
-| `collapsed` | `false` | Camerele încep pliate (un rând cu un arc mic, numele, motivul și ținta); atinge-l ca să deschizi camera |
+| `collapsed` | `false` | Camerele încep pliate (un rând cu un arc mic, numele cu decizia, timpul până la țintă, nivelul și ținta); atinge-l ca să deschizi camera |
 | `compact` | `false` | O placă pe cameră (arc cu temperatura, nivel, țintă, o iconiță de stare) și un rând pentru casă; atinge ca să deschizi |
 | `runtime_period` | `day` | Timpul de încălzire arătat pentru `day`, `week` sau `month` (perioade calendaristice, din statisticile pe termen lung; atinge valoarea în card ca s-o schimbi). Senzorii *Timp de încălzire* rămân totaluri cumulate |
 

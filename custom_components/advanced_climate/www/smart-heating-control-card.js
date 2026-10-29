@@ -1394,7 +1394,7 @@ class SmartHeatingControlCard extends HTMLElement {
           <span class="ftext"><span class="fname"><span class="name">${esc(a.room_name)}</span><span class="pill rule"><span class="dot"></span>${esc(
             this._label(stateObj)
           )}</span></span>
-            <span class="freason">${eta ? `${esc(eta)} · ` : ""}${esc(this._reasonText(a))}</span></span>
+            ${eta ? `<span class="freason">${esc(eta)}</span>` : ""}</span>
           ${this._statusIcons(a)}
           ${this._presetPill(a, true)}
           <span class="chev"></span>
@@ -1424,7 +1424,7 @@ class SmartHeatingControlCard extends HTMLElement {
         <span class="tile-head"><span class="tname"><span class="cname">${esc(a.room_name)}</span><span class="pill rule"><span class="dot"></span>${esc(
           this._label(stateObj)
         )}</span></span>${status}</span>
-        <span class="tile-body">${this._gauge(a, null, 86, false)}
+        <span class="tile-body">${this._gauge(a, null, 64, false)}
           <span class="tile-info">${this._presetPill(a)}
             <span class="tsub">${esc(this._t("target_tag"))} ${this._temp(a.target_temperature)}</span>
             ${line ? `<span class="muted">${esc(line)}</span>` : ""}</span>
@@ -3552,7 +3552,7 @@ const STYLE = `
   .gauge .gtrack { fill: none; stroke: color-mix(in srgb, var(--c) 20%, var(--ac-line)); stroke-linecap: round; }
   .gauge .gvalue { fill: none; stroke: var(--c); stroke-linecap: round; }
   .gcenter { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .gnum { font-size: calc(var(--gs) * 0.24); font-weight: 300; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .gnum { font-size: max(13px, calc(var(--gs) * 0.24)); font-weight: 300; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
   .gsub { font-size: 0.8em; color: var(--ac-muted); margin-top: 5px; }
   .chips { display: flex; flex-direction: column; gap: 9px; min-width: 0; flex: 1 1 180px; }
   .chip { display: inline-flex; align-items: flex-start; gap: 7px; font-size: 0.9em; line-height: 1.35; }

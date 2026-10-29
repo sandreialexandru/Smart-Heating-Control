@@ -413,7 +413,7 @@ type: custom:smart-heating-control-card
 | `show_levels` | `true` | Level temperatures (rooms without Generic Thermostat, fixed *nearby* temperature) |
 | `show_details` | `true` | Room and target temperature, learned heating, heating time, active adjustments, level temperatures |
 | `show_schedule_editor` | `true` | Schedule profiles with an editor: drag the start times on the day bar (5-minute steps), copy a profile over another day |
-| `collapsed` | `false` | Rooms start folded (a row with a small arc, the name, the reason and the target); tap it to open the room |
+| `collapsed` | `false` | Rooms start folded (a row with a small arc, the name with the decision, the time to target, the level and the target); tap it to open the room |
 | `compact` | `false` | One tile per room (arc with the temperature, level, target, a status icon) and one row for the house; tap to open |
 | `runtime_period` | `day` | Heating time shown for `day`, `week` or `month` (calendar periods, from the long-term statistics; tap the value in the card to change it). The *Heating time* sensors stay cumulative totals |
 

@@ -32,7 +32,7 @@ type: custom:smart-heating-control-card
 | `show_levels` | `true` | Temperaturile nivelurilor. |
 | `show_details` | `true` | *Detaliile* camerei. |
 | `show_schedule_editor` | `true` | Editorul programului. |
-| `collapsed` | `false` | Camerele încep pliate (un rând: un arc mic, numele cu decizia, motivul, nivelul și ținta); atingi rândul ca să deschizi camera. |
+| `collapsed` | `false` | Camerele încep pliate (un rând: un arc mic, numele cu decizia, timpul până la țintă, nivelul și ținta); atingi rândul ca să deschizi camera. |
 | `compact` | `false` | O placă pe cameră (numele cu decizia, arc cu temperatura, nivel, țintă, o iconiță de stare) și un rând pentru casă; atingi ca să deschizi. |
 | `runtime_period` | `day` | Timpul de încălzire pe `day`, `week` sau `month` (perioade calendaristice, din statisticile pe termen lung); se schimbă și atingând valoarea în card. |
 

@@ -52,6 +52,8 @@ collapsed: true
 
 - **Flacăra** lângă prezență (vezi mai jos) cât casa cere căldură; pâlpâie cât
   o cameră a casei chiar încălzește.
+- **Titlul** e același în orice vedere: iconița și numele casei, prezența
+  (Acasă / Aproape / Departe) și flacăra.
 - **Prezența**, cu fiecare persoană ca un cerc (poza sau inițiala) în culoarea
   locului unde e: portocaliu acasă, verde aproape, gri departe.
 - Plăci pentru **media temperaturii de afară** (pe orele din *Medie pe*),

@@ -52,6 +52,8 @@ collapsed: true
 
 - The **flame** next to the presence (see below) while the house asks for heat;
   it flickers while a room of the house really heats.
+- The **title** is the same in every view: the house icon and name, the
+  presence (Home / Nearby / Away) and the flame.
 - **Presence**, with every person as a round badge (the photo or the initial)
   in the colour of where they are: orange home, green nearby, grey far.
 - Tiles for **the outdoor average** (over the *Average over* hours), the

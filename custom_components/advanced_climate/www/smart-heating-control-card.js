@@ -1372,14 +1372,24 @@ class SmartHeatingControlCard extends HTMLElement {
         }`
       : this._t("vacation_none");
 
+    // The same title in every view: house icon and name, presence, flame.
+    const presenceIcon0 =
+      { home: "home-outline", nearby: "map-marker-radius-outline", far: "map-marker-distance" }[presence?.state] ||
+      "home-search-outline";
+    const titleHtml = `<span class="htitle">${this._icon("home-thermometer-outline")}<span class="name">${esc(
+      house.name || this._t("title")
+    )}</span></span>`;
+    const presencePill = (link) =>
+      `<span class="pill presence-state ${esc(presence?.state)} ${link ? "link" : ""}" ${link ? this._more(e.presence) : ""}>${this._icon(
+        presenceIcon0
+      )}${esc(this._label(presence))}</span>`;
     const houseKey = `house-${house.id}`;
     if (this._config.compact && !this._open[houseKey]) {
       return `<button class="crow house-row" data-action="fold" data-key="${esc(houseKey)}" aria-expanded="false">
-          ${persons.length ? `<span class="avatars sm overlap" aria-hidden="true">${avatarList(false, 3)}</span>` : this._icon("home-thermometer-outline")}
-          <span class="cname">${esc(house.name || "")}</span>
-          <span class="pill presence-state ${esc(presence?.state)}">${esc(this._label(presence))}</span>
-          <span class="pill">${esc(this._label(mode))}</span>
+          ${titleHtml}
+          ${presencePill(false)}
           ${demand?.state === "on" ? this._flame(this._houseHeating(house), null, true) : ""}
+          <span class="pill mode">${esc(this._label(mode))}</span>
           <span class="ctemp muted">${this._icon("weather-partly-cloudy")} ${esc(this._temp(outdoor?.state))}</span>
           <span class="chev"></span>
         </button>`;
@@ -1389,9 +1399,6 @@ class SmartHeatingControlCard extends HTMLElement {
           house.name || ""
         )}"><span class="chev open"></span></button>`
       : "";
-    const presenceIcon =
-      { home: "home-outline", nearby: "map-marker-radius-outline", far: "map-marker-distance" }[presence?.state] ||
-      "home-search-outline";
 
     // Action buttons: an icon and a short name; Guests and Vacation open their own panel.
     const vacKey = `vac-${house.id}`;
@@ -1446,23 +1453,21 @@ class SmartHeatingControlCard extends HTMLElement {
     return `
       <section class="block house">
         <div class="house-head">
-          <div class="who">
-            ${foldBack}
-            ${avatars ? `<div class="avatars ${overlap}">${avatars}</div>` : ""}
-            <div class="whotext">
-              ${this._houses().length > 1 && house.name ? `<span class="hname">${esc(house.name)}</span>` : ""}
-              <span class="pstate">
-                <span class="presence-state link ${esc(presence?.state)}" ${this._more(e.presence)}>${this._icon(presenceIcon)}${esc(
-                  this._label(presence)
-                )}</span>
-                ${presence?.attributes?.arriving ? `<span class="pill">${this._t("arriving")}</span>` : ""}
-                ${demand?.state === "on" ? this._flame(this._houseHeating(house), e.heat_demand) : ""}
-              </span>
-              ${who ? `<span class="muted">${esc(who)}</span>` : ""}
-            </div>
+          <div class="htitle-row">
+            ${foldBack}${titleHtml}
+            ${presencePill(true)}
+            ${presence?.attributes?.arriving ? `<span class="pill">${this._t("arriving")}</span>` : ""}
+            ${demand?.state === "on" ? this._flame(this._houseHeating(house), e.heat_demand) : ""}
           </div>
           <div class="segmented" role="group" aria-label="${esc(this._t("mode"))}">${modes}</div>
         </div>
+        ${
+          avatars
+            ? `<div class="who"><div class="avatars ${overlap}">${avatars}</div>${
+                who ? `<span class="whotext muted">${esc(who)}</span>` : ""
+              }</div>`
+            : ""
+        }
         <div class="stats">
           ${stat("weather-partly-cloudy", this._outdoorLabel(outdoor), this._temp(outdoor?.state), "", e.outdoor_average)}
           ${stat("calendar-range", this._t("season"), onOff(season), "", e.heating_season)}
@@ -3704,7 +3709,7 @@ const STYLE = `
   .cicon.warn ha-icon { color: var(--ac-warn); }
   .house-row .pill { flex: none; }
   .house-row .ctemp { font-size: 0.85em; }
-  @media (max-width: 420px) { .house-row .pill + .pill { display: none; } }
+  @media (max-width: 420px) { .house-row .pill.mode { display: none; } }
 
   /* house */
   .house-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -3724,13 +3729,17 @@ const STYLE = `
   .avatars.sm .avatar { width: 24px; height: 24px; font-size: 0.72em; }
   .avatars.sm.overlap { gap: 7px; flex-wrap: nowrap; }
   .avatars.sm.overlap .avatar { width: 24px; height: 24px; font-size: 0.72em; }
-  .whotext { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 150px; }
+  .whotext { min-width: 0; flex: 1 1 150px; font-size: 0.85em; }
+  .htitle-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+  .htitle { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+  .htitle .name { font-weight: 600; font-size: 1.15em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .htitle ha-icon { --mdc-icon-size: 22px; color: var(--ac-muted); flex: none; }
+  .house-row .htitle .name { font-size: 1em; }
+  .house-row .htitle ha-icon { --mdc-icon-size: 20px; }
+  .pill.presence-state ha-icon { --mdc-icon-size: 15px; }
+  .pill.presence-state.home ha-icon { color: #f08c00; }
+  .pill.presence-state.nearby ha-icon { color: #2f9e8f; }
   .hname { font-weight: 600; }
-  .pstate { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-  .pstate .presence-state { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; font-size: 1.05em; background: none; }
-  .pstate .presence-state ha-icon { --mdc-icon-size: 19px; color: var(--ac-muted); }
-  .pstate .presence-state.home ha-icon { color: #f08c00; }
-  .pstate .presence-state.nearby ha-icon { color: #2f9e8f; }
   .house-head .segmented { flex: 0 1 280px; min-width: 220px; }
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 8px; }
   .stat, button.stat.period { display: flex; flex-direction: column; gap: 3px; background: var(--ac-surface-2); border-radius: 10px;

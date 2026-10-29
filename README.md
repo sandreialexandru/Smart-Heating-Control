@@ -424,7 +424,7 @@ target, the TRV boost when it is on, what the device itself measures, today's
 profile as a bar, and *Back to automatic*. Buttons under the chart open *Set for
 a while*, *Schedule* (each profile with its days and an on / off switch; its
 days are chosen in the editor), *Levels* and *Details*, each on its own (several
-at once); the *Child lock* switch is in *Set for a while*.
+at once), and a *Lock* button for the child lock of the room.
 
 - **Not heating**: below its target, a room says why it does not heat (within
   the thermostat tolerance or the hysteresis, a minimum on / off time, waiting

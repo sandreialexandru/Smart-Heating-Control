@@ -446,7 +446,7 @@ la țintă, forțarea TRV când e pornită, ce măsoară dispozitivul însuși, 
 zilei ca bară și *Înapoi la automat*. Butoanele de sub grafic deschid *Setează
 temporar*, *Program* (fiecare profil cu zilele lui și un comutator pornit /
 oprit; zilele se aleg în editor), *Niveluri* și *Detalii*, fiecare separat (mai
-multe deodată); comutatorul *Blocare modificări* este în *Setează temporar*.
+multe deodată) și un buton *Blocare* pentru blocarea modificărilor în cameră.
 
 - **Nu încălzește**: sub țintă, camera spune de ce nu încălzește (în toleranța
   termostatului sau în histerezis, timp minim pornit / oprit, așteaptă alte

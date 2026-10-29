@@ -153,6 +153,7 @@ const TEXT = {
     reevaluate: "Reevaluate",
     clear_all: "Clear manual changes",
     child_lock: "Child lock",
+    lock_short: "Lock",
     next: "Next",
     quick: "Set for a while",
     for_hours: "for",
@@ -388,6 +389,7 @@ const TEXT = {
     reevaluate: "Reevaluează",
     clear_all: "Anulează modificările manuale",
     child_lock: "Blocare modificări",
+    lock_short: "Blocare",
     next: "Următor",
     quick: "Setează temporar",
     for_hours: "pentru",
@@ -592,20 +594,6 @@ const num = (value) => {
   return Number.isFinite(n) ? n : null;
 };
 
-/** ISO datetime -> value for <input type="datetime-local"> in local time. */
-const toLocalInput = (iso) => {
-  if (!iso || iso === "unknown" || iso === "unavailable") return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-    d.getHours()
-  )}:${pad(d.getMinutes())}`;
-};
-
-/** <input type="datetime-local"> value -> "YYYY-MM-DD HH:MM:SS" in local time. */
-const fromLocalInput = (value) => (value ? `${value.replace("T", " ")}:00` : null);
-
 class SmartHeatingControlCard extends HTMLElement {
   /** Event listeners are set once on the shadow root; the content is redrawn by _render. */
   constructor() {
@@ -627,6 +615,20 @@ class SmartHeatingControlCard extends HTMLElement {
     this.shadowRoot.addEventListener("dblclick", (ev) => this._chartDblClick(ev));
     this.shadowRoot.addEventListener("pointerleave", (ev) => this._chartHover(ev), true);
     this.shadowRoot.addEventListener("keydown", (ev) => this._keyDown(ev));
+  }
+
+  /** The animations (flame, pulse) stop while the card is not on the screen. */
+  connectedCallback() {
+    if (!this._io && "IntersectionObserver" in window) {
+      this._io = new IntersectionObserver((entries) => {
+        for (const entry of entries) this.toggleAttribute("offscreen", !entry.isIntersecting);
+      });
+    }
+    this._io?.observe(this);
+  }
+
+  disconnectedCallback() {
+    this._io?.disconnect();
   }
 
   /** Visual editor of the card (Home Assistant form). */
@@ -678,7 +680,7 @@ class SmartHeatingControlCard extends HTMLElement {
       .join("|");
     if (key !== this._lastKey) {
       this._lastKey = key;
-      this._render();
+      this._render(true);
     }
   }
 
@@ -817,16 +819,82 @@ class SmartHeatingControlCard extends HTMLElement {
     return text ? text.charAt(0).toLocaleUpperCase(this._lang()) + text.slice(1) : text;
   }
 
+  /**
+   * Time zone of the times shown: the server's when the user chose it in the
+   * Home Assistant profile (Time zone: server), otherwise the device's.
+   */
+  _tz() {
+    const h = this._hass;
+    return h?.locale?.time_zone === "server" && h?.config?.time_zone ? h.config.time_zone : undefined;
+  }
+
+  /** Clock parts of a moment in the time zone of the card. */
+  _parts(t) {
+    const tz = this._tz() || "";
+    this._fmtCache = this._fmtCache || {};
+    const f =
+      this._fmtCache[tz] ||
+      (this._fmtCache[tz] = new Intl.DateTimeFormat("en-US", {
+        timeZone: tz || undefined,
+        hourCycle: "h23",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }));
+    const o = {};
+    for (const part of f.formatToParts(new Date(t))) o[part.type] = part.value;
+    return { y: +o.year, mo: +o.month, d: +o.day, h: +o.hour % 24, mi: +o.minute, s: +o.second };
+  }
+
+  /** Offset of the card time zone from UTC at a moment (ms). */
+  _offset(t) {
+    const p = this._parts(t);
+    return Date.UTC(p.y, p.mo - 1, p.d, p.h, p.mi, p.s) - Math.floor(t / 1000) * 1000;
+  }
+
+  /** A moment as text in the language and time zone of the card. */
+  _fmt(t, opts) {
+    return new Date(t).toLocaleString(this._lang(), { ...opts, timeZone: this._tz() });
+  }
+
+  /** ISO datetime -> value for <input type="datetime-local"> (card time zone). */
+  _toInput(iso) {
+    if (!iso || iso === "unknown" || iso === "unavailable") return "";
+    const t = Date.parse(iso);
+    if (Number.isNaN(t)) return "";
+    const p = this._parts(t);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${p.y}-${pad(p.mo)}-${pad(p.d)}T${pad(p.h)}:${pad(p.mi)}`;
+  }
+
+  /** <input type="datetime-local"> value (card time zone) -> ISO with the offset, so the server reads it right. */
+  _fromInput(value) {
+    if (!value) return null;
+    const [day, clock] = value.split("T");
+    const [y, mo, d] = day.split("-").map(Number);
+    const [h, mi] = (clock || "0:0").split(":").map(Number);
+    const wall = Date.UTC(y, mo - 1, d, h, mi);
+    // Twice: the offset of the result can differ from the guess around a DST change.
+    let t = wall - this._offset(wall);
+    t = wall - this._offset(t);
+    return new Date(t).toISOString();
+  }
+
   /** Time of a moment; with the weekday when it is not today. */
   _fmtTime(iso) {
     if (!iso) return "–";
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "–";
-    const sameDay = new Date().toDateString() === d.toDateString();
+    const t = Date.parse(iso);
+    if (Number.isNaN(t)) return "–";
+    const a = this._parts(t);
+    const b = this._parts(Date.now());
+    const sameDay = a.y === b.y && a.mo === b.mo && a.d === b.d;
     const opts = sameDay
       ? { hour: "2-digit", minute: "2-digit" }
       : { weekday: "short", hour: "2-digit", minute: "2-digit" };
-    return d.toLocaleString(this._lang(), opts);
+    return this._fmt(t, opts);
   }
 
   /** Temperature with one decimal, or a dash. */
@@ -836,36 +904,117 @@ class SmartHeatingControlCard extends HTMLElement {
   }
 
   // ------------------------------------------------------------------ render
-  _render() {
+  /**
+   * Draw the card. Only the blocks that changed are replaced (title, banners,
+   * the house, every room), so the rest keeps its state and does not flicker.
+   * On a state change a block whose entities did not change keeps its last
+   * drawing for up to a minute (its times are refreshed after that).
+   */
+  _render(fromState = false) {
     if (!this._config) return;
+    this._ensureCard();
     const cfg = this._config;
     const houses = this._hass ? this._houses() : [];
     const title = cfg.title ?? this._t("title");
-    let body = "";
+    this._blockCache = this._blockCache || {};
+    const ver = (ids) =>
+      ids
+        .filter(Boolean)
+        .map((id) => {
+          const st = this._hass.states[id];
+          return st ? `${st.state}|${st.last_updated}` : "-";
+        })
+        .join(",");
+    const cached = (key, deps, make) => {
+      const c = this._blockCache[key];
+      if (fromState && c && c.deps === deps && Date.now() - c.at < 60000) return c.html;
+      const html = make();
+      this._blockCache[key] = { deps, html, at: Date.now() };
+      return html;
+    };
+    const blocks = [];
+    if (title) blocks.push({ k: "title", html: `<h2 class="title">${esc(title)}</h2>` });
     if (!houses.length) {
-      body = `<p class="empty">${this._t("no_rooms")}</p>`;
-    } else {
-      body = houses
-        .map(
-          (house) =>
-            this._pauseBanner(house) +
-            this._guestBanner(house) +
-            (cfg.show_house ? this._houseHtml(house) : "") +
-            (cfg.show_rooms
-              ? house.rooms.length
-                ? cfg.compact
-                  ? `<div class="rooms-list">${house.rooms.map((r) => this._roomHtml(r)).join("")}</div>`
-                  : house.rooms.map((r) => this._roomHtml(r)).join("")
-                : `<p class="empty">${this._t("no_rooms")}</p>`
-              : "")
-        )
-        .join("");
+      blocks.push({ k: "empty", html: `<p class="empty">${this._t("no_rooms")}</p>` });
     }
-    this.shadowRoot.innerHTML = `<style>${STYLE}</style>
-      <ha-card class="${cfg.compact ? "compact" : ""}">
-        ${title ? `<h2 class="title">${esc(title)}</h2>` : ""}
-        ${body}
-      </ha-card>`;
+    for (const house of houses) {
+      const he = Object.values(house.entities || {});
+      const houseRooms = this._discover().rooms.filter((id) => this._hass.states[id]?.attributes?.entry_id === house.id);
+      const pause = this._pauseBanner(house);
+      if (pause) blocks.push({ k: `pause-${house.id}`, html: pause });
+      const guest = this._guestBanner(house);
+      if (guest) blocks.push({ k: `guest-${house.id}`, html: guest });
+      if (cfg.show_house) {
+        blocks.push({
+          k: `house-${house.id}`,
+          html: cached(`house-${house.id}`, ver([...he, ...houseRooms]) + this._houses().length, () => this._houseHtml(house)),
+        });
+      }
+      if (!cfg.show_rooms) continue;
+      if (!house.rooms.length) {
+        blocks.push({ k: `norooms-${house.id}`, html: `<p class="empty">${this._t("no_rooms")}</p>` });
+        continue;
+      }
+      const rooms = house.rooms.map((r) => {
+        const a = r.attributes;
+        const deps = ver([
+          r.entity_id,
+          ...Object.values(a.entities || {}),
+          ...(a.climate_entities || []),
+          house.entities.guest_mode,
+          house.entities.outdoor_average,
+        ]);
+        return { k: `room-${a.room_id}`, html: cached(`room-${a.room_id}`, deps, () => this._roomHtml(r)) };
+      });
+      if (cfg.compact) blocks.push({ k: `list-${house.id}`, html: `<div class="rooms-list"></div>`, children: rooms });
+      else blocks.push(...rooms);
+    }
+    this._card.className = cfg.compact ? "compact" : "";
+    this._patch(this._card, blocks);
+  }
+
+  /** The card element and the styles, made once. */
+  _ensureCard() {
+    if (this._card) return;
+    const root = this.shadowRoot;
+    if ("adoptedStyleSheets" in root && typeof CSSStyleSheet !== "undefined" && "replaceSync" in CSSStyleSheet.prototype) {
+      const sheet = new CSSStyleSheet();
+      sheet.replaceSync(STYLE);
+      root.adoptedStyleSheets = [...root.adoptedStyleSheets, sheet];
+    } else {
+      const style = document.createElement("style");
+      style.textContent = STYLE;
+      root.appendChild(style);
+    }
+    this._card = document.createElement("ha-card");
+    root.appendChild(this._card);
+  }
+
+  /** Put the blocks in ``parent``: a block drawn the same as before keeps its element. */
+  _patch(parent, blocks) {
+    const old = new Map();
+    for (const node of parent.children) if (node.__k) old.set(node.__k, node);
+    const make = (html) => {
+      const tpl = document.createElement("template");
+      tpl.innerHTML = html.trim();
+      return tpl.content.firstElementChild;
+    };
+    const nodes = [];
+    for (const b of blocks) {
+      let node = old.get(b.k);
+      if (!node || node.__src !== b.html) {
+        node = make(b.html);
+        if (!node) continue;
+        node.__src = b.html;
+        node.__k = b.k;
+      }
+      if (b.children) this._patch(node, b.children);
+      nodes.push(node);
+    }
+    nodes.forEach((node, i) => {
+      if (parent.children[i] !== node) parent.insertBefore(node, parent.children[i] || null);
+    });
+    while (parent.children.length > nodes.length) parent.lastElementChild.remove();
   }
 
   /** Material Design icon. */
@@ -1083,20 +1232,36 @@ class SmartHeatingControlCard extends HTMLElement {
   _todayHtml(a) {
     const slots = a.profile && a.schedule ? a.schedule[a.profile] : null;
     if (!slots || !slots.length) return "";
-    const segs = this._segments(slots)
+    // The schedule day starts at the day start of the house (Day starts at), as the integration counts it;
+    // before its first time the last time of the profile goes on.
+    const start = ((Math.round(num(a.day_boundary) ?? 0) % 1440) + 1440) % 1440;
+    const key = (m) => (m - start + 1440) % 1440;
+    const sorted = slots
+      .map((sl) => ({ k: key(toMinutes(sl.time)), preset: sl.preset }))
+      .sort((x, y) => x.k - y.k);
+    const parts = [];
+    if (sorted[0].k > 0) parts.push({ s: 0, e: sorted[0].k, preset: sorted[sorted.length - 1].preset });
+    sorted.forEach((sl, i) => parts.push({ s: sl.k, e: i + 1 < sorted.length ? sorted[i + 1].k : 1440, preset: sl.preset }));
+    const clock = (k) => hhmm((k + start) % 1440);
+    const segs = parts
+      .filter((sg) => sg.e > sg.s)
       .map(
         (sg) =>
-          `<i style="left:${(sg.start / 1440) * 100}%;width:${((sg.end - sg.start) / 1440) * 100}%;--c:${
+          `<i style="left:${(sg.s / 1440) * 100}%;width:${((sg.e - sg.s) / 1440) * 100}%;--c:${
             PRESET_COLORS[sg.preset] || TEMP_COLOR
-          }" title="${esc(`${this._presetName(a, sg.preset)} ${hhmm(sg.start)}–${hhmm(sg.end % 1440)}`)}"></i>`
+          }" title="${esc(`${this._presetName(a, sg.preset)} ${clock(sg.s)}–${clock(sg.e)}`)}"></i>`
       )
       .join("");
-    const d = new Date();
-    const now = ((d.getHours() * 60 + d.getMinutes()) / 1440) * 100;
+    const p = this._parts(Date.now());
+    const now = (key(p.h * 60 + p.mi) / 1440) * 100;
+    const label = (k) => {
+      const text = clock(k);
+      return text.endsWith(":00") ? text.slice(0, 2) : text;
+    };
     return `<div class="today">
         <span class="tlabel">${esc(this._t("today"))} · ${esc(a.profile)}</span>
         <div class="tbar">${segs}<b style="left:${now}%"></b></div>
-        <div class="tticks"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+        <div class="tticks">${[0, 360, 720, 1080, 1440].map((k) => `<span>${label(k)}</span>`).join("")}</div>
       </div>`;
   }
 
@@ -1111,19 +1276,29 @@ class SmartHeatingControlCard extends HTMLElement {
       defs.push([`levels-${id}`, "levels", "tune-variant", () => this._levelsHtml(a, e)]);
     }
     if (cfg.show_details) defs.push([`details-${id}`, "details", "information-outline", () => this._detailsHtml(a, e)]);
-    if (!defs.length) return "";
+    const lock = e.child_lock ? this._state(e.child_lock) : null;
+    if (!defs.length && !lock) return "";
     const open = (k) => !!this._open[k] || (k === `sched-${id}` && this._editing === id);
-    const buttons = defs
-      .map(
-        ([k, label, icon]) => `<button class="sbtn ${open(k) ? "on" : ""}" data-action="fold" data-key="${esc(k)}"
+    const locked = lock?.state === "on";
+    const buttons =
+      defs
+        .map(
+          ([k, label, icon]) => `<button class="sbtn ${open(k) ? "on" : ""}" data-action="fold" data-key="${esc(k)}"
           aria-expanded="${open(k)}">${this._icon(icon)}<span>${esc(this._t(label))}</span></button>`
-      )
-      .join("");
+        )
+        .join("") +
+      (lock
+        ? `<button class="sbtn lock ${locked ? "on" : ""}" data-action="toggle" data-entity="${esc(e.child_lock)}" role="switch"
+          aria-checked="${locked}" title="${esc(this._t("child_lock"))}">${this._icon(
+            locked ? "lock-outline" : "lock-open-variant-outline"
+          )}<span>${esc(this._t("lock_short"))}</span></button>`
+        : "");
+    const count = defs.length + (lock ? 1 : 0);
     const bodies = defs
       .filter(([k]) => open(k))
       .map(([, , , html]) => html())
       .join("");
-    return `<div class="sbtns" style="--n:${defs.length}">${buttons}</div>${bodies}`;
+    return `<div class="sbtns" style="--n:${count}">${buttons}</div>${bodies}`;
   }
 
   /** House block: presence, outdoor, mode, pause, guests, vacation and buttons. */
@@ -1233,10 +1408,10 @@ class SmartHeatingControlCard extends HTMLElement {
           <div class="dates">
             <label class="datefield"><span>${this._t("from")}</span>
               <input type="datetime-local" data-vac="start" data-house="${esc(house.id)}"
-                value="${esc(toLocalInput(vStart?.state))}"></label>
+                value="${esc(this._toInput(vStart?.state))}"></label>
             <label class="datefield"><span>${this._t("to")}</span>
               <input type="datetime-local" data-vac="end" data-house="${esc(house.id)}"
-                value="${esc(toLocalInput(vEnd?.state))}"></label>
+                value="${esc(this._toInput(vEnd?.state))}"></label>
           </div>
           <p class="hint">${this._t("vacation_hint")}</p>
           <div class="row wrap">
@@ -2017,20 +2192,18 @@ class SmartHeatingControlCard extends HTMLElement {
     const span = view.v1 - view.v0;
     const stepMin = [5, 10, 15, 30, 60, 120, 180, 360].find((m) => span / (m * 60000) <= 7) || 360;
     const ticks = [];
-    const first = new Date(view.v0);
-    first.setSeconds(0, 0);
-    first.setMinutes(Math.ceil(first.getMinutes() / Math.min(stepMin, 60)) * Math.min(stepMin, 60));
-    for (let t = first.getTime(); t <= view.v1; t += 60000 * Math.min(stepMin, 60)) {
-      const dt = new Date(t);
-      const minutes = dt.getHours() * 60 + dt.getMinutes();
+    // In the time zone of the card: a tick every step of its clock (midnight shows the weekday).
+    const inc = 60000 * Math.min(stepMin, 60);
+    const off0 = this._offset(view.v0);
+    for (let t = Math.ceil((view.v0 + off0) / inc) * inc - off0; t <= view.v1; t += inc) {
+      const p = this._parts(t);
+      const minutes = p.h * 60 + p.mi;
       if (minutes % stepMin !== 0) continue;
       const label =
-        minutes === 0
-          ? dt.toLocaleDateString(this._lang(), { weekday: "short" })
-          : dt.toLocaleTimeString(this._lang(), { hour: "2-digit", minute: "2-digit" });
+        minutes === 0 ? this._fmt(t, { weekday: "short" }) : this._fmt(t, { hour: "2-digit", minute: "2-digit" });
       ticks.push(`<span style="left:${pct(t)}%">${esc(label)}</span>`);
     }
-    const fmt = (t) => new Date(t).toLocaleTimeString(this._lang(), { hour: "2-digit", minute: "2-digit" });
+    const fmt = (t) => this._fmt(t, { hour: "2-digit", minute: "2-digit" });
     const zoomBtn = (zoom, label, title, active = false) =>
       `<button class="zbtn ${active ? "active" : ""}" data-action="zoom" data-zoom="${zoom}" data-room="${esc(
         a.room_id
@@ -2152,7 +2325,7 @@ class SmartHeatingControlCard extends HTMLElement {
       }
       if (out === null && d.outdoor?.length) out = d.outdoor[d.outdoor.length - 1][1];
     }
-    const time = new Date(t).toLocaleString(this._lang(), { weekday: "short", hour: "2-digit", minute: "2-digit" });
+    const time = this._fmt(t, { weekday: "short", hour: "2-digit", minute: "2-digit" });
     const rows = [`<b>${esc(time)}</b>`];
     if (t <= d.now && temp !== null) rows.push(`<span><i class="lg-temp"></i>${temp.toFixed(1)}°</span>`);
     if (seg && seg.opt) {
@@ -2208,7 +2381,6 @@ class SmartHeatingControlCard extends HTMLElement {
       this._t("quick"),
       `<p class="hint">${this._t("quick_hint")}</p>
         <div class="presets">${presets}</div>
-        ${e.child_lock ? `<div class="lockrow">${this._toggle(e.child_lock, this._t("child_lock"))}</div>` : ""}
         <div class="quickset">
           ${this._btn(this._t("apply"), `data-action="quick-temp" data-room="${esc(a.room_id)}"`, {
             icon: "thermometer-check",
@@ -3072,8 +3244,8 @@ class SmartHeatingControlCard extends HTMLElement {
         const start = this.shadowRoot.querySelector(`input[data-vac="start"][data-house="${CSS.escape(house)}"]`);
         const end = this.shadowRoot.querySelector(`input[data-vac="end"][data-house="${CSS.escape(house)}"]`);
         const data = { config_entry_id: house };
-        if (start?.value) data.start = fromLocalInput(start.value);
-        if (end?.value) data.end = fromLocalInput(end.value);
+        if (start?.value) data.start = this._fromInput(start.value);
+        if (end?.value) data.end = this._fromInput(end.value);
         await this._call("advanced_climate", "set_vacation", data, `vac-${house}`);
         break;
       }
@@ -3637,12 +3809,14 @@ const STYLE = `
   .tbar b { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--primary-text-color); }
   .tticks { display: flex; justify-content: space-between; font-size: 0.68em; color: var(--ac-muted); }
   .sbtns { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 8px; }
-  @media (max-width: 420px) { .sbtns { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  .sbtn { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 6px 8px; border-radius: 12px;
+  @media (max-width: 420px) { .sbtns { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .sbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 56px; padding: 6px 4px; border-radius: 12px;
     border: 1px solid var(--ac-line); background: var(--card-background-color); color: var(--primary-text-color); font: inherit;
     font-size: 0.85em; font-weight: 500; cursor: pointer; min-width: 0; transition: background .15s, border-color .15s; }
   .sbtn span { text-align: center; line-height: 1.2; overflow-wrap: anywhere; }
-  .sbtn ha-icon { --mdc-icon-size: 18px; flex: none; }
+  .sbtn ha-icon { --mdc-icon-size: 20px; flex: none; }
+  .sbtn.lock.on { border-color: var(--warning-color, #f0ad4e); background: color-mix(in srgb, var(--warning-color, #f0ad4e) 16%, var(--card-background-color)); }
+  .sbtn.lock.on ha-icon { color: var(--warning-color, #f0ad4e); }
   .sbtn:hover { background: var(--ac-surface-2); }
   .sbtn.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 18%, var(--card-background-color)); }
   .section { display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: var(--ac-surface);
@@ -3701,6 +3875,7 @@ const STYLE = `
   .tile-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 0.85em; align-items: flex-start; }
   .tile-info .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 
+  :host([offscreen]) .pulse, :host([offscreen]) .flame.on ha-icon { animation-play-state: paused; }
   @media (prefers-reduced-motion: reduce) { .pulse, .flame.on ha-icon { animation: none; } * { transition: none !important; } }
 `;
 

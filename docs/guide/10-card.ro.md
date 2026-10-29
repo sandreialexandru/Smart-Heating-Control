@@ -93,14 +93,17 @@ nivelul lângă arc. Sub antet:
   schimbare** (*~21.5° la 22:00*), modul oaspeți cât e pornit, **forțarea TRV** când e pornită pentru
   cameră și ce măsoară dispozitivul însuși (camerele cu TRV / dispozitive
   climate);
-- **Azi**: profilul zilei ca bară de la 00 la 24, cu ora de acum.
+- **Azi**: profilul zilei ca bară pe ziua programului (de la *Ziua programului începe la*
+  a casei, de exemplu 00 → 24 sau 04 → 04), cu ora de acum.
 Dacă o cameră sub țintă nu încălzește, cardul spune de ce (*Nu încălzește: …*,
 vezi [capitolul 8](08-sursa-si-energie.ro.md#când-nu-încălzește-o-cameră-sub-țintă)).
 Butonul *Înapoi la automat* anulează o modificare manuală.
 
 Sub grafic, butoanele deschid secțiunile **Setează temporar**, **Program**,
 **Niveluri** și **Detalii**, fiecare separat (pot fi deschise mai multe deodată);
-butonul unei secțiuni deschise rămâne colorat. Graficul și secțiunile:
+butonul unei secțiuni deschise rămâne colorat. Butonul **Blocare** de lângă ele
+pornește sau oprește blocarea modificărilor în cameră (colorat cât e pornită).
+Graficul și secțiunile:
 
 ### Graficul
 
@@ -127,8 +130,7 @@ senzorii căzuți și *Cald afară* apar așa cum sunt acum, pe toată perioada.
 ### Setează temporar
 
 Pui un nivel sau o temperatură pentru un număr de ore: *[Setează] [21] °C pentru
-[2] h*. Ore goale = regula configurată pentru modificările manuale. Tot aici e
-comutatorul **Blocare modificări**.
+[2] h*. Ore goale = regula configurată pentru modificările manuale.
 
 ### Niveluri
 
@@ -163,6 +165,13 @@ dispozitiv), până când, *se aplică după: …* sau *revine după: …*.
 
 Aproape orice valoare, stare sau insignă deschide la atingere fereastra cu
 detaliile entității.
+
+## Orele
+
+Orele (grafic, bara programului, până când, datele vacanței) urmează setarea
+*Fus orar* din profilul tău Home Assistant: al dispozitivului sau al serverului,
+dacă l-ai ales. Datele vacanței se trimit cu fusul orar, ca să însemne același
+moment pe server.
 
 ## Limba
 

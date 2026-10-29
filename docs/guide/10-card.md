@@ -94,14 +94,17 @@ header:
   the change** (*~21.5° at 22:00*), guest mode while it is on, the **TRV boost** when it is on for the
   room, and what the device itself measures (rooms with TRVs / climate
   devices);
-- **Today**: the profile of the day as a bar from 00 to 24, with the time now.
+- **Today**: the profile of the day as a bar over the schedule day (from the
+  house *Schedule day starts at*, e.g. 00 → 24 or 04 → 04), with the time now.
 If a room below its target does not heat, the card says why (*Not heating: …*,
 see [chapter 8](08-heat-source-and-energy.md#when-a-room-below-its-target-does-not-heat)).
 The *Back to automatic* button clears a manual change.
 
 Under the chart, buttons open the sections **Set for a while**, **Schedule**,
 **Levels** and **Details**, each on its own (several can be open at once); an
-open section's button stays coloured. The chart and the sections:
+open section's button stays coloured. A **Lock** button next to them turns the
+child lock of the room on or off (coloured while on). The chart and the
+sections:
 
 ### The chart
 
@@ -129,8 +132,7 @@ outside* appear as they are now, for the whole period.
 ### Set for a while
 
 Set a level or a temperature for a number of hours: *[Set] [21] °C for [2] h*.
-Empty hours = the configured rule for manual changes. The **Child lock** switch
-is here too.
+Empty hours = the configured rule for manual changes.
 
 ### Levels
 
@@ -165,6 +167,13 @@ device), until when, *applies after: …* or *returns after: …*.
 
 Almost every value, state or badge opens the entity's more-info dialog when
 tapped.
+
+## Times
+
+Times (chart, schedule bar, until when, vacation dates) follow the *Time zone*
+setting of your Home Assistant profile: the device's, or the server's when you
+chose that. Vacation dates are sent with their time zone, so they mean the same
+moment on the server.
 
 ## Language
 

@@ -20,7 +20,6 @@ aceleași nume de preseturi (`home`, `sleep`, `eco`, `away`, `comfort`,
 Numele setărilor și ale entităților sunt date mai jos în română, ca în
 interfața Home Assistant în română.
 
-
 ## Funcții
 
 - **Prezență în trei stări**: *acasă*, *aproape* (de exemplu undeva în oraș)
@@ -214,7 +213,6 @@ Regulile sunt evaluate de sus în jos; prima care se aplică decide:
 
 Apoi ajustările (prag de temperatură exterioară, compensare, tarif,
 fotovoltaic, câștig solar) și limitele de siguranță.
-
 
 ## Entități
 
@@ -486,7 +484,6 @@ multe deodată) și un buton *Blocare* pentru blocarea modificărilor în camer�
 - **Limbă**: motivul deciziei și numele ajustărilor apar în limba cardului
   (senzorul *Decizie* le are ca `reason_key` și `reason_params`; `reason`
   rămâne textul în engleză).
-
 
 ## Traduceri
 

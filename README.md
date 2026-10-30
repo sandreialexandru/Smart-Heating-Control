@@ -17,7 +17,6 @@ names (`home`, `sleep`, `eco`, `away`, `comfort`, `activity`) and only selects
 the right one; your thermostat keeps working exactly as before. Rooms with TRVs,
 other thermostats or plain relays are supported as well.
 
-
 ## Features
 
 - **Presence in three states**: *home*, *nearby* (e.g. somewhere in your city)
@@ -199,7 +198,6 @@ Rules are evaluated from the top; the first one that applies wins:
 
 Then the adjustments (outdoor cutoff, compensation, tariff, PV, solar gain) and
 the safety limits.
-
 
 ## Entities
 
@@ -462,7 +460,6 @@ at once), and a *Lock* button for the child lock of the room.
 - **Language**: the reason of the decision and the names of the adjustments are
   shown in the language of the card (the *Decision* sensor has them as
   `reason_key` and `reason_params`; `reason` stays the English text).
-
 
 ## Translations
 

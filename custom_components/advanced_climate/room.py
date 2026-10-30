@@ -1987,9 +1987,11 @@ class Room:
             return False
         if float_attr(new, ATTR_TEMPERATURE) == float_attr(old, ATTR_TEMPERATURE):
             return False
-        return self._learn_device_limit(entity_id, new)
+        return self._learn_device_limit(entity_id, new, reported_now=True)
 
-    def _learn_device_limit(self, entity_id: str, new: State | None) -> bool:
+    def _learn_device_limit(
+        self, entity_id: str, new: State | None, *, reported_now: bool = False
+    ) -> bool:
         """True when what a thermostat shows now is its own limit for the last value sent.
 
         Also used without a change of the device (the verification, the next
@@ -2005,8 +2007,9 @@ class Room:
             sent = float(sent)
         except (TypeError, ValueError):
             return False
-        # A value sent before (reported late, or once more after the new one) is
-        # an echo, not a limit.
+        # A value sent before, reported now (late, or once more after the new one),
+        # is an echo, not a limit. (At the check, the TRV has held what it shows
+        # since before the command was sent again.)
         step0 = float_attr(new, "target_temp_step")
         margin0 = step0 / 2 + 0.01 if step0 else 0.05
         now = dt_util.utcnow()
@@ -2015,7 +2018,11 @@ class Room:
             for at, key, v in self._sent_recent.get(entity_id, [])
             if key == ATTR_TEMPERATURE and now - at <= SENT_RECENT
         ]
-        if any(_close(reported, v, margin0) for v in earlier) and not _close(reported, sent, margin0):
+        if (
+            reported_now
+            and any(_close(reported, v, margin0) for v in earlier)
+            and not _close(reported, sent, margin0)
+        ):
             return False
         unit = system_unit(self.hass)
         step = float_attr(new, "target_temp_step")

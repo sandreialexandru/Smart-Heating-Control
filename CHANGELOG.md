@@ -19,8 +19,8 @@ GitHub releases.
   holds its limit after a boost, the valve exercise or frost protection; the next
   commands stay within it and an alert tells it (tried again after a day).
   A TRV that already held its limit (so it reports nothing new) is recognised
-  by the command verification too, instead of being sent the value again and
-  again and told as not accepted.
+  by the command verification too (after the value was sent again), instead of
+  being told as not accepted.
 
 ## 2.4.0 – 2026-10-29
 

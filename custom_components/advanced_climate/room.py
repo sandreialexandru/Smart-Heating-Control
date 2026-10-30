@@ -1897,9 +1897,6 @@ class Room:
         assert state is not None
         if not force and self._matches(state, target):
             return False
-        # The TRV holds its own limit for the value sent last: learned, nothing to send.
-        if not force and self._learn_device_limit(entity_id, state) and self._matches(state, target):
-            return False
         self._sent[entity_id] = {}
         self._sent_confirmed.pop(entity_id, None)
         modes = list(state.attributes.get("hvac_modes") or [])
@@ -2007,6 +2004,18 @@ class Room:
         try:
             sent = float(sent)
         except (TypeError, ValueError):
+            return False
+        # A value sent before (reported late, or once more after the new one) is
+        # an echo, not a limit.
+        step0 = float_attr(new, "target_temp_step")
+        margin0 = step0 / 2 + 0.01 if step0 else 0.05
+        now = dt_util.utcnow()
+        earlier = [
+            v
+            for at, key, v in self._sent_recent.get(entity_id, [])
+            if key == ATTR_TEMPERATURE and now - at <= SENT_RECENT
+        ]
+        if any(_close(reported, v, margin0) for v in earlier) and not _close(reported, sent, margin0):
             return False
         unit = system_unit(self.hass)
         step = float_attr(new, "target_temp_step")
@@ -2181,9 +2190,15 @@ class Room:
                 state = self.hass.states.get(eid)
                 if not valid(state) or self._matches(state, expected):  # type: ignore[arg-type]
                     continue
-                # A TRV holding its own limit (it may have held it before the
-                # command, so it reported no change): learned, not retried.
-                if self._learn_device_limit(eid, state) and self._matches(state, expected):  # type: ignore[arg-type]
+                # Still not there after the command was sent again: a TRV that
+                # holds its own limit (it may have held it already, so it reported
+                # no change) is learned instead of the alert. Not at the first
+                # check: a TRV may just not have reported yet.
+                if (
+                    self._verify_attempts >= 1
+                    and self._learn_device_limit(eid, state)
+                    and self._matches(state, expected)  # type: ignore[arg-type]
+                ):
                     continue
                 mismatched.append(eid)
             if not mismatched:

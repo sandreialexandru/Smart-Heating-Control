@@ -2095,8 +2095,8 @@ async def test_trv_already_at_its_limit_is_learned_without_a_report(
 ) -> None:
     """The TRV already holds 25 (its own maximum) when 28 is sent: no change is reported.
 
-    The verification learns the limit instead of sending 28 again and again or
-    telling that it was not accepted.
+    The verification learns the limit instead of telling that it was not
+    accepted, and 28 is no longer sent again and again.
     """
     trv = {"hvac_modes": ["heat", "off"], "current_temperature": 23.0, "temperature": 25.0,
            "max_temp": 35.0, "target_temp_step": 0.5}
@@ -2107,10 +2107,13 @@ async def test_trv_already_at_its_limit_is_learned_without_a_report(
     room = next(iter(entry.runtime_data.rooms.values()))
     await _tick(hass, freezer, 15)
     assert calls[-1].data["temperature"] == 28.0
-    sent = len(calls)
-    # The verification (2 minutes later) sees 25 held: a limit, learned.
+    # The first check (2 minutes later) sends it again (the TRV may just be slow);
+    # the second one sees 25 still held: a limit, learned instead of the alert.
+    await _tick(hass, freezer, 125)
+    assert not any(a["code"] == "device_limit_max" for a in room.house.alerts_for(room))
     await _tick(hass, freezer, 125)
     assert any(a["code"] == "device_limit_max" for a in room.house.alerts_for(room))
+    sent = len(calls)
     assert not any(a["code"] == "not_accepted" for a in room.house.alerts_for(room))
     # Nothing more is sent while the TRV holds its limit.
     for _ in range(3):

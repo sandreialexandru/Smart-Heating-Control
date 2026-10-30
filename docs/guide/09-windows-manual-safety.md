@@ -64,7 +64,8 @@ is a manual change.
 boost or the valve exercise sent (but at least the target), or more than frost
 protection / off sent (but below the lowest level), that is its limit, not a
 manual change: the next commands stay within it, and an alert tells it. A TRV
-that already held its limit is recognised by the command check as well. The
+that already held its limit (so it reports nothing) is recognised by the command
+check: after the command was sent again and the TRV still holds it. The
 limit is tried again after a day, so a new setting on the device is seen.
 
 **How long** (*Manual changes are kept*, in the house options):

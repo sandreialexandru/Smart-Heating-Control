@@ -20,14 +20,6 @@ aceleași nume de preseturi (`home`, `sleep`, `eco`, `away`, `comfort`,
 Numele setărilor și ale entităților sunt date mai jos în română, ca în
 interfața Home Assistant în română.
 
-> **Beta.** Integrarea rulează zilnic într-o singură casă: o zonă pentru toată
-> casa cu Generic Thermostat și un releu, prezență, temperatura de afară cu
-> oprirea când e cald și prognoza, programul intern și învățarea. TRV-urile, mai multe camere, alte termostate,
-> camerele cu relee, o sursă de căldură pornită de integrare, tariful /
-> fotovoltaicul și °F sunt acoperite de testele automate, dar încă nu de case
-> reale. Dacă le încerci, te rog
-> [spune-mi ce vezi](https://github.com/sandreialexandru/Smart-Heating-Control/issues/new/choose),
-> fie că merge, fie că nu.
 
 ## Funcții
 

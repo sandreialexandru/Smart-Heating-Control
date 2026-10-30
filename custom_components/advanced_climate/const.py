@@ -389,4 +389,6 @@ TEMP_DROP_HOLD_MINUTES: Final = 15
 SENT_RECENT_MINUTES: Final = 5
 # How long the device must show the last value sent before the older ones are forgotten.
 SENT_STABLE_SECONDS: Final = 60
+# How long a limit learned from a thermostat is kept (then it is tried again).
+DEVICE_LIMIT_HOURS: Final = 24
 MAX_DECISION_LOG: Final = 100

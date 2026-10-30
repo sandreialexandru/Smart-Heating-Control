@@ -58,6 +58,15 @@ dispozitivul înainte de fiecare comandă, până când dispozitivul arată ulti
 TRV-uri arată imediat valoarea nouă, apoi mai raportează o dată pe cea veche);
 după aceea orice altă valoare e o modificare manuală.
 
+**Limitele dispozitivului.** Unele TRV-uri au pe dispozitiv propriile *Max
+temperature* / *Min temperature*, mai înguste decât intervalul entității (de
+exemplu 25 °C pe un TRV Tuya a cărui entitate merge până la 35 °C). Când un TRV
+raportează mai puțin decât a trimis forțarea sau mișcarea robinetelor (dar cel
+puțin ținta), sau mai mult decât a trimis antiînghețul / oprirea (dar sub cel mai
+jos nivel), aceea e limita lui, nu o modificare manuală: comenzile următoare
+rămân în ea, iar o alertă o spune. Limita se încearcă din nou după o zi, ca o
+setare nouă pe dispozitiv să fie văzută.
+
 **Cât durează** (*Modificările manuale se păstrează*, în opțiunile casei):
 
 | Alegere | Se termină |

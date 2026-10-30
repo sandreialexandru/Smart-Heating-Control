@@ -58,6 +58,14 @@ until the device has shown the last value for 1 minute (some TRVs show the new
 value at once and then report the old one once more); after that any other value
 is a manual change.
 
+**Limits of the device.** Some TRVs have their own *Max temperature* /
+*Min temperature* on the device, narrower than the range of their entity (e.g.
+25 °C on a Tuya TRV whose entity goes to 35 °C). When a TRV reports less than a
+boost or the valve exercise sent (but at least the target), or more than frost
+protection / off sent (but below the lowest level), that is its limit, not a
+manual change: the next commands stay within it, and an alert tells it. The
+limit is tried again after a day, so a new setting on the device is seen.
+
 **How long** (*Manual changes are kept*, in the house options):
 
 | Choice | Ends |

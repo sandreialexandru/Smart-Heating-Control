@@ -582,7 +582,16 @@ class House:
 
         # Automatic vacation after a long time far away.
         hours = float(opts[CONF_AUTO_VACATION_HOURS] or 0)
-        if self.presence.current != PRESENCE_FAR:
+        if self.guest:
+            # Guests make the house home, not the people: the automatic vacation
+            # waits (it does not apply while they are there) and goes on after
+            # them, unless one of the people came near or home meanwhile (the
+            # people only: presence sensors in the house see the guests too).
+            people = raw_house_presence(list(classes.values()), opts[CONF_HOME_RULE], False, False)
+            if people is not None and people != PRESENCE_FAR:
+                self.auto_vacation = False
+                self.auto_vacation_reset = None
+        elif self.presence.current != PRESENCE_FAR:
             self.auto_vacation = False
             self.auto_vacation_reset = None
         elif self.arriving:

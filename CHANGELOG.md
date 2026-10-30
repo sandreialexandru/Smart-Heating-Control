@@ -12,6 +12,12 @@ GitHub releases.
 - Guest mode wins over every vacation (the vacation mode, the dates or the
   automatic one): while it is on, the rooms follow the schedule; the vacation
   goes on when it is turned off. The card band says the vacation is suspended.
+  The automatic vacation goes on at once after the guests, unless one of the
+  people came near or home meanwhile.
+- A TRV with its own Max / Min temperature on the device (narrower than its
+  entity, e.g. 25 °C on a Tuya TRV) is no longer taken for a manual change when it
+  holds its limit after a boost, the valve exercise or frost protection; the next
+  commands stay within it and an alert tells it (tried again after a day).
 
 ## 2.4.0 – 2026-10-29
 

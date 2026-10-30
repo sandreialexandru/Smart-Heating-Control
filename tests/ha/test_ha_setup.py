@@ -2008,3 +2008,74 @@ async def test_guests_suspend_every_vacation(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_automatic_vacation_goes_on_after_the_guests(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Guests suspend the automatic vacation; after them it goes on at once."""
+    entry = await _setup(hass, freezer)
+    entry.runtime_data.options["auto_vacation_hours"] = 1.0
+    await _tick(hass, freezer, 15)
+    hass.states.async_set("person.andrei", "not_home")
+    await _tick(hass, freezer, 11 * 60)
+    await _tick(hass, freezer, 3600)
+    assert hass.states.get("sensor.bedroom_decision").state == "vacation"
+
+    async def guests(on: bool) -> None:
+        await hass.services.async_call(
+            "switch", "turn_on" if on else "turn_off", {"entity_id": "switch.home_guest_mode"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    await guests(True)
+    assert hass.states.get("sensor.bedroom_decision").state == "schedule"
+    assert hass.states.get("sensor.home_presence").attributes["vacation_suspended"] is True
+    await _tick(hass, freezer, 2 * 3600)
+    await guests(False)
+    assert hass.states.get("sensor.home_presence").state == "far"
+    assert hass.states.get("sensor.bedroom_decision").state == "vacation"
+
+    # Someone of the people comes home while guests are there: the automatic vacation ends.
+    await guests(True)
+    hass.states.async_set("person.andrei", "home")
+    await _tick(hass, freezer, 30)
+    await guests(False)
+    assert hass.states.get("sensor.bedroom_decision").state == "schedule"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_trv_limit_is_not_a_manual_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The TRV applies its own maximum (25) to a boost of 28: a limit, not a manual change."""
+    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 23.0, "temperature": 21.0,
+           "max_temp": 35.0, "target_temp_step": 0.5}
+    hass.states.async_set("climate.trv", "heat", trv)
+    hass.states.async_set("sensor.office_temp", "20.9", {"unit_of_measurement": "°C"})
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    # A house maximum of 30 °C, so the boost of 28 °C is sent as it is.
+    entry = await _boost_house(hass, freezer, {"trv_boost_temperature": 28}, max_temp=30)
+    room = next(iter(entry.runtime_data.rooms.values()))
+    await _tick(hass, freezer, 15)
+    await _room_temp(hass, freezer, 20.8)
+    assert calls[-1].data["temperature"] == 28.0
+    # The TRV holds 25 (its own Max temperature), with its own context.
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 25.0}, context=Context())
+    await _tick(hass, freezer, 5)
+    assert hass.states.get("binary_sensor.office_manual_change").state == "off"
+    assert any(a["code"] == "device_limit_max" for a in room.house.alerts_for(room))
+    # The demand ends (the target again), then the next boost is sent within the limit.
+    await _room_temp(hass, freezer, 21.2)
+    assert calls[-1].data["temperature"] == 21.0
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 21.0}, context=Context())
+    await _tick(hass, freezer, 5)
+    await _room_temp(hass, freezer, 20.8)
+    assert calls[-1].data["temperature"] == 25.0
+    assert hass.states.get("binary_sensor.office_manual_change").state == "off"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

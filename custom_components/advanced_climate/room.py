@@ -95,6 +95,7 @@ from .const import (
     CONF_WINDOW_SENSORS,
     DEFAULT_LEVEL_TEMPS,
     DEFAULT_SCHEDULE,
+    DEVICE_LIMIT_HOURS,
     DOMAIN,
     EVENT_DECISION_CHANGED,
     GT_DOMAIN,
@@ -177,6 +178,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 SENT_RECENT = timedelta(minutes=SENT_RECENT_MINUTES)
 SENT_STABLE = timedelta(seconds=SENT_STABLE_SECONDS)
+DEVICE_LIMIT_KEEP = timedelta(hours=DEVICE_LIMIT_HOURS)
 
 
 def _close(value: Any, sent: Any, margin: float) -> bool:
@@ -350,6 +352,10 @@ class Room:
         # values are forgotten only after it stayed there a while (some TRVs show
         # the new value at once and then report the old one once more).
         self._sent_confirmed: dict[str, dict[str, datetime]] = {}
+        # Limits a thermostat applies on the device itself, below its entity range
+        # (e.g. "Max temperature" 25 on a Tuya TRV whose entity goes to 35):
+        # {entity: {"max" | "min": (value in its unit, when learned)}}.
+        self._device_limits: dict[str, dict[str, tuple[float, datetime]]] = {}
 
     # ------------------------------------------------------------------
     # Setup
@@ -582,13 +588,19 @@ class Room:
         return maximum
 
     def device_max_temp(self) -> float | None:
-        """Highest temperature the thermostats accept (valve exercise)."""
+        """Highest temperature the thermostats accept (valve exercise, boost).
+
+        Their entity range, or the lower maximum a device showed it applies.
+        """
         values = [
             v
             for entity_id in self.climates
             if (v := climate_temp(self.hass, self.hass.states.get(entity_id), "max_temp"))
             is not None
         ]
+        learned = self._learned_max()
+        if learned is not None:
+            values.append(learned)
         return min(values) if values else None
 
     # ------------------------------------------------------------------
@@ -603,7 +615,9 @@ class Room:
         now = dt_util.utcnow()
         if entity_id in self.climates:
             self._remember_preset_temp(new)
-            if self._is_manual_change(event, old, new):
+            if self._check_device_limit(entity_id, old, new):
+                pass  # its own limit, not a person
+            elif self._is_manual_change(event, old, new):
                 self._handle_manual_change(entity_id, new)
             else:
                 self._confirm_sent(entity_id, new)
@@ -1720,6 +1734,16 @@ class Room:
             value = min(value, device_max)
         return max(value, temperature)
 
+    def _learned_max(self) -> float | None:
+        """Lowest maximum learned from the thermostats of the room (°C)."""
+        unit = system_unit(self.hass)
+        values = [
+            float(to_celsius(v, unit))
+            for eid in self.climates
+            if (v := self._device_limit(eid, "max")) is not None
+        ]
+        return min(values) if values else None
+
     def _target_temperature_of(self, target: Target) -> float | None:
         """Temperature of a target, before the boost."""
         if target.kind == KIND_TEMPERATURE:
@@ -1928,7 +1952,78 @@ class Room:
             maximum = float(from_celsius(self.max_temp(), unit))
             if value <= maximum + 1e-9 < round(value / step) * step:
                 value = round(math.floor(maximum / step + 1e-9) * step, 2)
+        # The limits the device applies by itself: sent within them, so what it
+        # reports is what was sent (not a manual change).
+        high = self._device_limit(state.entity_id, "max")
+        low = self._device_limit(state.entity_id, "min")
+        if high is not None:
+            value = min(value, high)
+        if low is not None:
+            value = max(value, low)
         return value
+
+    def _device_limit(self, entity_id: str, kind: str) -> float | None:
+        """A limit learned from the device (its unit); forgotten after a day, to see a new setting."""
+        limit = self._device_limits.get(entity_id, {}).get(kind)
+        if limit is None:
+            return None
+        value, learned = limit
+        if dt_util.utcnow() - learned > DEVICE_LIMIT_KEEP:
+            self._device_limits[entity_id].pop(kind, None)
+            self.house.clear_alert(f"limit_{entity_id}_{kind}")
+            return None
+        return value
+
+    def _check_device_limit(self, entity_id: str, old: State | None, new: State | None) -> bool:
+        """True when a thermostat reports its own limit instead of the value sent.
+
+        After a boost or the valve exercise (a value above the target) it may
+        report less, but at least the target: that is its own maximum. After
+        frost protection or off (a value below every level) it may report more,
+        but below the lowest level: that is its own minimum. Neither is a
+        manual change; the limit is kept for the next commands and told.
+        """
+        if old is None or new is None or not valid(new) or new.state == STATE_OFF:
+            return False
+        sent = (self._sent.get(entity_id) or {}).get(ATTR_TEMPERATURE)
+        reported = float_attr(new, ATTR_TEMPERATURE)
+        if sent is None or reported is None or reported == float_attr(old, ATTR_TEMPERATURE):
+            return False
+        try:
+            sent = float(sent)
+        except (TypeError, ValueError):
+            return False
+        unit = system_unit(self.hass)
+        step = float_attr(new, "target_temp_step")
+        margin = step / 2 + 0.01 if step else 0.05
+        base = self._target_temperature_of(self.decision.target) if self.decision else None
+        kind = None
+        if reported < sent - margin:
+            target = None if base is None else float(from_celsius(base, unit))
+            if self._exercise_until is not None or (
+                target is not None and sent > target + margin and reported >= target - margin
+            ):
+                kind = "max"
+        elif reported > sent + margin:
+            levels = [self.level_temp(p) for p in PRESETS]
+            lowest = min((v for v in levels if v is not None), default=None)
+            if lowest is not None and reported < float(from_celsius(lowest, unit)) - margin:
+                kind = "min"
+        if kind is None:
+            return False
+        self._device_limits.setdefault(entity_id, {})[kind] = (reported, dt_util.utcnow())
+        self._sent.setdefault(entity_id, {})[ATTR_TEMPERATURE] = reported
+        shown = f"{reported:g} {unit}"
+        self.house.notify(
+            f"limit_{entity_id}_{kind}",
+            f"{self.name}: {entity_id} accepts at {'most' if kind == 'max' else 'least'} {shown}; "
+            f"{'raise its Max temperature' if kind == 'max' else 'lower its Min temperature'} "
+            "on the device if the room needs more.",
+            code=f"device_limit_{kind}",
+            params={"entity": entity_id, "value": shown},
+            room=self.id,
+        )
+        return True
 
     async def _send(
         self, entity_id: str, service: str, key: str, value: Any, field: str | None = None

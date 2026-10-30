@@ -39,6 +39,14 @@ minute fiecare) protejează centrala de porniri și opriri dese. Se respectă ș
 peste o repornire a Home Assistant. Când un timp minim se termină, integrarea
 verifică imediat din nou.
 
+**TRV-uri pe toate caloriferele.** Când ultima cameră nu mai cere căldură (a
+ajuns la țintă), TRV-urile ei primesc ținta și se închid, dar sursa de căldură
+merge până la capătul timpului minim pornită. Integrarea nu ține un TRV deschis
+pentru asta: ar încălzi camera peste țintă. Instalația însăși trebuie să lase apa
+să circule, ca și cu TRV-uri mecanice obișnuite: un bypass automat, o centrală cu
+bypass intern sau un calorifer fără TRV (de obicei în baie). Fără așa ceva, se
+micșorează *Timp minim pornită*.
+
 **În pauză** integrarea nu comandă sursa, cu o singură excepție: o pornește
 pentru antiîngheț și o oprește din nou când nu mai e nevoie (și după o
 repornire în timpul pauzei).

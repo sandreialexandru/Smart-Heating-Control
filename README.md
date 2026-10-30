@@ -1,4 +1,4 @@
-<img src="custom_components/advanced_climate/brand/icon@2x.png" alt="Smart Heating Control" width="128" align="right">
+<img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/custom_components/advanced_climate/brand/icon@2x.png" alt="Smart Heating Control" width="128" align="right">
 
 # Smart Heating Control
 
@@ -17,7 +17,7 @@ names (`home`, `sleep`, `eco`, `away`, `comfort`, `activity`) and only selects
 the right one; your thermostat keeps working exactly as before. Rooms with TRVs,
 other thermostats or plain relays are supported as well.
 
-<p align="center"><img src="docs/images/card-hero.png" alt="The card: the house with its people, mode and buttons, an open room with its temperature arc, and the other rooms folded" width="420"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-hero.png" alt="The card: the house with its people, mode and buttons, an open room with its temperature arc, and the other rooms folded" width="420"></p>
 
 ## Features
 
@@ -386,9 +386,9 @@ its decision (`room`, `old_rule`, `rule`, `old_target`, `target`, `reason`).
 ## Lovelace card
 
 <p align="center">
-  <img src="docs/images/card-room-chart.png" alt="An open room with its chart: the temperature, the target, the heating and the outdoor temperature" width="270">
-  <img src="docs/images/card-room-light.png" alt="A room with a manual change, the Set for a while section open, light theme" width="270">
-  <img src="docs/images/card-compact.png" alt="Compact card: one tile per room" width="270">
+  <img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-room-chart.png" alt="An open room with its chart: the temperature, the target, the heating and the outdoor temperature" width="270">
+  <img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-room-light.png" alt="A room with a manual change, the Set for a while section open, light theme" width="270">
+  <img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-compact.png" alt="Compact card: one tile per room" width="270">
 </p>
 
 *The pictures use invented data.*

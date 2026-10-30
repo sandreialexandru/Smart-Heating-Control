@@ -1,4 +1,4 @@
-<img src="custom_components/advanced_climate/brand/icon@2x.png" alt="Smart Heating Control" width="128" align="right">
+<img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/custom_components/advanced_climate/brand/icon@2x.png" alt="Smart Heating Control" width="128" align="right">
 
 # Smart Heating Control
 
@@ -17,7 +17,7 @@ aceleași nume de preseturi (`home`, `sleep`, `eco`, `away`, `comfort`,
 `activity`) și doar îl alege pe cel potrivit; termostatul funcționează exact ca
 înainte. Sunt acceptate și camere cu TRV-uri, alte termostate sau relee simple.
 
-<p align="center"><img src="docs/images/card-hero.png" alt="Cardul: casa cu persoanele, modul și butoanele, o cameră deschisă cu arcul temperaturii și celelalte camere pliate" width="420"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-hero.png" alt="Cardul: casa cu persoanele, modul și butoanele, o cameră deschisă cu arcul temperaturii și celelalte camere pliate" width="420"></p>
 
 Numele setărilor și ale entităților sunt date mai jos în română, ca în
 interfața Home Assistant în română.
@@ -406,9 +406,9 @@ cameră își schimbă decizia (`room`, `old_rule`, `rule`, `old_target`, `targe
 ## Cardul Lovelace
 
 <p align="center">
-  <img src="docs/images/card-room-chart.png" alt="O cameră deschisă cu graficul: temperatura, ținta, încălzirea și temperatura de afară" width="270">
-  <img src="docs/images/card-room-light.png" alt="O cameră cu modificare manuală și secțiunea Setează temporar deschisă, temă deschisă" width="270">
-  <img src="docs/images/card-compact.png" alt="Cardul compact: o placă pe cameră" width="270">
+  <img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-room-chart.png" alt="O cameră deschisă cu graficul: temperatura, ținta, încălzirea și temperatura de afară" width="270">
+  <img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-room-light.png" alt="O cameră cu modificare manuală și secțiunea Setează temporar deschisă, temă deschisă" width="270">
+  <img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-compact.png" alt="Cardul compact: o placă pe cameră" width="270">
 </p>
 
 *Pozele folosesc date inventate; cardul e în limba Home Assistant (aici engleză).*

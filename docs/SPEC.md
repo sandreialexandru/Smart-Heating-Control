@@ -202,7 +202,7 @@ One select for the house: **Auto / Vacation / Off / Summer**.
 | Option | Default | Description |
 | --- | --- | --- |
 | Hysteresis | 0.3 °C | Relays, on / off control and thermostats without `hvac_action` (not with GT, which has its own tolerances) |
-| Minimum on / off time | 5 / 5 min | Relays only (not with GT); counted from the last switch, also one made by hand; the room is evaluated again when it ends (also for the heat source of the house); inside the hysteresis band the relay keeps its real state; a manual value set again after a window also waits for it |
+| Minimum on / off time | 5 / 5 min | Relays only (not with GT); counted from the last switch, also one made by hand; the room is evaluated again when it ends (also for the heat source of the house, whose own minimum on / off time is 0 / 0 min by default); inside the hysteresis band the relay keeps its real state; a manual value set again after a window also waits for it |
 | Dynamic tariff | off | Lower by X °C above a price, preheat below a price |
 | PV surplus | off | Raise by X °C with surplus |
 | Statistics | on | Heating hours per room and for the house |

@@ -5,6 +5,15 @@ release (and of each beta pre-release) are taken from here: a beta shows the
 *Unreleased* section, a release its own section. Older versions: see the
 GitHub releases.
 
+## Unreleased
+
+### Integration
+
+- The heat source minimum on / off time is 0 by default (no wait): the heat
+  source follows the heat demand at once, so it stops as soon as the last room
+  reached its target. A house that saved its own values keeps them; a larger
+  value still protects a boiler without its own anti-cycling.
+
 ## 2.4.2 – 2026-10-30
 
 ### Integration

@@ -707,16 +707,44 @@ async def test_frost_protection_starts_the_heat_source(
     await hass.async_block_till_done()
 
 
+async def test_heat_source_without_minimum_times_by_default(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """By default the heat source has no minimum on / off time: it follows the demand at once."""
+    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 18.0, "temperature": 21.0}
+    hass.states.async_set("climate.trv", "heat", {**trv, "hvac_action": "heating"})
+    entry = await _trv_house(hass, freezer)
+    house = entry.runtime_data
+    assert house.options["boiler_min_on"] == 0
+    assert house.options["boiler_min_off"] == 0
+    await _tick(hass, freezer, 15)
+    assert hass.states.get("input_boolean.boiler").state == "on"
+    # The room reaches its target a few seconds later: the heat source stops at once.
+    hass.states.async_set(
+        "climate.trv", "heat", {**trv, "current_temperature": 21.0, "hvac_action": "idle"}
+    )
+    await _tick(hass, freezer, 5)
+    assert hass.states.get("input_boolean.boiler").state == "off"
+    assert house.source_waiting is None
+    # And it starts again at once.
+    hass.states.async_set("climate.trv", "heat", {**trv, "hvac_action": "heating"})
+    await _tick(hass, freezer, 5)
+    assert hass.states.get("input_boolean.boiler").state == "on"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_frost_start_in_a_pause_survives_a_restart(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """A heat source started for frost protection in a pause is stopped after a restart.
 
-    The minimum on time (5 min by default) also holds across the restart.
+    The minimum on time (5 min chosen here; 0 by default) also holds across the restart.
     """
     cold = {"hvac_modes": ["heat", "off"], "current_temperature": 5.0, "temperature": 7.0}
     hass.states.async_set("climate.trv", "heat", {**cold, "hvac_action": "heating"})
-    entry = await _trv_house(hass, freezer)
+    entry = await _trv_house(hass, freezer, boiler_min_on=5, boiler_min_off=5)
     await hass.services.async_call("switch", "turn_on", {"entity_id": "switch.home_pause"}, blocking=True)
     await _tick(hass, freezer, 15)
     assert hass.states.get("input_boolean.boiler").state == "on"

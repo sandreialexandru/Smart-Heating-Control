@@ -220,7 +220,7 @@ Al doilea formular, doar cu o sursă de căldură:
 | Setare | Implicit | Ce face |
 | --- | --- | --- |
 | Camere necesare pentru pornirea sursei | 1 | Câte camere trebuie să ceară căldură ca să pornească sursa. Cel mult numărul de camere ale casei; dacă mai târziu se șterg camere și rămân mai puține, apare o alertă. |
-| Timp minim pornită / oprită | 5 / 5 min | Protecție contra pornirilor dese. |
+| Timp minim pornită / oprită | 0 / 0 min | 0 = sursa urmează imediat cererea de căldură. O valoare mai mare protejează de cicluri scurte o centrală fără protecție proprie. |
 | Cameră de referință | – | Doar această cameră decide când merge sursa; celelalte doar își deschid sau închid robinetele. |
 
 Detalii: [capitolul 8](08-sursa-si-energie.ro.md).

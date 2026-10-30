@@ -45,7 +45,7 @@ dormitor, sufragerie și birou, senzori de fereastră.
    releul Shelly al centralei; *Camere necesare* 1.
 
 Acum, când un TRV cere căldură, integrarea pornește centrala; când nu mai cere
-niciunul, o oprește (cu timpii minimi de 5 minute).
+niciunul, o oprește.
 
 ### C. Încălzire electrică cu prize smart și fotovoltaic
 

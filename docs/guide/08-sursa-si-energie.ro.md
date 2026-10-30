@@ -34,18 +34,20 @@ nu are `heat`) și oprit cu `off`.
 
 **Oprește** sursa când nu mai e îndeplinită condiția.
 
-**Timpii minimi**: *Timp minim pornită* și *Timp minim oprită* (implicit 5
-minute fiecare) protejează centrala de porniri și opriri dese. Se respectă și
-peste o repornire a Home Assistant. Când un timp minim se termină, integrarea
-verifică imediat din nou.
+**Timpii minimi**: *Timp minim pornită* și *Timp minim oprită* (implicit 0,
+adică fără așteptare: sursa urmează imediat cererea de căldură). Cu o valoare
+mai mare protejează centrala de porniri și opriri dese, pentru centralele fără
+protecție proprie la cicluri scurte. Se respectă și peste o repornire a Home
+Assistant. Când un timp minim se termină, integrarea verifică imediat din nou.
 
 **TRV-uri pe toate caloriferele.** Când ultima cameră nu mai cere căldură (a
 ajuns la țintă), TRV-urile ei primesc ținta și se închid, dar sursa de căldură
-merge până la capătul timpului minim pornită. Integrarea nu ține un TRV deschis
+merge până la capătul timpului minim pornită, dacă e setat unul. Integrarea nu ține un TRV deschis
 pentru asta: ar încălzi camera peste țintă. Instalația însăși trebuie să lase apa
 să circule, ca și cu TRV-uri mecanice obișnuite: un bypass automat, o centrală cu
 bypass intern sau un calorifer fără TRV (de obicei în baie). Fără așa ceva, se
-micșorează *Timp minim pornită*.
+alege un *Timp minim pornită* mic sau 0 (implicit), ca sursa să se oprească
+imediat ce nu mai cere nicio cameră.
 
 **În pauză** integrarea nu comandă sursa, cu o singură excepție: o pornește
 pentru antiîngheț și o oprește din nou când nu mai e nevoie (și după o

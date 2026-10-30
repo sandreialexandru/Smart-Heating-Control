@@ -219,7 +219,7 @@ The second form, only with a heat source:
 | Setting | Default | What it does |
 | --- | --- | --- |
 | Rooms needed to start the heat source | 1 | How many rooms must ask for heat to start it. At most the number of rooms of the house; if rooms are removed later and fewer remain, you get an alert. |
-| Heat source minimum on / off time | 5 / 5 min | Against short cycles. |
+| Heat source minimum on / off time | 0 / 0 min | 0 = the source follows the heat demand at once. A larger value protects a boiler without its own anti-cycling from short cycles. |
 | Reference room | – | Only this room decides when the source runs; the others only open or close their valves. |
 
 Details: [chapter 8](08-heat-source-and-energy.md).

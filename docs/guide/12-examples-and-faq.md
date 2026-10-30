@@ -45,7 +45,7 @@ in the bedroom, the living room and the office, window sensors.
    the boiler; *Rooms needed* 1.
 
 Now, when a TRV asks for heat, the integration starts the boiler; when none asks
-any more, it stops it (with the 5-minute minimum times).
+any more, it stops it.
 
 ### C. Electric heating with smart plugs and PV
 

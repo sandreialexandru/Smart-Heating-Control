@@ -177,6 +177,7 @@ the integration takes control again.
 | Option | Default | Description |
 | --- | --- | --- |
 | Detection | on | Changes made by the integration are told apart by their context, or because the device only reports the values the integration sent (also the values sent in the last 5 minutes and the temperature or preset shown before each command, until the device has shown the last value for 1 minute: an older value reported late, or once more after the new one, is recognised too) |
+| TRV limits | learned | A TRV that holds less than a boost / the valve exercise sent (at least the target) or more than frost protection / off sent (below the lowest level) holds its own Max / Min temperature: not a manual change, the next commands stay within it, alert, kept 24 h (not over a restart or reload). Learned only within 5 minutes of the command and only while the TRV has not shown the value sent; after that a different value is a manual change |
 | Duration | configurable, universal | One rule for every manual change, including turning GT off: **fixed duration** (X hours) or **until the next reevaluation** triggered by a change (slot, presence, window, mode). The periodic check does not end it |
 | Scope | room | Whole house only when rooms have their own valves |
 | Pause | – | Switch: no commands at all, no TRV calibration (frost protection and the maximum temperature still apply) |

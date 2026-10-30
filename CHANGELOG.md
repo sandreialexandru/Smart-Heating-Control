@@ -5,6 +5,17 @@ release (and of each beta pre-release) are taken from here: a beta shows the
 *Unreleased* section, a release its own section. Older versions: see the
 GitHub releases.
 
+## Unreleased
+
+### Integration
+
+- A person who turns a TRV down during a boost (after the TRV showed the boost
+  value) is a manual change again, not the TRV's own maximum: no false alert,
+  and the next boosts are no longer cut to that value for a day. The same for
+  turning it up a little during frost protection. A limit is learned only
+  within 5 minutes of the command and only while the TRV has not shown the value
+  sent.
+
 ## 2.4.1 – 2026-10-30
 
 ### Card

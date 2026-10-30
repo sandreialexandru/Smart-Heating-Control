@@ -181,6 +181,7 @@ definit; apoi integrarea preia din nou controlul.
 | Opțiune | Implicit | Descriere |
 | --- | --- | --- |
 | Detectare | activă | Schimbările făcute de integrare se recunosc după context, sau pentru că dispozitivul doar raportează valorile trimise de integrare (și valorile trimise în ultimele 5 minute și temperatura sau presetul arătate înainte de fiecare comandă, până când dispozitivul arată ultima valoare de 1 minut: o valoare veche raportată târziu, sau încă o dată după cea nouă, e recunoscută și ea) |
+| Limitele TRV | învățate | Un TRV care ține mai puțin decât a trimis forțarea / mișcarea robinetelor (cel puțin ținta) sau mai mult decât a trimis antiînghețul / oprirea (sub cel mai jos nivel) își ține propriile Max / Min temperature: nu e modificare manuală, comenzile următoare rămân în ele, alertă, păstrate 24 h (nu peste o repornire sau reîncărcare). Se învață doar în 5 minute de la comandă și doar cât TRV-ul nu a arătat valoarea trimisă; după aceea o altă valoare e modificare manuală |
 | Durată | configurabilă, universală | O singură regulă pentru orice modificare manuală, inclusiv oprirea GT: **durată fixă** (X ore) sau **până la următoarea reevaluare** declanșată de o schimbare (interval, prezență, fereastră, mod). Verificarea periodică nu o încheie |
 | Domeniu | cameră | Toată casa doar când camerele au robinete proprii |
 | Pauză | – | Comutator: nicio comandă, fără calibrarea TRV (antiînghețul și temperatura maximă se aplică în continuare) |

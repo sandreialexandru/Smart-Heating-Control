@@ -2007,12 +2007,22 @@ class Room:
             sent = float(sent)
         except (TypeError, ValueError):
             return False
+        # A TRV that has shown the value sent accepted it: any other value after
+        # that is a person's, not its limit.
+        if ATTR_TEMPERATURE in self._sent_confirmed.get(entity_id, {}):
+            return False
         # A value sent before, reported now (late, or once more after the new one),
         # is an echo, not a limit. (At the check, the TRV has held what it shows
         # since before the command was sent again.)
         step0 = float_attr(new, "target_temp_step")
         margin0 = step0 / 2 + 0.01 if step0 else 0.05
         now = dt_util.utcnow()
+        sent_at = [
+            at for at, key, _v in self._sent_recent.get(entity_id, []) if key == ATTR_TEMPERATURE
+        ]
+        # Only right after the command: a TRV holds its limit when it gets it.
+        if not sent_at or now - max(sent_at) > SENT_RECENT:
+            return False
         earlier = [
             v
             for at, key, v in self._sent_recent.get(entity_id, [])

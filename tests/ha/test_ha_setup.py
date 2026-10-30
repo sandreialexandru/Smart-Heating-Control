@@ -2090,6 +2090,69 @@ async def test_trv_limit_is_not_a_manual_change(
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize("after", [30, 10 * 60, 60 * 60])
+async def test_lower_value_after_an_accepted_boost_is_a_manual_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, after: int
+) -> None:
+    """The TRV showed the boost (28), then a person turns it to 23: a manual change.
+
+    It accepted 28, so 23 is not its maximum: no limit is learned, no alert.
+    Tried 30 seconds, 10 minutes and 1 hour after the TRV showed 28.
+    """
+    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 23.0, "temperature": 21.0,
+           "max_temp": 35.0, "target_temp_step": 0.5}
+    hass.states.async_set("climate.trv", "heat", trv)
+    hass.states.async_set("sensor.office_temp", "20.9", {"unit_of_measurement": "°C"})
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    entry = await _boost_house(hass, freezer, {"trv_boost_temperature": 28}, max_temp=30)
+    room = next(iter(entry.runtime_data.rooms.values()))
+    await _tick(hass, freezer, 15)
+    await _room_temp(hass, freezer, 20.8)
+    assert calls[-1].data["temperature"] == 28.0
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 28.0}, context=Context())
+    await _tick(hass, freezer, after)
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 23.0}, context=Context())
+    await _tick(hass, freezer, 5)
+    assert hass.states.get("binary_sensor.office_manual_change").state == "on"
+    assert not any(a["code"] == "device_limit_max" for a in room.house.alerts_for(room))
+    assert room._device_limits.get("climate.trv", {}).get("max") is None
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_higher_value_after_accepted_frost_is_a_manual_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Mode Off sends frost protection (7), the TRV shows it, then a person sets 10.
+
+    10 is below the lowest level (away, 12 by default), but the TRV accepted 7:
+    a manual change, not its minimum.
+    """
+    trv = {"hvac_modes": ["heat"], "current_temperature": 21.0, "temperature": 21.0,
+           "max_temp": 35.0, "min_temp": 5.0, "target_temp_step": 0.5}
+    hass.states.async_set("climate.trv", "heat", trv)
+    hass.states.async_set("sensor.office_temp", "21.5", {"unit_of_measurement": "°C"})
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    entry = await _boost_house(hass, freezer, {})
+    room = next(iter(entry.runtime_data.rooms.values()))
+    await hass.services.async_call(
+        "select", "select_option", {"entity_id": "select.home_mode", "option": "off"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert calls[-1].data["temperature"] == 7.0
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 7.0}, context=Context())
+    await _tick(hass, freezer, 60)
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 10.0}, context=Context())
+    await _tick(hass, freezer, 5)
+    assert not any(a["code"] == "device_limit_min" for a in room.house.alerts_for(room))
+    assert room._device_limits.get("climate.trv", {}).get("min") is None
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_trv_already_at_its_limit_is_learned_without_a_report(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:

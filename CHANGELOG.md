@@ -9,10 +9,11 @@ GitHub releases.
 
 ### Integration
 
-- The heat source minimum on / off time is 0 by default (no wait): the heat
-  source follows the heat demand at once, so it stops as soon as the last room
-  reached its target. A house that saved its own values keeps them; a larger
-  value still protects a boiler without its own anti-cycling.
+- The minimum on / off times are 0 by default (no wait), for the heat source
+  and for the relays of the rooms: the heat follows the demand at once, so the
+  heat source stops as soon as the last room reached its target. Houses and
+  rooms that saved their own values keep them; a few minutes still protect a
+  boiler without its own anti-cycling or spare a mechanical relay.
 
 ## 2.4.2 – 2026-10-30
 

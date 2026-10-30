@@ -82,9 +82,10 @@ cameră și folosește toate opțiunile casei.
     histerezis și se oprește peste țintă plus histerezis. Exemplu cu ținta
     aleasă 21 °C: pornește la 21 − 0,3 = 20,7 °C și se oprește la
     21 + 0,3 = 21,3 °C.
-  - *Timp minim pornit* și *Timp minim oprit* (implicit 5 minute fiecare):
-    protejează centrala sau releul de porniri și opriri prea dese. 0 pentru
-    radiatoare electrice cărora nu le pasă.
+  - *Timp minim pornit* și *Timp minim oprit* (implicit 0, fără așteptare): se
+    setează (de exemplu câteva minute) când releul pornește o centrală fără
+    protecție proprie la cicluri scurte sau ca să fie cruțat un releu mecanic;
+    0 e potrivit pentru radiatoarele electrice.
 - **Termostat** (alte termostate comandate prin *Temperatură* sau *Preset*):
   - *Toleranța termostatului* (implicit 0): cât lasă termostatul camera să
     coboare sub țintă înainte să încălzească. Contează pentru învățare

@@ -61,8 +61,8 @@ camere care trimit comenzi opuse aceluiași dispozitiv s-ar contrazice. Senzorii
 | Câmp | Implicit | Ce face |
 | --- | --- | --- |
 | Histerezis | 0,3 °C (0,1 – 3) | Pornește sub țintă − histerezis, oprește peste țintă + histerezis. Cu ținta aleasă 21 °C: pornește la 20,7 °C, oprește la 21,3 °C. |
-| Timp minim pornit | 5 min (0 – 60) | Cel mai scurt timp cât rămâne pornit. 0 pentru radiatoare cărora nu le strică ciclurile scurte. |
-| Timp minim oprit | 5 min (0 – 60) | Cea mai scurtă pauză între două porniri. |
+| Timp minim pornit | 0 min (0 – 60) | Cel mai scurt timp cât rămâne pornit. 0 = fără așteptare. Câteva minute pentru un releu care pornește o centrală fără protecție proprie la cicluri scurte sau ca să fie cruțat un releu mecanic. |
+| Timp minim oprit | 0 min (0 – 60) | Cea mai scurtă pauză între două porniri. 0 = fără așteptare. |
 
 Timpul minim se numără de la ultima comutare, **și de la una făcută de mână**.
 Când se termină, camera e verificată din nou imediat. În banda de histerezis
@@ -280,8 +280,8 @@ Cu TRV-uri, centrala trebuie să știe când să pornească: la opțiunile casei
 
 1. *Încălzită prin* Comutator (releu).
 2. *Dispozitive*: `switch.priza_baie`.
-3. *Comandă pornit / oprit*: histerezis 0,3 °C, timpi minimi 0 (un radiator
-   electric nu are nevoie de ei).
+3. *Comandă pornit / oprit*: histerezis 0,3 °C, timpi minimi 0 (implicit; un
+   radiator electric nu are nevoie de ei).
 4. *Niveluri*: de exemplu `home` 23 °C.
 5. *Senzori*: senzorul de temperatură al băii (obligatoriu).
 

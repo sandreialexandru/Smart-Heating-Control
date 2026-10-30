@@ -81,9 +81,9 @@ uses every option of the house.
     hysteresis and stops above target plus hysteresis. Example with a chosen
     target of 21 °C: it starts at 21 − 0.3 = 20.7 °C and stops at
     21 + 0.3 = 21.3 °C.
-  - *Minimum on time* and *Minimum off time* (5 minutes each by default):
-    protect the boiler or relay from switching too often. 0 for electric
-    heaters that do not mind.
+  - *Minimum on time* and *Minimum off time* (0 by default, no wait): set
+    them (e.g. a few minutes) when the relay starts a boiler without its own
+    anti-cycling, or to spare a mechanical relay; 0 suits electric heaters.
 - **Thermostat** (other thermostats commanded by *Temperature* or *Preset*):
   - *Thermostat tolerance* (0 by default): how far below the target the
     thermostat lets the room fall before heating. Matters for the learning

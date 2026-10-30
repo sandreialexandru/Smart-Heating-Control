@@ -60,8 +60,8 @@ fight. Sensors (temperature, window, occupancy) may be shared by several rooms.
 | Field | Default | What it does |
 | --- | --- | --- |
 | Hysteresis | 0.3 °C (0.1 – 3) | Starts below target − hysteresis, stops above target + hysteresis. With a chosen target of 21 °C: starts at 20.7 °C, stops at 21.3 °C. |
-| Minimum on time | 5 min (0 – 60) | The shortest time it stays on. 0 for heaters that do not mind short cycles. |
-| Minimum off time | 5 min (0 – 60) | The shortest pause between two starts. |
+| Minimum on time | 0 min (0 – 60) | The shortest time it stays on. 0 = no wait. Set a few minutes for a relay that starts a boiler without its own anti-cycling, or to spare a mechanical relay. |
+| Minimum off time | 0 min (0 – 60) | The shortest pause between two starts. 0 = no wait. |
 
 The minimum time counts from the last switch, **also one made by hand**. When it
 ends, the room is checked again at once. Inside the hysteresis band (in the
@@ -273,8 +273,8 @@ source*, pick the boiler or its relay (see
 
 1. *Heated by* Switch (relay).
 2. *Devices*: `switch.bathroom_plug`.
-3. *On / off control*: hysteresis 0.3 °C, minimum times 0 (an electric heater
-   does not need them).
+3. *On / off control*: hysteresis 0.3 °C, minimum times 0 (the default; an
+   electric heater does not need them).
 4. *Levels*: e.g. `home` 23 °C.
 5. *Sensors*: the bathroom temperature sensor (required).
 

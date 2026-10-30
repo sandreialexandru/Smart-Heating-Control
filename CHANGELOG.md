@@ -7,6 +7,11 @@ GitHub releases.
 
 ## Unreleased
 
+### Card
+
+- The room buttons wrap into even rows (one row up to five buttons) instead of
+  breaking their words when there are six.
+
 ### Integration
 
 - Guest mode wins over every vacation (the vacation mode, the dates or the

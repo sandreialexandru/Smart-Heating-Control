@@ -1318,7 +1318,9 @@ class SmartHeatingControlCard extends HTMLElement {
       .filter(([k]) => open(k))
       .map(([, , , html]) => html())
       .join("");
-    return `<div class="sbtns" style="--n:${count}">${buttons}</div>${bodies}`;
+    // One row up to 5 buttons, else two even rows (no button left alone on a row).
+    const cols = count <= 5 ? count : Math.ceil(count / 2);
+    return `<div class="sbtns" style="--cols:${cols}">${buttons}</div>${bodies}`;
   }
 
   /** House block: presence, outdoor, mode, pause, guests, vacation and buttons. */
@@ -3852,12 +3854,12 @@ const STYLE = `
   .tbar i { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--c) 80%, transparent); }
   .tbar b { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--primary-text-color); }
   .tticks { display: flex; justify-content: space-between; font-size: 0.68em; color: var(--ac-muted); }
-  .sbtns { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 8px; }
+  .sbtns { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 8px; }
   @media (max-width: 420px) { .sbtns { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   .sbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 56px; padding: 6px 4px; border-radius: 12px;
     border: 1px solid var(--ac-line); background: var(--card-background-color); color: var(--primary-text-color); font: inherit;
     font-size: 0.85em; font-weight: 500; cursor: pointer; min-width: 0; transition: background .15s, border-color .15s; }
-  .sbtn span { text-align: center; line-height: 1.2; overflow-wrap: anywhere; }
+  .sbtn span { text-align: center; line-height: 1.2; overflow-wrap: break-word; hyphens: auto; }
   .sbtn ha-icon { --mdc-icon-size: 20px; flex: none; }
   .sbtn.back { border-color: var(--ac-accent); background: color-mix(in srgb, var(--ac-accent) 16%, var(--card-background-color)); }
   .sbtn.back ha-icon { color: var(--ac-accent); }

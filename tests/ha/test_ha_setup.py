@@ -2136,6 +2136,7 @@ async def test_higher_value_after_accepted_frost_is_a_manual_change(
     calls = async_mock_service(hass, "climate", "set_temperature")
     entry = await _boost_house(hass, freezer, {})
     room = next(iter(entry.runtime_data.rooms.values()))
+    await _tick(hass, freezer, 15)
     await hass.services.async_call(
         "select", "select_option", {"entity_id": "select.home_mode", "option": "off"},
         blocking=True,

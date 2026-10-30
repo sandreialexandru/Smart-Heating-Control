@@ -100,8 +100,10 @@ from .const import (
     GT_DOMAIN,
     GT_PRESET_KEYS,
     MAX_DECISION_LOG,
+    MODE_AUTO,
     MODE_OFF,
     MODE_SUMMER,
+    MODE_VACATION,
     OVERRIDE_FIXED,
     OVERRIDE_NEXT,
     PRESET_FROST,
@@ -1340,7 +1342,8 @@ class Room:
 
         inputs = RoomInputs(
             now=now,
-            mode=house.mode,
+            # Guests win over the vacation mode too: the rooms follow the schedule.
+            mode=MODE_AUTO if house.mode == MODE_VACATION and house.guest else house.mode,
             paused=house.paused,
             season_active=house.season_active,
             cutoff_active=house.cutoff_active,

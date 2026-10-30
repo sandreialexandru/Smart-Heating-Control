@@ -673,7 +673,22 @@ class House:
         return resume if resume is not None and resume > now else None
 
     def vacation_active(self, now: datetime | None = None) -> bool:
-        """Return True when the vacation level applies."""
+        """Return True when the vacation level applies.
+
+        Guest mode wins over every vacation (planned, automatic or the mode):
+        while it is on the rooms follow the schedule; the vacation goes on
+        when it is turned off.
+        """
+        if self.guest:
+            return False
+        return self._vacation_set(now)
+
+    def vacation_suspended(self, now: datetime | None = None) -> bool:
+        """A vacation would apply, but guest mode is on."""
+        return self.guest and self._vacation_set(now)
+
+    def _vacation_set(self, now: datetime | None = None) -> bool:
+        """A vacation applies (mode, automatic or planned), guests aside."""
         now = now or dt_util.utcnow()
         if self.mode == MODE_VACATION:
             return True

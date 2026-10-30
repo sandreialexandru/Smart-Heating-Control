@@ -1963,3 +1963,48 @@ async def test_turned_off_by_hand_right_after_on_is_manual(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_guests_suspend_every_vacation(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A planned vacation and the vacation mode wait while guest mode is on."""
+    entry = await _setup(hass, freezer)
+    await _tick(hass, freezer, 15)
+    end = dt_util.now() + timedelta(days=3)
+    await hass.services.async_call(DOMAIN, "set_vacation", {"end": end}, blocking=True)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.bedroom_decision").state == "vacation"
+
+    async def guests(on: bool) -> None:
+        await hass.services.async_call(
+            "switch", "turn_on" if on else "turn_off", {"entity_id": "switch.home_guest_mode"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    # Guests: the schedule (home at noon); the vacation waits.
+    await guests(True)
+    assert hass.states.get("sensor.bedroom_decision").state == "schedule"
+    presence = hass.states.get("sensor.home_presence").attributes
+    assert presence["vacation_active"] is False
+    assert presence["vacation_suspended"] is True
+    # Guests gone: the vacation goes on, with its dates.
+    await guests(False)
+    assert hass.states.get("sensor.bedroom_decision").state == "vacation"
+
+    # The same with the vacation mode.
+    await hass.services.async_call(DOMAIN, "set_vacation", {}, blocking=True)
+    await hass.services.async_call(
+        "select", "select_option", {"entity_id": "select.home_mode", "option": "vacation"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.bedroom_decision").state == "vacation"
+    await guests(True)
+    assert hass.states.get("sensor.bedroom_decision").state == "schedule"
+    await guests(False)
+    assert hass.states.get("sensor.bedroom_decision").state == "vacation"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

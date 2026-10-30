@@ -332,6 +332,7 @@ const TEXT = {
     off_pv_surplus: "solar surplus",
     off_solar_gain: "solar gain",
     guests_banner: "Guest mode: the house counts as Home even if none of the people is home",
+    guests_banner_vacation: "Guest mode: the vacation is suspended, the rooms follow the schedule",
     guests_chip: "Guest mode on: the house counts as Home",
     asks_heat: "Asks for heat",
     auto_short: "Automatic",
@@ -569,6 +570,7 @@ const TEXT = {
     off_pv_surplus: "surplus solar",
     off_solar_gain: "câștig solar",
     guests_banner: "Mod oaspeți: casa e considerată Acasă chiar dacă nu e acasă nimeni dintre persoane",
+    guests_banner_vacation: "Mod oaspeți: vacanța e suspendată, camerele urmează programul",
     guests_chip: "Mod oaspeți pornit: casa e considerată Acasă",
     asks_heat: "Cere căldură",
     auto_short: "Automat",
@@ -1511,8 +1513,10 @@ class SmartHeatingControlCard extends HTMLElement {
     if (guest?.state !== "on") return "";
     const name = this._houses().length > 1 && house.name ? `${house.name}: ` : "";
     const until = guest.attributes?.until ? ` (${this._t("until")} ${this._fmtTime(guest.attributes.until)})` : "";
+    // While a vacation waits for the guests, the band says so.
+    const suspended = this._state(house.entities?.presence)?.attributes?.vacation_suspended;
     return `<div class="banner teal link" ${this._more(house.entities.guest_mode)}>${this._icon("account-group-outline")}<span>${esc(
-      name + this._t("guests_banner") + until
+      name + this._t(suspended ? "guests_banner_vacation" : "guests_banner") + until
     )}</span></div>`;
   }
 

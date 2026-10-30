@@ -5,6 +5,14 @@ release (and of each beta pre-release) are taken from here: a beta shows the
 *Unreleased* section, a release its own section. Older versions: see the
 GitHub releases.
 
+## Unreleased
+
+### Integration
+
+- Guest mode wins over every vacation (the vacation mode, the dates or the
+  automatic one): while it is on, the rooms follow the schedule; the vacation
+  goes on when it is turned off. The card band says the vacation is suspended.
+
 ## 2.4.0 – 2026-10-29
 
 ### Card

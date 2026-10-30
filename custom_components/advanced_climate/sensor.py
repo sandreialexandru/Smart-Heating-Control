@@ -95,6 +95,7 @@ class PresenceSensor(HouseEntity, SensorEntity):
             "arriving": self.house.arriving,
             "guest_mode": self.house.guest,
             "vacation_active": self.house.vacation_active(),
+            "vacation_suspended": self.house.vacation_suspended(),
             "vacation_preheating": self.house.vacation_preheating(),
             "pending": self.house.presence.pending,
             "pending_since": iso(self.house.presence.pending_since),

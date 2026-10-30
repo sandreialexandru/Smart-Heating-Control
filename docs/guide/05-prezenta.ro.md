@@ -130,6 +130,12 @@ Vacanța pune toate camerele pe `away`. Se poate porni în trei feluri:
    - Preîncălzirea dinaintea sfârșitului unei vacanțe planificate are
      prioritate față de vacanța automată.
 
+**Modul oaspeți are prioritate față de orice vacanță** (modul, datele sau cea
+automată): cât e pornit, camerele urmează programul ca și cum ar fi cineva acasă,
+iar banda din card spune că vacanța e suspendată. Când îl oprești, vacanța
+continuă (datele și preîncălzirea rămân cum erau). Modul oaspeți nu se oprește
+singur din cauza vacanței: setează *Modul oaspeți se oprește după* dacă vrei asta.
+
 Într-o zi fără profil activ în program, vacanța nu aduce `away` (mai cald), ci
 rămâne antiînghețul.
 

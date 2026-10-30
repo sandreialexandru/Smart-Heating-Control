@@ -136,7 +136,7 @@ opțională a fiecărei camere.
 | Întârziere la sosire | 0 min | Așteptare înainte ca cineva să fie considerat sosit |
 | Senzori de prezență | niciunul | mmWave / mișcare / comutatoare țin casa *acasă* |
 | Ocuparea camerei | oprită | Camera trece pe eco după X minute fără ocupare |
-| Mod oaspeți | oprit | Forțează *acasă*, cu expirare automată opțională |
+| Mod oaspeți | oprit | Forțează *acasă*, cu expirare automată opțională; are prioritate față de orice vacanță (mod, date, automată), care continuă când e oprit |
 
 Stările `unknown` / `unavailable` ale persoanelor sunt tratate ca „nicio
 schimbare”, niciodată ca plecare.

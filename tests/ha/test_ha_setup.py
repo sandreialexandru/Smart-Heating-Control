@@ -2088,3 +2088,35 @@ async def test_trv_limit_is_not_a_manual_change(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_trv_already_at_its_limit_is_learned_without_a_report(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The TRV already holds 25 (its own maximum) when 28 is sent: no change is reported.
+
+    The verification learns the limit instead of sending 28 again and again or
+    telling that it was not accepted.
+    """
+    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 23.0, "temperature": 25.0,
+           "max_temp": 35.0, "target_temp_step": 0.5}
+    hass.states.async_set("climate.trv", "heat", trv)
+    hass.states.async_set("sensor.office_temp", "20.8", {"unit_of_measurement": "°C"})
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    entry = await _boost_house(hass, freezer, {"trv_boost_temperature": 28}, max_temp=30)
+    room = next(iter(entry.runtime_data.rooms.values()))
+    await _tick(hass, freezer, 15)
+    assert calls[-1].data["temperature"] == 28.0
+    sent = len(calls)
+    # The verification (2 minutes later) sees 25 held: a limit, learned.
+    await _tick(hass, freezer, 125)
+    assert any(a["code"] == "device_limit_max" for a in room.house.alerts_for(room))
+    assert not any(a["code"] == "not_accepted" for a in room.house.alerts_for(room))
+    # Nothing more is sent while the TRV holds its limit.
+    for _ in range(3):
+        await _room_temp(hass, freezer, 20.8)
+    assert len(calls) == sent
+    assert hass.states.get("binary_sensor.office_manual_change").state == "off"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

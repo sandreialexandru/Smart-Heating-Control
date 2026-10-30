@@ -63,7 +63,8 @@ is a manual change.
 25 °C on a Tuya TRV whose entity goes to 35 °C). When a TRV reports less than a
 boost or the valve exercise sent (but at least the target), or more than frost
 protection / off sent (but below the lowest level), that is its limit, not a
-manual change: the next commands stay within it, and an alert tells it. The
+manual change: the next commands stay within it, and an alert tells it. A TRV
+that already held its limit is recognised by the command check as well. The
 limit is tried again after a day, so a new setting on the device is seen.
 
 **How long** (*Manual changes are kept*, in the house options):

@@ -18,6 +18,9 @@ GitHub releases.
   entity, e.g. 25 °C on a Tuya TRV) is no longer taken for a manual change when it
   holds its limit after a boost, the valve exercise or frost protection; the next
   commands stay within it and an alert tells it (tried again after a day).
+  A TRV that already held its limit (so it reports nothing new) is recognised
+  by the command verification too, instead of being sent the value again and
+  again and told as not accepted.
 
 ## 2.4.0 – 2026-10-29
 

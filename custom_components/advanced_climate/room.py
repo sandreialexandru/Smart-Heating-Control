@@ -1897,6 +1897,9 @@ class Room:
         assert state is not None
         if not force and self._matches(state, target):
             return False
+        # The TRV holds its own limit for the value sent last: learned, nothing to send.
+        if not force and self._learn_device_limit(entity_id, state) and self._matches(state, target):
+            return False
         self._sent[entity_id] = {}
         self._sent_confirmed.pop(entity_id, None)
         modes = list(state.attributes.get("hvac_modes") or [])
@@ -1983,11 +1986,23 @@ class Room:
         but below the lowest level: that is its own minimum. Neither is a
         manual change; the limit is kept for the next commands and told.
         """
-        if old is None or new is None or not valid(new) or new.state == STATE_OFF:
+        if old is None or new is None or not valid(new):
+            return False
+        if float_attr(new, ATTR_TEMPERATURE) == float_attr(old, ATTR_TEMPERATURE):
+            return False
+        return self._learn_device_limit(entity_id, new)
+
+    def _learn_device_limit(self, entity_id: str, new: State | None) -> bool:
+        """True when what a thermostat shows now is its own limit for the last value sent.
+
+        Also used without a change of the device (the verification, the next
+        command): a TRV that already held its limit reports nothing new.
+        """
+        if new is None or not valid(new) or new.state == STATE_OFF:
             return False
         sent = (self._sent.get(entity_id) or {}).get(ATTR_TEMPERATURE)
         reported = float_attr(new, ATTR_TEMPERATURE)
-        if sent is None or reported is None or reported == float_attr(old, ATTR_TEMPERATURE):
+        if sent is None or reported is None:
             return False
         try:
             sent = float(sent)
@@ -2161,11 +2176,16 @@ class Room:
             if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC:
                 self._verify_attempts = 0
                 return
-            mismatched = [
-                eid
-                for eid in self.climates
-                if valid(state := self.hass.states.get(eid)) and not self._matches(state, expected)  # type: ignore[arg-type]
-            ]
+            mismatched = []
+            for eid in self.climates:
+                state = self.hass.states.get(eid)
+                if not valid(state) or self._matches(state, expected):  # type: ignore[arg-type]
+                    continue
+                # A TRV holding its own limit (it may have held it before the
+                # command, so it reported no change): learned, not retried.
+                if self._learn_device_limit(eid, state) and self._matches(state, expected):  # type: ignore[arg-type]
+                    continue
+                mismatched.append(eid)
             if not mismatched:
                 self._verify_attempts = 0
                 self.house.clear_alert(f"verify_{self.id}")

@@ -64,8 +64,9 @@ exemplu 25 °C pe un TRV Tuya a cărui entitate merge până la 35 °C). Când u
 raportează mai puțin decât a trimis forțarea sau mișcarea robinetelor (dar cel
 puțin ținta), sau mai mult decât a trimis antiînghețul / oprirea (dar sub cel mai
 jos nivel), aceea e limita lui, nu o modificare manuală: comenzile următoare
-rămân în ea, iar o alertă o spune. Limita se încearcă din nou după o zi, ca o
-setare nouă pe dispozitiv să fie văzută.
+rămân în ea, iar o alertă o spune. Un TRV care își ținea deja limita e
+recunoscut și de verificarea comenzilor. Limita se încearcă din nou după o zi,
+ca o setare nouă pe dispozitiv să fie văzută.
 
 **Cât durează** (*Modificările manuale se păstrează*, în opțiunile casei):
 

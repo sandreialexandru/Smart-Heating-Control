@@ -237,3 +237,8 @@ progress), the outdoor averages
 the last switches of the boiler and relays, and whether the boiler was started
 for frost protection. After a restart the integration continues where it left
 off.
+
+Not kept (on a restart or a reload of the integration): the limits learned
+from what the TRVs apply on the device (their own Max / Min temperature). They
+are learned again at the first boost or command that meets them, so a restart
+or a reload is also the way to forget them before the day is over.

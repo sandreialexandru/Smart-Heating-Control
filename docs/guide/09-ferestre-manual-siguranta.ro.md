@@ -237,3 +237,9 @@ mediile de afară (inclusiv
 mediile zilnice pentru sezon), oprirea după prognoză, timpii ultimelor comutări
 ale centralei și releelor și dacă centrala a fost pornită pentru antiîngheț.
 După repornire, integrarea continuă de unde a rămas.
+
+Nu se păstrează (la repornire sau la reîncărcarea integrării): limitele
+învățate din ce aplică TRV-urile pe dispozitiv (propriile Max / Min
+temperature). Se învață din nou la prima forțare sau comandă care le atinge,
+deci o repornire sau o reîncărcare e și felul de a le uita înainte să treacă
+ziua.

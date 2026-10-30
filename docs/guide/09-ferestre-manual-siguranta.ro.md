@@ -4,7 +4,7 @@
 
 ## Ferestre și uși
 
-Când se deschide o fereastră, nu are rost să încălzești afara. Integrarea
+Când se deschide o fereastră, nu are rost să se încălzească afara. Integrarea
 reacționează pe cameră.
 
 **Ce se întâmplă:**
@@ -38,7 +38,7 @@ valoare sau peste.
 
 **Alertă**: dacă o fereastră rămâne deschisă mai mult de *Alertă când o
 fereastră e deschisă mai mult de* (implicit 30 de minute) cât timp încălzirea e
-necesară, primești o alertă.
+necesară, apare o alertă.
 
 Episoadele de învățare în care o fereastră a fost deschisă nu se folosesc.
 
@@ -77,7 +77,7 @@ ca o setare nouă pe dispozitiv să fie văzută.
 | **Până la următoarea reevaluare** | când se schimbă ceva important: nivelul din program, profilul, prezența, cineva e pe drum spre casă, vacanța sau preîncălzirea ei, o fereastră, modul, oprirea când e cald, sezonul. Verificarea periodică nu o termină. |
 
 **Exemplu cu *Până la următoarea reevaluare*.** E 20:00, programul cere `home`
-21 °C până la 22:00, iar tu pui 23 °C pe termostat. Schimbarea ține până la
+21 °C până la 22:00, iar cineva pune 23 °C pe termostat. Schimbarea ține până la
 22:00, când programul trece pe `sleep`; atunci camera trece pe `sleep`.
 
 **Pe ce se aplică** (*Modificarea manuală se aplică*): **Doar acea cameră**
@@ -87,7 +87,7 @@ doar când fiecare cameră are robinete proprii).
 **Dacă o regulă mai importantă intervine.** Dacă în timpul unei modificări
 manuale se deschide o fereastră (sau intervine antiînghețul, sau se schimbă
 modul), dispozitivele se schimbă după acea regulă. Când regula se termină,
-valoarea manuală e pusă din nou: valoarea din card / serviciu, sau ce ai pus tu
+valoarea manuală e pusă din nou: valoarea din card / serviciu, sau ce s-a pus
 pe dispozitiv (mod, preset, temperatură, releu pornit / oprit). La un releu,
 refacerea respectă timpul minim pornit / oprit. Cardul arată *revine după: …*
 cât timp e întreruptă.
@@ -119,7 +119,7 @@ siguranță:
   cameră cu releu sau comandată pornit / oprit e oprită cât e la maxim sau
   peste;
 - **forțarea TRV**: o forțare rămasă pe TRV-uri când începe pauza e adusă
-  înapoi la țintă o dată (vezi [capitolul 3](03-camere.ro.md)).
+  înapoi la țintă o dată ([capitolul 3](03-camere.ro.md)).
 
 În card apare o bandă sus cât timp casa e în pauză. O modificare manuală făcută
 în pauză se păstrează și se aplică după pauză: una din card sau din serviciu se
@@ -133,7 +133,7 @@ Selectul *Mod* al casei:
 | Mod | Ce face |
 | --- | --- |
 | **Auto** | Toate regulile: program, prezență, ferestre, vreme… |
-| **Vacanță** | `away` în toate camerele (vezi [capitolul 5](05-prezenta.ro.md#vacanța)) |
+| **Vacanță** | `away` în toate camerele ([capitolul 5](05-prezenta.ro.md#vacanța)) |
 | **Oprit** | Doar antiîngheț |
 | **Vară** | Încălzire oprită (antiînghețul rămâne ca siguranță). Cu sezonul automat sau între date, încălzirea se oprește singură în afara sezonului. |
 
@@ -187,7 +187,7 @@ Dacă senzorii de temperatură ai camerei sunt indisponibili:
 2. dacă nici acela nu merge, camera trece pe `eco`, dar niciodată peste program:
    dacă programul cere un nivel mai jos (de exemplu `away`), rămâne acela.
 
-În ambele cazuri primești o alertă. O valoare a senzorului care nu e număr
+În ambele cazuri apare o alertă. O valoare a senzorului care nu e număr
 (`nan`, `inf`) e tratată ca indisponibilă.
 
 ## Verificarea comenzilor
@@ -195,7 +195,7 @@ Dacă senzorii de temperatură ai camerei sunt indisponibili:
 Cu *Verifică comenzile* (pornit implicit), la 2 minute după o comandă integrarea
 verifică dacă dispozitivul a acceptat-o (și pentru o modificare manuală din
 card). Dacă nu, o retrimite o dată; dacă nici atunci, dă alerta *… nu a acceptat
-…*. Oprește verificarea doar dacă un dispozitiv își raportează starea foarte
+…*. Verificarea se oprește doar dacă un dispozitiv își raportează starea foarte
 încet.
 
 ## Mișcarea robinetelor
@@ -223,6 +223,7 @@ câteva ore.
 | Senzorii de temperatură sunt indisponibili | se folosește senzorul dispozitivului sau `eco` |
 | Baterie descărcată la … | sub *Baterie descărcată sub* (implicit 20 %) |
 | … nu a acceptat … | verificarea comenzilor a eșuat de două ori |
+| … acceptă cel mult / cel puțin … | TRV-ul ține propria limită *Max / Min temperature* de pe dispozitiv (mai sus, *Limitele dispozitivului*) |
 | Unele camere rămân reci, altele sunt calde | cu *Alertă când o cameră rămâne mai rece cu* |
 | Nivelul … nu există pe … | un preset ales pentru un nivel lipsește de pe termostat și temperatura lui e necunoscută |
 | Programul e invalid | se folosește programul implicit |

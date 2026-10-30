@@ -33,7 +33,7 @@ interfața Home Assistant în română.
   calendar, o oră de început a zilei pentru ture de noapte sau un Schedule
   helper existent.
 - **Pornire / oprire anticipată** cu timpul de încălzire și răcirea învățate
-  pentru fiecare cameră (vezi *Învățarea încălzirii* și *Învățarea
+  pentru fiecare cameră (detalii în *Învățarea încălzirii* și *Învățarea
   răcirii și oprirea anticipată*). Odată începută, pornirea anticipată
   continuă până la ora din program, chiar dacă camera s-a încălzit mai
   devreme; regulile de deasupra programului o pot suprascrie.
@@ -99,33 +99,33 @@ Specificația completă este în [docs/SPEC.ro.md](docs/SPEC.ro.md).
 
 ### HACS
 
-1. HACS → ⋮ → **Custom repositories** → adaugă
+1. HACS → ⋮ → **Custom repositories**: se adaugă
    `https://github.com/sandreialexandru/Smart-Heating-Control` ca **Integration**.
-2. Instalează **Smart Heating Control** și repornește Home Assistant.
+2. Se instalează **Smart Heating Control** și se repornește Home Assistant.
 3. **Setări → Dispozitive și servicii → Adaugă integrare → Smart Heating Control**.
 
 ### Manual
 
-Copiază `custom_components/advanced_climate` în folderul
-`config/custom_components` și repornește Home Assistant.
+Folderul `custom_components/advanced_climate` se copiază în
+`config/custom_components`, apoi se repornește Home Assistant.
 
 Necesită Home Assistant **2026.6.0** sau mai nou (cea mai veche versiune pe care rulează
 testele; rulează și pe cea mai nouă).
 
 ## Configurare
 
-> **Configurator interactiv:** [docs/configurator.html](https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/docs/configurator.html) te duce prin
+> **Configurator interactiv:** [docs/configurator.html](https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/docs/configurator.html) parcurge
 > fiecare formular pas cu pas, în engleză sau română, explică fiecare alegere
-> și îți dă un rezumat cu ce ai de setat. Descarcă fișierul și deschide-l într-un
-> browser.
+> și dă la sfârșit un rezumat cu tot ce trebuie setat. Fișierul se descarcă și
+> se deschide într-un browser.
 
-1. **Creează casa**: întâi **unitatea de temperatură** (°C sau °F), apoi
+1. **Crearea casei**: întâi **unitatea de temperatură** (°C sau °F), apoi
    numele, persoanele, zonele apropiate și regula pentru acasă, apoi
-   **încălzirea întregii case** (de exemplu Generic Thermostat-ul tău). Atât e
+   **încălzirea întregii case** (de exemplu Generic Thermostat-ul existent). Atât e
    suficient pentru o casă încălzită de un singur termostat: devine zona
    *Whole house* și folosește toate opțiunile. Se poate schimba mai târziu din
    *Configurează → Încălzirea întregii case*.
-2. Opțional, **adaugă camere** cu *Adaugă cameră* pe pagina integrării, pentru
+2. Opțional, **se adaugă camere** cu *Adaugă cameră* pe pagina integrării, pentru
    camerele cu robinete sau termostate proprii. Fiecare cameră are propriile
    dispozitive, senzori, ferestre și program. Zona *Whole house* se schimbă la
    fel (*⋮ → Reconfigurează* pe pagina integrării).
@@ -322,7 +322,7 @@ Senzorul *Decizie* îl are ca atribut `time_to_target` (minute).
 ## Învățarea răcirii și oprirea anticipată
 
 Răcirea se învață invers față de încălzire, pentru fiecare cameră (doar în
-sezonul rece, vezi mai sus):
+sezonul rece, ca mai sus):
 
 - Un **episod** începe când se oprește cererea de căldură (niciun senzor de
   fereastră sau ușă deschis) și se încheie când cererea de căldură reîncepe.
@@ -352,7 +352,7 @@ scade de la 22 la 21,5 °C în 40 de minute, sleep începe la 21:20.
   camera coboară sub confortul nivelului curent (s-a răcit mai repede decât a
   învățat), oprirea anticipată se anulează: nivelul curent rămâne până la ora
   din program și oprirea nu mai pornește pentru acea schimbare. Dacă se
-  întâmplă des, micșorează *Oprire anticipată maximă*.
+  întâmplă des, *Oprire anticipată maximă* trebuie micșorată.
 - Cardul arată temperatura estimată la schimbare (de exemplu *~21.5° la
   22:00*), după răcirea învățată și temperatura de afară așteptată până
   atunci; senzorul *Decizie* o are ca atribut `stop_forecast`.
@@ -416,7 +416,7 @@ cameră își schimbă decizia (`room`, `old_rule`, `rule`, `old_target`, `targe
 Integrarea adaugă automat cardul la resursele dashboard-urilor
 (`/advanced_climate/smart-heating-control-card.js?v=<versiune>`, actualizat la
 fiecare versiune, ca browserele și aplicația companion să încarce noua
-versiune). Cu dashboard-uri în mod YAML, adaugă singur acest URL ca resursă de
+versiune). Cu dashboard-uri în mod YAML, acest URL se adaugă manual ca resursă de
 tip `module`. Cardul are editor vizual. Fără opțiuni arată toate casele și
 camerele, cu toate comenzile:
 
@@ -434,10 +434,10 @@ type: custom:smart-heating-control-card
 | `show_quick_override` | `true` | Setează un nivel sau o temperatură pentru un număr de ore (gol = regula configurată) |
 | `show_levels` | `true` | Temperaturile nivelurilor (camere fără Generic Thermostat, temperatura fixă pentru *aproape*) |
 | `show_details` | `true` | Temperatura camerei și ținta, încălzirea învățată, timpul de încălzire, ajustările active, temperaturile nivelurilor |
-| `show_schedule_editor` | `true` | Profilurile programului cu editor: orele de început se trag pe bara zilei (pași de 5 minute), un profil se copiază peste altă zi |
-| `collapsed` | `false` | Camerele încep pliate (un rând cu un arc mic, numele, timpul până la țintă, iconițe de stare, nivelul și ținta); atinge-l ca să deschizi camera |
-| `compact` | `false` | O placă pe cameră (arc cu temperatura, nivel, țintă, o iconiță de stare) și un rând pentru casă; atinge ca să deschizi |
-| `runtime_period` | `day` | Timpul de încălzire arătat pentru `day`, `week` sau `month` (perioade calendaristice, din statisticile pe termen lung; atinge valoarea în card ca s-o schimbi). Senzorii *Timp de încălzire* rămân totaluri cumulate |
+| `show_schedule_editor` | `true` | Profilurile programului cu editor: orele de început se trag pe bara zilei (pași de 5 minute), un profil se copiază peste altul |
+| `collapsed` | `false` | Camerele încep pliate (un rând cu un arc mic, numele, timpul până la țintă, iconițe de stare, nivelul și ținta); camera se deschide atingând rândul |
+| `compact` | `false` | O placă pe cameră (numele, iconițele de stare, arc cu temperatura, nivel, țintă) și un rând pentru casă; se deschide la atingere |
+| `runtime_period` | `day` | Timpul de încălzire arătat pentru `day`, `week` sau `month` (perioade calendaristice, din statisticile pe termen lung; se schimbă și atingând valoarea în card). Senzorii *Timp de încălzire* rămân totaluri cumulate |
 
 Fiecare cameră arată și decizia, o flacără (conturată cât cere căldură, plină și pâlpâind cât
 încălzește; și la casă și la camerele pliate) / insignele pentru fereastră / modificare manuală, un arc cu temperatura camerei (gol la
@@ -445,7 +445,7 @@ antiîngheț, plin la maxim; doar arată valoarea) și ținta, motivul, timpul p
 la țintă, forțarea TRV când e pornită, ce măsoară dispozitivul însuși, profilul
 zilei ca bară și un buton *Automat* (înapoi la automat) în rândul de butoane cât există o modificare manuală. Butoanele de sub arc deschid *Setează
 temporar*, *Program* (fiecare profil cu zilele lui și un comutator pornit /
-oprit; zilele se aleg în editor), *Niveluri* și *Detalii*, fiecare separat (mai
+oprit; zilele se aleg în editor), *Grafic*, *Niveluri* și *Detalii*, fiecare separat (mai
 multe deodată) și un buton *Blocare* pentru blocarea modificărilor în cameră.
 
 - **Nu încălzește**: sub țintă, camera spune de ce nu încălzește (în toleranța

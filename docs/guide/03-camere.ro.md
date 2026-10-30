@@ -6,22 +6,22 @@ O **cameră** este o zonă de încălzire cu dispozitivele ei. Se adaugă pe pag
 integrării cu **Adaugă cameră** și se schimbă cu **⋮ → Reconfigurează camera**.
 Zona *Whole house* (creată odată cu casa) se schimbă la fel.
 
-Formularul are mai mulți pași. Pașii și câmpurile care nu se aplică tipului tău
+Formularul are mai mulți pași. Pașii și câmpurile care nu se aplică tipului ales
 de încălzire sunt săriți.
 
-## Ce tip de încălzire alegi
+## Ce tip de încălzire se alege
 
-| Ai… | Alege la *Încălzită prin* | Comanda |
+| Încălzirea | La *Încălzită prin* | Comanda |
 | --- | --- | --- |
 | Un **Generic Thermostat** pentru cameră | Generic Thermostat | – (GT își păstrează preseturile, integrarea doar le alege) |
 | **TRV-uri** (robinete termostatice) | Alte termostate / TRV-uri | de obicei *Temperatură* |
 | Un **termostat smart** cu preseturi proprii | Alte termostate / TRV-uri | *Preset* |
-| Un termostat pe care vrei doar să-l pornești / oprești | Alte termostate / TRV-uri | *Pornit / oprit (hvac mode)* |
+| Un termostat care doar trebuie pornit / oprit | Alte termostate / TRV-uri | *Pornit / oprit (hvac mode)* |
 | Un **releu** (priză smart, releu Shelly / Sonoff, `input_boolean`) care pornește direct un radiator sau o centrală | Comutator (releu) | – (integrarea îl pornește și îl oprește singură) |
 
 ## Pasul 1: Cameră
 
-| Câmp | Ce faci |
+| Câmp | Ce se completează |
 | --- | --- |
 | **Nume** | Numele camerei, de exemplu „Dormitor”. |
 | **Zonă** | Opțional, leagă camera de o zonă (area) din Home Assistant. |
@@ -29,12 +29,12 @@ de încălzire sunt săriți.
 
 ## Pasul 2: Dispozitive
 
-| Câmp | Ce faci |
+| Câmp | Ce se completează |
 | --- | --- |
 | **Termostate** | Termostatele camerei (pentru Generic Thermostat și pentru alte termostate / TRV-uri). Mai multe termostate în aceeași cameră primesc toate aceeași comandă, de exemplu două TRV-uri pe două calorifere din sufragerie. |
 | **Comutatoare (relee)** | Releele care încălzesc camera (doar pentru *Comutator*). |
-| **Comandă** | Doar pentru alte termostate / TRV-uri, vezi mai jos. |
-| **Forțează temperatura TRV cât încălzește** | Doar pentru alte termostate / TRV-uri cu comanda *Temperatură* (altfel apare *Forțarea TRV merge doar cu comanda Temperatură*), vezi pasul 3. |
+| **Comandă** | Doar pentru alte termostate / TRV-uri, mai jos. |
+| **Forțează temperatura TRV cât încălzește** | Doar pentru alte termostate / TRV-uri cu comanda *Temperatură* (altfel apare *Forțarea TRV merge doar cu comanda Temperatură*), detalii la pasul 3. |
 
 Trebuie ales cel puțin un dispozitiv (altfel apare *Alege cel puțin un
 dispozitiv*).
@@ -67,13 +67,13 @@ camere care trimit comenzi opuse aceluiași dispozitiv s-ar contrazice. Senzorii
 Timpul minim se numără de la ultima comutare, **și de la una făcută de mână**.
 Când se termină, camera e verificată din nou imediat. În banda de histerezis
 (în exemplu, între 20,7 și 21,3 °C) releul rămâne în starea în care e: dacă
-l-ai oprit tu, rămâne oprit.
+a fost oprit de mână, rămâne oprit.
 
 ### *Temperatură* sau *Preset*: **Termostat**
 
 | Câmp | Implicit | Ce face |
 | --- | --- | --- |
-| Toleranța termostatului | 0 (0 – 2 °C) | Cât lasă termostatul camera să coboare sub țintă înainte să încălzească (toleranța lui proprie). Învățarea încălzirii pornește de la atât sub țintă. Dacă nu știi, lasă 0. |
+| Toleranța termostatului | 0 (0 – 2 °C) | Cât lasă termostatul camera să coboare sub țintă înainte să încălzească (toleranța lui proprie). Învățarea încălzirii pornește de la atât sub țintă. Când nu se cunoaște, rămâne 0. |
 | Histerezis | 0,3 °C | Apare doar dacă termostatul nu raportează când încălzește (`hvac_action`) sau e indisponibil la configurare. Atunci se consideră că încălzește de la histerezis sub temperatura setată până la histerezis peste ea, ca un releu. Se folosește pentru cererea de căldură, centrală, timpul de încălzire, învățare și ca toleranță a opririi anticipate. |
 
 ### *Temperatură* cu forțare: **Forțarea TRV**
@@ -88,7 +88,7 @@ camera are nevoie de căldură:
 
 - camera **cere căldură** de la ținta − histerezis și se oprește la ținta +
   histerezis, măsurat de **senzorii de temperatură ai camerei** (obligatorii,
-  vezi pasul 5);
+  pasul 5);
 - cât cere căldură, TRV-urile primesc **Temperatura de forțare**; în rest
   primesc **ținta**, așa că TRV-ul se închide singur și ține camera și când Home
   Assistant e oprit.
@@ -105,7 +105,7 @@ cameră, TRV-urile primesc 25 °C; la 20 + 0,2 = 20,2 °C primesc iar 20 °C. Î
 
 Forțarea se aplică la orice cerere de căldură, și la antiîngheț. Fără forțare,
 o cameră cu TRV-uri și senzori de temperatură e forțată doar pentru antiîngheț
-(vezi [capitolul 9](09-ferestre-manual-siguranta.ro.md#antiînghețul)). La mișcarea
+([capitolul 9](09-ferestre-manual-siguranta.ro.md#antiînghețul)). La mișcarea
 robinetelor, cu o fereastră deschisă și acțiunea *Oprire* sau în modul Oprit
 cu dispozitive care se pot opri, nu există forțare. În **pauză** nu se trimite
 nimic, doar că o forțare rămasă pe TRV-uri e adusă înapoi la țintă o dată, ca
@@ -119,7 +119,7 @@ Niciun pas: Generic Thermostat are propriile toleranțe (`cold_tolerance`,
 
 ## Pasul 4: Niveluri
 
-| Câmp | Ce faci |
+| Câmp | Ce se completează |
 | --- | --- |
 | **Când nimeni nu e acasă, dar cineva e aproape** | *Preset eco* (folosește nivelul `eco`) sau *Temperatură fixă* (o temperatură aleasă pe pagina următoare; la Generic Thermostat presetul devine `none`). |
 | **Nu peste program** | Nebifat implicit. Bifat: când programul e mai jos decât nivelul sau temperatura pentru *aproape*, se aplică programul. Exemplu cu valori alese: *aproape* 20 °C, programul cere noaptea `sleep` 18 °C → 18 °C. Nebifat → 20 °C. |
@@ -129,13 +129,13 @@ Restul pasului depinde de tip:
 - **Generic Thermostat**: nimic altceva. Temperaturile nivelurilor sunt cele
   setate în Generic Thermostat (`home_temp`, `sleep_temp`, `eco_temp`,
   `away_temp`, `comfort_temp`, `activity_temp`).
-- **Comanda *Preset***: pentru fiecare nivel alegi **presetul termostatului**
+- **Comanda *Preset***: pentru fiecare nivel se alege **presetul termostatului**
   (lista arată preseturile găsite pe dispozitiv) și o **temperatură**.
   Termostatul își păstrează temperatura presetului. Dacă termostatul nu are un
-  preset pentru un nivel, lași câmpul gol și se trimite temperatura
+  preset pentru un nivel, câmpul rămâne gol și se trimite temperatura
   nivelului.
 - **Comanda *Temperatură*, *Pornit / oprit* și releele**: pentru fiecare nivel
-  un **nume** (cum apare în program și în card; poți lăsa numele implicit) și o
+  un **nume** (cum apare în program și în card; numele implicit poate rămâne) și o
   **temperatură**. Un nume nu poate fi numele intern al altui nivel (`home`,
   `sleep`, `eco`, `away`, `comfort`, `activity`, `frost`): programul folosește
   aceste nume, deci ar citi alt nivel.
@@ -147,8 +147,8 @@ camerei. Două niveluri nu pot avea același nume. Un nume poate folosi orice li
 (și cu diacritice), cifre, spații, `_` și `-`, dar nu `,` `:` sau `#`, pe care le
 folosește formatul programului.
 
-**Exemplu de nume.** Pentru un birou poți numi `home` „Lucru” și `sleep`
-„Închis”. În program scrii atunci `07:00 Lucru, 19:00 Închis`, iar rolurile
+**Exemplu de nume.** Pentru un birou, `home` se poate numi „Lucru” și
+`sleep` „Închis”. Programul se scrie atunci `07:00 Lucru, 19:00 Închis`, iar rolurile
 rămân aceleași: „Lucru” e tot nivelul `home`.
 
 ### Pagina **Aproape** (doar cu *Temperatură fixă*)
@@ -159,7 +159,7 @@ rămân aceleași: „Lucru” e tot nivelul `home`.
 
 ## Pasul 5: Senzori
 
-| Câmp | Ce faci |
+| Câmp | Ce se completează |
 | --- | --- |
 | **Senzori de temperatură** | Senzorii din cameră, folosiți în locul senzorului termostatului (mai exacți când termostatul stă lângă calorifer). Gol = senzorul termostatului. **Obligatorii pentru relee**, care nu au senzor (altfel apare *Releele au nevoie de un senzor de temperatură al camerei*), și pentru forțarea TRV (altfel apare *Forțarea TRV are nevoie de un senzor de temperatură al camerei*). Senzorul exterior al unei case e refuzat. Un senzor care nu raportează unitatea e citit în unitatea casei. |
 | **Calibrare TRV** | Doar pentru TRV-uri și doar cu un senzor de cameră. *Offset*: corectează senzorul TRV-ului. *Temperatură externă*: scrie temperatura camerei în TRV (dacă TRV-ul are această intrare). *Oprit* altfel. |
@@ -186,7 +186,7 @@ program.
 
 ## Pasul 6: Ferestre și uși
 
-| Câmp | Ce faci |
+| Câmp | Ce se completează |
 | --- | --- |
 | **Senzori de fereastră** | Ferestrele și ușile camerei. Oricare deschisă = fereastră deschisă. |
 | **Ferestre din alte camere** | Ferestre care răcesc și camera aceasta, de exemplu ușa de balcon din sufragerie pentru hol. |
@@ -209,7 +209,7 @@ Totul despre ferestre: [capitolul 9](09-ferestre-manual-siguranta.ro.md).
 
 ## Pasul 7: Program
 
-| Câmp | Ce faci |
+| Câmp | Ce se completează |
 | --- | --- |
 | **Sursa programului** | *Program intern* (scris aici sau editat din card) sau *Helper Program* (un Schedule helper din Home Assistant decide între două niveluri). |
 | **Pornire anticipată** | Pornește încălzirea mai devreme, ca nivelul următor să fie atins la timp. Viteza de încălzire se învață în câteva zile. |
@@ -273,8 +273,8 @@ Temperaturile se schimbă în setările Generic Thermostat (presetările lui).
 8. *Extra*: mișcarea robinetelor duminică la 10:00.
 
 Cu TRV-uri, centrala trebuie să știe când să pornească: la opțiunile casei,
-*Sursa de căldură*, alegi centrala sau releul ei (vezi
-[capitolul 8](08-sursa-si-energie.ro.md)).
+*Sursa de căldură*, se alege centrala sau releul ei
+([capitolul 8](08-sursa-si-energie.ro.md)).
 
 ### Baie cu radiator electric pe o priză smart
 

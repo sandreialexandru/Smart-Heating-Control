@@ -155,6 +155,7 @@ from home, the automatic vacation ends and the house warms up.
 The card has the vacation date fields and the clear button. The house's
 *Presence* sensor shows in its attributes the state of every person
 (`persons`), whether someone is on the way home (`arriving`), the guest mode
-(`guest_mode`), whether a vacation is on (`vacation_active`) or its preheating
+(`guest_mode`), whether a vacation is on (`vacation_active`), whether guest mode
+suspends a vacation (`vacation_suspended`) or its preheating
 (`vacation_preheating`), and a change waiting for its delay (`pending`,
 `pending_since`).

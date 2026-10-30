@@ -81,7 +81,8 @@ A **flame** shows the heat everywhere (house, open room, folded row, compact
 tile): an outlined circle while there is a demand for heat (*Asks for heat*), a
 full one that flickers while the heat source really runs (*Heating*); the words
 appear when it is touched or hovered.
- A folded room (row or compact tile) shows only the **level** (e.g. *Eco*) and
+
+A folded room (row or compact tile) shows only the **level** (e.g. *Eco*) and
 small icons: heating (flame), window open, manual change and guest mode while
 it is on; the decision appears when the room is open, with the level next to
 the arc. Below the

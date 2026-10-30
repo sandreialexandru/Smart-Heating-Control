@@ -2,16 +2,16 @@
 
 *[English](08-heat-source-and-energy.md) · [Cuprins](README.ro.md)*
 
-## Ai nevoie de *Sursa de căldură*?
+## E nevoie de *Sursa de căldură*?
 
 Depinde cine pornește centrala:
 
-| Situația ta | *Sursa de căldură* |
+| Situația | *Sursa de căldură* |
 | --- | --- |
-| Un **Generic Thermostat** pornește centrala (prin releul lui) | **Gol.** GT pornește deja centrala. Nu alege niciodată releul pe care îl folosește GT. |
+| Un **Generic Thermostat** pornește centrala (prin releul lui) | **Gol.** GT pornește deja centrala. Releul folosit de GT nu se alege niciodată. |
 | Un **releu** al camerei pornește direct centrala sau un radiator | **Gol.** Releul e deja comandat de integrare. |
-| **TRV-uri** sau robinete de zonă, iar centrala are un releu sau un termostat în Home Assistant | **Alege centrala** (sau releul ei). Integrarea o pornește când camerele cer căldură. |
-| TRV-uri, iar centrala e pornită de un termostat care **nu e în Home Assistant** | Nu poți alege nimic. Merge, dar învățarea nu e sigură (vezi [capitolul 7](07-anticipare-si-invatare.ro.md#când-nu-se-recomandă)). |
+| **TRV-uri** sau robinete de zonă, iar centrala are un releu sau un termostat în Home Assistant | **Se alege centrala** (sau releul ei). Integrarea o pornește când camerele cer căldură. |
+| TRV-uri, iar centrala e pornită de un termostat care **nu e în Home Assistant** | Nu se poate alege nimic. Merge, dar învățarea nu e sigură ([capitolul 7](07-anticipare-si-invatare.ro.md#când-nu-se-recomandă)). |
 
 De ce contează: un TRV doar deschide sau închide robinetul caloriferului. Dacă
 centrala nu pornește, caloriferul rămâne rece.
@@ -43,7 +43,7 @@ verifică imediat din nou.
 pentru antiîngheț și o oprește din nou când nu mai e nevoie (și după o
 repornire în timpul pauzei).
 
-**Exemplu cu camere necesare.** Ai patru camere cu TRV și *Camere necesare*
+**Exemplu cu camere necesare.** Patru camere cu TRV și *Camere necesare*
 2. Doar dormitorul cere căldură: centrala nu pornește, iar cardul arată în
 dormitor *Nu încălzește: așteaptă alte camere: 1 din 2 cer căldură*. Când cere
 și sufrageria, centrala pornește.
@@ -94,7 +94,7 @@ Cu un *Senzor preț energie* (de exemplu Nord Pool, Tibber):
 - la **preț mic** (*Preț mic până la* sau sub) se adaugă *Ajustare la preț mic*
   (implicit +0,5 °C): casa se încălzește puțin mai mult cât e ieftin.
 
-Pragurile sunt în unitatea senzorului tău (de exemplu lei/kWh). Dacă un prag e
+Pragurile sunt în unitatea senzorului (de exemplu lei/kWh). Dacă un prag e
 gol, ajustarea lui nu se folosește.
 
 **Exemplu** (valori alese): preț mare de la 1,20, ajustarea implicită −1 °C,
@@ -105,11 +105,11 @@ gol, ajustarea lui nu se folosește.
 Cu un *Senzor surplus fotovoltaic* (puterea trimisă în rețea, în W): cât
 surplusul e cel puțin *Surplus de la* (implicit 1000 W), se adaugă *Ajustare cu
 surplus* (implicit +0,5 °C). Util doar cu încălzire electrică sau pompă de
-căldură: folosești energia proprie în loc s-o vinzi ieftin.
+căldură: energia proprie e folosită în loc să fie vândută ieftin.
 
 Ajustările de energie se adună cu celelalte (compensare, câștig solar), suma e
-limitată la ±3 °C și nu se aplică niciodată unui antiîngheț (vezi
-[capitolul 6](06-vreme.ro.md#cum-se-adună-ajustările)).
+limitată la ±3 °C și nu se aplică niciodată unui antiîngheț
+([capitolul 6](06-vreme.ro.md#cum-se-adună-ajustările)).
 
 ## Timpul de încălzire
 
@@ -122,4 +122,4 @@ limitată la ±3 °C și nu se aplică niciodată unui antiîngheț (vezi
 
 Senzorii de timp sunt totaluri crescătoare (ore), deci Home Assistant le
 păstrează în statisticile pe termen lung. Cardul arată timpul pe zi, săptămână
-sau lună (vezi [capitolul 10](10-card.ro.md)).
+sau lună ([capitolul 10](10-card.ro.md)).

@@ -222,6 +222,7 @@ repeated often.
 | The temperature sensors are unavailable | the device sensor or `eco` is used |
 | Low battery on … | below *Low battery below* (20 % by default) |
 | … did not accept … | the command check failed twice |
+| … accepts at most / at least … | the TRV keeps its own *Max / Min temperature* set on the device (above, *Limits of the device*) |
 | Some rooms stay cold while others are warm | with *Alert when a room stays colder than* |
 | The level … is not available on … | a preset chosen for a level is missing on the thermostat and its temperature is unknown |
 | The schedule is invalid | the default schedule is used |

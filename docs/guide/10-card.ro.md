@@ -10,7 +10,7 @@ programul editabil și detaliile.
 Integrarea adaugă singură cardul la resursele dashboard-urilor (adresa
 `/advanced_climate/smart-heating-control-card.js?v=<versiune>`, schimbată la
 fiecare versiune, ca browserul și aplicația să încarce versiunea nouă). Cu
-dashboard-uri în mod YAML adaugi singur adresa ca resursă de tip `module`.
+dashboard-uri în mod YAML adresa se adaugă manual ca resursă de tip `module`.
 
 În dashboard: **Adaugă card → Smart Heating Control**. Are editor vizual. Fără
 nicio opțiune arată toate casele și camerele:
@@ -25,15 +25,15 @@ type: custom:smart-heating-control-card
 | --- | --- | --- |
 | `title` | Încălzire | Titlul cardului (un text gol îl ascunde). |
 | `rooms` | toate | Lista senzorilor *Decizie* ai camerelor de arătat. |
-| `show_house` | `true` | Partea casei (vezi mai jos). |
+| `show_house` | `true` | Partea casei (mai jos). |
 | `show_rooms` | `true` | Camerele. |
 | `show_timeline` | `true` | Butonul **Grafic** al fiecărei camere (graficul se deschide cu el). |
 | `show_quick_override` | `true` | *Setează temporar*. |
 | `show_levels` | `true` | Temperaturile nivelurilor. |
 | `show_details` | `true` | *Detaliile* camerei. |
 | `show_schedule_editor` | `true` | Editorul programului. |
-| `collapsed` | `false` | Camerele încep pliate (un rând: un arc mic, numele, timpul până la țintă, iconițele de stare, nivelul și ținta); atingi rândul ca să deschizi camera. |
-| `compact` | `false` | O placă pe cameră (numele, iconițele de stare, arc cu temperatura, nivel, țintă) și un rând pentru casă; atingi ca să deschizi. |
+| `collapsed` | `false` | Camerele încep pliate (un rând: un arc mic, numele, timpul până la țintă, iconițele de stare, nivelul și ținta); camera se deschide atingând rândul. |
+| `compact` | `false` | O placă pe cameră (numele, iconițele de stare, arc cu temperatura, nivel, țintă) și un rând pentru casă; se deschide la atingere. |
 | `runtime_period` | `day` | Timpul de încălzire pe `day`, `week` sau `month` (perioade calendaristice, din statisticile pe termen lung); se schimbă și atingând valoarea în card. |
 
 **Exemplu**: un card doar pentru dormitor, pliat, fără editorul de program:
@@ -50,7 +50,7 @@ collapsed: true
 
 ## Partea casei
 
-- **Flacăra** lângă prezență (vezi mai jos) cât casa cere căldură; pâlpâie cât
+- **Flacăra** lângă prezență (mai jos) cât casa cere căldură; pâlpâie cât
   o cameră a casei chiar încălzește.
 - **Titlul** e același în orice vedere: iconița și numele casei, prezența
   (Acasă / Aproape / Departe) și flacăra.
@@ -63,8 +63,8 @@ collapsed: true
   (deschide datele vacanței), **Reevaluează** și **Automat** (anulează toate
   modificările manuale). Un buton rămâne colorat cât modul lui e pornit.
 - **Cald afară**, cât încălzirea e oprită pentru că e cald, cu motivul (media
-  măsurată sau prognoza) sau când prognoza lasă încălzirea să pornească (vezi
-  [capitolul 6](06-vreme.ro.md)). Nu apare unde nu are efect: modul Oprit sau
+  măsurată sau prognoza) sau când prognoza lasă încălzirea să pornească
+  ([capitolul 6](06-vreme.ro.md)). Nu apare unde nu are efect: modul Oprit sau
   Vară, în afara sezonului, în pauză.
 - O **bandă de pauză** sus cât casa e în pauză și o **bandă de oaspeți** cât
   modul oaspeți e pornit (cu sfârșitul lui, când are unul).
@@ -81,7 +81,8 @@ O **flacără** arată căldura peste tot (casa, camera deschisă, rândul pliat
 placa compactă): un cerc conturat cât există cerere de căldură (*Cere
 căldură*), unul plin care pâlpâie cât sursa de căldură chiar merge
 (*Încălzește*); cuvintele apar la atingere sau la mouse.
- O cameră pliată (rând sau placă compactă) arată doar **nivelul** (de exemplu
+
+O cameră pliată (rând sau placă compactă) arată doar **nivelul** (de exemplu
 *Eco*) și iconițe mici: încălzire (flacără), fereastră deschisă, modificare
 manuală și modul oaspeți cât e pornit; decizia apare când camera e deschisă, cu
 nivelul lângă arc. Sub antet:
@@ -98,7 +99,7 @@ nivelul lângă arc. Sub antet:
 - **Azi**: profilul zilei ca bară pe ziua programului (de la *Ziua programului începe la*
   a casei, de exemplu 00 → 24 sau 04 → 04), cu ora de acum.
 Dacă o cameră sub țintă nu încălzește, cardul spune de ce (*Nu încălzește: …*,
-vezi [capitolul 8](08-sursa-si-energie.ro.md#când-nu-încălzește-o-cameră-sub-țintă)).
+[capitolul 8](08-sursa-si-energie.ro.md#când-nu-încălzește-o-cameră-sub-țintă)).
 Cât există o modificare manuală, butonul **Automat**, primul din rândul de
 butoane de sub arc, o anulează (înapoi la automat).
 
@@ -124,7 +125,8 @@ următoarele 12:
 
 Valorile se citesc cu mouse-ul, la atingere sau trăgând pe grafic. Zoom cu
 butoanele (1h, 6h, −, +), dublu clic, ciupire sau Ctrl + rotiță, până la 20 de
-minute; când e mărit, te muți în timp trăgând fereastra din bara de sub grafic.
+minute; când e mărit, deplasarea în timp se face trăgând fereastra din bara de sub
+grafic.
 
 Partea planificată arată ce se va întâmpla: programul; o modificare manuală cu
 durată până la sfârșitul ei; o vacanță planificată până la preîncălzire; un
@@ -134,7 +136,7 @@ senzorii căzuți și *Cald afară* apar așa cum sunt acum, pe toată perioada.
 
 ### Setează temporar
 
-Pui un nivel sau o temperatură pentru un număr de ore: *[Setează] [21] °C pentru
+Se pune un nivel sau o temperatură pentru un număr de ore: *[Setează] [21] °C pentru
 [2] h*. Ore goale = regula configurată pentru modificările manuale.
 
 ### Niveluri
@@ -149,7 +151,7 @@ Fiecare profil cu zilele lui și un comutator pornit / oprit:
 - **orele de început** se trag pe bara zilei, în pași de 5 minute;
 - **zilele** se aleg în editor (toate, lucrătoare, weekend, zile anume);
 - un profil se poate **copia** peste altul;
-- cardul te avertizează înainte ca pornirea sau oprirea unui profil să lase
+- cardul avertizează înainte ca pornirea sau oprirea unui profil să lase
   zile fără profil (care ar rămâne pe antiîngheț).
 
 ### Detalii
@@ -174,8 +176,8 @@ detaliile entității.
 ## Orele
 
 Orele (grafic, bara programului, până când, datele vacanței) urmează setarea
-*Fus orar* din profilul tău Home Assistant: al dispozitivului sau al serverului,
-dacă l-ai ales. Datele vacanței se trimit cu fusul orar, ca să însemne același
+*Fus orar* din profilul utilizatorului Home Assistant: al dispozitivului sau al
+serverului, dacă acesta e ales. Datele vacanței se trimit cu fusul orar, ca să însemne același
 moment pe server.
 
 ## Limba

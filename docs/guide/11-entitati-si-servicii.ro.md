@@ -2,8 +2,7 @@
 
 *[English](11-entities-and-services.md) · [Cuprins](README.ro.md)*
 
-Numele entităților sunt date ca în interfața în engleză; în română apar
-traduse. ID-urile încep cu numele casei sau al camerei, de exemplu
+Numele entităților sunt date ca în interfața în română. ID-urile încep cu numele casei sau al camerei, de exemplu
 `sensor.dormitor_decision`.
 
 ## Entitățile casei
@@ -11,7 +10,7 @@ traduse. ID-urile încep cu numele casei sau al camerei, de exemplu
 | Entitate | Ce arată / face |
 | --- | --- |
 | *Mod* (select) | Modul: `auto`, `vacation`, `off`, `summer`. |
-| *Prezență* (senzor) | `home`, `nearby`, `far`; atribute: persoanele, `arriving`, `guest_mode`, `vacation_active`, `vacation_preheating`, `pending`, `pending_since`. |
+| *Prezență* (senzor) | `home`, `nearby`, `far`; atribute: persoanele, `arriving`, `guest_mode`, `vacation_active`, `vacation_suspended`, `vacation_preheating`, `pending`, `pending_since`. |
 | *Pauză* (comutator) | Pauza. |
 | *Mod oaspeți* (comutator) | Modul oaspeți (casa rămâne *acasă*). |
 | *Început vacanță*, *Sfârșit vacanță* (dată și oră) | Perioada vacanței. Un sfârșit înainte de început (sau egal cu el) e refuzat, ca la `set_vacation`. |
@@ -28,11 +27,11 @@ traduse. ID-urile încep cu numele casei sau al camerei, de exemplu
 
 | Entitate | Ce arată / face |
 | --- | --- |
-| *Decizie* (senzor) | Regula care decide acum (vezi mai jos), cu multe atribute. |
+| *Decizie* (senzor) | Regula care decide acum (mai jos), cu multe atribute. |
 | *Temperatură țintă* (senzor) | Ținta, în unitatea casei. |
 | *Temperatura camerei* (senzor) | Temperatura camerei folosită de integrare. |
 | *Următoarea schimbare* (senzor) | Următoarea schimbare din program; atribute: nivelul următor, profilul. |
-| *Viteză de încălzire* (senzor) | Minute pe grad învățate pentru temperatura de afară de acum (vezi [capitolul 7](07-anticipare-si-invatare.ro.md)). |
+| *Viteză de încălzire* (senzor) | Minute pe grad învățate pentru temperatura de afară de acum ([capitolul 7](07-anticipare-si-invatare.ro.md)). |
 | *Viteză de răcire* (senzor) | Cât de repede scade camera acum fără încălzire. |
 | *Timp de încălzire* (senzor) | Ore totale de încălzire ale camerei. |
 | *Cerere de căldură* (senzor binar) | Dacă camera cere căldură; atributul `heating` arată dacă sursa ei merge. |
@@ -115,7 +114,7 @@ data:
 
 ### `advanced_climate.clear_override`
 
-Revine la automat (toate camerele, dacă nu dai o cameră; o cameră care nu există dă o eroare).
+Revine la automat (toate camerele, dacă nu se dă o cameră; o cameră care nu există dă o eroare).
 
 ### `advanced_climate.set_vacation`
 
@@ -139,7 +138,7 @@ Recalculează toate camerele acum.
 Înlocuiește programul unei camere: `schedule` (textul) sau `profiles` (un
 obiect: profil → listă de oră și nivel), opțional `profile_days` (zilele și
 pornit / oprit ale fiecărui profil). Nu merge pentru camerele cu Schedule
-helper (atunci editezi helperul). Un `profiles` greșit dă o eroare clară, de
+helper (atunci se editează helperul). Un `profiles` greșit dă o eroare clară, de
 exemplu *Profile "workday": every slot needs "time" and "preset"*.
 
 Exemplu cu `profiles`:
@@ -185,7 +184,7 @@ actions:
 
 ## Alte exemple de automatizări
 
-**Musafiri**: modul oaspeți pornit (se oprește singur după *Modul oaspeți se oprește după* ore, dacă ai setat o valoare).
+**Musafiri**: modul oaspeți pornit (se oprește singur după *Modul oaspeți se oprește după* ore, dacă e setată o valoare).
 
 ```yaml
 actions:
@@ -194,7 +193,7 @@ actions:
       entity_id: switch.acasa_guest_mode
 ```
 
-**Modul Vară la 1 mai** (dacă nu folosești
+**Modul Vară la 1 mai** (dacă nu se folosește
 sezonul între date sau automat):
 
 ```yaml
@@ -209,7 +208,7 @@ actions:
       option: summer
 ```
 
-**Comfort la baie cât ești la duș**, pornit de un buton:
+**Comfort la baie pentru duș**, pornit de un buton:
 
 ```yaml
 actions:
@@ -223,5 +222,5 @@ actions:
 ## Diagnosticul
 
 Pe pagina integrării, **⋮ → Descarcă diagnosticul** dă configurația, învățarea
-(`learned_heating`) și ultimele 100 de decizii ale fiecărei camere. E util când
-raportezi o problemă.
+(`learned_heating`) și ultimele 100 de decizii ale fiecărei camere. E util la
+raportarea unei probleme.

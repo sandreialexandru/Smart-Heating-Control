@@ -16,15 +16,15 @@ fie deja la 21 °C.
 Invers, programul spune „`sleep` 18 °C de la 22:00”. Camera e caldă și s-ar
 răci oricum încet. Cu **oprirea anticipată**, nivelul mai rece începe puțin mai
 devreme, cât timp camera rămâne confortabilă până la 22:00. Se economisește
-energie fără să simți diferența.
+energie fără ca diferența să se simtă.
 
-Ambele se pornesc pe cameră, la pasul *Program* (vezi
-[capitolul 3](03-camere.ro.md#pasul-7-program)). Oprirea anticipată are nevoie
+Ambele se pornesc pe cameră, la pasul *Program*
+([capitolul 3](03-camere.ro.md#pasul-7-program)). Oprirea anticipată are nevoie
 de o temperatură de afară (senzor sau entitate meteo).
 
 ## Cum învață o cameră să se încălzească
 
-Nu trebuie să spui nimic despre casă (calorifere, izolație, centrală). Camera
+Nu trebuie introdus nimic despre casă (calorifere, izolație, centrală). Camera
 își **măsoară singură** încălzirile, numite **episoade**:
 
 - un episod începe când camera cere căldură, e cu cel puțin *toleranța* sub
@@ -128,15 +128,15 @@ ultimelor 30.
    devreme.
 4. Odată începută, continuă până la ora schimbării. Dacă totuși camera coboară
    sub confort (s-a răcit mai repede decât a învățat), oprirea se **anulează**:
-   nivelul curent revine până la ora schimbării. Dacă se întâmplă des, micșorează
-   *Oprire anticipată maximă*.
+   nivelul curent revine până la ora schimbării. Dacă se întâmplă des, *Oprire
+   anticipată maximă* trebuie micșorată.
 
 **Exemplu** (valori alese): `home` 22 °C până la 22:00, toleranța 0,5 °C,
 confortul deci 21,5 °C. Dacă după cele învățate camera scade de la 22 la
 21,5 °C în 40 de minute, `sleep` începe la 22:00 − 40 = **21:20**. Cu limita
 implicită de 30 de minute, începe la **21:30**.
 
-## Ce vezi în card și în senzori
+## Ce arată cardul și senzorii
 
 - **Timpul până la țintă**: cât timp camera e sub țintă, sub temperatura țintă
   apare de exemplu *~35 min* (atributul `time_to_target` al senzorului
@@ -150,21 +150,21 @@ implicită de 30 de minute, începe la **21:30**.
 - **Învățarea**, în *Detalii*: numărul de episoade, partea fixă și minutele pe
   grad acum (de exemplu *12 episoade · 25 min + 49 min/°C acum*), cât de repede
   scade camera acum și ultimul episod.
-- Senzorii **Viteză de încălzire** (minute pe grad acum, cu atribute) și **Cooling
-  rate** (cât de repede scade camera acum fără încălzire).
+- Senzorii **Viteză de încălzire** (minute pe grad acum, cu atribute) și **Viteză
+  de răcire** (cât de repede scade camera acum fără încălzire).
 
 ## Resetarea învățării
 
-Dacă ai schimbat ceva important (alte calorifere, altă curbă a centralei,
-izolație nouă), învățarea se adaptează singură în câteva săptămâni. Ca să
-înceapă imediat de la zero, apasă **Resetează învățarea încălzirii** sau **Reset
-cooling learning** (butoanele camerei, sau *Resetează* în *Detaliile* cardului,
+După o schimbare importantă (alte calorifere, altă curbă a centralei, izolație
+nouă), învățarea se adaptează singură în câteva săptămâni. Ca să înceapă imediat
+de la zero, există butoanele **Resetează învățarea încălzirii** și **Resetează
+învățarea răcirii** (butoanele camerei, sau *Resetează* în *Detaliile* cardului,
 cu un al doilea clic pentru confirmare).
 
 ## Când nu se recomandă
 
 Cu **TRV-uri** și o centrală pornită de un termostat care **nu e în Home
 Assistant**, integrarea nu poate ști când merge centrala. Învățarea nu e sigură,
-deci pornirea și oprirea anticipată nu sunt recomandate. Soluția e să pui
-centrala (sau releul ei) în Home Assistant și să o alegi ca *Sursa de căldură*
-(vezi [capitolul 8](08-sursa-si-energie.ro.md)).
+deci pornirea și oprirea anticipată nu sunt recomandate. Soluția e ca centrala
+(sau releul ei) să fie adăugată în Home Assistant și aleasă ca *Sursa de
+căldură* ([capitolul 8](08-sursa-si-energie.ro.md)).

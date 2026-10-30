@@ -4,19 +4,19 @@
 
 Vremea poate **opri** încălzirea (când e cald) sau o poate **ajusta** puțin
 (când e foarte frig sau e soare). Nu poate ridica niciodată temperatura peste
-ce cere programul, cu excepția compensării de câteva zecimi de grad pe care o
-alegi tu.
+ce cere programul, cu excepția compensării de câteva zecimi de grad, aleasă în
+setări.
 
-Toate setările sunt în opțiunile casei, la **Vreme și sezon** (vezi
-[capitolul 2](02-instalare-si-casa.ro.md#vreme-și-sezon)). Fără senzor de afară
-și fără entitate meteo, formularul nu te lasă să pornești funcțiile care au
+Toate setările sunt în opțiunile casei, la **Vreme și sezon**
+([capitolul 2](02-instalare-si-casa.ro.md#vreme-și-sezon)). Fără senzor de afară
+și fără entitate meteo, formularul nu permite pornirea funcțiilor care au
 nevoie de ele.
 
 ## Temperatura de afară
 
 Vine din *Senzor de temperatură exterioară* (care nu poate fi senzorul de
 temperatură al unei camere; o valoare care nu e număr, `nan` sau `inf`, e
-ignorată) sau, dacă nu ai unul, din
+ignorată) sau, dacă nu există unul, din
 temperatura *Entității meteo*.
 
 Integrarea păstrează valorile din ultimele 48 de ore și calculează **media pe
@@ -29,7 +29,7 @@ se aplică oprirea când e cald, compensarea și ignorarea ferestrelor, nu se
 învață episoade și nu se face oprire anticipată, până când senzorul revine.
 Dacă nicio sursă configurată nu dă temperatura (senzorul căzut și entitatea meteo
 lipsă, indisponibilă sau fără temperatură) mai mult de *Alertă când un dispozitiv
-e indisponibil mai mult de* (implicit 15 minute), primești o alertă. Cu senzorul
+e indisponibil mai mult de* (implicit 15 minute), apare o alertă. Cu senzorul
 căzut și meteo bun nu apare nicio alertă: se folosește temperatura din meteo.
 
 ## Oprirea când e cald afară
@@ -100,7 +100,7 @@ imediat după fiecare citire.
 
 | Mod | Ce face |
 | --- | --- |
-| **Mereu** (implicit) | Încălzirea e posibilă tot anul. Vara o oprești tu, cu modul *Vară*. |
+| **Mereu** (implicit) | Încălzirea e posibilă tot anul. Vara se oprește cu modul *Vară*. |
 | **Între date** | Doar între *Început sezon* și *Sfârșit sezon* (implicit 10-15 și 04-15, adică 15 octombrie – 15 aprilie, format luna-ziua). |
 | **Automat (temperatura exterioară)** | Sezonul începe după *Sezon automat: zile consecutive* (implicit 3) zile la rând cu media zilnică sub *Prag sezon automat* (implicit 15 °C) și se termină după tot atâtea zile la rând peste prag. |
 
@@ -128,7 +128,7 @@ mai rece.
 ## Câștigul solar
 
 Setare pe cameră (*Câștig solar*, între −3 și 0 °C, la pasul *Extra*), care
-apare doar dacă ai o entitate meteo. Cât e soare, ținta camerei scade cu
+apare doar cu o entitate meteo. Cât e soare, ținta camerei scade cu
 valoarea aleasă, pentru camerele care se încălzesc de la soare (de exemplu o
 sufragerie cu ferestre mari spre sud).
 

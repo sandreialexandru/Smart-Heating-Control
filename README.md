@@ -413,9 +413,9 @@ type: custom:smart-heating-control-card
 | `show_quick_override` | `true` | Set a level or a temperature for a number of hours (empty = the configured rule) |
 | `show_levels` | `true` | Level temperatures (rooms without Generic Thermostat, fixed *nearby* temperature) |
 | `show_details` | `true` | Room and target temperature, learned heating, heating time, active adjustments, level temperatures |
-| `show_schedule_editor` | `true` | Schedule profiles with an editor: drag the start times on the day bar (5-minute steps), copy a profile over another day |
+| `show_schedule_editor` | `true` | Schedule profiles with an editor: drag the start times on the day bar (5-minute steps), copy a profile over another one |
 | `collapsed` | `false` | Rooms start folded (a row with a small arc, the name, the time to target, state icons, the level and the target); tap it to open the room |
-| `compact` | `false` | One tile per room (arc with the temperature, level, target, a status icon) and one row for the house; tap to open |
+| `compact` | `false` | One tile per room (the name, the status icons, arc with the temperature, level, target) and one row for the house; tap to open |
 | `runtime_period` | `day` | Heating time shown for `day`, `week` or `month` (calendar periods, from the long-term statistics; tap the value in the card to change it). The *Heating time* sensors stay cumulative totals |
 
 Every room also shows its decision, a flame (outlined while it asks for heat, full and flickering
@@ -424,7 +424,7 @@ the maximum; it only shows the value) and the target, the reason, the time to
 target, the TRV boost when it is on, what the device itself measures, today's
 profile as a bar, and an *Automatic* button (back to automatic) in the row of buttons while there is a manual change. Buttons under the arc open *Set for
 a while*, *Schedule* (each profile with its days and an on / off switch; its
-days are chosen in the editor), *Levels* and *Details*, each on its own (several
+days are chosen in the editor), *Chart*, *Levels* and *Details*, each on its own (several
 at once), and a *Lock* button for the child lock of the room.
 
 - **Not heating**: below its target, a room says why it does not heat (within

@@ -13,11 +13,11 @@ termostatice, relee) ce să facă. Ține cont de:
   vine cineva, se încălzește din nou;
 - **ferestre**: o fereastră deschisă oprește sau reduce încălzirea camerei;
 - **vreme**: când e cald afară, încălzirea se oprește;
-- **ce faci tu de mână**: dacă schimbi temperatura pe termostat, integrarea
-  respectă schimbarea un timp;
+- **modificările de mână**: dacă temperatura e schimbată pe termostat,
+  integrarea respectă schimbarea un timp;
 - **siguranță**: casa nu îngheață niciodată și nu se supraîncălzește.
 
-Integrarea nu înlocuiește termostatul tău. Dacă folosești **Generic
+Integrarea nu înlocuiește termostatul existent. Cu **Generic
 Thermostat** (termostatul generic din Home Assistant), el continuă să
 funcționeze exact ca înainte; integrarea doar îi alege presetul potrivit
 („acasă”, „somn”, „plecat”…).
@@ -32,18 +32,19 @@ Configurarea are două niveluri:
 - **Camerele** sunt adăugate în casă. Fiecare cameră are dispozitivele ei,
   senzorii ei, ferestrele ei și programul ei.
 
-La crearea casei alegi și **încălzirea întregii case**: de obicei termostatul
+La crearea casei se alege și **încălzirea întregii case**: de obicei termostatul
 care pornește centrala. El devine zona **Whole house** (toată casa), care se
 comportă ca o cameră. Pentru un apartament încălzit de un singur termostat,
-asta e tot ce îți trebuie: nu mai adaugi nicio cameră.
+asta e tot ce trebuie: nu se mai adaugă nicio cameră.
 
-Adaugi camere separate doar dacă ai camere cu robinete sau termostate proprii
+Camere separate se adaugă doar pentru camerele cu robinete sau termostate proprii
 (de exemplu TRV-uri, adică robinete termostatice pe calorifere).
 
 **Exemplu.** Un apartament cu centrală pe gaz și un singur termostat în
-sufragerie: creezi casa, alegi termostatul la *Încălzirea întregii case* și
-gata. O casă cu TRV-uri în fiecare cameră: creezi casa (poți alege *Încă fără
-dispozitive*), apoi adaugi câte o cameră pentru fiecare cameră cu TRV.
+sufragerie: se creează casa, se alege termostatul la *Încălzirea întregii case*
+și gata. O casă cu TRV-uri în fiecare cameră: se creează casa (se poate alege
+*Încă fără dispozitive*), apoi se adaugă câte o cameră pentru fiecare cameră cu
+TRV.
 
 ## Nivelurile (preseturile)
 
@@ -56,8 +57,8 @@ Fiecare nivel are o temperatură, iar unele niveluri au un **rol fix**:
 | `sleep` (somn) | noaptea, cu cineva acasă | 18 °C |
 | `eco` | nimeni acasă, dar cineva e prin apropiere (de exemplu în oraș) | 17 °C |
 | `away` (plecat) | toată lumea e departe, sau vacanță | 12 °C |
-| `comfort` | fără rol automat; îl folosești tu în program | 22 °C |
-| `activity` | fără rol automat; îl folosești tu în program | 20 °C |
+| `comfort` | fără rol automat; se folosește în program | 22 °C |
+| `activity` | fără rol automat; se folosește în program | 20 °C |
 
 Numele vin de la presetările Generic Thermostat. La o cameră cu Generic
 Thermostat, temperaturile sunt cele setate în GT; integrarea doar alege
@@ -91,7 +92,7 @@ verifică de sus în jos, iar prima care se aplică decide:
 
 1. **Siguranță**: antiîngheț și temperatură maximă. Se aplică mereu, chiar și
    peste o modificare manuală sau în pauză.
-2. **Pauză**: integrarea nu trimite nicio comandă.
+2. **Pauză**: integrarea trimite doar siguranța.
 3. **Mișcarea robinetelor**: o dată pe săptămână TRV-urile se deschid complet
    câteva minute, contra depunerilor.
 4. **Mod Oprit / Vară / în afara sezonului**: încălzire oprită (la Oprit, doar

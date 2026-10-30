@@ -92,7 +92,7 @@ They are checked from top to bottom, and the first one that applies decides:
 
 1. **Safety**: frost protection and maximum temperature. Always applied, even
    over a manual change or in a pause.
-2. **Pause**: the integration sends no command.
+2. **Pause**: the integration sends only the safety.
 3. **Valve exercise**: once a week the TRVs open fully for a few minutes,
    against limescale.
 4. **Mode Off / Summer / outside the season**: heating off (with Off, only

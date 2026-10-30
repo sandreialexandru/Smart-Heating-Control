@@ -117,8 +117,8 @@ alert *No active schedule profile*), mode Off, an open window or a window
 detected from a temperature drop.
 
 **What happens when Home Assistant restarts?**
-Everything is kept (see
-[chapter 9](09-windows-manual-safety.md#restart-of-home-assistant)).
+Almost everything is kept; only the TRV limits learned from the device are not
+(see [chapter 9](09-windows-manual-safety.md#restart-of-home-assistant)).
 
 **Does it work with several houses?**
 Yes, every house is a separate entry of the integration. The house services then

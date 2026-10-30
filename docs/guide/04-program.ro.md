@@ -2,9 +2,9 @@
 
 *[English](04-schedule.md) · [Cuprins](README.ro.md)*
 
-Programul spune **ce nivel vrei cât timp cineva e acasă**. Prezența, ferestrele
-și celelalte reguli îl pot coborî (de exemplu `away` când pleci), dar nu îl pot
-ridica.
+Programul spune **ce nivel se dorește cât timp cineva e acasă**. Prezența,
+ferestrele și celelalte reguli îl pot coborî (de exemplu `away` când pleacă
+toată lumea), dar nu îl pot ridica.
 
 ## Formatul
 
@@ -17,15 +17,15 @@ weekend: 00:00 sleep, 08:00 home, 23:00 sleep
 ```
 
 Citire: în zilele lucrătoare `sleep` de la 00:00, `home` de la 06:00, `sleep`
-de la 22:00 până la sfârșitul zilei. În weekend te trezești la 08:00.
+de la 22:00 până la sfârșitul zilei. În weekend ziua începe la 08:00.
 
 Acesta e și programul implicit al fiecărei camere noi.
 
 - Numele profilului e liber (`workday`, `weekend`, `home_office`, `vineri`,
   `sâmbătă`…), și cu diacritice; doar `,` `:` și `#` nu se pot folosi.
 - Nivelul poate fi oricare dintre `home`, `sleep`, `eco`, `away`, `comfort`,
-  `activity`, sau numele pe care le-ai dat nivelurilor în setările camerei.
-- Dacă primul interval nu începe la 00:00 (sau la începutul zilei, vezi mai
+  `activity`, sau numele date nivelurilor în setările camerei.
+- Dacă primul interval nu începe la 00:00 (sau la începutul zilei, mai
   jos), până la el continuă ultimul nivel al zilei de dinainte. De exemplu, cu
   `workday: 06:00 home, 22:00 sleep`, între 00:00 și 06:00 rămâne `sleep` de la
   22:00 din ziua precedentă.
@@ -36,7 +36,7 @@ devine invalid, camera folosește programul implicit și afișează alerta
 
 Cel mai ușor se editează din **card** (*Program*): orele de început se trag pe
 bara zilei, în pași de 5 minute, iar un profil se poate copia peste altul
-(vezi [capitolul 10](10-card.ro.md)).
+([capitolul 10](10-card.ro.md)).
 
 ## Zilele fiecărui profil
 
@@ -64,10 +64,10 @@ card:
 **Profilurile active nu se suprapun.** Pornirea unui profil le oprește pe cele
 active cu care s-ar suprapune: „toate zilele” se suprapune cu zilele lucrătoare
 și cu weekendul, iar zilele anume se suprapun când au o zi comună. Astfel o zi
-nu are niciodată două profiluri. Cardul te avertizează înainte ca pornirea sau
+nu are niciodată două profiluri. Cardul avertizează înainte ca pornirea sau
 oprirea unui profil să lase zile fără profil.
 
-**Exemplu.** Ai `workday` (zile lucrătoare), `weekend` (weekend) și
+**Exemplu.** Există `workday` (zile lucrătoare), `weekend` (weekend) și
 `home_office` (doar miercuri). Miercuri se folosește `home_office`, în celelalte
 zile lucrătoare `workday`, sâmbăta, duminica și sărbătorile `weekend`.
 
@@ -80,7 +80,7 @@ ca planul (și pornirea anticipată) pentru mâine să știe că mâine e sărb�
 
 ## Calendarul
 
-Opțional, poți alege un **calendar** din Home Assistant (de exemplu un calendar
+Opțional, se poate alege un **calendar** din Home Assistant (de exemplu un calendar
 local sau Google). Titlul evenimentului contează:
 
 - **Numele unui profil** (de exemplu `home_office`): profilul se folosește
@@ -99,7 +99,7 @@ fiecare oră și imediat ce se schimbă calendarul.
   marți se folosește profilul `weekend`.
 - Un eveniment „weekend” marți 10:00–16:00: tot profilul `weekend`, pentru toată
   ziua de marți.
-- Un eveniment „away” vineri 09:00–17:00 (ești la un curs): vineri între 09:00 și
+- Un eveniment „away” vineri 09:00–17:00 (un curs în altă parte): vineri între 09:00 și
   17:00 nivelul e `away`, apoi revine programul.
 
 Regulile de mai sus de program (fereastră, prezență, siguranță) se aplică și
@@ -110,7 +110,8 @@ peste calendar.
 *Ziua programului începe la* (implicit 00:00) mută momentul în care se schimbă
 ziua programului.
 
-**Exemplu.** Lucrezi în ture de noapte și te culci vineri dimineața la 04:00.
+**Exemplu.** Cineva lucrează în ture de noapte și se culcă vineri dimineața la
+04:00.
 Cu începutul zilei la 05:00, intervalul de vineri 00:00–05:00 aparține încă
 zilei de joi: se folosește profilul de joi (zi lucrătoare) până la 05:00, nu cel
 de vineri.
@@ -127,12 +128,12 @@ Programul folosește ora locală, dar ține cont de momentul real:
 
 ## Schedule helper
 
-În loc de programul intern poți folosi un **Schedule helper** al Home
+În loc de programul intern se poate folosi un **Schedule helper** al Home
 Assistant (*Setări → Dispozitive și servicii → Ajutoare → Program*). Integrarea
 folosește un nivel cât helperul e pornit (implicit `home`) și altul cât e oprit
 (implicit `sleep`).
 
-E potrivit dacă ai deja un astfel de helper. Programul intern e mai bogat
+E potrivit când există deja un astfel de helper. Programul intern e mai bogat
 (mai multe niveluri, profiluri pe zile, editor în card).
 
 ## Ce se întâmplă la ora unei schimbări
@@ -140,7 +141,7 @@ E potrivit dacă ai deja un astfel de helper. Programul intern e mai bogat
 La ora din program, camera trece pe nivelul nou. Cu **pornirea anticipată**,
 încălzirea poate începe mai devreme, ca nivelul nou să fie atins exact la ora
 din program; cu **oprirea anticipată**, un nivel mai rece poate începe mai
-devreme (vezi [capitolul 7](07-anticipare-si-invatare.ro.md)).
+devreme ([capitolul 7](07-anticipare-si-invatare.ro.md)).
 
 Senzorul *Următoarea schimbare* al camerei arată următoarea schimbare, iar cardul arată
 în grafic ce urmează în următoarele 12 ore.
@@ -148,7 +149,7 @@ Senzorul *Următoarea schimbare* al camerei arată următoarea schimbare, iar ca
 ## Schimbarea programului dintr-o automatizare
 
 Serviciul `advanced_climate.set_schedule` înlocuiește programul unei camere
-(vezi [capitolul 11](11-entitati-si-servicii.ro.md#servicii)):
+([capitolul 11](11-entitati-si-servicii.ro.md#servicii)):
 
 ```yaml
 action: advanced_climate.set_schedule

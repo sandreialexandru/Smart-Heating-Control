@@ -2,7 +2,7 @@
 
 *[English](02-install-and-house.md) · [Cuprins](README.ro.md)*
 
-## Ce îți trebuie
+## Ce e necesar
 
 - Home Assistant **2026.6.0** sau mai nou.
 - Dispozitivele de încălzire în Home Assistant: un Generic Thermostat, TRV-uri,
@@ -15,35 +15,36 @@
 
 **Cu HACS (recomandat):**
 
-1. HACS → meniul ⋮ → **Custom repositories** → adaugi
+1. HACS → meniul ⋮ → **Custom repositories**: se adaugă
    `https://github.com/sandreialexandru/Smart-Heating-Control`, tipul
    **Integration**.
-2. Cauți **Smart Heating Control**, îl instalezi și repornești Home Assistant.
+2. Se caută **Smart Heating Control**, se instalează și se repornește Home
+   Assistant.
 3. **Setări → Dispozitive și servicii → Adaugă integrare → Smart Heating
    Control**.
 
-**Manual:** copiezi folderul `custom_components/advanced_climate` în
-`config/custom_components` și repornești Home Assistant.
+**Manual:** folderul `custom_components/advanced_climate` se copiază în
+`config/custom_components`, apoi se repornește Home Assistant.
 
-Cardul Lovelace se adaugă singur la resursele dashboard-urilor (vezi
-[capitolul 10](10-card.ro.md)).
+Cardul Lovelace se adaugă singur la resursele dashboard-urilor
+([capitolul 10](10-card.ro.md)).
 
 ## Crearea casei
 
 Formularele arată doar câmpurile care se aplică. Dacă un câmp nu apare, înseamnă
-că nu are sens pentru alegerile tale.
+că nu are sens pentru alegerile făcute.
 
 ### Pasul 1: casa
 
-| Câmp | Ce faci |
+| Câmp | Ce se completează |
 | --- | --- |
-| **Unitatea de temperatură** | °C sau °F. Toate temperaturile casei se introduc și se afișează în ea. Se poate schimba mai târziu (vezi mai jos). |
+| **Unitatea de temperatură** | °C sau °F. Toate temperaturile casei se introduc și se afișează în ea. Se poate schimba mai târziu (mai jos). |
 | **Nume** | Numele casei, de exemplu „Acasă”. Apare pe dispozitive și în card. |
-| **Persoane** | Entitățile `person` ale celor care locuiesc în casă. Locația lor decide dacă casa e *acasă*, *aproape* sau *departe*. Dacă le lași goale, casa e mereu *acasă* și decide doar programul. |
-| **Zone apropiate** | Zonele în care casa e *aproape* (`eco`) în loc de *departe* (`away`), de exemplu zona orașului tău. Dacă le lași goale, există doar *acasă* și *departe*. |
+| **Persoane** | Entitățile `person` ale celor care locuiesc în casă. Locația lor decide dacă casa e *acasă*, *aproape* sau *departe*. Dacă rămâne gol, casa e mereu *acasă* și decide doar programul. |
+| **Zone apropiate** | Zonele în care casa e *aproape* (`eco`) în loc de *departe* (`away`), de exemplu zona orașului. Dacă rămâne gol, există doar *acasă* și *departe*. |
 | **Casa e „acasă” când** | *Cel puțin o persoană e acasă* (potrivit pentru aproape toate casele) sau *Toți sunt acasă* (încălzirea scade imediat ce pleacă cineva). |
 
-**Exemplu.** Andrei și Maria locuiesc în București. Alegi persoanele
+**Exemplu.** Andrei și Maria locuiesc în București. Se aleg persoanele
 `person.andrei` și `person.maria`, iar ca zonă apropiată o zonă „București”
 (creată în Home Assistant la *Setări → Zone*). Când amândoi sunt la muncă în
 oraș, casa e *aproape* și trece pe `eco`. Când pleacă din oraș, casa e
@@ -53,14 +54,14 @@ oraș, casa e *aproape* și trece pe `eco`. Când pleacă din oraș, casa e
 
 **Încălzită prin** alege ce încălzește toată casa:
 
-| Alegere | Când o folosești |
+| Alegere | Când se folosește |
 | --- | --- |
-| **Generic Thermostat** | Ai un Generic Thermostat care pornește centrala (cazul cel mai des întâlnit). |
+| **Generic Thermostat** | Un Generic Thermostat pornește centrala (cazul cel mai des întâlnit). |
 | **Alte termostate / TRV-uri** | Un termostat smart care nu e Generic Thermostat (de exemplu un termostat Zigbee sau Wi-Fi). |
 | **Comutator (releu)** | Un releu pornește direct încălzirea, fără termostat. |
-| **Încă fără dispozitive** | Vei adăuga doar camere cu robinete proprii (de exemplu TRV-uri). |
+| **Încă fără dispozitive** | Se vor adăuga doar camere cu robinete proprii (de exemplu TRV-uri). |
 
-Ce alegi aici devine zona **Whole house** (toată casa), care se comportă ca o
+Ce se alege aici devine zona **Whole house** (toată casa), care se comportă ca o
 cameră și folosește toate opțiunile casei.
 
 **Pasul 3: dispozitive.** În funcție de alegere:
@@ -68,7 +69,7 @@ cameră și folosește toate opțiunile casei.
 - **Termostate**: termostatul care comandă centrala, de exemplu entitatea
   Generic Thermostat.
 - **Comutatoare (relee)**: doar când un releu încălzește direct.
-- **Comandă**: doar pentru alte termostate decât Generic Thermostat; vezi
+- **Comandă**: doar pentru alte termostate decât Generic Thermostat; în
   [capitolul 3](03-camere.ro.md#comanda-pentru-alte-termostate) pentru
   diferența dintre *Temperatură*, *Preset* și *Pornit / oprit*.
 
@@ -93,12 +94,12 @@ cameră și folosește toate opțiunile casei.
     histerezis sub temperatura setată până la histerezis peste ea.
 - **Generic Thermostat**: niciun pas, GT are propriile setări.
 
-După acești pași casa e creată. Pentru o casă cu un singur termostat, ai
-terminat; restul e opțional.
+După acești pași casa e creată. Pentru o casă cu un singur termostat,
+configurarea e gata; restul e opțional.
 
 ## Schimbarea unității de temperatură
 
-Pe pagina integrării, la casă: **⋮ → Reconfigurează**. Alegi altă unitate, iar
+Pe pagina integrării, la casă: **⋮ → Reconfigurează**. Se alege altă unitate, iar
 toate valorile (setări, niveluri, card) se convertesc. Nu trebuie introdus
 nimic din nou.
 
@@ -106,14 +107,14 @@ nimic din nou.
 
 Pe pagina integrării, **Configurează** deschide un meniu cu grupurile de
 opțiuni. Fiecare grup are întâi alegerile, apoi, dacă e cazul, un al doilea
-formular doar cu valorile de care ai nevoie.
+formular doar cu valorile necesare.
 
 ### Încălzirea întregii case
 
 Aceiași pași ca la crearea casei (sursa, dispozitivele, setările comenzii).
 Restul setărilor zonei *Whole house* (niveluri, senzori, ferestre, program) se
 schimbă ca la orice cameră: pe pagina integrării, la zona *Whole house*,
-**⋮ → Reconfigurează** (vezi [capitolul 3](03-camere.ro.md)).
+**⋮ → Reconfigurează** ([capitolul 3](03-camere.ro.md)).
 
 ### Prezență
 
@@ -122,16 +123,16 @@ schimbă ca la orice cameră: pe pagina integrării, la zona *Whole house*,
 | Persoane | – | Ca la crearea casei. |
 | Casa e „acasă” când | cel puțin una | Ca la crearea casei. |
 | Zone apropiate | niciuna | Ca la crearea casei. |
-| Folosește coordonatele pentru zonele apropiate | pornit | Cineva aflat într-o zonă care e în interiorul unei zone apropiate (de exemplu zona „Birou” din oraș) contează ca *aproape*. Oprește-l dacă persoanele nu au locație GPS. |
+| Folosește coordonatele pentru zonele apropiate | pornit | Cineva aflat într-o zonă care e în interiorul unei zone apropiate (de exemplu zona „Birou” din oraș) contează ca *aproape*. Se oprește dacă persoanele nu au locație GPS. |
 | Întârziere la plecare | 10 min | Cât timp trebuie să lipsească toată lumea înainte să scadă încălzirea. Evită reacția la drumuri scurte (magazin, plimbatul câinelui). |
-| Întârziere la sosire | 0 min | De obicei 0: încălzirea revine imediat ce vine cineva. Mărește doar dacă GPS-ul raportează uneori greșit „acasă”. |
+| Întârziere la sosire | 0 min | De obicei 0: încălzirea revine imediat ce vine cineva. Se mărește doar dacă GPS-ul raportează uneori greșit „acasă”. |
 | Senzori de prezență | niciunul | Țin casa *acasă* cât sunt pornite (mmWave, mișcare, un comutator pentru cine nu are telefon). |
 | Modul oaspeți se oprește după | 0 h | Modul oaspeți ține casa *acasă*; se oprește singur după atâtea ore. 0 = doar manual. |
 | Senzor de distanță (Proximity) | – | Pentru preîncălzirea pe drum spre casă. |
 | Senzor de direcție (Proximity) | – | Ca preîncălzirea să pornească doar când cineva vine spre casă, nu când stă la un birou aproape de casă. |
 | Senzor de timp de deplasare | – | Timpul până acasă (Waze, Google Travel Time). |
 
-Dacă ai pus un senzor de distanță sau de timp, apare al doilea formular,
+Cu un senzor de distanță sau de timp, apare al doilea formular,
 **Preîncălzire pe drum spre casă**:
 
 | Setare | Implicit | Ce face |
@@ -147,7 +148,7 @@ Totul despre prezență: [capitolul 5](05-prezenta.ro.md).
 | --- | --- | --- |
 | Senzor Workday | – | Senzorul integrării Workday, ca sărbătorile să folosească profilul zilelor de weekend. Fără el, luni–vineri sunt zile lucrătoare. |
 | Calendar | – | Opțional. Un eveniment cu numele unui profil (de exemplu `home_office`) sau al unui nivel (de exemplu `away`) îl aplică. |
-| Ziua programului începe la | 00:00 | Lasă 00:00. Schimbă doar pentru ture de noapte, ca o noapte să aparțină zilei de dinainte. |
+| Ziua programului începe la | 00:00 | De obicei 00:00. Se schimbă doar pentru ture de noapte, ca o noapte să aparțină zilei de dinainte. |
 
 Detalii: [capitolul 4](04-program.ro.md).
 
@@ -156,7 +157,7 @@ Detalii: [capitolul 4](04-program.ro.md).
 | Setare | Implicit | Ce face |
 | --- | --- | --- |
 | Senzor de temperatură exterioară | – | Temperatura de afară. Dacă e gol, se folosește temperatura entității meteo. |
-| Entitate meteo | – | Pentru prognoză, câștigul solar și ca temperatură de afară când nu ai senzor. |
+| Entitate meteo | – | Pentru prognoză, câștigul solar și ca temperatură de afară când nu există senzor. |
 | Oprește încălzirea când e cald afară | oprit | Oprește încălzirea când media de afară atinge pragul. |
 | Folosește prognoza | oprit | Folosește media prognozei pe următoarele ore pentru oprire / repornire. |
 | Sezon de încălzire | Mereu | *Mereu*, *Între date* sau *Automat (temperatura exterioară)*. |
@@ -171,7 +172,7 @@ lângă opțiune. Dacă o configurare mai veche le are pornite fără sursă, ca
 alerta *Pornite, dar nu funcționează…*, iar sezonul *Automat* se comportă ca
 *Mereu* (nu rămâne blocat oprit).
 
-Al doilea formular, **Valori pentru vreme și sezon**, arată doar ce ai pornit:
+Al doilea formular, **Valori pentru vreme și sezon**, arată doar ce e pornit:
 
 | Setare | Implicit | Interval |
 | --- | --- | --- |
@@ -211,14 +212,14 @@ Detalii: [capitolul 8](08-sursa-si-energie.ro.md).
 
 | Setare | Implicit | Ce face |
 | --- | --- | --- |
-| Sursa de căldură | – | Centrala (sau releul care o pornește) când camerele nu o pot porni singure (TRV-uri, robinete de zonă). **Lasă gol** cu Generic Thermostat sau un releu pe centrală. Formularul refuză un dispozitiv al unei camere și releul unui Generic Thermostat folosit de o cameră. |
+| Sursa de căldură | – | Centrala (sau releul care o pornește) când camerele nu o pot porni singure (TRV-uri, robinete de zonă). **Rămâne gol** cu Generic Thermostat sau un releu pe centrală. Formularul refuză un dispozitiv al unei camere și releul unui Generic Thermostat folosit de o cameră. |
 | Alertă când o cameră rămâne mai rece cu | 0 (oprit) | Alertă când o cameră rămâne cu atâtea grade sub țintă în timp ce altele sunt calde (robinet blocat, fereastră deschisă). |
 
 Al doilea formular, doar cu o sursă de căldură:
 
 | Setare | Implicit | Ce face |
 | --- | --- | --- |
-| Camere necesare pentru pornirea sursei | 1 | Câte camere trebuie să ceară căldură ca să pornească sursa. Cel mult numărul de camere ale casei; dacă ștergi camere mai târziu și rămân mai puține, primești o alertă. |
+| Camere necesare pentru pornirea sursei | 1 | Câte camere trebuie să ceară căldură ca să pornească sursa. Cel mult numărul de camere ale casei; dacă mai târziu se șterg camere și rămân mai puține, apare o alertă. |
 | Timp minim pornită / oprită | 5 / 5 min | Protecție contra pornirilor dese. |
 | Cameră de referință | – | Doar această cameră decide când merge sursa; celelalte doar își deschid sau închid robinetele. |
 

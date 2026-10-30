@@ -169,6 +169,9 @@ class House:
         self.auto_vacation = False
         # Last time an arrival ended the automatic vacation (far time counts from it).
         self.auto_vacation_reset: datetime | None = None
+        # The automatic vacation was on when guest mode ended: it comes back even
+        # while the departure delay of a person who came by meanwhile still runs.
+        self._auto_vacation_resume = False
         self.presence = PresenceDebouncer()
         self.outdoor = OutdoorTracker()
         self.boiler_runtime_s = 0.0
@@ -588,15 +591,26 @@ class House:
             # back when guest mode is turned off; then the presence of the people
             # decides as always (someone home or near ends it).
             pass
+        elif self._auto_vacation_resume and self.presence.current != PRESENCE_FAR:
+            # Guests just left: the automatic vacation comes back while every person
+            # is far (a person's departure delay may still run); someone of the
+            # people home or near ends it.
+            people = raw_house_presence(list(classes.values()), opts[CONF_HOME_RULE], False, False)
+            if people is not None and people != PRESENCE_FAR:
+                self._auto_vacation_resume = False
+                self.auto_vacation = False
+                self.auto_vacation_reset = None
         elif self.presence.current != PRESENCE_FAR:
             self.auto_vacation = False
             self.auto_vacation_reset = None
         elif self.arriving:
+            self._auto_vacation_resume = False
             # On the way home: the automatic vacation ends (the house preheats)
             # and the time far away counts again from now.
             self.auto_vacation = False
             self.auto_vacation_reset = now
         elif hours > 0:
+            self._auto_vacation_resume = False
             far = self.presence.far_for(now)
             if self.auto_vacation_reset is not None:
                 far = min(far, now - self.auto_vacation_reset)
@@ -613,9 +627,12 @@ class House:
         if self.guest and self.guest_until and now >= self.guest_until:
             self.guest = False
             self.guest_until = None
+            self._auto_vacation_resume = self.auto_vacation
 
     async def async_set_guest(self, on: bool) -> None:
         """Turn guest mode on or off."""
+        if self.guest and not on:
+            self._auto_vacation_resume = self.auto_vacation
         self.guest = on
         hours = float(self.options[CONF_GUEST_EXPIRE_HOURS] or 0)
         self.guest_until = dt_util.utcnow() + timedelta(hours=hours) if on and hours > 0 else None

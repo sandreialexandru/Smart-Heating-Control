@@ -2037,7 +2037,16 @@ async def test_automatic_vacation_goes_on_after_the_guests(
     assert hass.states.get("sensor.home_presence").state == "far"
     assert hass.states.get("sensor.bedroom_decision").state == "vacation"
 
-    # Someone of the people comes home while guests are there: the automatic vacation ends.
+    # Someone of the people comes by while guests are there and leaves again:
+    # after the guests the automatic vacation comes back all the same.
+    await guests(True)
+    hass.states.async_set("person.andrei", "home")
+    await _tick(hass, freezer, 30)
+    hass.states.async_set("person.andrei", "not_home")
+    await _tick(hass, freezer, 30)
+    await guests(False)
+    assert hass.states.get("sensor.bedroom_decision").state == "vacation"
+    # Someone of the people is home when the guests leave: no vacation.
     await guests(True)
     hass.states.async_set("person.andrei", "home")
     await _tick(hass, freezer, 30)

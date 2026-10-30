@@ -136,8 +136,7 @@ Vacation sets every room to `away`. It can start in three ways:
 one): while it is on, the rooms follow the schedule as if someone were home and
 the card band says the vacation is suspended. When it is turned off, the
 vacation goes on (the dates and the preheating stay as they were; the automatic
-vacation goes on at once, unless one of the people came near or home
-meanwhile). Guest mode is
+vacation comes back at once, unless one of the people is near or home then). Guest mode is
 not turned off by itself because of a vacation: set *Guest mode turns off after*
 if you want that.
 

@@ -2011,6 +2011,10 @@ class Room:
                 kind = "min"
         if kind is None:
             return False
+        previous = self._device_limits.get(entity_id, {}).get(kind)
+        if previous is not None and abs(previous[0] - reported) > margin:
+            # The limit changed on the device: the alert tells the new value.
+            self.house.clear_alert(f"limit_{entity_id}_{kind}")
         self._device_limits.setdefault(entity_id, {})[kind] = (reported, dt_util.utcnow())
         self._sent.setdefault(entity_id, {})[ATTR_TEMPERATURE] = reported
         shown = f"{reported:g} {unit}"

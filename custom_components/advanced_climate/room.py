@@ -2599,8 +2599,17 @@ class Room:
                 "uses_fixed": self.learner.model.uses_fixed,
                 "uses_outdoor": self.learner.model.uses_outdoor,
                 "episodes": len(self.learner.episodes),
+                # Every kept episode (°C, as stored), to check the fit.
+                "episode_list": [
+                    {"outdoor": o, "rise": g, "minutes": m, "at": at or None}
+                    for o, g, m, at in self.learner.episodes
+                ],
             },
             "cooling_coefficient": self.cooling.coefficient,
+            "cooling_episode_list": [
+                {"outdoor": o, "coefficient": k, "at": at or None}
+                for o, k, at, *_ in self.cooling.episodes
+            ],
             "runtime_hours": round(self.runtime_s / 3600, 2),
             "decisions": list(self.decisions),
         }

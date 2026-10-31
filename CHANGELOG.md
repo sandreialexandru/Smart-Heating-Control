@@ -5,6 +5,13 @@ release (and of each beta pre-release) are taken from here: a beta shows the
 *Unreleased* section, a release its own section. Older versions: see the
 GitHub releases.
 
+## Unreleased
+
+### Integration
+
+- The diagnostics list every kept heating episode (`episode_list`) and cooling
+  episode (`cooling_episode_list`) of each room, not only their number.
+
 ## 2.4.3 – 2026-10-31
 
 ### Integration

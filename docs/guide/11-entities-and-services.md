@@ -223,5 +223,7 @@ actions:
 ## Diagnostics
 
 On the integration page, **⋮ → Download diagnostics** gives the configuration,
-the learning (`learned_heating`) and the last 100 decisions of every room. Useful
+the learning (`learned_heating`, with every kept heating episode in
+`episode_list`, and the cooling episodes in `cooling_episode_list`) and the last
+100 decisions of every room. Useful
 when you report a problem.

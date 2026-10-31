@@ -2215,3 +2215,34 @@ async def test_trv_already_at_its_limit_is_learned_without_a_report(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_diagnostics_list_every_learned_episode(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The diagnostics have every kept heating and cooling episode, not only their number."""
+    from custom_components.advanced_climate.diagnostics import (
+        async_get_config_entry_diagnostics,
+    )
+
+    entry = await _setup(hass, freezer)
+    room = next(iter(entry.runtime_data.rooms.values()))
+    room.learner.episodes = [
+        [12.3, 0.9, 111.0, "2026-10-29T16:18:37+00:00"],
+        [10.0, 0.7, 60.0, "2026-10-31T07:56:08+00:00"],
+    ]
+    room.learner._model = None
+    room.cooling.episodes = [[11.0, 0.034, "2026-10-30T02:00:00+00:00"]]
+    data = await async_get_config_entry_diagnostics(hass, entry)
+    learned = data["state"]["rooms"][room.name]["learned_heating"]
+    assert learned["episodes"] == 2
+    assert learned["episode_list"] == [
+        {"outdoor": 12.3, "rise": 0.9, "minutes": 111.0, "at": "2026-10-29T16:18:37+00:00"},
+        {"outdoor": 10.0, "rise": 0.7, "minutes": 60.0, "at": "2026-10-31T07:56:08+00:00"},
+    ]
+    assert data["state"]["rooms"][room.name]["cooling_episode_list"] == [
+        {"outdoor": 11.0, "coefficient": 0.034, "at": "2026-10-30T02:00:00+00:00"}
+    ]
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

@@ -222,5 +222,7 @@ actions:
 ## Diagnosticul
 
 Pe pagina integrării, **⋮ → Descarcă diagnosticul** dă configurația, învățarea
-(`learned_heating`) și ultimele 100 de decizii ale fiecărei camere. E util la
+(`learned_heating`, cu toate episoadele de încălzire păstrate în `episode_list`,
+și episoadele de răcire în `cooling_episode_list`) și ultimele 100 de decizii ale
+fiecărei camere. E util la
 raportarea unei probleme.

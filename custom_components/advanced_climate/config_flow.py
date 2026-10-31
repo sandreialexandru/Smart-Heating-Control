@@ -515,14 +515,11 @@ def _energy_details(v: dict[str, Any]) -> vol.Schema:
     return vol.Schema(fields)
 
 
-def _boiler_schema(v: dict[str, Any], with_source: bool = True) -> vol.Schema:
-    """Boiler entity (not when the whole house already starts it) and room-difference alert."""
-    d = HOUSE_DEFAULTS
-    fields: dict[Any, Any] = {}
-    if with_source:
-        fields[_opt(CONF_BOILER_ENTITY, v)] = _entity(["switch", "climate", "input_boolean"])
-    fields[_req(CONF_ROOM_DIFF_ALERT, v, d)] = _number(0, 10, 0.5, "°C")
-    return vol.Schema(fields)
+def _boiler_schema(v: dict[str, Any]) -> vol.Schema:
+    """The heat source of the house."""
+    return vol.Schema(
+        {_opt(CONF_BOILER_ENTITY, v): _entity(["switch", "climate", "input_boolean"])}
+    )
 
 
 def _boiler_details(v: dict[str, Any], rooms: list[selector.SelectOptionDict]) -> vol.Schema:
@@ -550,24 +547,25 @@ def _boiler_details(v: dict[str, Any], rooms: list[selector.SelectOptionDict]) -
     return vol.Schema(fields)
 
 
-def _behavior_schema(v: dict[str, Any]) -> vol.Schema:
-    """Manual changes, vacation and safety choices."""
+def _behavior_schema(v: dict[str, Any], rooms: int) -> vol.Schema:
+    """Manual changes, vacation and safety choices (only those that can apply)."""
     d = HOUSE_DEFAULTS
-    return vol.Schema(
-        {
-            _req(CONF_OVERRIDE_MODE, v, d): _select(
-                [OVERRIDE_FIXED, OVERRIDE_NEXT], "override_mode"
-            ),
-            _req(CONF_OVERRIDE_SCOPE, v, d): _select(
-                [OVERRIDE_SCOPE_ROOM, OVERRIDE_SCOPE_HOUSE], "override_scope"
-            ),
-            _req(CONF_VACATION_PREHEAT, v, d): _number(0, 48, 0.5, "h"),
-            _req(CONF_AUTO_VACATION_HOURS, v, d): _number(0, 720, 1, "h"),
-            _req(CONF_FROST_TEMP, v, d): _number(3, 15, 0.5, "°C"),
-            _req(CONF_MAX_TEMP, v, d): _number(15, 35, 0.5, "°C"),
-            _req(CONF_REEVAL_MINUTES, v, d): _number(1, 60, 1, "min"),
-        }
-    )
+    fields: dict[Any, Any] = {
+        _req(CONF_OVERRIDE_MODE, v, d): _select([OVERRIDE_FIXED, OVERRIDE_NEXT], "override_mode"),
+    }
+    if rooms > 1:
+        # Copying a manual change to every room needs more than one room.
+        fields[_req(CONF_OVERRIDE_SCOPE, v, d)] = _select(
+            [OVERRIDE_SCOPE_ROOM, OVERRIDE_SCOPE_HOUSE], "override_scope"
+        )
+    fields[_req(CONF_VACATION_PREHEAT, v, d)] = _number(0, 48, 0.5, "h")
+    if v.get(CONF_PERSONS):
+        # Without people the house is never all away.
+        fields[_req(CONF_AUTO_VACATION_HOURS, v, d)] = _number(0, 720, 1, "h")
+    fields[_req(CONF_FROST_TEMP, v, d)] = _number(3, 15, 0.5, "°C")
+    fields[_req(CONF_MAX_TEMP, v, d)] = _number(15, 35, 0.5, "°C")
+    fields[_req(CONF_REEVAL_MINUTES, v, d)] = _number(1, 60, 1, "min")
+    return vol.Schema(fields)
 
 
 def _behavior_details(v: dict[str, Any]) -> vol.Schema:
@@ -584,18 +582,20 @@ def _behavior_details(v: dict[str, Any]) -> vol.Schema:
     return vol.Schema({})
 
 
-def _alerts_schema(v: dict[str, Any]) -> vol.Schema:
-    """Notifications: service, unavailable devices, batteries, windows."""
+def _alerts_schema(v: dict[str, Any], rooms: int) -> vol.Schema:
+    """Notifications: service, unavailable devices, batteries, windows, a colder room."""
     d = HOUSE_DEFAULTS
-    return vol.Schema(
-        {
-            _opt(CONF_NOTIFY_SERVICE, v): _text(),
-            _req(CONF_ALERT_WINDOW_MINUTES, v, d): _number(1, 720, 1, "min"),
-            _req(CONF_ALERT_UNAVAILABLE_MINUTES, v, d): _number(1, 720, 1, "min"),
-            _req(CONF_BATTERY_THRESHOLD, v, d): _number(1, 100, 1, "%"),
-            _req(CONF_VERIFY_COMMANDS, v, d): _bool(),
-        }
-    )
+    fields: dict[Any, Any] = {
+        _opt(CONF_NOTIFY_SERVICE, v): _text(),
+        _req(CONF_ALERT_WINDOW_MINUTES, v, d): _number(1, 720, 1, "min"),
+        _req(CONF_ALERT_UNAVAILABLE_MINUTES, v, d): _number(1, 720, 1, "min"),
+        _req(CONF_BATTERY_THRESHOLD, v, d): _number(1, 100, 1, "%"),
+        _req(CONF_VERIFY_COMMANDS, v, d): _bool(),
+    }
+    if rooms > 1:
+        # It compares the rooms with each other.
+        fields[_req(CONF_ROOM_DIFF_ALERT, v, d)] = _number(0, 10, 0.5, "°C")
+    return vol.Schema(fields)
 
 
 # ---------------------------------------------------------------------------
@@ -1061,19 +1061,10 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Menu."""
-        return self.async_show_menu(
-            step_id="init",
-            menu_options=[
-                "heating",
-                "presence",
-                "calendar",
-                "weather",
-                "energy",
-                "boiler",
-                "behavior",
-                "alerts",
-            ],
-        )
+        menu = ["heating", "presence", "calendar", "weather", "energy", "boiler", "behavior", "alerts"]
+        if self._whole_house_starts_source():
+            menu.remove("boiler")  # the whole house starts the boiler itself
+        return self.async_show_menu(step_id="init", menu_options=menu)
 
     def _house_zone(self) -> ConfigSubentry | None:
         """The whole-house zone, or the only room if there is just one."""
@@ -1130,7 +1121,11 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
             )
         else:
             entries.async_update_subentry(self.config_entry, zone, data=dict(data))
-        return self.async_create_entry(data=dict(self.config_entry.options))
+        options = dict(self.config_entry.options)
+        if data is not None and data.get(CONF_SOURCE) in (SOURCE_GT, SOURCE_SWITCH):
+            # The whole house starts the boiler itself: no heat source is kept.
+            options.pop(CONF_BOILER_ENTITY, None)
+        return self.async_create_entry(data=options)
 
     @property
     def _values(self) -> dict[str, Any]:
@@ -1255,6 +1250,12 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
             if sub.subentry_type == SUBENTRY_ROOM and sub.data.get(CONF_USE_HOUSE_SOURCE, True)
         ]
 
+    def _room_count(self) -> int:
+        """Rooms of the house (the whole-house zone included)."""
+        return sum(
+            1 for sub in self.config_entry.subentries.values() if sub.subentry_type == SUBENTRY_ROOM
+        )
+
     def _whole_house_starts_source(self) -> bool:
         """True when the whole-house zone (Generic Thermostat or relay) starts the boiler itself."""
         for sub in self.config_entry.subentries.values():
@@ -1264,8 +1265,6 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
 
     async def async_step_boiler(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Boiler and heat demand options."""
-        if self._whole_house_starts_source():
-            return await self.async_step_boiler_alert(user_input)
         schema = _boiler_schema(self._values)
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {"entity": "", "owner": ""}
@@ -1285,20 +1284,6 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
             description_placeholders=placeholders,
         )
 
-    async def async_step_boiler_alert(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Only the room-difference alert: the whole house already starts the heat source.
-
-        The form has no heat source, so saving it keeps none.
-        """
-        schema = _boiler_schema(self._values, with_source=False)
-        if user_input is not None:
-            self._first(schema, user_input)
-            self._pending.pop(CONF_BOILER_ENTITY, None)
-            return self.async_create_entry(data=self._pending)
-        return self.async_show_form(step_id="boiler_alert", data_schema=schema)
-
     async def async_step_boiler_details(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -1310,7 +1295,7 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Overrides, vacation and limits."""
-        schema = _behavior_schema(self._values)
+        schema = _behavior_schema(self._values, self._room_count())
         if user_input is not None:
             self._first(schema, user_input)
             return await self.async_step_behavior_details()
@@ -1324,7 +1309,7 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
 
     async def async_step_alerts(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Notifications."""
-        schema = _alerts_schema(self._values)
+        schema = _alerts_schema(self._values, self._room_count())
         if user_input is not None:
             return self._save(schema, user_input)
         return self.async_show_form(step_id="alerts", data_schema=schema)
@@ -1525,12 +1510,16 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
             for p, v in self._current_levels().items()
         }
 
-        fields: dict[Any, Any] = {
-            vol.Required(CONF_NEARBY_MODE, default=d[CONF_NEARBY_MODE]): _select(
+        # "Nearby" happens only in a house with nearby zones.
+        nearby = bool(self._get_entry().options.get(CONF_NEARBY_ZONES))
+        fields: dict[Any, Any] = {}
+        if nearby:
+            fields[vol.Required(CONF_NEARBY_MODE, default=d[CONF_NEARBY_MODE])] = _select(
                 [NEARBY_PRESET, NEARBY_TEMPERATURE], "nearby_mode"
-            ),
-            vol.Required(CONF_NEARBY_LIMIT, default=bool(d.get(CONF_NEARBY_LIMIT, False))): _bool(),
-        }
+            )
+            fields[
+                vol.Required(CONF_NEARBY_LIMIT, default=bool(d.get(CONF_NEARBY_LIMIT, False)))
+            ] = _bool()
         if source != SOURCE_GT:
             for preset in PRESETS:
                 if uses_presets:
@@ -1556,6 +1545,9 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                     low, high, 0.5, "°C"
                 )
         schema = vol.Schema(fields)
+        if not fields:
+            # Generic Thermostat in a house without nearby zones: nothing to ask.
+            return await self.async_step_sensors()
         placeholders = {"presets": ", ".join(device_presets) or "-", "name": ""}
         if user_input is not None:
             if uses_presets:
@@ -1613,10 +1605,11 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                 self._data[CONF_LEVELS] = {p: float(kept[f"temp_{p}"]) for p in PRESETS}
             else:
                 self._data.pop(CONF_LEVELS, None)
-            self._data[CONF_NEARBY_MODE] = user_input[CONF_NEARBY_MODE]
-            self._data[CONF_NEARBY_LIMIT] = bool(user_input.get(CONF_NEARBY_LIMIT, False))
-            if user_input[CONF_NEARBY_MODE] == NEARBY_TEMPERATURE:
-                return await self.async_step_levels_nearby()
+            if nearby:
+                self._data[CONF_NEARBY_MODE] = user_input[CONF_NEARBY_MODE]
+                self._data[CONF_NEARBY_LIMIT] = bool(user_input.get(CONF_NEARBY_LIMIT, False))
+                if user_input[CONF_NEARBY_MODE] == NEARBY_TEMPERATURE:
+                    return await self.async_step_levels_nearby()
             return await self.async_step_sensors()
         return self.async_show_form(
             step_id="levels", data_schema=schema, description_placeholders=placeholders

@@ -203,24 +203,12 @@
       "boiler": {
         "title": "Heat source and heat demand",
         "data": {
-          "boiler_entity": "Heat source",
-          "room_diff_alert": "Alert when a room stays colder than"
+          "boiler_entity": "Heat source"
         },
         "data_description": {
-          "boiler_entity": "The boiler (or the relay that starts the heat source) when the rooms cannot start it themselves (TRVs, zone valves). The integration starts it when rooms ask for heat, and the learning and the heating time count only while it runs. Leave empty with Generic Thermostat or a relay on the boiler, and never pick the relay Generic Thermostat already uses. With TRVs and a boiler started by a thermostat that is not in Home Assistant, the learning is not reliable: optimal start and stop are not recommended.",
-          "room_diff_alert": "Alert when one room stays this much below its target while others are warm (stuck valve, open window). 0 = off; useful only with several rooms."
+          "boiler_entity": "The boiler (or the relay that starts the heat source) when the rooms cannot start it themselves (TRVs, zone valves). The integration starts it when rooms ask for heat, and the learning and the heating time count only while it runs. Never the relay a Generic Thermostat already uses. With TRVs and a boiler started by a thermostat that is not in Home Assistant, the learning is not reliable: optimal start and stop are not recommended."
         },
-        "description": "Only for houses where the rooms cannot start the heat source themselves (TRVs or zone valves): the integration then starts it when rooms ask for heat, and a room heats (for the learning and the heating time) only while it runs. With Generic Thermostat or a relay on the boiler it stays empty; the alert below still works.\n\n⚠️ With TRVs on every radiator, the installation must let the water through (an automatic bypass, a boiler with an internal bypass or one radiator without a TRV): the TRVs close at their target, and the heat source may run until its minimum on time ends."
-      },
-      "boiler_alert": {
-        "title": "Heat source and heat demand",
-        "description": "The heating of the whole house (Generic Thermostat or relay) already starts the boiler, so no heat source is chosen here. A heat source saved before is removed when this form is saved.\n\nRooms with TRVs added to such a house do not start the boiler: it runs only when the whole-house thermostat or relay asks for heat.",
-        "data": {
-          "room_diff_alert": "Alert when a room stays colder than"
-        },
-        "data_description": {
-          "room_diff_alert": "Alert when one room stays this much below its target while others are warm (stuck valve, open window). 0 = off; useful only with several rooms."
-        }
+        "description": "Only for houses where the rooms cannot start the heat source themselves (TRVs or zone valves): the integration then starts it when rooms ask for heat, and a room heats (for the learning and the heating time) only while it runs.\n\n⚠️ With TRVs on every radiator, the installation must let the water through (an automatic bypass, a boiler with an internal bypass or one radiator without a TRV): the TRVs close at their target, and the heat source may run until its minimum on time ends."
       },
       "behavior": {
         "title": "Manual changes, vacation and limits",
@@ -250,14 +238,16 @@
           "alert_window_minutes": "Alert when a window is open longer than",
           "alert_unavailable_minutes": "Alert when a device is unavailable longer than",
           "battery_threshold": "Low battery below",
-          "verify_commands": "Verify commands"
+          "verify_commands": "Verify commands",
+          "room_diff_alert": "Alert when a room stays colder than"
         },
         "data_description": {
           "notify_service": "e.g. notify.mobile_app_phone. Leave empty for notifications in Home Assistant only.",
           "alert_window_minutes": "Alert when a window stays open this long while heating is needed.",
           "alert_unavailable_minutes": "Alert when a thermostat or sensor is unavailable this long.",
           "battery_threshold": "Alert when the battery of a room device (TRV, sensor) drops below this.",
-          "verify_commands": "After 2 minutes checks that the device accepted the command, retries once, then alerts. Turn off only if a device reports its state slowly."
+          "verify_commands": "After 2 minutes checks that the device accepted the command, retries once, then alerts. Turn off only if a device reports its state slowly.",
+          "room_diff_alert": "Alert when one room stays this much below its target while others are warm (stuck valve, open window). 0 = off; useful only with several rooms."
         }
       },
       "heating": {

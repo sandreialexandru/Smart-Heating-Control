@@ -9,6 +9,14 @@ GitHub releases.
 
 ### Integration
 
+- A room can be set not to heat from the heat source of the house (*Heats from
+  the heat source of the house*, in the room's devices step, shown only when the
+  house has a heat source; on by default). A room with its own heat (electric
+  heater, heat pump, air conditioner) then no longer starts the boiler, does not
+  count for the rooms needed, and its heating and learning follow its own device.
+- The whole-house heating choice explains better when to pick *No heating
+  devices yet*: every room has its own heating (TRVs, electric heaters, a heat
+  pump or air conditioner, underfloor heating).
 - The diagnostics list every kept heating episode (`episode_list`) and cooling
   episode (`cooling_episode_list`) of each room, not only their number.
 

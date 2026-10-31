@@ -82,6 +82,7 @@ from .const import (
     CONF_TEMP_SENSORS,
     CONF_TRV_BOOST,
     CONF_TRV_BOOST_TEMP,
+    CONF_USE_HOUSE_SOURCE,
     CONF_VALVE_DAY,
     CONF_VALVE_EXERCISE,
     CONF_VALVE_TIME,
@@ -1466,6 +1467,11 @@ class Room:
         ]
         return max(values) if values else None
 
+    @property
+    def uses_house_source(self) -> bool:
+        """True when the room heats from the heat source of the house (the default)."""
+        return bool(self.config.get(CONF_USE_HOUSE_SOURCE, True))
+
     def _frost_holding(self) -> bool:
         """Frost protection started (heating off otherwise) and the device still heats."""
         previous = self.decision
@@ -1584,6 +1590,7 @@ class Room:
         # relay, on / off thermostat) and, when one is set, the heat source of
         # the house (the boiler that TRVs and zone valves wait for).
         configured, source_on = self.house.heat_source_state()
+        configured = configured and self.uses_house_source
         self.source_unknown = configured and source_on is None
         heating = demand and (not configured or bool(source_on))
         now = dt_util.utcnow()
@@ -2536,7 +2543,7 @@ class Room:
             return None
         house = self.house
         configured, source_on = house.heat_source_state()
-        if self.heat_demand:
+        if self.heat_demand and self.uses_house_source:
             if configured and source_on is None:
                 return {"code": "source_unknown"}
             if house.source_waiting:
@@ -2550,7 +2557,9 @@ class Room:
             ):
                 return {"code": "reference_room", "room": house.rooms[reference].name}
             needed = max(1, int(house.options[CONF_BOILER_MIN_ROOMS]))
-            count = sum(1 for room in house.rooms.values() if room.heat_demand)
+            count = sum(
+                1 for room in house.rooms.values() if room.heat_demand and room.uses_house_source
+            )
             if not reference and count < needed:
                 return {"code": "rooms_needed", "count": count, "needed": needed}
             return {"code": "source_off"}

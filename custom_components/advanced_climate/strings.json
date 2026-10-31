@@ -36,7 +36,7 @@
         },
         "description": "The thermostat (or relay) that heats the whole house. It becomes the zone {zone} and works with every option of the house. Rooms with their own valves can be added later with \"Add room\".",
         "data_description": {
-          "source": "What heats the whole house. Pick 'No heating devices yet' if you will only add rooms with their own valves."
+          "source": "What heats the whole house: a Generic Thermostat or a relay that starts the boiler, or another thermostat. 'No heating devices yet' when nothing heats the whole house as one zone and every room is added with its own heating: TRVs or valves on the radiators, electric heaters, a heat pump or air conditioner, underfloor heating."
         }
       },
       "heating_devices": {
@@ -267,7 +267,7 @@
         },
         "description": "The thermostat (or relay) that heats the whole house. It becomes the zone {zone} and works with every option of the house. Rooms with their own valves can be added later with \"Add room\".",
         "data_description": {
-          "source": "What heats the whole house. Pick 'No heating devices yet' if you will only add rooms with their own valves."
+          "source": "What heats the whole house: a Generic Thermostat or a relay that starts the boiler, or another thermostat. 'No heating devices yet' when nothing heats the whole house as one zone and every room is added with its own heating: TRVs or valves on the radiators, electric heaters, a heat pump or air conditioner, underfloor heating."
         }
       },
       "heating_devices": {
@@ -452,13 +452,15 @@
             "climates": "Thermostats",
             "switches": "Switches (relays)",
             "command_mode": "Command",
-            "trv_boost": "Boost TRV temperature while heating"
+            "trv_boost": "Boost TRV temperature while heating",
+            "use_house_source": "Heats from the heat source of the house"
           },
           "data_description": {
             "climates": "The thermostats of this room. Several thermostats in one room all get the same command.",
             "switches": "The relays that heat this room.",
             "command_mode": "Temperature: the integration sends the temperature of each level (most TRVs). Preset: each level uses a preset of the thermostat, with the thermostat's temperature. On / off: the thermostat is only switched on and off, the integration keeps the temperature.",
-            "trv_boost": "While the room asks for heat, the TRVs get a higher temperature so they stay open until the room is warm; the rest of the time they get the target. The heat demand then comes from the room sensor, with the hysteresis. Needs a temperature sensor in the room. Only with the Temperature command."
+            "trv_boost": "While the room asks for heat, the TRVs get a higher temperature so they stay open until the room is warm; the rest of the time they get the target. The heat demand then comes from the room sensor, with the hysteresis. Needs a temperature sensor in the room. Only with the Temperature command.",
+            "use_house_source": "On: the room's heat comes from the heat source of the house (radiators on the boiler): it starts the boiler when it asks for heat, and it heats only while the boiler runs. Off: the room has its own heat (electric heater, heat pump, air conditioner): it does not start the boiler, and it heats while its own device runs."
           }
         },
         "control_on_off": {

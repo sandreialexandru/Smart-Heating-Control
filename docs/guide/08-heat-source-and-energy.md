@@ -74,7 +74,14 @@ runs**:
 
 - Generic Thermostat: when it reports heating (`hvac_action`);
 - relay or on / off thermostat: when it is on;
-- with a *Heat source* set: in addition, only while the source runs.
+- with a *Heat source* set: in addition, only while the source runs (not for a
+  room with *Heats from the heat source of the house* off).
+
+**Rooms with their own heat.** In a house with a *Heat source*, a room heated
+otherwise (an electric heater, a heat pump, an air conditioner) has *Heats from
+the heat source of the house* off, in its devices step. It then does not start
+the boiler (neither for *Rooms needed* nor for frost protection), cannot be the
+*Reference room*, and heats while its own device runs.
 
 A room that asks for heat while the source waits for other rooms cools down,
 and this is learned as cooling. While the state of the source is unknown,

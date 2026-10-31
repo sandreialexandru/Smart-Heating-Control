@@ -73,7 +73,14 @@ merge sursa ei**:
 
 - Generic Thermostat: când spune că încălzește (`hvac_action`);
 - releu sau termostat pornit / oprit: când e pornit;
-- cu *Sursa de căldură* setată: în plus, doar cât merge și sursa.
+- cu *Sursa de căldură* setată: în plus, doar cât merge și sursa (nu și pentru o
+  cameră cu *Se încălzește de la sursa de căldură a casei* oprit).
+
+**Camere cu încălzirea lor.** Într-o casă cu *Sursă de căldură*, o cameră
+încălzită altfel (radiator electric, pompă de căldură, aer condiționat) are *Se
+încălzește de la sursa de căldură a casei* oprit, la pasul dispozitivelor. Atunci
+nu pornește centrala (nici la *Camere necesare*, nici pentru antiîngheț), nu
+poate fi *Cameră de referință* și încălzește cât merge propriul dispozitiv.
 
 O cameră care cere căldură în timp ce sursa așteaptă alte camere se răcește, iar
 asta se învață ca răcire. Cât timp starea sursei e necunoscută, nu se învață

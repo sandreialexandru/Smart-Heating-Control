@@ -58,7 +58,7 @@ is *far* and goes to `away`.
 | **Generic Thermostat** | A Generic Thermostat starts the boiler (the most common case). |
 | **Other thermostats / TRVs** | A smart thermostat that is not Generic Thermostat (e.g. a Zigbee or Wi-Fi thermostat). |
 | **Switch (relay)** | A relay turns the heating on directly, without a thermostat. |
-| **No heating devices yet** | You will only add rooms with their own valves (e.g. TRVs). |
+| **No heating devices yet** | Nothing heats the whole house as one zone; every room is added with its own heating: TRVs or valves on the radiators, electric heaters, a heat pump or air conditioner, underfloor heating. |
 
 What you pick becomes the zone **Whole house**, which behaves like a room and
 uses every option of the house.

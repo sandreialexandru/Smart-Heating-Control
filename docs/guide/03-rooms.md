@@ -35,6 +35,7 @@ heating are skipped.
 | **Switches (relays)** | The relays that heat the room (only for *Switch*). |
 | **Command** | Only for other thermostats / TRVs, see below. |
 | **Boost TRV temperature while heating** | Only for other thermostats / TRVs with the *Temperature* command (otherwise *The TRV boost works only with the Temperature command*), see step 3. |
+| **Heats from the heat source of the house** | Only when the house has a *Heat source* (on by default). On: the room's radiators are on the boiler; the room starts the boiler when it asks for heat and heats only while the boiler runs. Off: the room has its own heat (electric heater, heat pump, air conditioner); it does not start the boiler, does not count for *Rooms needed*, cannot be the *Reference room* and heats while its own device runs. |
 
 At least one device must be picked (otherwise *Select at least one device*).
 

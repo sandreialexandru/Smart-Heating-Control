@@ -35,6 +35,7 @@ de încălzire sunt săriți.
 | **Comutatoare (relee)** | Releele care încălzesc camera (doar pentru *Comutator*). |
 | **Comandă** | Doar pentru alte termostate / TRV-uri, mai jos. |
 | **Forțează temperatura TRV cât încălzește** | Doar pentru alte termostate / TRV-uri cu comanda *Temperatură* (altfel apare *Forțarea TRV merge doar cu comanda Temperatură*), detalii la pasul 3. |
+| **Se încălzește de la sursa de căldură a casei** | Doar când casa are o *Sursă de căldură* (implicit pornit). Pornit: caloriferele camerei sunt pe centrală; camera pornește centrala când cere căldură și încălzește doar cât merge centrala. Oprit: camera are încălzirea ei (radiator electric, pompă de căldură, aer condiționat); nu pornește centrala, nu contează la *Camere necesare*, nu poate fi *Cameră de referință* și încălzește cât merge propriul dispozitiv. |
 
 Trebuie ales cel puțin un dispozitiv (altfel apare *Alege cel puțin un
 dispozitiv*).

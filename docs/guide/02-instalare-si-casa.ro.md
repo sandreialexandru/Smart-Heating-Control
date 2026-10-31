@@ -59,7 +59,7 @@ oraș, casa e *aproape* și trece pe `eco`. Când pleacă din oraș, casa e
 | **Generic Thermostat** | Un Generic Thermostat pornește centrala (cazul cel mai des întâlnit). |
 | **Alte termostate / TRV-uri** | Un termostat smart care nu e Generic Thermostat (de exemplu un termostat Zigbee sau Wi-Fi). |
 | **Comutator (releu)** | Un releu pornește direct încălzirea, fără termostat. |
-| **Încă fără dispozitive** | Se vor adăuga doar camere cu robinete proprii (de exemplu TRV-uri). |
+| **Încă fără dispozitive** | Nimic nu încălzește toată casa ca o singură zonă; fiecare cameră se adaugă cu încălzirea ei: TRV-uri sau robinete pe calorifere, radiatoare electrice, pompă de căldură sau aer condiționat, încălzire în pardoseală. |
 
 Ce se alege aici devine zona **Whole house** (toată casa), care se comportă ca o
 cameră și folosește toate opțiunile casei.

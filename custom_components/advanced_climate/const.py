@@ -269,6 +269,8 @@ CONF_LEARN_TOLERANCE: Final = "learn_tolerance"  # thermostat tolerance (other t
 # Temperature command: the TRVs get a higher temperature while the room asks for
 # heat (decided from the room sensor with the hysteresis), the target otherwise.
 CONF_TRV_BOOST: Final = "trv_boost"
+# The room heats from the heat source of the house (off: its own heat, e.g. electric).
+CONF_USE_HOUSE_SOURCE: Final = "use_house_source"
 CONF_TRV_BOOST_TEMP: Final = "trv_boost_temperature"  # °C; empty = maximum of the house
 CONF_STOP_TOLERANCE: Final = "stop_tolerance"  # comfort kept by optimal stop (other thermostats)
 CONF_MIN_ON: Final = "min_on_minutes"
@@ -335,6 +337,7 @@ DEFAULT_SCHEDULE: Final = (
 
 ROOM_DEFAULTS: Final = {
     CONF_SOURCE: SOURCE_GT,
+    CONF_USE_HOUSE_SOURCE: True,
     CONF_CLIMATES: [],
     CONF_SWITCHES: [],
     CONF_COMMAND_MODE: COMMAND_PRESET,

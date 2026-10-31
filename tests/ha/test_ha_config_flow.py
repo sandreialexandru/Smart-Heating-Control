@@ -484,6 +484,22 @@ async def test_a_device_is_commanded_by_one_room_only(hass: HomeAssistant) -> No
     assert result["step_id"] == "control_on_off"
 
 
+async def test_room_asks_for_the_house_heat_source_only_with_one(hass: HomeAssistant) -> None:
+    """The room form asks whether the room heats from the heat source only when the house has one."""
+    flow = hass.config_entries.subentries
+    for options, shown in (({}, False), ({"boiler_entity": "switch.boiler"}, True)):
+        entry = _house_with_rooms(hass, options=options)
+        result = await flow.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
+        result = await flow.async_configure(result["flow_id"], {"name": "Bath", "source": "switch"})
+        assert ("use_house_source" in _keys(result)) is shown
+        if shown:
+            result = await flow.async_configure(
+                result["flow_id"],
+                {"switches": ["input_boolean.bath_heater"], "use_house_source": False},
+            )
+            assert result["step_id"] == "control_on_off"
+
+
 async def test_heat_source_and_generic_thermostat_relay(hass: HomeAssistant) -> None:
     """The heat source is not a room device, nor the relay of a Generic Thermostat room."""
     climate = _gt_climate(hass, "switch.gt_relay")

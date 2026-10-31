@@ -47,6 +47,7 @@ entry for the **house** (people, zones, global mode, shared settings) and one
 | Heating | heat source running | A room heats (learning, heating time) only while its heat source runs: GT heating, the relay or on / off thermostat on, and the *Heat source* too when set; with TRVs and no heat source, the demand of the TRV. While the heat source state is unknown no episode is used. With TRVs and a boiler started by a thermostat outside Home Assistant the learning is not reliable |
 | Rooms needed | 1 | Number of rooms that must ask for heat to start the heat source. It has priority over optimal start: with more than 1, a room in optimal start waits until enough rooms ask for heat, so it may reach its target later |
 | Reference room | none | Only this room decides for the heat source |
+| Heats from the heat source of the house | on (per room, only with a heat source) | Off for a room with its own heat (electric, heat pump): it does not start the heat source, does not count for the rooms needed, cannot be the reference room, and heats while its own device runs |
 | Room difference alert | off | Alert when a room stays colder than the target while others are warm |
 
 ## 2. Levels (presets)
@@ -222,7 +223,7 @@ One select for the house: **Auto / Vacation / Off / Summer**.
 | Periodic reevaluation | 5 min | In addition to events |
 | Invalid values | refused | A sensor value, attribute or saved value that is not a number (`nan`, `inf`) counts as unavailable or is dropped; a temperature sensor without a unit is read in the unit of the house. `set_override` refuses a temperature that is not a number and a duration outside 0.25–72 h (as in the form); the vacation entities refuse an end not after the start; a malformed `set_schedule` profile gives a clear error |
 | One owner per device | form check | A thermostat or relay is controlled by one room only (in every house); the heat source is not a room device; the relay of a Generic Thermostat used by a room is neither a room device nor a heat source; the outdoor sensor is not a room temperature sensor. Sensors may be shared |
-| Rooms needed | ≤ rooms | The form allows at most the number of rooms of the house; an alert when rooms are removed and fewer remain |
+| Rooms needed | ≤ rooms | The form allows at most the number of rooms of the house that heat from the heat source; an alert when rooms are removed and fewer remain |
 | Time | UTC inside | Durations (heating time, learning, manual changes, delays, vacation preheat) are real time, also across a DST change; the schedule, workdays and daily means use the local time. A schedule slot in the hour repeated at the end of summer time applies once (at its first occurrence); one in the hour skipped in spring starts when that hour ends (e.g. 03:30 → 04:00). |
 
 ## 11. Visibility

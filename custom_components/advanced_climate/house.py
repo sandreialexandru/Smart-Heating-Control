@@ -1122,34 +1122,43 @@ class House:
     async def _async_control_boiler(self, now: datetime) -> None:
         """Switch the boiler from the heat demand of the rooms, with minimum on / off times."""
         opts = self.options
+        # Only the rooms that heat from the heat source of the house start it.
+        sourced = {rid: room for rid, room in self.rooms.items() if room.uses_house_source}
         reference = opts.get(CONF_REFERENCE_ROOM)
+        if reference not in sourced:
+            reference = None
         needed = max(1, int(opts[CONF_BOILER_MIN_ROOMS]))
-        if reference and reference in self.rooms:
-            demand = self.rooms[reference].heat_demand
+        if reference:
+            demand = sourced[reference].heat_demand
         else:
-            count = sum(1 for room in self.rooms.values() if room.heat_demand)
-            demand = count >= needed if self.rooms else False
+            count = sum(1 for room in sourced.values() if room.heat_demand)
+            demand = count >= needed if sourced else False
         # More rooms needed than the house has (rooms were removed): the heat
         # source would start only for frost protection.
         if (
             opts.get(CONF_BOILER_ENTITY)
-            and not (reference and reference in self.rooms)
-            and needed > len(self.rooms)
+            and not reference
+            and needed > len(sourced)
         ):
             self.notify(
                 "boiler_min_rooms",
                 f"Rooms needed to start the heat source is {needed}, but the house has "
-                f"{len(self.rooms)} rooms: the heat source starts only for frost protection.",
+                f"{len(sourced)} rooms that heat from it: the heat source starts only for "
+                "frost protection.",
                 code="boiler_min_rooms",
-                params={"needed": needed, "rooms": len(self.rooms)},
+                params={"needed": needed, "rooms": len(sourced)},
             )
         else:
             self.clear_alert("boiler_min_rooms")
         # Frost protection of any room starts the heat source on its own (no
         # rooms needed, no reference room, also while paused).
-        frost = any(room.frost_demand for room in self.rooms.values())
+        frost = any(room.frost_demand for room in sourced.values())
         demand = demand or frost
-        self.heat_demand = demand
+        # The house asks for heat also when a room with its own heat does; only
+        # ``demand`` (the rooms of the heat source) switches the heat source.
+        self.heat_demand = demand or any(
+            room.heat_demand for room in self.rooms.values() if not room.uses_house_source
+        )
         # Heating time of the house: while the heat source runs (its real state),
         # without one while at least one room heats.
         configured, source_on = self.heat_source_state()

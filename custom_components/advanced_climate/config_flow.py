@@ -121,6 +121,7 @@ from .const import (
     CONF_TRAVEL_TIME,
     CONF_TRV_BOOST,
     CONF_TRV_BOOST_TEMP,
+    CONF_USE_HOUSE_SOURCE,
     CONF_VACATION_PREHEAT,
     CONF_VALVE_DAY,
     CONF_VALVE_EXERCISE,
@@ -1247,11 +1248,11 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
         return self._second("energy_details", _energy_details(self._pending_values), user_input)
 
     def _room_options(self) -> list[selector.SelectOptionDict]:
-        """Rooms of the house, for the reference room choice."""
+        """Rooms of the house that heat from its heat source, for the reference room choice."""
         return [
             selector.SelectOptionDict(value=sub.subentry_id, label=sub.title)
             for sub in self.config_entry.subentries.values()
-            if sub.subentry_type == SUBENTRY_ROOM
+            if sub.subentry_type == SUBENTRY_ROOM and sub.data.get(CONF_USE_HOUSE_SOURCE, True)
         ]
 
     def _whole_house_starts_source(self) -> bool:
@@ -1394,10 +1395,22 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
         """The devices that heat the room (and the command for other thermostats)."""
         d = self._data
         schema = _devices_schema(d)
+        # Only a house with a heat source asks whether the room heats from it.
+        with_source = bool(self._get_entry().options.get(CONF_BOILER_ENTITY))
+        if with_source:
+            schema = schema.extend(
+                {
+                    vol.Required(
+                        CONF_USE_HOUSE_SOURCE, default=bool(d.get(CONF_USE_HOUSE_SOURCE, True))
+                    ): _bool()
+                }
+            )
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {"entity": "", "owner": ""}
         if user_input is not None:
             errors = _devices_done(d, user_input)
+            if with_source:
+                d[CONF_USE_HOUSE_SOURCE] = bool(user_input.get(CONF_USE_HOUSE_SOURCE, True))
             key = CONF_SWITCHES if d[CONF_SOURCE] == SOURCE_SWITCH else CONF_CLIMATES
             skip = (self._get_entry().entry_id, self._subentry_id)
             if not errors and (

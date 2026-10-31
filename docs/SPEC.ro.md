@@ -51,6 +51,7 @@ program).
 | Încălzire | sursa de căldură pornită | O cameră încălzește (învățare, timp de încălzire) doar cât merge sursa ei: GT încălzește, releul sau termostatul on / off e pornit și, când e setată, și *Sursa de căldură*; cu TRV-uri și fără sursă, cererea TRV-ului. Cât timp starea sursei e necunoscută nu se folosește niciun episod. Cu TRV-uri și o centrală pornită de un termostat din afara Home Assistant învățarea nu e sigură |
 | Camere necesare | 1 | Câte camere trebuie să ceară căldură ca să pornească sursa de căldură. Are prioritate față de pornirea anticipată: cu mai mult de 1, o cameră aflată în pornire anticipată așteaptă până cer căldură destule camere, deci poate ajunge la țintă mai târziu |
 | Cameră de referință | niciuna | Doar această cameră decide pentru sursa de căldură |
+| Se încălzește de la sursa de căldură a casei | pornit (pe cameră, doar cu o sursă de căldură) | Oprit pentru o cameră cu încălzirea ei (electric, pompă de căldură): nu pornește sursa, nu contează la camerele necesare, nu poate fi cameră de referință și încălzește cât merge propriul dispozitiv |
 | Alertă diferență între camere | oprită | Alertă când o cameră rămâne sub țintă în timp ce altele sunt calde |
 
 ## 2. Niveluri (preseturi)
@@ -226,7 +227,7 @@ Un select pentru casă: **Auto / Vacanță / Oprit / Vară**.
 | Reevaluare periodică | 5 min | Pe lângă evenimente |
 | Valori invalide | refuzate | O valoare de senzor, un atribut sau o valoare salvată care nu e număr (`nan`, `inf`) e tratată ca indisponibilă sau e eliminată; un senzor de temperatură fără unitate e citit în unitatea casei. `set_override` refuză o temperatură care nu e număr și o durată în afara intervalului 0,25–72 h (ca în formular); entitățile vacanței refuză un sfârșit care nu e după început; un profil `set_schedule` greșit dă o eroare clară |
 | Un singur proprietar pe dispozitiv | verificare în formular | Un termostat sau un releu e comandat de o singură cameră (din toate casele); sursa de căldură nu e dispozitivul unei camere; releul unui Generic Thermostat folosit de o cameră nu e nici dispozitiv de cameră, nici sursă de căldură; senzorul exterior nu e senzor de temperatură al unei camere. Senzorii pot fi comuni |
-| Camere necesare | ≤ camere | Formularul permite cel mult numărul de camere ale casei; alertă când se șterg camere și rămân mai puține |
+| Camere necesare | ≤ camere | Formularul permite cel mult numărul de camere ale casei care se încălzesc de la sursa de căldură; alertă când se șterg camere și rămân mai puține |
 | Timp | UTC intern | Duratele (timp de încălzire, învățare, modificări manuale, întârzieri, preîncălzirea dinaintea sfârșitului vacanței) sunt în timp real, și peste schimbarea orei; programul, zilele lucrătoare și mediile zilnice folosesc ora locală. Un interval din program aflat în ora repetată la sfârșitul orei de vară se aplică o singură dată (la prima apariție); unul din ora sărită primăvara începe când se termină acea oră (de exemplu 03:30 → 04:00). |
 
 ## 11. Vizibilitate

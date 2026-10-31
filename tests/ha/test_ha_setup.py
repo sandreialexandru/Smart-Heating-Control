@@ -2246,3 +2246,53 @@ async def test_diagnostics_list_every_learned_episode(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_room_with_its_own_heat_does_not_start_the_heat_source(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """An electric room (not on the heat source) neither starts the boiler nor waits for it."""
+    await hass.config.async_set_time_zone("Europe/Bucharest")
+    freezer.move_to("2026-10-12 09:00:00+00:00")
+    async_mock_service(hass, "climate", "set_temperature")
+    assert await async_setup_component(
+        hass, "input_boolean", {"input_boolean": {"boiler": {}, "bath_heater": {}}}
+    )
+    hass.states.async_set("person.andrei", "home")
+    hass.states.async_set("sensor.bath_temp", "18.0", {"unit_of_measurement": "°C"})
+    hass.states.async_set(
+        "climate.trv", "heat",
+        {"hvac_modes": ["heat", "off"], "current_temperature": 22.0, "temperature": 21.0,
+         "hvac_action": "idle"},
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        options={"persons": ["person.andrei"], "nearby_zones": [],
+                 "boiler_entity": "input_boolean.boiler"},
+        subentries_data=[
+            {"data": {"source": "climate", "climates": ["climate.trv"],
+                      "command_mode": "temperature"},
+             "subentry_type": SUBENTRY_ROOM, "title": "Office", "unique_id": None},
+            {"data": {"source": "switch", "switches": ["input_boolean.bath_heater"],
+                      "climates": [], "temperature_sensors": ["sensor.bath_temp"],
+                      "use_house_source": False},
+             "subentry_type": SUBENTRY_ROOM, "title": "Bath", "unique_id": None},
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await _tick(hass, freezer, 15)
+    house = entry.runtime_data
+    bath = next(r for r in house.rooms.values() if r.name == "Bath")
+    # The bath is cold and heats with its own heater; the boiler stays off.
+    assert bath.heat_demand
+    assert hass.states.get("input_boolean.bath_heater").state == "on"
+    assert hass.states.get("input_boolean.boiler").state == "off"
+    # It heats although the boiler is off, and the house still asks for heat.
+    assert bath.heating
+    assert house.heat_demand
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

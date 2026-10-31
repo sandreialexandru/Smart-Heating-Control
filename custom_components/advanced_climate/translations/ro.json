@@ -36,7 +36,7 @@
         },
         "description": "Termostatul (sau releul) care încălzește toată casa. Devine zona „{zone}” și folosește toate opțiunile casei. Camerele cu robinete proprii se pot adăuga mai târziu cu „Adaugă cameră”.",
         "data_description": {
-          "source": "Ce încălzește toată casa. Alege „Încă fără dispozitive” dacă vei adăuga doar camere cu robinete proprii."
+          "source": "Ce încălzește toată casa: un Generic Thermostat sau un releu care pornește centrala, ori alt termostat. „Încă fără dispozitive” când nimic nu încălzește toată casa ca o singură zonă și fiecare cameră se adaugă cu încălzirea ei: TRV-uri sau robinete pe calorifere, radiatoare electrice, pompă de căldură sau aer condiționat, încălzire în pardoseală."
         }
       },
       "heating_devices": {
@@ -267,7 +267,7 @@
         },
         "description": "Termostatul (sau releul) care încălzește toată casa. Devine zona „{zone}” și folosește toate opțiunile casei. Camerele cu robinete proprii se pot adăuga mai târziu cu „Adaugă cameră”.",
         "data_description": {
-          "source": "Ce încălzește toată casa. Alege „Încă fără dispozitive” dacă vei adăuga doar camere cu robinete proprii."
+          "source": "Ce încălzește toată casa: un Generic Thermostat sau un releu care pornește centrala, ori alt termostat. „Încă fără dispozitive” când nimic nu încălzește toată casa ca o singură zonă și fiecare cameră se adaugă cu încălzirea ei: TRV-uri sau robinete pe calorifere, radiatoare electrice, pompă de căldură sau aer condiționat, încălzire în pardoseală."
         }
       },
       "heating_devices": {
@@ -452,13 +452,15 @@
             "climates": "Termostate",
             "switches": "Comutatoare (relee)",
             "command_mode": "Comandă",
-            "trv_boost": "Forțează temperatura TRV cât încălzește"
+            "trv_boost": "Forțează temperatura TRV cât încălzește",
+            "use_house_source": "Se încălzește de la sursa de căldură a casei"
           },
           "data_description": {
             "climates": "Termostatele camerei. Dacă sunt mai multe în aceeași cameră, primesc toate aceeași comandă.",
             "switches": "Releele care încălzesc camera.",
             "command_mode": "Temperatură: integrarea trimite temperatura fiecărui nivel (majoritatea TRV-urilor). Preset: fiecare nivel folosește un preset al termostatului, cu temperatura din termostat. Pornit / oprit: termostatul doar e pornit și oprit, integrarea ține temperatura.",
-            "trv_boost": "Cât camera cere căldură, TRV-urile primesc o temperatură mai mare, ca să rămână deschise până se încălzește camera; în rest primesc ținta. Cererea de căldură vine atunci de la senzorul camerei, cu histerezisul. Are nevoie de un senzor de temperatură în cameră. Doar cu comanda Temperatură."
+            "trv_boost": "Cât camera cere căldură, TRV-urile primesc o temperatură mai mare, ca să rămână deschise până se încălzește camera; în rest primesc ținta. Cererea de căldură vine atunci de la senzorul camerei, cu histerezisul. Are nevoie de un senzor de temperatură în cameră. Doar cu comanda Temperatură.",
+            "use_house_source": "Pornit: căldura camerei vine de la sursa de căldură a casei (calorifere pe centrală): pornește centrala când cere căldură și încălzește doar cât merge centrala. Oprit: camera are încălzirea ei (radiator electric, pompă de căldură, aer condiționat): nu pornește centrala și încălzește cât merge propriul dispozitiv."
           }
         },
         "control_on_off": {

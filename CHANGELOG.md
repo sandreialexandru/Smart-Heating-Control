@@ -14,6 +14,8 @@ GitHub releases.
   heat source stops as soon as the last room reached its target. Houses and
   rooms that saved their own values keep them; a few minutes still protect a
   boiler without its own anti-cycling or spare a mechanical relay.
+- The heat source form warns that with TRVs on every radiator the installation
+  needs a bypass or a radiator without a TRV (also in the guide, chapter 8).
 
 ## 2.4.2 – 2026-10-30
 

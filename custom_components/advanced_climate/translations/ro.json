@@ -210,7 +210,7 @@
           "boiler_entity": "Centrala (sau releul care pornește sursa de căldură) când camerele nu o pot porni singure (TRV-uri, robinete de zonă). Integrarea o pornește când camerele cer căldură, iar învățarea și timpul de încălzire se numără doar cât merge. Lasă gol cu Generic Thermostat sau releu pe centrală și nu alege niciodată releul folosit deja de Generic Thermostat. Cu TRV-uri și o centrală pornită de un termostat care nu e în Home Assistant, învățarea nu e sigură: pornirea și oprirea anticipată nu sunt recomandate.",
           "room_diff_alert": "Alertă când o cameră rămâne cu atâtea grade sub țintă în timp ce altele sunt calde (robinet blocat, fereastră deschisă). 0 = oprit; util doar cu mai multe camere."
         },
-        "description": "Doar pentru casele în care camerele nu pot porni singure sursa de căldură (TRV-uri sau robinete de zonă): integrarea o pornește atunci când camerele cer căldură, iar o cameră încălzește (pentru învățare și timpul de încălzire) doar cât merge sursa. Cu Generic Thermostat sau releu pe centrală lasă gol; alerta de mai jos funcționează oricum."
+        "description": "Doar pentru casele în care camerele nu pot porni singure sursa de căldură (TRV-uri sau robinete de zonă): integrarea o pornește atunci când camerele cer căldură, iar o cameră încălzește (pentru învățare și timpul de încălzire) doar cât merge sursa. Cu Generic Thermostat sau releu pe centrală rămâne gol; alerta de mai jos funcționează oricum.\n\n⚠️ Cu TRV-uri pe toate caloriferele, instalația trebuie să lase apa să circule (bypass automat, centrală cu bypass intern sau un calorifer fără TRV): TRV-urile se închid la țintă, iar sursa poate merge până la capătul timpului minim pornită."
       },
       "behavior": {
         "title": "Modificări manuale, vacanță și limite",
@@ -370,7 +370,7 @@
         },
         "data_description": {
           "boiler_min_rooms": "Câte camere trebuie să ceară căldură ca să pornească. 1 = oricare cameră.",
-          "boiler_min_on": "Timpul minim de funcționare, contra pornirilor scurte.",
+          "boiler_min_on": "Timpul minim de funcționare, contra pornirilor scurte. 0 (implicit) = sursa se oprește imediat ce nu mai cere nicio cameră. Un timp mai mare cere bypass sau un calorifer fără TRV.",
           "boiler_min_off": "Pauza minimă între porniri.",
           "reference_room": "Doar această cameră decide pornirea, celelalte doar își deschid sau închid robinetele. Lasă gol ca să conteze numărul de camere."
         }

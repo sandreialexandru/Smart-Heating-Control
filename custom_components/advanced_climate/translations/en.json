@@ -210,7 +210,7 @@
           "boiler_entity": "The boiler (or the relay that starts the heat source) when the rooms cannot start it themselves (TRVs, zone valves). The integration starts it when rooms ask for heat, and the learning and the heating time count only while it runs. Leave empty with Generic Thermostat or a relay on the boiler, and never pick the relay Generic Thermostat already uses. With TRVs and a boiler started by a thermostat that is not in Home Assistant, the learning is not reliable: optimal start and stop are not recommended.",
           "room_diff_alert": "Alert when one room stays this much below its target while others are warm (stuck valve, open window). 0 = off; useful only with several rooms."
         },
-        "description": "Only for houses where the rooms cannot start the heat source themselves (TRVs or zone valves): the integration then starts it when rooms ask for heat, and a room heats (for the learning and the heating time) only while it runs. With Generic Thermostat or a relay on the boiler leave it empty; the alert below still works."
+        "description": "Only for houses where the rooms cannot start the heat source themselves (TRVs or zone valves): the integration then starts it when rooms ask for heat, and a room heats (for the learning and the heating time) only while it runs. With Generic Thermostat or a relay on the boiler it stays empty; the alert below still works.\n\n⚠️ With TRVs on every radiator, the installation must let the water through (an automatic bypass, a boiler with an internal bypass or one radiator without a TRV): the TRVs close at their target, and the heat source may run until its minimum on time ends."
       },
       "behavior": {
         "title": "Manual changes, vacation and limits",
@@ -370,7 +370,7 @@
         },
         "data_description": {
           "boiler_min_rooms": "How many rooms must ask for heat to start it. 1 = any room.",
-          "boiler_min_on": "Minimum run time, against short cycles.",
+          "boiler_min_on": "Minimum run time, against short cycles. 0 (default) = the heat source stops as soon as no room asks for heat. A longer time needs a bypass or a radiator without a TRV.",
           "boiler_min_off": "Minimum pause between starts.",
           "reference_room": "Only this room decides when it runs, the others just open or close their valves. Leave empty to use the number of rooms."
         }

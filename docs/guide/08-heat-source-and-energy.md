@@ -40,14 +40,18 @@ once). A larger value protects a boiler without its own anti-cycling from
 frequent starts and stops. They hold over a Home Assistant restart too. When a minimum time ends,
 the integration checks again at once.
 
-**TRVs on every radiator.** When the last room stops asking for heat (it
-reached its target), its TRVs get the target and close, but the heat source runs
-until its minimum on time ends, when one is set. The integration does not keep a TRV open for it:
-that would heat the room above its target. The installation itself must give the
-water a way through, as it must with plain mechanical TRVs: an automatic bypass,
-a boiler with an internal bypass, or one radiator without a TRV (often in the
-bathroom). Without one, choose a short *Heat source minimum on time* or 0 (the
-default), so the source stops as soon as no room asks for heat.
+> [!WARNING]
+> **TRVs on every radiator: a bypass or a radiator without a TRV.**
+>
+> When the last room stops asking for heat (it reached its target), its TRVs
+> get the target and close, but the heat source runs until its minimum on time
+> ends, when one is set. The integration does not keep a TRV open for it: that
+> would heat the room above its target. The installation itself must give the
+> water a way through, as it must with plain mechanical TRVs: an automatic
+> bypass, a boiler with an internal bypass, or one radiator without a TRV
+> (often in the bathroom). Without one, choose a short *Heat source minimum on
+> time* or 0 (the default), so the source stops as soon as no room asks for
+> heat.
 
 **In a pause** the integration does not control the source, with one exception:
 it starts it for frost protection and stops it again when no longer needed

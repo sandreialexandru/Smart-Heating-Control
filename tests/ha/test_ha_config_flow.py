@@ -618,6 +618,33 @@ async def test_outdoor_sensor_is_not_a_room_sensor(hass: HomeAssistant) -> None:
     assert result["step_id"] != "sensors"
 
 
+async def test_generic_thermostat_room_has_no_temperature_sensors(hass: HomeAssistant) -> None:
+    """A Generic Thermostat regulates by its own sensor: the room form does not ask for one.
+
+    Saving the form drops a sensor chosen before.
+    """
+    climate = _gt_climate(hass, "switch.gt_relay")
+    entry = _house_with_rooms(
+        hass,
+        rooms=[("Living", {"source": "generic_thermostat", "climates": [climate], "switches": [],
+                           "temperature_sensors": ["sensor.living"]})],
+    )
+    rooms = hass.config_entries.subentries
+    subentry = next(iter(entry.subentries.values()))
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+    result = await rooms.async_configure(
+        result["flow_id"], {"name": "Living", "source": "generic_thermostat"}
+    )
+    result = await rooms.async_configure(result["flow_id"], {"climates": [climate]})
+    result = await _until(hass, result, rooms, stop={"sensors_gt", "sensors"})
+    assert result["step_id"] == "sensors_gt"
+    assert _keys(result) == {"occupancy_sensors"}
+    result = await rooms.async_configure(result["flow_id"], {"occupancy_sensors": []})
+    result = await _until(hass, result, rooms, stop=set())
+    assert result["type"] is FlowResultType.ABORT
+    assert entry.subentries[subentry.subentry_id].data["temperature_sensors"] == []
+
+
 async def test_trv_boost_in_the_room_form(hass: HomeAssistant) -> None:
     """The boost is chosen with the devices; then only the boost page is asked."""
     # An outdoor sensor: the optimal stop can be turned on.

@@ -547,7 +547,17 @@
           "data_description": {
             "temperature_sensors": "Senzori din cameră, folosiți în locul senzorului termostatului (mai exacți când termostatul e lângă o sursă de căldură). Lasă gol ca să folosești senzorul termostatului; la relee sunt necesari, releul nu are senzor.",
             "calibration_mode": "Are nevoie de un senzor de temperatură al camerei, setat mai sus. Offset: corectează senzorul TRV-ului. Temperatură externă: scrie temperatura camerei în TRV (dacă știe). Altfel oprit.",
-            "occupancy_sensors": "Senzori de mișcare / prezență din cameră: când camera e goală o vreme trece pe eco chiar dacă e cineva acasă. Lasă gol pentru camerele care urmează doar programul."
+            "occupancy_sensors": "Senzori de mișcare / prezență din cameră: când camera e goală o vreme trece pe eco chiar dacă e cineva acasă. Rămâne gol pentru camerele care urmează doar programul."
+          }
+        },
+        "sensors_gt": {
+          "title": "Senzori",
+          "description": "Un Generic Thermostat ține temperatura după senzorul din propria configurare, așa că integrarea îl folosește tot pe acela. Pentru alt senzor, acesta se schimbă în setările Generic Thermostat-ului.",
+          "data": {
+            "occupancy_sensors": "Senzori de ocupare"
+          },
+          "data_description": {
+            "occupancy_sensors": "Senzori de mișcare / prezență din cameră: când camera e goală o vreme trece pe eco chiar dacă e cineva acasă. Rămâne gol pentru camerele care urmează doar programul."
           }
         },
         "windows": {

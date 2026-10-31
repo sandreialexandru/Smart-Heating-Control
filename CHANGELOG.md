@@ -17,6 +17,14 @@ GitHub releases.
 - The whole-house heating choice explains better when to pick *No heating
   devices yet*: every room has its own heating (TRVs, electric heaters, a heat
   pump or air conditioner, underfloor heating).
+- Rooms with a Generic Thermostat no longer ask for temperature sensors: GT
+  keeps the temperature by the sensor of its own configuration, and the
+  integration uses that one too, so the card and the learning match what GT does.
+
+  > **Warning – Generic Thermostat rooms with temperature sensors chosen in the
+  > integration:** they keep working until the room form is saved again; saving
+  > it removes them. To keep another sensor, set it as the sensor of the Generic
+  > Thermostat itself.
 - The diagnostics list every kept heating episode (`episode_list`) and cooling
   episode (`cooling_episode_list`) of each room, not only their number.
 

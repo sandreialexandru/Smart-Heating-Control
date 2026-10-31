@@ -1642,6 +1642,8 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Temperature, calibration (TRVs only) and occupancy sensors."""
         d = self._shown()
+        if d[CONF_SOURCE] == SOURCE_GT:
+            return await self.async_step_sensors_gt(user_input)
         trv = d[CONF_SOURCE] == SOURCE_CLIMATE
         relay = d[CONF_SOURCE] == SOURCE_SWITCH
         fields: dict[Any, Any] = {
@@ -1679,6 +1681,28 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
             errors=errors,
             description_placeholders=placeholders,
         )
+
+    async def async_step_sensors_gt(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Occupancy sensors only: a Generic Thermostat regulates by its own sensor.
+
+        The form has no temperature sensors, so saving it keeps none.
+        """
+        d = self._shown()
+        schema = vol.Schema(
+            {
+                _req(CONF_OCCUPANCY_SENSORS, d, ROOM_DEFAULTS): _entity(
+                    ["binary_sensor", "input_boolean"], multiple=True
+                )
+            }
+        )
+        if user_input is not None:
+            self._data = _merge(self._data, schema, self._kept(user_input))
+            self._data[CONF_TEMP_SENSORS] = []
+            self._data[CONF_CALIBRATION_MODE] = CALIBRATION_OFF
+            return await self.async_step_sensors_details()
+        return self.async_show_form(step_id="sensors_gt", data_schema=schema)
 
     async def async_step_sensors_details(
         self, user_input: dict[str, Any] | None = None

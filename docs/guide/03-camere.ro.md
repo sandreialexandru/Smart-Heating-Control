@@ -162,7 +162,7 @@ rămân aceleași: „Lucru” e tot nivelul `home`.
 
 | Câmp | Ce se completează |
 | --- | --- |
-| **Senzori de temperatură** | Senzorii din cameră, folosiți în locul senzorului termostatului (mai exacți când termostatul stă lângă calorifer). Gol = senzorul termostatului. **Obligatorii pentru relee**, care nu au senzor (altfel apare *Releele au nevoie de un senzor de temperatură al camerei*), și pentru forțarea TRV (altfel apare *Forțarea TRV are nevoie de un senzor de temperatură al camerei*). Senzorul exterior al unei case e refuzat. Un senzor care nu raportează unitatea e citit în unitatea casei. |
+| **Senzori de temperatură** | Nu apare la Generic Thermostat: GT-ul ține temperatura după senzorul din propria configurare, iar integrarea îl folosește tot pe acela (alt senzor se schimbă în setările GT-ului). Senzorii din cameră, folosiți în locul senzorului termostatului (mai exacți când termostatul stă lângă calorifer). Gol = senzorul termostatului. **Obligatorii pentru relee**, care nu au senzor (altfel apare *Releele au nevoie de un senzor de temperatură al camerei*), și pentru forțarea TRV (altfel apare *Forțarea TRV are nevoie de un senzor de temperatură al camerei*). Senzorul exterior al unei case e refuzat. Un senzor care nu raportează unitatea e citit în unitatea casei. |
 | **Calibrare TRV** | Doar pentru TRV-uri și doar cu un senzor de cameră. *Offset*: corectează senzorul TRV-ului. *Temperatură externă*: scrie temperatura camerei în TRV (dacă TRV-ul are această intrare). *Oprit* altfel. |
 | **Senzori de ocupare** | Senzori de mișcare / prezență ai camerei: dacă camera e goală un timp, trece pe `eco` chiar dacă e cineva acasă. Gol pentru camerele care urmează doar programul. |
 

@@ -550,6 +550,16 @@
             "occupancy_sensors": "Motion / presence sensors of the room: when the room is empty for a while it goes to eco even if someone is home. Leave empty for rooms that should follow only the schedule."
           }
         },
+        "sensors_gt": {
+          "title": "Sensors",
+          "description": "A Generic Thermostat keeps the temperature by the sensor of its own configuration, so the integration uses that one too. To use another sensor, change it in the Generic Thermostat settings.",
+          "data": {
+            "occupancy_sensors": "Occupancy sensors"
+          },
+          "data_description": {
+            "occupancy_sensors": "Motion / presence sensors of the room: when the room is empty for a while it goes to eco even if someone is home. Leave empty for rooms that should follow only the schedule."
+          }
+        },
         "windows": {
           "title": "Windows and doors",
           "data": {

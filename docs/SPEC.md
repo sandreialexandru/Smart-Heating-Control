@@ -48,7 +48,7 @@ entry for the **house** (people, zones, global mode, shared settings) and one
 | Rooms needed | 1 | Number of rooms that must ask for heat to start the heat source. It has priority over optimal start: with more than 1, a room in optimal start waits until enough rooms ask for heat, so it may reach its target later |
 | Reference room | none | Only this room decides for the heat source |
 | Heats from the heat source of the house | on (per room, only with a heat source) | Off for a room with its own heat (electric, heat pump): it does not start the heat source, does not count for the rooms needed, cannot be the reference room, and heats while its own device runs |
-| Room difference alert | off | Alert when a room stays colder than the target while others are warm |
+| Room difference alert | off | Alert when a room stays colder than the target while others are warm (in the Alerts options, only with more than one room) |
 
 ## 2. Levels (presets)
 
@@ -68,7 +68,8 @@ All GT presets remain available as presets: they can be chosen manually or used
 in the schedule. The integration only selects the preset; it does not change any
 functionality of GT.
 
-For *nearby* the default is the `eco` preset. Instead of the preset a **fixed
+The *nearby* choices are offered only when the house has nearby zones. For *nearby*
+the default is the `eco` preset. Instead of the preset a **fixed
 temperature** can be configured; the integration sends it to GT, which switches
 to preset `none` by itself. With *Not above the schedule* (per room, unchecked
 by default) the lower of the nearby level / temperature and the schedule
@@ -180,7 +181,7 @@ the integration takes control again.
 | Detection | on | Changes made by the integration are told apart by their context, or because the device only reports the values the integration sent (also the values sent in the last 5 minutes and the temperature or preset shown before each command, until the device has shown the last value for 1 minute: an older value reported late, or once more after the new one, is recognised too) |
 | TRV limits | learned | A TRV that holds less than a boost / the valve exercise sent (at least the target) or more than frost protection / off sent (below the lowest level) holds its own Max / Min temperature: not a manual change, the next commands stay within it, alert, kept 24 h (not over a restart or reload). Learned only within 5 minutes of the command and only while the TRV has not shown the value sent; after that a different value is a manual change |
 | Duration | configurable, universal | One rule for every manual change, including turning GT off: **fixed duration** (X hours) or **until the next reevaluation** triggered by a change (slot, presence, window, mode). The periodic check does not end it |
-| Scope | room | Whole house only when rooms have their own valves |
+| Scope | room | Whole house only when rooms have their own valves; offered only with more than one room |
 | Pause | – | Switch: no commands at all, no TRV calibration (frost protection and the maximum temperature still apply) |
 | Child lock | off | Manual changes are reverted immediately |
 | Clear | – | Button per room and for the house |
@@ -194,7 +195,7 @@ One select for the house: **Auto / Vacation / Off / Summer**.
 | Mode | What it does | Options |
 | --- | --- | --- |
 | Auto | Schedule + presence + every rule | – |
-| Vacation | `away` in every room | Start and end dates (only an end: from now), preheat X hours before the end (default 4 h; the schedule applies even while everyone is far), automatic vacation after Y hours far away (the preheating before the end of a planned vacation wins over it; it ends when someone is arriving and comes back only after another Y hours far away) |
+| Vacation | `away` in every room | Start and end dates (only an end: from now), preheat X hours before the end (default 4 h; the schedule applies even while everyone is far), automatic vacation after Y hours far away (offered only when the house has people; the preheating before the end of a planned vacation wins over it; it ends when someone is arriving and comes back only after another Y hours far away) |
 | Off | Frost protection only (`min_temp` of GT) | – |
 | Summer | Heating off | Automatic switch with the season (section 6) |
 

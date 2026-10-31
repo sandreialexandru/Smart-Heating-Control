@@ -122,7 +122,8 @@ Vacanța pune toate camerele pe `away`. Se poate porni în trei feluri:
      programul revine cu atâtea ore înainte de sfârșit, chiar dacă toată lumea
      e încă departe, ca să fie cald la întoarcere.
 3. **Vacanța automată**: *Vacanță automată după departe timp de* (implicit 0 =
-   oprită). Când toți sunt departe atâtea ore, vacanța pornește singură.
+   oprită; setarea apare doar când casa are persoane). Când toți sunt departe
+   atâtea ore, vacanța pornește singură.
    - Se termină când cineva ajunge *aproape* sau *acasă*, sau când e **pe drum
      spre casă** (casa se preîncălzește).
    - Dacă după asta toți sunt din nou departe (de exemplu cineva a trecut doar

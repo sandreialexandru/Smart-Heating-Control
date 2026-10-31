@@ -120,6 +120,9 @@ Niciun pas: Generic Thermostat are propriile toleranțe (`cold_tolerance`,
 
 ## Pasul 4: Niveluri
 
+Câmpurile pentru *aproape* apar doar când casa are zone apropiate. La Generic
+Thermostat, fără zone apropiate, pasul nu are ce întreba și e sărit.
+
 | Câmp | Ce se completează |
 | --- | --- |
 | **Când nimeni nu e acasă, dar cineva e aproape** | *Preset eco* (folosește nivelul `eco`) sau *Temperatură fixă* (o temperatură aleasă pe pagina următoare; la Generic Thermostat presetul devine `none`). |

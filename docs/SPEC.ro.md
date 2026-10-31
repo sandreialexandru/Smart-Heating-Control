@@ -52,7 +52,7 @@ program).
 | Camere necesare | 1 | Câte camere trebuie să ceară căldură ca să pornească sursa de căldură. Are prioritate față de pornirea anticipată: cu mai mult de 1, o cameră aflată în pornire anticipată așteaptă până cer căldură destule camere, deci poate ajunge la țintă mai târziu |
 | Cameră de referință | niciuna | Doar această cameră decide pentru sursa de căldură |
 | Se încălzește de la sursa de căldură a casei | pornit (pe cameră, doar cu o sursă de căldură) | Oprit pentru o cameră cu încălzirea ei (electric, pompă de căldură): nu pornește sursa, nu contează la camerele necesare, nu poate fi cameră de referință și încălzește cât merge propriul dispozitiv |
-| Alertă diferență între camere | oprită | Alertă când o cameră rămâne sub țintă în timp ce altele sunt calde |
+| Alertă diferență între camere | oprită | Alertă când o cameră rămâne sub țintă în timp ce altele sunt calde (la opțiunile Alerte, doar cu mai multe camere) |
 
 ## 2. Niveluri (preseturi)
 
@@ -72,7 +72,8 @@ Toate preseturile GT rămân disponibile ca preseturi: pot fi alese manual sau
 folosite în program. Integrarea doar alege presetul; nu schimbă nicio funcție a
 GT.
 
-Pentru *aproape* implicit este presetul `eco`. În locul presetului se poate
+Alegerile pentru *aproape* se oferă doar când casa are zone apropiate. Pentru
+*aproape* implicit este presetul `eco`. În locul presetului se poate
 configura o **temperatură fixă**; integrarea o trimite la GT, care trece singur
 pe presetul `none`. Cu *Nu peste program* (pe cameră, nebifat implicit) se aplică
 cea mai mică dintre nivelul / temperatura pentru aproape și program, ca în oraș
@@ -184,7 +185,7 @@ definit; apoi integrarea preia din nou controlul.
 | Detectare | activă | Schimbările făcute de integrare se recunosc după context, sau pentru că dispozitivul doar raportează valorile trimise de integrare (și valorile trimise în ultimele 5 minute și temperatura sau presetul arătate înainte de fiecare comandă, până când dispozitivul arată ultima valoare de 1 minut: o valoare veche raportată târziu, sau încă o dată după cea nouă, e recunoscută și ea) |
 | Limitele TRV | învățate | Un TRV care ține mai puțin decât a trimis forțarea / mișcarea robinetelor (cel puțin ținta) sau mai mult decât a trimis antiînghețul / oprirea (sub cel mai jos nivel) își ține propriile Max / Min temperature: nu e modificare manuală, comenzile următoare rămân în ele, alertă, păstrate 24 h (nu peste o repornire sau reîncărcare). Se învață doar în 5 minute de la comandă și doar cât TRV-ul nu a arătat valoarea trimisă; după aceea o altă valoare e modificare manuală |
 | Durată | configurabilă, universală | O singură regulă pentru orice modificare manuală, inclusiv oprirea GT: **durată fixă** (X ore) sau **până la următoarea reevaluare** declanșată de o schimbare (interval, prezență, fereastră, mod). Verificarea periodică nu o încheie |
-| Domeniu | cameră | Toată casa doar când camerele au robinete proprii |
+| Domeniu | cameră | Toată casa doar când camerele au robinete proprii; se oferă doar cu mai multe camere |
 | Pauză | – | Comutator: nicio comandă, fără calibrarea TRV (antiînghețul și temperatura maximă se aplică în continuare) |
 | Blocare pentru copii | oprită | Modificările manuale sunt anulate imediat |
 | Anulare | – | Buton pentru fiecare cameră și pentru casă |
@@ -198,7 +199,7 @@ Un select pentru casă: **Auto / Vacanță / Oprit / Vară**.
 | Mod | Ce face | Opțiuni |
 | --- | --- | --- |
 | Auto | Program + prezență + toate regulile | – |
-| Vacanță | `away` în toate camerele | Date de început și sfârșit (doar sfârșit: de acum), preîncălzire cu X ore înainte de sfârșit (implicit 4 h; programul se aplică chiar dacă toată lumea e departe), vacanță automată după Y ore departe (preîncălzirea dinaintea sfârșitului unei vacanțe planificate are prioritate; se termină când cineva e pe drum spre casă și revine doar după alte Y ore departe) |
+| Vacanță | `away` în toate camerele | Date de început și sfârșit (doar sfârșit: de acum), preîncălzire cu X ore înainte de sfârșit (implicit 4 h; programul se aplică chiar dacă toată lumea e departe), vacanță automată după Y ore departe (se oferă doar când casa are persoane; preîncălzirea dinaintea sfârșitului unei vacanțe planificate are prioritate; se termină când cineva e pe drum spre casă și revine doar după alte Y ore departe) |
 | Oprit | Doar antiîngheț (`min_temp` al GT) | – |
 | Vară | Încălzire oprită | Comutare automată cu sezonul (secțiunea 6) |
 

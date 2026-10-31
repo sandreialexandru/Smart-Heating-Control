@@ -117,6 +117,9 @@ No step: Generic Thermostat has its own tolerances (`cold_tolerance`,
 
 ## Step 4: Levels
 
+The *nearby* fields appear only when the house has nearby zones. With a Generic
+Thermostat and no nearby zones, the step has nothing to ask and is skipped.
+
 | Field | What to do |
 | --- | --- |
 | **When nobody is home but someone is nearby** | *Eco preset* (uses the `eco` level) or *Fixed temperature* (a temperature chosen on the next page; with Generic Thermostat the preset becomes `none`). |

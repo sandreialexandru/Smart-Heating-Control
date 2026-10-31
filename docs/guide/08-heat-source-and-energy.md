@@ -108,9 +108,9 @@ attribute:
 - **The heat source is unavailable** longer than *Alert when a device is
   unavailable longer than* (15 minutes by default): then nothing heats, not even
   frost protection.
-- **Alert when a room stays colder than** (0 = off by default): a room stays this
-  many degrees below its target while others are warm (stuck valve, window left
-  open). Useful only with several rooms.
+- **Alert when a room stays colder than** (in the *Alerts* options, 0 = off by
+  default, shown only with more than one room): a room stays this many degrees
+  below its target while others are warm (stuck valve, window left open).
 
 ## Dynamic tariff
 

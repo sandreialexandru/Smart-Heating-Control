@@ -25,9 +25,24 @@ GitHub releases.
   > integration:** they keep working until the room form is saved again; saving
   > it removes them. To keep another sensor, set it as the sensor of the Generic
   > Thermostat itself.
+- The options show only what can apply to the house:
+  - *Heat source and heat demand* is no longer in the menu when the *Whole house*
+    zone is a Generic Thermostat or a relay;
+  - *Alert when a room stays colder than* moved to *Alerts*, shown only with
+    more than one room (its value is kept);
+  - *Manual change applies to* is shown only with more than one room, the
+    *Automatic vacation* only when the house has people;
+  - a room's *nearby* choices are shown only when the house has nearby zones.
+  A value hidden this way stays saved and works again when it can apply.
+
+  > **Warning – houses with a Generic Thermostat or a relay on the whole house
+  > that still have a *Heat source*:** it now goes away when the *Heating of the
+  > whole house* is saved (no longer from the heat source form, which is gone
+  > for these houses). Check before saving that the Generic Thermostat (or the
+  > relay) is the one that starts the boiler.
 - The interactive configurator follows the latest forms: the heat source is not
-  offered for a Generic Thermostat or relay on the whole house, the room option
-  for the heat source of the house, no temperature sensors for Generic
+  offered for a Generic Thermostat or relay on the whole house, the colder-room
+  alert under Alerts, the room option for the heat source of the house, no temperature sensors for Generic
   Thermostat rooms, the bypass warning and the clearer whole-house choice; its
   Romanian text is impersonal.
 - The diagnostics list every kept heating episode (`episode_list`) and cooling

@@ -209,10 +209,13 @@ Details: [chapter 8](08-heat-source-and-energy.md).
 
 ### Heat source and heat demand
 
+Not in the menu when the *Whole house* zone is a Generic Thermostat or a relay:
+that zone already starts the boiler (a heat source saved before is removed when
+the whole-house heating is saved).
+
 | Setting | Default | What it does |
 | --- | --- | --- |
-| Heat source | – | The boiler (or the relay that starts it) when the rooms cannot start it themselves (TRVs, zone valves). Not shown when the *Whole house* zone is a Generic Thermostat or a relay: it already starts the boiler (a heat source saved before is removed when the form is saved). The form refuses a device of a room and the relay of a Generic Thermostat used by a room. |
-| Alert when a room stays colder than | 0 (off) | Alert when a room stays this many degrees below its target while others are warm (stuck valve, open window). |
+| Heat source | – | The boiler (or the relay that starts it) when the rooms cannot start it themselves (TRVs, zone valves). The form refuses a device of a room and the relay of a Generic Thermostat used by a room. |
 
 The second form, only with a heat source:
 
@@ -229,9 +232,9 @@ Details: [chapter 8](08-heat-source-and-energy.md).
 | Setting | Default | What it does |
 | --- | --- | --- |
 | Manual changes are kept | Fixed duration | *Fixed duration* (the hours below) or *Until next reevaluation* (until the schedule, presence, a window or the mode changes). |
-| Manual change applies to | Only that room | *Whole house* copies a manual change to every room; only when every room has its own valves. |
+| Manual change applies to | Only that room | *Whole house* copies a manual change to every room; only when every room has its own valves. Shown only with more than one room. |
 | Preheat before the end of a vacation | 4 h | The schedule returns this many hours before the vacation ends. |
-| Automatic vacation after everyone is far for | 0 h (off) | The vacation starts by itself after everybody has been far this long. |
+| Automatic vacation after everyone is far for | 0 h (off) | The vacation starts by itself after everybody has been far this long. Shown only when the house has people. |
 | Frost protection | 7 °C (3 – 15 °C) | The lowest temperature. Rooms with Generic Thermostat use its minimum temperature instead. |
 | Maximum temperature | 25 °C (15 – 35 °C) | No target goes above it. |
 | Periodic check every | 5 min (1 – 60) | The safety check that resends the decision. Changes are applied at once anyway. |
@@ -251,5 +254,6 @@ Details: [chapter 9](09-windows-manual-safety.md) and
 | Alert when a device is unavailable longer than | 15 min | Thermostat or sensor. |
 | Low battery below | 20 % | The room devices (TRV, sensors). |
 | Verify commands | on | After 2 minutes checks that the device accepted the command, retries once, then alerts. |
+| Alert when a room stays colder than | 0 (off) | Alert when a room stays this many degrees below its target while others are warm (stuck valve, open window). Shown only with more than one room. |
 
 The list of alerts: [chapter 9](09-windows-manual-safety.md#the-alerts).

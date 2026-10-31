@@ -211,10 +211,13 @@ Detalii: [capitolul 8](08-sursa-si-energie.ro.md).
 
 ### Sursa de căldură și cererea de căldură
 
+Nu apare în meniu când zona *Whole house* e Generic Thermostat sau releu: acea
+zonă pornește deja centrala (o sursă salvată înainte se scoate la salvarea
+încălzirii întregii case).
+
 | Setare | Implicit | Ce face |
 | --- | --- | --- |
-| Sursa de căldură | – | Centrala (sau releul care o pornește) când camerele nu o pot porni singure (TRV-uri, robinete de zonă). Nu apare când zona *Whole house* e Generic Thermostat sau releu: aceasta pornește deja centrala (o sursă salvată înainte se scoate la salvarea formularului). Formularul refuză un dispozitiv al unei camere și releul unui Generic Thermostat folosit de o cameră. |
-| Alertă când o cameră rămâne mai rece cu | 0 (oprit) | Alertă când o cameră rămâne cu atâtea grade sub țintă în timp ce altele sunt calde (robinet blocat, fereastră deschisă). |
+| Sursa de căldură | – | Centrala (sau releul care o pornește) când camerele nu o pot porni singure (TRV-uri, robinete de zonă). Formularul refuză un dispozitiv al unei camere și releul unui Generic Thermostat folosit de o cameră. |
 
 Al doilea formular, doar cu o sursă de căldură:
 
@@ -231,9 +234,9 @@ Detalii: [capitolul 8](08-sursa-si-energie.ro.md).
 | Setare | Implicit | Ce face |
 | --- | --- | --- |
 | Modificările manuale se păstrează | Durată fixă | *Durată fixă* (orele de mai jos) sau *Până la următoarea reevaluare* (până se schimbă programul, prezența, o fereastră sau modul). |
-| Modificarea manuală se aplică | Doar acea cameră | *Toată casa* copiază o modificare manuală în toate camerele; doar când fiecare cameră are robinete proprii. |
+| Modificarea manuală se aplică | Doar acea cameră | *Toată casa* copiază o modificare manuală în toate camerele; doar când fiecare cameră are robinete proprii. Apare doar cu mai multe camere. |
 | Preîncălzire înainte de sfârșitul vacanței | 4 h | Programul revine cu atâtea ore înainte de sfârșitul vacanței. |
-| Vacanță automată după departe timp de | 0 h (oprit) | Vacanța pornește singură după ce toți au fost departe atâtea ore. |
+| Vacanță automată după departe timp de | 0 h (oprit) | Vacanța pornește singură după ce toți au fost departe atâtea ore. Apare doar când casa are persoane. |
 | Antiîngheț | 7 °C (3 – 15 °C) | Cea mai mică temperatură. Camerele cu Generic Thermostat folosesc în locul ei temperatura minimă a GT. |
 | Temperatură maximă | 25 °C (15 – 35 °C) | Nicio țintă nu trece de ea. |
 | Verificare periodică la | 5 min (1 – 60) | Verificarea de siguranță care retrimite decizia. Schimbările se aplică oricum imediat. |
@@ -252,5 +255,6 @@ Detalii: [capitolul 9](09-ferestre-manual-siguranta.ro.md) și
 | Alertă când un dispozitiv e indisponibil mai mult de | 15 min | Termostat sau senzor. |
 | Baterie descărcată sub | 20 % | Dispozitivele camerei (TRV, senzori). |
 | Verifică comenzile | pornit | După 2 minute verifică dacă dispozitivul a acceptat comanda, reîncearcă o dată, apoi dă alertă. |
+| Alertă când o cameră rămâne mai rece cu | 0 (oprit) | Alertă când o cameră rămâne cu atâtea grade sub țintă în timp ce altele sunt calde (robinet blocat, fereastră deschisă). Apare doar cu mai multe camere. |
 
 Lista alertelor: [capitolul 9](09-ferestre-manual-siguranta.ro.md#alertele).

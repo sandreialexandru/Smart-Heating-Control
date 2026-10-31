@@ -106,9 +106,9 @@ Cardul spune de ce, iar senzorul *Decizie* are atributul `no_heat_reason`:
 - **Sursa de căldură indisponibilă** mai mult de *Alertă când un dispozitiv e
   indisponibil mai mult de* (implicit 15 minute): atunci nu se încălzește
   deloc, nici pentru antiîngheț.
-- **Alertă când o cameră rămâne mai rece cu** (implicit 0 = oprit): o cameră
-  rămâne cu atâtea grade sub țintă în timp ce altele sunt calde (robinet blocat,
-  fereastră uitată deschisă). Utilă doar cu mai multe camere.
+- **Alertă când o cameră rămâne mai rece cu** (la opțiunile *Alerte*, implicit
+  0 = oprit, apare doar cu mai multe camere): o cameră rămâne cu atâtea grade sub
+  țintă în timp ce altele sunt calde (robinet blocat, fereastră uitată deschisă).
 
 ## Tariful dinamic
 

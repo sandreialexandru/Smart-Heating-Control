@@ -25,6 +25,11 @@ GitHub releases.
   > integration:** they keep working until the room form is saved again; saving
   > it removes them. To keep another sensor, set it as the sensor of the Generic
   > Thermostat itself.
+- The interactive configurator follows the latest forms: the heat source is not
+  offered for a Generic Thermostat or relay on the whole house, the room option
+  for the heat source of the house, no temperature sensors for Generic
+  Thermostat rooms, the bypass warning and the clearer whole-house choice; its
+  Romanian text is impersonal.
 - The diagnostics list every kept heating episode (`episode_list`) and cooling
   episode (`cooling_episode_list`) of each room, not only their number.
 

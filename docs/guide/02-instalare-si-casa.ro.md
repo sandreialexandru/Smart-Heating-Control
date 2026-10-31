@@ -213,7 +213,7 @@ Detalii: [capitolul 8](08-sursa-si-energie.ro.md).
 
 | Setare | Implicit | Ce face |
 | --- | --- | --- |
-| Sursa de căldură | – | Centrala (sau releul care o pornește) când camerele nu o pot porni singure (TRV-uri, robinete de zonă). **Rămâne gol** cu Generic Thermostat sau un releu pe centrală. Formularul refuză un dispozitiv al unei camere și releul unui Generic Thermostat folosit de o cameră. |
+| Sursa de căldură | – | Centrala (sau releul care o pornește) când camerele nu o pot porni singure (TRV-uri, robinete de zonă). Nu apare când zona *Whole house* e Generic Thermostat sau releu: aceasta pornește deja centrala (o sursă salvată înainte se scoate la salvarea formularului). Formularul refuză un dispozitiv al unei camere și releul unui Generic Thermostat folosit de o cameră. |
 | Alertă când o cameră rămâne mai rece cu | 0 (oprit) | Alertă când o cameră rămâne cu atâtea grade sub țintă în timp ce altele sunt calde (robinet blocat, fereastră deschisă). |
 
 Al doilea formular, doar cu o sursă de căldură:

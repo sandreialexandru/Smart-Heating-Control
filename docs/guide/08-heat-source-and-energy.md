@@ -8,13 +8,18 @@ It depends on who starts the boiler:
 
 | Your case | *Heat source* |
 | --- | --- |
-| A **Generic Thermostat** starts the boiler (through its relay) | **Empty.** GT already starts the boiler. Never pick the relay GT uses. |
-| A room **relay** starts the boiler or a heater directly | **Empty.** The relay is already controlled by the integration. |
+| A **Generic Thermostat** starts the boiler (through its relay) | **None.** GT already starts the boiler; with GT on the *Whole house* zone the form does not offer a heat source. |
+| A room **relay** starts the boiler or a heater directly | **None.** The relay is already controlled by the integration; with a relay on the *Whole house* zone the form does not offer a heat source. |
 | **TRVs** or zone valves, and the boiler has a relay or a thermostat in Home Assistant | **Pick the boiler** (or its relay). The integration starts it when rooms ask for heat. |
 | TRVs, and the boiler is started by a thermostat that is **not in Home Assistant** | Nothing to pick. It works, but the learning is not reliable (see [chapter 7](07-optimal-start-stop-and-learning.md#when-it-is-not-recommended)). |
 
 Why it matters: a TRV only opens or closes the radiator valve. If the boiler
 does not start, the radiator stays cold.
+
+**Generic Thermostat or relay on the whole house, plus rooms with TRVs.** The
+boiler then runs only when the whole-house thermostat or relay asks for heat
+(after its own sensor). A TRV room that needs heat while that sensor is warm
+stays cold: the integration cannot start the boiler for it.
 
 ## How the integration controls the heat source
 

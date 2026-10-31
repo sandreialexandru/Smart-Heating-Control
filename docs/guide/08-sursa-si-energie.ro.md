@@ -8,13 +8,18 @@ Depinde cine pornește centrala:
 
 | Situația | *Sursa de căldură* |
 | --- | --- |
-| Un **Generic Thermostat** pornește centrala (prin releul lui) | **Gol.** GT pornește deja centrala. Releul folosit de GT nu se alege niciodată. |
-| Un **releu** al camerei pornește direct centrala sau un radiator | **Gol.** Releul e deja comandat de integrare. |
+| Un **Generic Thermostat** pornește centrala (prin releul lui) | **Niciuna.** GT pornește deja centrala; cu GT pe zona *Whole house* formularul nu oferă o sursă de căldură. |
+| Un **releu** al camerei pornește direct centrala sau un radiator | **Niciuna.** Releul e deja comandat de integrare; cu un releu pe zona *Whole house* formularul nu oferă o sursă de căldură. |
 | **TRV-uri** sau robinete de zonă, iar centrala are un releu sau un termostat în Home Assistant | **Se alege centrala** (sau releul ei). Integrarea o pornește când camerele cer căldură. |
 | TRV-uri, iar centrala e pornită de un termostat care **nu e în Home Assistant** | Nu se poate alege nimic. Merge, dar învățarea nu e sigură ([capitolul 7](07-anticipare-si-invatare.ro.md#când-nu-se-recomandă)). |
 
 De ce contează: un TRV doar deschide sau închide robinetul caloriferului. Dacă
 centrala nu pornește, caloriferul rămâne rece.
+
+**Generic Thermostat sau releu pe toată casa, plus camere cu TRV-uri.** Centrala
+merge atunci doar când termostatul sau releul întregii case cere căldură (după
+propriul senzor). O cameră cu TRV care are nevoie de căldură cât acel senzor e
+cald rămâne rece: integrarea nu poate porni centrala pentru ea.
 
 ## Cum comandă integrarea sursa de căldură
 

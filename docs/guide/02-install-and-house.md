@@ -211,7 +211,7 @@ Details: [chapter 8](08-heat-source-and-energy.md).
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| Heat source | – | The boiler (or the relay that starts it) when the rooms cannot start it themselves (TRVs, zone valves). **Leave empty** with Generic Thermostat or a relay on the boiler. The form refuses a device of a room and the relay of a Generic Thermostat used by a room. |
+| Heat source | – | The boiler (or the relay that starts it) when the rooms cannot start it themselves (TRVs, zone valves). Not shown when the *Whole house* zone is a Generic Thermostat or a relay: it already starts the boiler (a heat source saved before is removed when the form is saved). The form refuses a device of a room and the relay of a Generic Thermostat used by a room. |
 | Alert when a room stays colder than | 0 (off) | Alert when a room stays this many degrees below its target while others are warm (stuck valve, open window). |
 
 The second form, only with a heat source:

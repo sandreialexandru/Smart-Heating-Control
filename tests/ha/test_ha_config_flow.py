@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.core import HomeAssistant
+import pytest
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -521,6 +522,61 @@ async def test_heat_source_and_generic_thermostat_relay(hass: HomeAssistant) -> 
         result = await rooms.async_configure(result["flow_id"], {"name": "Office", "source": "switch"})
         result = await rooms.async_configure(result["flow_id"], {"switches": [switch]})
         assert result["errors"] == {"switches": error}, switch
+
+
+def _house_with_zone(hass: HomeAssistant, zone: dict, options: dict | None = None) -> MockConfigEntry:
+    """A house whose whole-house zone has the given data."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        options=options or {},
+        subentries_data=[
+            {"data": zone, "subentry_type": SUBENTRY_ROOM, "title": "Whole house",
+             "unique_id": "whole_house"}
+        ],
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.mark.parametrize(
+    "zone",
+    [
+        {"source": "generic_thermostat", "climates": ["climate.gt"], "switches": []},
+        RELAY_ROOM,
+    ],
+)
+async def test_no_heat_source_when_the_whole_house_starts_the_boiler(
+    hass: HomeAssistant, zone: dict
+) -> None:
+    """A Generic Thermostat or relay on the whole house starts the boiler itself.
+
+    The form has no heat source then (only the alert), and saving it keeps none.
+    """
+    entry = _house_with_zone(
+        hass, zone, options={"boiler_entity": "switch.boiler", "room_diff_alert": 2.0}
+    )
+    options = hass.config_entries.options
+    result = await options.async_init(entry.entry_id)
+    result = await options.async_configure(result["flow_id"], {"next_step_id": "boiler"})
+    assert result["step_id"] == "boiler_alert"
+    assert _keys(result) == {"room_diff_alert"}
+    result = await options.async_configure(result["flow_id"], {"room_diff_alert": 1.5})
+    assert result["type"] == "create_entry"
+    assert "boiler_entity" not in entry.options
+    assert entry.options["room_diff_alert"] == 1.5
+
+
+async def test_heat_source_shown_for_trvs_on_the_whole_house(hass: HomeAssistant) -> None:
+    """Other thermostats / TRVs on the whole house: the heat source can be chosen."""
+    entry = _house_with_zone(
+        hass, {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"}
+    )
+    options = hass.config_entries.options
+    result = await options.async_init(entry.entry_id)
+    result = await options.async_configure(result["flow_id"], {"next_step_id": "boiler"})
+    assert result["step_id"] == "boiler"
+    assert _keys(result) == {"boiler_entity", "room_diff_alert"}
 
 
 async def test_outdoor_sensor_is_not_a_room_sensor(hass: HomeAssistant) -> None:

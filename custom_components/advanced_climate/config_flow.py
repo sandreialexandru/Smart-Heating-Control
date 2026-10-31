@@ -514,15 +514,14 @@ def _energy_details(v: dict[str, Any]) -> vol.Schema:
     return vol.Schema(fields)
 
 
-def _boiler_schema(v: dict[str, Any]) -> vol.Schema:
-    """Boiler entity and room-difference alert."""
+def _boiler_schema(v: dict[str, Any], with_source: bool = True) -> vol.Schema:
+    """Boiler entity (not when the whole house already starts it) and room-difference alert."""
     d = HOUSE_DEFAULTS
-    return vol.Schema(
-        {
-            _opt(CONF_BOILER_ENTITY, v): _entity(["switch", "climate", "input_boolean"]),
-            _req(CONF_ROOM_DIFF_ALERT, v, d): _number(0, 10, 0.5, "°C"),
-        }
-    )
+    fields: dict[Any, Any] = {}
+    if with_source:
+        fields[_opt(CONF_BOILER_ENTITY, v)] = _entity(["switch", "climate", "input_boolean"])
+    fields[_req(CONF_ROOM_DIFF_ALERT, v, d)] = _number(0, 10, 0.5, "°C")
+    return vol.Schema(fields)
 
 
 def _boiler_details(v: dict[str, Any], rooms: list[selector.SelectOptionDict]) -> vol.Schema:
@@ -1255,8 +1254,17 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
             if sub.subentry_type == SUBENTRY_ROOM
         ]
 
+    def _whole_house_starts_source(self) -> bool:
+        """True when the whole-house zone (Generic Thermostat or relay) starts the boiler itself."""
+        for sub in self.config_entry.subentries.values():
+            if sub.subentry_type == SUBENTRY_ROOM and sub.unique_id == HOUSE_ZONE_ID:
+                return sub.data.get(CONF_SOURCE) in (SOURCE_GT, SOURCE_SWITCH)
+        return False
+
     async def async_step_boiler(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Boiler and heat demand options."""
+        if self._whole_house_starts_source():
+            return await self.async_step_boiler_alert(user_input)
         schema = _boiler_schema(self._values)
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {"entity": "", "owner": ""}
@@ -1275,6 +1283,20 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
             errors=errors,
             description_placeholders=placeholders,
         )
+
+    async def async_step_boiler_alert(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Only the room-difference alert: the whole house already starts the heat source.
+
+        The form has no heat source, so saving it keeps none.
+        """
+        schema = _boiler_schema(self._values, with_source=False)
+        if user_input is not None:
+            self._first(schema, user_input)
+            self._pending.pop(CONF_BOILER_ENTITY, None)
+            return self.async_create_entry(data=self._pending)
+        return self.async_show_form(step_id="boiler_alert", data_schema=schema)
 
     async def async_step_boiler_details(
         self, user_input: dict[str, Any] | None = None

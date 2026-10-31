@@ -14,6 +14,15 @@ GitHub releases.
   heat source stops as soon as the last room reached its target. Houses and
   rooms that saved their own values keep them; a few minutes still protect a
   boiler without its own anti-cycling or spare a mechanical relay.
+- The *Heat source* is no longer offered when the *Whole house* zone is a Generic
+  Thermostat or a relay: that zone already starts the boiler. The form then
+  shows only the alert for a room that stays colder.
+
+  > **Warning – houses with a Generic Thermostat or a relay on the whole house:**
+  > if a *Heat source* was chosen there, it keeps working until the options form
+  > *Heat source and heat demand* is saved again; saving it removes the heat
+  > source. Check that the Generic Thermostat (or the relay) is the one that
+  > starts the boiler before you save, since nothing else will start it then.
 - The heat source form warns that with TRVs on every radiator the installation
   needs a bypass or a radiator without a TRV (also in the guide, chapter 8).
 

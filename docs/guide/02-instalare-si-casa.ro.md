@@ -252,8 +252,9 @@ Detalii: [capitolul 9](09-ferestre-manual-siguranta.ro.md) și
 | --- | --- | --- |
 | Alerte importante către | – | Telefoane (`notify.mobile_app_...`), email sau alte servicii de notificare. Pentru email se scriu adresele după serviciu: `notify.eu_gmail_com: ana@exemplu.ro, ion@exemplu.ro` (Google Mail are nevoie de ele). Se trimit imediat, și în orele de liniște. Gol = notificări în Home Assistant. |
 | Avertizări către | – | La fel, pentru alertele de verificat. Gol = notificări în Home Assistant. |
-| Informații către | – | Ce a făcut casa singură (vacanța automată). Gol = fără anunț. |
+| Informații către | – | Ce a făcut casa singură: a început sau s-a încheiat sezonul de încălzire, a început o vacanță planificată, preîncălzirea dinaintea întoarcerii, vacanța automată, modul oaspeți oprit singur. Gol = fără anunț. |
 | Anunță când o alertă se încheie | pornit | Un mesaj când un dispozitiv funcționează din nou, o fereastră s-a închis sau o baterie a fost schimbată. |
+| Amintește când pauza durează mai mult de | 12 h | O avertizare când încălzirea rămâne în pauză atât timp, apoi o dată pe zi. 0 = niciodată. |
 | Ore de liniște de la / până la | – | În acest interval doar alertele importante; celelalte se trimit la sfârșitul lui, dacă mai sunt valabile. |
 | Alertă când o fereastră e deschisă mai mult de | 30 min | Cât timp încălzirea e necesară. |
 | Alertă când un dispozitiv e indisponibil mai mult de | 15 min | Termostat sau senzor. |

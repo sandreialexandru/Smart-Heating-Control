@@ -220,8 +220,10 @@ opțiuni (*Alerte*), după cât de importante sunt:
   indisponibil. Se trimit imediat, și în orele de liniște;
 - **avertizări**: toate celelalte alerte din lista de mai jos. În orele de
   liniște așteaptă sfârșitul lor și se trimit doar dacă mai sunt valabile;
-- **informații**: ce a făcut casa singură, a pornit sau s-a încheiat vacanța
-  automată. Nu apar în card.
+- **informații**: ce a făcut casa singură: a început sau s-a încheiat sezonul
+  de încălzire, a început o vacanță planificată, casa se încălzește înainte de
+  întoarcere, a pornit sau s-a încheiat vacanța automată, modul oaspeți s-a
+  oprit singur. Nu apar în card.
 
 Un destinatar e un serviciu de notificare (un telefon, `notify.mobile_app_...`)
 sau o entitate de notificare. Pentru email se scriu adresele după serviciu:
@@ -256,6 +258,8 @@ pentru avertizări.
 | Programul e invalid | se folosește programul implicit |
 | Fără profil activ în program: … | zile fără profil activ (antiîngheț) |
 | Camere necesare pentru pornirea sursei de căldură: … | mai multe camere necesare decât are casa (au fost șterse camere): sursa pornește doar pentru antiîngheț |
+| Camera are …°, sub temperatura de antiîngheț | camera e cu 0,5° sau mai mult sub ea: încălzirea nu o poate menține (se anunță și când revine) |
+| Încălzirea e în pauză de peste … h | pauza e pornită mai mult de *Amintește când pauza durează mai mult de* (implicit 12 h), apoi o dată pe zi |
 
 ## Repornirea Home Assistant
 

@@ -24,6 +24,12 @@ GitHub releases.
   target, so the Google Mail integration sends the alerts too.
   A recipient written with capitals (e.g. *Notify.* from a phone keyboard) is
   accepted.
+- More messages, only for rare events: a room that falls below the frost
+  protection temperature (warning, its end told too), a pause left on (warning
+  after *Remind when the pause lasts longer than*, 12 h by default, then once a
+  day), and as information the start and end of the heating season, a planned
+  vacation that starts, the preheating before the return and guest mode that
+  ends by itself.
 - A room can be set not to heat from the heat source of the house (*Heats from
   the heat source of the house*, in the room's devices step, shown only when the
   house has a heat source; on by default). A room with its own heat (electric

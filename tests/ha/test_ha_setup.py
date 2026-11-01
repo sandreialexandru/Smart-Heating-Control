@@ -2473,3 +2473,80 @@ async def test_alerts_by_email_addresses(hass: HomeAssistant, freezer: FrozenDat
         }
     ]
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_frost_protection_is_told(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """A room that falls below the frost protection temperature is a warning; its end is told."""
+    phone = async_mock_service(hass, "notify", "mobile_app_phone")
+    entry, house, room = await _alert_house(hass, freezer, notify_warning=["notify.mobile_app_phone"])
+    await house.async_set_mode("off")
+    hass.states.async_set("sensor.room_temp", "6.8", {"unit_of_measurement": "°C"})
+    await _tick(hass, freezer, 60)
+    assert not phone  # just under it: the heating keeps it
+    hass.states.async_set("sensor.room_temp", "5.0", {"unit_of_measurement": "°C"})
+    await _tick(hass, freezer, 60)
+    hass.states.async_set("sensor.room_temp", "6.8", {"unit_of_measurement": "°C"})
+    await _tick(hass, freezer, 60)
+    hass.states.async_set("sensor.room_temp", "7.2", {"unit_of_measurement": "°C"})
+    await _tick(hass, freezer, 60)
+    assert [c.data["message"] for c in phone] == [
+        "Bedroom: The room is 5.0°, below the frost protection temperature (7.0°): the heating cannot keep it.",
+        "Bedroom: The room is back at the frost protection temperature.",
+    ]
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_long_pause_is_reminded(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """A pause left on is a warning after the hours set, then once a day; resuming ends it quietly."""
+    phone = async_mock_service(hass, "notify", "mobile_app_phone")
+    entry, house, room = await _alert_house(
+        hass, freezer, notify_warning=["notify.mobile_app_phone"], pause_remind_hours=12
+    )
+    await house.async_set_pause(True)
+    await _tick(hass, freezer, 11 * 3600)
+    assert not phone
+    await _tick(hass, freezer, 3600 + 60)
+    assert [c.data["message"] for c in phone] == [
+        "The heating has been paused for more than 12 h: only frost protection works."
+    ]
+    for _ in range(24):
+        await _tick(hass, freezer, 3600)
+    assert len(phone) == 2  # once a day
+    await house.async_set_pause(False)
+    await _tick(hass, freezer, 60)
+    assert len(phone) == 2
+    assert house.paused_since is None
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_house_events_are_told(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Season, guests that end by themselves, a planned vacation and its preheating."""
+    from custom_components.advanced_climate.house import House
+
+    season = {"on": True}
+    monkeypatch.setattr(House, "season_active", property(lambda self: season["on"]))
+    phone = async_mock_service(hass, "notify", "mobile_app_phone")
+    entry, house, room = await _alert_house(
+        hass, freezer, notify_info=["notify.mobile_app_phone"], guest_expire_hours=1,
+        vacation_preheat_hours=4,
+    )
+    season["on"] = False
+    await _tick(hass, freezer, 60)
+    season["on"] = True
+    await _tick(hass, freezer, 60)
+    await house.async_set_guest(True)
+    await _tick(hass, freezer, 3600 + 60)
+    now = dt_util.utcnow()
+    await house.async_set_vacation(now + timedelta(hours=1), now + timedelta(hours=10))
+    await _tick(hass, freezer, 3600 + 60)
+    await _tick(hass, freezer, 5 * 3600)
+    assert [c.data["message"] for c in phone] == [
+        "The heating season ended: no heating until it starts again.",
+        "The heating season started.",
+        "Guest mode ended by itself: the house follows the people again.",
+        "The vacation started: every room is set to away.",
+        "The vacation ends soon: the house is warmed up for your return.",
+    ]
+    assert await hass.config_entries.async_unload(entry.entry_id)

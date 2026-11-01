@@ -187,6 +187,8 @@ CONF_NOTIFY_RESOLVED: Final = "notify_resolved"
 # Quiet hours: only the important alerts are sent; the others wait for their end.
 CONF_QUIET_START: Final = "quiet_start"
 CONF_QUIET_END: Final = "quiet_end"
+# A reminder when the pause stays on this long (hours; 0 = never).
+CONF_PAUSE_REMIND_HOURS: Final = "pause_remind_hours"
 CONF_ALERT_WINDOW_MINUTES: Final = "alert_window_minutes"
 CONF_ALERT_UNAVAILABLE_MINUTES: Final = "alert_unavailable_minutes"
 CONF_BATTERY_THRESHOLD: Final = "battery_threshold"
@@ -249,6 +251,7 @@ HOUSE_DEFAULTS: Final = {
     CONF_BATTERY_THRESHOLD: 20,
     CONF_VERIFY_COMMANDS: True,
     CONF_NOTIFY_RESOLVED: True,
+    CONF_PAUSE_REMIND_HOURS: 12,
     CONF_FROST_TEMP: 7.0,
     CONF_MAX_TEMP: 25.0,
 }

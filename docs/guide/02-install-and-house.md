@@ -251,8 +251,9 @@ Details: [chapter 9](09-windows-manual-safety.md) and
 | --- | --- | --- |
 | Important alerts to | – | Phones (`notify.mobile_app_...`), email or other notify services. For email write the addresses after the service: `notify.me_gmail_com: ana@example.com, ion@example.com` (Google Mail needs them). Sent at once, also in the quiet hours. Empty = notifications in Home Assistant. |
 | Warnings to | – | The same, for the alerts to look at. Empty = notifications in Home Assistant. |
-| Information to | – | What the house did by itself (the automatic vacation). Empty = not told. |
+| Information to | – | What the house did by itself: the heating season started or ended, a planned vacation started, the preheating before your return, the automatic vacation, guest mode ended by itself. Empty = not told. |
 | Tell when an alert ends | on | A message when a device works again, a window is closed or a battery was replaced. |
+| Remind when the pause lasts longer than | 12 h | A warning when the heating stays paused this long, then once a day. 0 = never. |
 | Quiet hours from / until | – | Only the important alerts in this time; the others are sent when it ends, if they still apply. |
 | Alert when a window is open longer than | 30 min | While heating is needed. |
 | Alert when a device is unavailable longer than | 15 min | Thermostat or sensor. |

@@ -33,9 +33,16 @@ CATEGORIES: dict[str, str] = {
     "schedule_gap": CATEGORY_WARNING,
     "weather_without_source": CATEGORY_WARNING,
     "boiler_min_rooms": CATEGORY_WARNING,
+    "frost_protection": CATEGORY_WARNING,
+    "pause_long": CATEGORY_WARNING,
     # What the house did by itself.
     "auto_vacation_on": CATEGORY_INFO,
     "auto_vacation_off": CATEGORY_INFO,
+    "season_on": CATEGORY_INFO,
+    "season_off": CATEGORY_INFO,
+    "guest_ended": CATEGORY_INFO,
+    "vacation_started": CATEGORY_INFO,
+    "vacation_preheat": CATEGORY_INFO,
 }
 
 # Alerts whose end is worth telling (a device back, a window closed); the others
@@ -48,6 +55,7 @@ RESOLVABLE = {
     "window_long",
     "battery_low",
     "not_accepted",
+    "frost_protection",
 }
 
 TEXTS: dict[str, dict[str, str]] = {
@@ -70,6 +78,13 @@ TEXTS: dict[str, dict[str, str]] = {
         "outdoor_unavailable": "No outdoor temperature from {entities} for more than {minutes} min: the cutoff, the automatic season, the compensation and the optimal stop cannot use it.",
         "auto_vacation_on": "Everyone has been away for a long time: the automatic vacation started.",
         "auto_vacation_off": "The automatic vacation ended.",
+        "frost_protection": "The room is {current}°, below the frost protection temperature ({frost}°): the heating cannot keep it.",
+        "pause_long": "The heating has been paused for more than {hours} h: only frost protection works.",
+        "season_on": "The heating season started.",
+        "season_off": "The heating season ended: no heating until it starts again.",
+        "guest_ended": "Guest mode ended by itself: the house follows the people again.",
+        "vacation_started": "The vacation started: every room is set to away.",
+        "vacation_preheat": "The vacation ends soon: the house is warmed up for your return.",
         # Resolved.
         "resolved_source_unavailable": "The heat source {entity} works again.",
         "resolved_device_unavailable": "{entity} is available again.",
@@ -78,6 +93,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "resolved_window_long": "The window is closed again.",
         "resolved_battery_low": "The battery of {device} is fine again.",
         "resolved_not_accepted": "{entities} follow the target again.",
+        "resolved_frost_protection": "The room is back at the frost protection temperature.",
         # Values.
         "free_days": "free days (holidays)",
         "weekend_workdays": "workdays on the weekend",
@@ -106,6 +122,13 @@ TEXTS: dict[str, dict[str, str]] = {
         "outdoor_unavailable": "Nicio temperatură de afară de la {entities} de peste {minutes} min: oprirea când e cald, sezonul automat, compensarea și oprirea anticipată nu o pot folosi.",
         "auto_vacation_on": "Toată lumea e plecată de mult: a pornit vacanța automată.",
         "auto_vacation_off": "Vacanța automată s-a încheiat.",
+        "frost_protection": "Camera are {current}°, sub temperatura de antiîngheț ({frost}°): încălzirea nu o poate menține.",
+        "pause_long": "Încălzirea e în pauză de peste {hours} h: funcționează doar antiînghețul.",
+        "season_on": "A început sezonul de încălzire.",
+        "season_off": "S-a încheiat sezonul de încălzire: nu se mai încălzește până nu reîncepe.",
+        "guest_ended": "Modul oaspeți s-a oprit singur: casa urmează din nou persoanele.",
+        "vacation_started": "A început vacanța: toate camerele sunt pe away.",
+        "vacation_preheat": "Vacanța se termină curând: casa se încălzește pentru întoarcerea voastră.",
         "resolved_source_unavailable": "Sursa de căldură {entity} funcționează din nou.",
         "resolved_device_unavailable": "{entity} e din nou disponibil.",
         "resolved_sensor_unavailable": "Senzorii de temperatură funcționează din nou.",
@@ -113,6 +136,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "resolved_window_long": "Fereastra e închisă din nou.",
         "resolved_battery_low": "Bateria de la {device} e din nou în regulă.",
         "resolved_not_accepted": "{entities} urmează din nou ținta.",
+        "resolved_frost_protection": "Camera a revenit la temperatura de antiîngheț.",
         "free_days": "zilele libere (sărbători)",
         "weekend_workdays": "zilele lucrătoare din weekend",
         "wf_cutoff": "oprirea când e cald",

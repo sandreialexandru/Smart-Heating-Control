@@ -220,8 +220,10 @@ matter:
   Sent at once, also in the quiet hours;
 - **warnings**: every other alert of the list below. In the quiet hours they
   wait until the quiet hours end and are sent only if they still apply;
-- **information**: what the house did by itself, the automatic vacation started
-  or ended. Not shown in the card.
+- **information**: what the house did by itself: the heating season started or
+  ended, a planned vacation started, the house warms up before your return, the
+  automatic vacation started or ended, guest mode ended by itself. Not shown in
+  the card.
 
 A recipient is a notify service (a phone, `notify.mobile_app_...`) or a notify
 entity. For email, write the addresses after the service:
@@ -255,6 +257,8 @@ as the recipient of the important alerts and of the warnings.
 | The schedule is invalid | the default schedule is used |
 | No active schedule profile: … | days without an active profile (frost protection) |
 | Rooms needed to start the heat source is … | more rooms needed than the house has (rooms were removed): the heat source starts only for frost protection |
+| The room is …°, below the frost protection temperature | the room is 0.5° or more below it: the heating cannot keep it (its end is told when it is back) |
+| The heating has been paused for more than … h | the pause is on longer than *Remind when the pause lasts longer than* (12 h by default), then once a day |
 
 ## Restart of Home Assistant
 

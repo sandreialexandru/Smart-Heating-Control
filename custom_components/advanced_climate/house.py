@@ -71,6 +71,7 @@ from .const import (
     CONF_OPTIMAL_STOP,
     CONF_OUTDOOR_SENSOR,
     CONF_OVERRIDE_SCOPE,
+    CONF_PAUSE_REMIND_HOURS,
     CONF_PERSONS,
     CONF_PRESENCE_SENSORS,
     CONF_PRICE_HIGH,
@@ -209,6 +210,10 @@ class House:
         self._delivered: dict[str, dict[str, Any]] = {}
         # Messages held by the quiet hours, in order: (key or None, message dict).
         self._deferred: list[tuple[str | None, dict[str, Any]]] = []
+        # Since when the pause is on (for its reminder).
+        self.paused_since: datetime | None = None
+        # The last season / planned vacation state told (None: not known yet).
+        self._told: dict[str, Any] = {}
         # Why the heat source waits: "min_on" / "min_off" (minimum times), else None.
         self.source_waiting: str | None = None
         self._unsubs: list[Callable[[], None]] = []
@@ -230,6 +235,7 @@ class House:
         house = data.get("house", {})
         self.mode = house.get("mode", MODE_AUTO) if house.get("mode") in MODES else MODE_AUTO
         self.paused = bool(house.get("paused", False))
+        self.paused_since = from_iso(house.get("paused_since")) if self.paused else None
         self.guest = bool(house.get("guest", False))
         self.guest_until = from_iso(house.get("guest_until"))
         self.vacation_start = from_iso(house.get("vacation_start"))
@@ -378,6 +384,7 @@ class House:
             "house": {
                 "mode": self.mode,
                 "paused": self.paused,
+                "paused_since": self.paused_since.isoformat() if self.paused_since else None,
                 "guest": self.guest,
                 "guest_until": iso(self.guest_until),
                 "vacation_start": iso(self.vacation_start),
@@ -465,6 +472,7 @@ class House:
         try:
             self._check_room_difference()
             self._check_weather_alerts(now)
+            self._check_house_events(now)
         except Exception:
             _LOGGER.exception("Error in the checks of %s", self.entry.title)
         self._flush_deferred(now)
@@ -651,6 +659,7 @@ class House:
             self.guest = False
             self.guest_until = None
             self._auto_vacation_resume = self.auto_vacation
+            self.inform("guest_ended")
 
     async def async_set_guest(self, on: bool) -> None:
         """Turn guest mode on or off."""
@@ -663,6 +672,11 @@ class House:
 
     async def async_set_pause(self, on: bool) -> None:
         """Pause or resume."""
+        if on and not self.paused:
+            self.paused_since = dt_util.utcnow()
+        elif not on:
+            self.paused_since = None
+            self.clear_alert("pause_long")
         self.paused = on
         await self.async_evaluate_or_notify()
 
@@ -1345,6 +1359,38 @@ class House:
             # A thermostat in heat mode may be idle: it runs only while heating.
             return True, state.attributes["hvac_action"] == "heating"  # type: ignore[union-attr]
         return True, state.state != "off"  # type: ignore[union-attr]
+
+    def _check_house_events(self, now: datetime) -> None:
+        """Tell the season, a planned vacation and its preheating; remind a long pause."""
+        hours = float(self.options.get(CONF_PAUSE_REMIND_HOURS) or 0)
+        if self.paused and self.paused_since is None:
+            self.paused_since = now  # paused before this was kept
+        if self.paused and hours > 0 and now - self.paused_since >= timedelta(hours=hours):
+            self.notify(
+                "pause_long",
+                f"The heating has been paused for more than {hours:g} hours.",
+                repeat=timedelta(days=1),
+                code="pause_long",
+                params={"hours": f"{hours:g}"},
+            )
+        # The planned vacation (its dates), guests aside: they only suspend it.
+        planned = (
+            self.mode != MODE_VACATION and not self.auto_vacation and self._vacation_set(now)
+        )
+        states = {
+            "season": self.season_active,
+            "vacation": planned,
+            "preheat": self.vacation_preheating(now),
+        }
+        told = self._told
+        # Only changes are told, never the state found at the start.
+        if told.get("season") is not None and states["season"] != told["season"]:
+            self.inform("season_on" if states["season"] else "season_off")
+        if told.get("vacation") is False and states["vacation"]:
+            self.inform("vacation_started")
+        if told.get("preheat") is False and states["preheat"]:
+            self.inform("vacation_preheat")
+        self._told = states
 
     def _check_room_difference(self) -> None:
         """Alert when some rooms stay cold while others reached their target."""

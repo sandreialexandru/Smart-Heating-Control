@@ -177,6 +177,8 @@ if TYPE_CHECKING:
     from .house import House
 
 _LOGGER = logging.getLogger(__name__)
+# How far below the frost protection temperature a room is told (°C).
+FROST_ALERT_MARGIN = 0.5
 SENT_RECENT = timedelta(minutes=SENT_RECENT_MINUTES)
 SENT_STABLE = timedelta(seconds=SENT_STABLE_SECONDS)
 DEVICE_LIMIT_KEEP = timedelta(hours=DEVICE_LIMIT_HOURS)
@@ -2340,6 +2342,24 @@ class Room:
                     params={"minutes": round(minutes)},
                     room=self.id,
                 )
+        # The room fell clearly below the frost protection temperature (the heating
+        # cannot keep it); told once, until the room is back at it.
+        frost = self.frost_temp()
+        if self.current_temp is not None and self.current_temp <= frost - FROST_ALERT_MARGIN:
+            unit = house.unit
+            house.notify(
+                f"frost_{self.id}",
+                f"{self.name}: the room is below the frost protection temperature "
+                f"({from_celsius(frost, unit):.1f} {unit}).",
+                code="frost_protection",
+                params={
+                    "current": f"{from_celsius(self.current_temp, unit):.1f}",
+                    "frost": f"{from_celsius(frost, unit):.1f}",
+                },
+                room=self.id,
+            )
+        elif self.current_temp is not None and self.current_temp >= frost:
+            house.clear_alert(f"frost_{self.id}")
         # Unavailable devices.
         limit = timedelta(minutes=house.alert_unavailable_minutes)
         for entity_id in self.climates + self.switches:

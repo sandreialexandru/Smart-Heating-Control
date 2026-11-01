@@ -811,3 +811,22 @@ async def test_options_alerts_recipients(hass: HomeAssistant) -> None:
     assert "notify_service" not in entry.options
     assert entry.options["notify_critical"] == ["notify.mobile_app_phone"]
     assert entry.options["quiet_start"] == "22:00:00"
+
+
+async def test_options_alerts_email_recipient(hass: HomeAssistant) -> None:
+    """A mail service with addresses is accepted; a wrong address is refused."""
+    entry = MockConfigEntry(domain=DOMAIN, title="Home", options={})
+    entry.add_to_hass(hass)
+    flow = hass.config_entries.options
+    result = await flow.async_init(entry.entry_id)
+    result = await flow.async_configure(result["flow_id"], {"next_step_id": "alerts"})
+    result = await flow.async_configure(
+        result["flow_id"], {"notify_warning": ["notify.me_gmail_com: ana@example, ion@example.com"]}
+    )
+    assert result["errors"] == {"notify_warning": "invalid_recipient"}
+    assert result["description_placeholders"]["recipient"] == "ana@example"
+    result = await flow.async_configure(
+        result["flow_id"], {"notify_warning": ["notify.me_gmail_com: ana@example.com, ion@example.com"]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options["notify_warning"] == ["notify.me_gmail_com: ana@example.com, ion@example.com"]

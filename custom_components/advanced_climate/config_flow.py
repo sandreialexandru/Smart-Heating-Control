@@ -20,6 +20,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import selector
 
+from . import alerts as alert_texts
 from .const import (
     AGG_MEAN,
     AGG_MEDIAN,
@@ -1349,12 +1350,30 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
     async def async_step_alerts(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Notifications."""
         schema = _alerts_schema(self._values, self._room_count(), _notify_targets(self.hass))
+        errors: dict[str, str] = {}
+        placeholders = {"recipient": ""}
         if user_input is not None:
-            data = _merge(dict(self.config_entry.options), schema, _kept(user_input, self._unit()))
-            # The recipients replace the one service of earlier versions.
-            data.pop(CONF_NOTIFY_SERVICE, None)
-            return self.async_create_entry(data=data)
-        return self.async_show_form(step_id="alerts", data_schema=schema)
+            for key in NOTIFY_KEYS:
+                for recipient in alert_texts.targets(user_input.get(key)):
+                    if (bad := alert_texts.invalid_recipient(recipient)) is not None:
+                        errors[key] = "invalid_recipient"
+                        placeholders["recipient"] = bad
+                        break
+            if not errors:
+                data = _merge(
+                    dict(self.config_entry.options), schema, _kept(user_input, self._unit())
+                )
+                # The recipients replace the one service of earlier versions.
+                data.pop(CONF_NOTIFY_SERVICE, None)
+                return self.async_create_entry(data=data)
+        return self.async_show_form(
+            step_id="alerts",
+            data_schema=self.add_suggested_values_to_schema(schema, user_input or {})
+            if errors
+            else schema,
+            errors=errors,
+            description_placeholders=placeholders,
+        )
 
 
 # ---------------------------------------------------------------------------

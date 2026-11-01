@@ -223,6 +223,12 @@ matter:
 - **information**: what the house did by itself, the automatic vacation started
   or ended. Not shown in the card.
 
+A recipient is a notify service (a phone, `notify.mobile_app_...`) or a notify
+entity. For email, write the addresses after the service:
+`notify.me_gmail_com: ana@example.com, ion@example.com`. The Google Mail
+integration sends nothing without them; with SMTP set up in YAML the addresses
+of its configuration are used when none are written.
+
 A category without recipients becomes a notification in Home Assistant
 (information is then not told). With *Tell when an alert ends*, an unavailable
 device that works again, a closed window, a replaced battery or a command

@@ -223,6 +223,12 @@ opțiuni (*Alerte*), după cât de importante sunt:
 - **informații**: ce a făcut casa singură, a pornit sau s-a încheiat vacanța
   automată. Nu apar în card.
 
+Un destinatar e un serviciu de notificare (un telefon, `notify.mobile_app_...`)
+sau o entitate de notificare. Pentru email se scriu adresele după serviciu:
+`notify.eu_gmail_com: ana@exemplu.ro, ion@exemplu.ro`. Integrarea Google Mail nu
+trimite nimic fără ele; cu SMTP configurat în YAML, fără adrese scrise se
+folosesc cele din configurarea lui.
+
 O categorie fără destinatari devine notificare în Home Assistant (informațiile
 atunci nu se anunță). Cu *Anunță când o alertă se încheie* se anunță și un
 dispozitiv care funcționează din nou, o fereastră închisă, o baterie schimbată

@@ -249,7 +249,7 @@ Details: [chapter 9](09-windows-manual-safety.md) and
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| Important alerts to | – | Phones (`notify.mobile_app_...`), email or other notify services. Sent at once, also in the quiet hours. Empty = notifications in Home Assistant. |
+| Important alerts to | – | Phones (`notify.mobile_app_...`), email or other notify services. For email write the addresses after the service: `notify.me_gmail_com: ana@example.com, ion@example.com` (Google Mail needs them). Sent at once, also in the quiet hours. Empty = notifications in Home Assistant. |
 | Warnings to | – | The same, for the alerts to look at. Empty = notifications in Home Assistant. |
 | Information to | – | What the house did by itself (the automatic vacation). Empty = not told. |
 | Tell when an alert ends | on | A message when a device works again, a window is closed or a battery was replaced. |

@@ -247,8 +247,8 @@
           "room_diff_alert": "Alert when a room stays colder than"
         },
         "data_description": {
-          "notify_critical": "No heating: the heat source or a thermostat unavailable. Sent at once, also in the quiet hours. Choose phones (notify.mobile_app_...), email or other notify services; leave empty for notifications in Home Assistant.",
-          "notify_warning": "Something to look at: an open window, a low battery, a failed sensor, a room colder than the others, a setting that does not work. Leave empty for notifications in Home Assistant.",
+          "notify_critical": "No heating: the heat source or a thermostat unavailable. Sent at once, also in the quiet hours. Choose phones (notify.mobile_app_...) or other notify services. For email write the addresses after the service, e.g. notify.me_gmail_com: ana@example.com, ion@example.com (Google Mail needs them). Leave empty for notifications in Home Assistant.",
+          "notify_warning": "Something to look at: an open window, a low battery, a failed sensor, a room colder than the others, a setting that does not work. Email: the addresses after the service, as above. Leave empty for notifications in Home Assistant.",
           "notify_info": "What the house did by itself, e.g. the automatic vacation started or ended. Leave empty to not be told.",
           "notify_resolved": "A message when a device works again, a window is closed or a battery was replaced (only for alerts sent to the recipients above). On a phone it replaces the alert.",
           "quiet_start": "From this time only the important alerts are sent; the others wait until the quiet hours end and are sent only if they still apply. Leave both empty for no quiet hours.",
@@ -422,7 +422,8 @@
       "outdoor_is_room_sensor": "{entity} is a temperature sensor of {owner}. The outdoor sensor must be a different sensor.",
       "room_sensor_is_outdoor": "{entity} is the outdoor sensor of {owner}. Choose a sensor in the room.",
       "boost_sensor_required": "The TRV boost needs a temperature sensor of the room.",
-      "boost_temperature_only": "The TRV boost works only with the Temperature command."
+      "boost_temperature_only": "The TRV boost works only with the Temperature command.",
+      "invalid_recipient": "“{recipient}” cannot be used: write a notify service (notify.name), optionally followed by email addresses, e.g. notify.me_gmail_com: ana@example.com, ion@example.com."
     }
   },
   "config_subentries": {

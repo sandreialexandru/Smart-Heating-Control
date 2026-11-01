@@ -2448,3 +2448,28 @@ async def test_auto_vacation_is_told(hass: HomeAssistant, freezer: FrozenDateTim
         "The automatic vacation ended.",
     ]
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_alerts_by_email_addresses(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Addresses written after a mail service go as its target (Google Mail needs them)."""
+    sent = []
+
+    async def gmail(call):
+        if not call.data.get("target"):
+            raise ValueError("recipient address required")
+        sent.append(call.data)
+
+    hass.services.async_register("notify", "me_gmail_com", gmail)
+    entry, house, room = await _alert_house(
+        hass, freezer, notify_warning=["notify.me_gmail_com: ana@example.com; ion@example.com"]
+    )
+    house.notify("win", "x", code="window_long", params={"minutes": 30}, room=room.id)
+    await hass.async_block_till_done()
+    assert sent == [
+        {
+            "title": "Home",
+            "message": "Bedroom: A window has been open for more than 30 min.",
+            "target": ["ana@example.com", "ion@example.com"],
+        }
+    ]
+    assert await hass.config_entries.async_unload(entry.entry_id)

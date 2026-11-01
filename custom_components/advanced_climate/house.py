@@ -1538,13 +1538,17 @@ class House:
                 self._send(key, item, targets, resolved=resolved)
 
     async def _async_call_notify(
-        self, target: str, title: str, message: str, key: str | None
+        self, recipient: str, title: str, message: str, key: str | None
     ) -> None:
-        """Send with a notify service or entity (persistent notification if it fails)."""
+        """Send with a notify service or entity (persistent notification if it fails).
+
+        Email addresses written after the service go as its ``target``.
+        """
+        target, addresses = alert_texts.split_recipient(recipient)
         domain, _, name = target.partition(".")
         try:
             if self.hass.states.get(target) is not None and domain == "notify":
-                # A notify entity (the newer kind): no title on some, so it leads.
+                # A notify entity (the newer kind): it knows where it sends.
                 await self.hass.services.async_call(
                     "notify",
                     "send_message",
@@ -1553,6 +1557,8 @@ class House:
                 )
                 return
             data: dict[str, Any] = {"title": title, "message": message}
+            if addresses:
+                data["target"] = addresses
             if name.startswith("mobile_app_") and key is not None:
                 # The phone replaces the alert with its end (same tag).
                 data["data"] = {"tag": f"{DOMAIN}_{key}", "group": DOMAIN}

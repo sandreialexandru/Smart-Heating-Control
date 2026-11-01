@@ -250,7 +250,7 @@ Detalii: [capitolul 9](09-ferestre-manual-siguranta.ro.md) și
 
 | Setare | Implicit | Ce face |
 | --- | --- | --- |
-| Alerte importante către | – | Telefoane (`notify.mobile_app_...`), email sau alte servicii de notificare. Se trimit imediat, și în orele de liniște. Gol = notificări în Home Assistant. |
+| Alerte importante către | – | Telefoane (`notify.mobile_app_...`), email sau alte servicii de notificare. Pentru email se scriu adresele după serviciu: `notify.eu_gmail_com: ana@exemplu.ro, ion@exemplu.ro` (Google Mail are nevoie de ele). Se trimit imediat, și în orele de liniște. Gol = notificări în Home Assistant. |
 | Avertizări către | – | La fel, pentru alertele de verificat. Gol = notificări în Home Assistant. |
 | Informații către | – | Ce a făcut casa singură (vacanța automată). Gol = fără anunț. |
 | Anunță când o alertă se încheie | pornit | Un mesaj când un dispozitiv funcționează din nou, o fereastră s-a închis sau o baterie a fost schimbată. |

@@ -215,7 +215,12 @@ def in_quiet_hours(local_now: datetime, start: time | None, end: time | None) ->
 
 
 def targets(value: Any) -> list[str]:
-    """The notify services or entities chosen for a category."""
+    """The recipients chosen for a category, as written (duplicates dropped).
+
+    A recipient is a notify service or entity, optionally followed by the email
+    addresses it sends to: ``notify.me_gmail_com: ana@example.com, ion@example.com``
+    (Google Mail and other mail services need them).
+    """
     if not value:
         return []
     if isinstance(value, str):
@@ -225,8 +230,30 @@ def targets(value: Any) -> list[str]:
         item = str(item).strip()
         if not item:
             continue
-        if "." not in item:
-            item = f"notify.{item}"
-        if item not in result:
-            result.append(item)
+        name, _, addresses = item.partition(":")
+        name = name.strip()
+        if "." not in name:
+            name = f"notify.{name}"
+        recipient = f"{name}: {addresses.strip()}" if addresses.strip() else name
+        if recipient not in result:
+            result.append(recipient)
     return result
+
+
+def split_recipient(recipient: str) -> tuple[str, list[str]]:
+    """The notify service or entity of a recipient and its email addresses."""
+    name, _, addresses = recipient.partition(":")
+    found = [a.strip() for a in addresses.replace(";", ",").split(",") if a.strip()]
+    return name.strip(), found
+
+
+def invalid_recipient(recipient: str) -> str | None:
+    """The first part of a recipient that cannot be used, None when it is fine."""
+    name, addresses = split_recipient(recipient)
+    if not name.startswith("notify.") or len(name) <= len("notify.") or " " in name:
+        return name or recipient
+    for address in addresses:
+        local, at, domain = address.partition("@")
+        if not at or not local or "." not in domain or " " in address:
+            return address
+    return None

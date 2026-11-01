@@ -231,7 +231,8 @@ def targets(value: Any) -> list[str]:
         if not item:
             continue
         name, _, addresses = item.partition(":")
-        name = name.strip()
+        # Services and entities are lower case (a phone keyboard may write "Notify.").
+        name = name.strip().lower()
         if "." not in name:
             name = f"notify.{name}"
         recipient = f"{name}: {addresses.strip()}" if addresses.strip() else name
@@ -244,7 +245,7 @@ def split_recipient(recipient: str) -> tuple[str, list[str]]:
     """The notify service or entity of a recipient and its email addresses."""
     name, _, addresses = recipient.partition(":")
     found = [a.strip() for a in addresses.replace(";", ",").split(",") if a.strip()]
-    return name.strip(), found
+    return name.strip().lower(), found
 
 
 def invalid_recipient(recipient: str) -> str | None:

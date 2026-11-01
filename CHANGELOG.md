@@ -22,6 +22,8 @@ GitHub releases.
 - Email: the addresses can be written after the notify service
   (`notify.me_gmail_com: ana@example.com, ion@example.com`) and go as its
   target, so the Google Mail integration sends the alerts too.
+  A recipient written with capitals (e.g. *Notify.* from a phone keyboard) is
+  accepted.
 - A room can be set not to heat from the heat source of the house (*Heats from
   the heat source of the house*, in the room's devices step, shown only when the
   house has a heat source; on by default). A room with its own heat (electric

@@ -830,3 +830,22 @@ async def test_options_alerts_email_recipient(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options["notify_warning"] == ["notify.me_gmail_com: ana@example.com, ion@example.com"]
+
+
+async def test_options_alerts_recipient_capital_letter(hass: HomeAssistant) -> None:
+    """A phone keyboard writes "Notify." with a capital: it is accepted and stored in lower case."""
+    entry = MockConfigEntry(domain=DOMAIN, title="Home", options={})
+    entry.add_to_hass(hass)
+    flow = hass.config_entries.options
+    result = await flow.async_init(entry.entry_id)
+    result = await flow.async_configure(result["flow_id"], {"next_step_id": "alerts"})
+    result = await flow.async_configure(
+        result["flow_id"], {"notify_critical": ["Notify.Me_gmail_com: Ana@Example.com"]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    from custom_components.advanced_climate.alerts import split_recipient, targets
+
+    assert split_recipient(targets(entry.options["notify_critical"])[0]) == (
+        "notify.me_gmail_com",
+        ["Ana@Example.com"],
+    )

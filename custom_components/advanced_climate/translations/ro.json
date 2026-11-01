@@ -234,7 +234,12 @@
       "alerts": {
         "title": "Alerte",
         "data": {
-          "notify_service": "Serviciu de notificare",
+          "notify_critical": "Alerte importante către",
+          "notify_warning": "Avertizări către",
+          "notify_info": "Informații către",
+          "notify_resolved": "Anunță când o alertă se încheie",
+          "quiet_start": "Ore de liniște de la",
+          "quiet_end": "Ore de liniște până la",
           "alert_window_minutes": "Alertă când o fereastră e deschisă mai mult de",
           "alert_unavailable_minutes": "Alertă când un dispozitiv e indisponibil mai mult de",
           "battery_threshold": "Baterie descărcată sub",
@@ -242,7 +247,12 @@
           "room_diff_alert": "Alertă când o cameră rămâne mai rece cu"
         },
         "data_description": {
-          "notify_service": "de ex. notify.mobile_app_telefon. Lasă gol pentru notificări doar în Home Assistant.",
+          "notify_critical": "Fără încălzire: sursa de căldură sau un termostat indisponibil. Se trimit imediat, și în orele de liniște. Alege telefoane (notify.mobile_app_...), email sau alte servicii de notificare; lasă gol pentru notificări în Home Assistant.",
+          "notify_warning": "Ceva de verificat: o fereastră deschisă, o baterie descărcată, un senzor căzut, o cameră mai rece decât celelalte, o setare care nu funcționează. Lasă gol pentru notificări în Home Assistant.",
+          "notify_info": "Ce a făcut casa singură, de ex. a pornit sau s-a încheiat vacanța automată. Lasă gol ca să nu fii anunțat.",
+          "notify_resolved": "Un mesaj când un dispozitiv funcționează din nou, o fereastră s-a închis sau o baterie a fost schimbată (doar pentru alertele trimise destinatarilor de mai sus). Pe telefon înlocuiește alerta.",
+          "quiet_start": "De la această oră se trimit doar alertele importante; celelalte așteaptă sfârșitul orelor de liniște și se trimit doar dacă mai sunt valabile. Lasă ambele goale pentru fără ore de liniște.",
+          "quiet_end": "Sfârșitul orelor de liniște (poate fi a doua zi dimineață).",
           "alert_window_minutes": "Alertă când o fereastră rămâne deschisă atât, cât e nevoie de încălzire.",
           "alert_unavailable_minutes": "Alertă când un termostat sau senzor e indisponibil atât timp.",
           "battery_threshold": "Alertă când bateria unui dispozitiv din cameră (TRV, senzor) scade sub această valoare.",

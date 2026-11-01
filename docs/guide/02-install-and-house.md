@@ -249,7 +249,11 @@ Details: [chapter 9](09-windows-manual-safety.md) and
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| Notification service | – | e.g. `notify.mobile_app_phone`. Empty = notifications in Home Assistant only. |
+| Important alerts to | – | Phones (`notify.mobile_app_...`), email or other notify services. Sent at once, also in the quiet hours. Empty = notifications in Home Assistant. |
+| Warnings to | – | The same, for the alerts to look at. Empty = notifications in Home Assistant. |
+| Information to | – | What the house did by itself (the automatic vacation). Empty = not told. |
+| Tell when an alert ends | on | A message when a device works again, a window is closed or a battery was replaced. |
+| Quiet hours from / until | – | Only the important alerts in this time; the others are sent when it ends, if they still apply. |
 | Alert when a window is open longer than | 30 min | While heating is needed. |
 | Alert when a device is unavailable longer than | 15 min | Thermostat or sensor. |
 | Low battery below | 20 % | The room devices (TRV, sensors). |

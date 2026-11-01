@@ -212,15 +212,33 @@ perioada ei nu se învață.
 
 ## Alertele
 
-Alertele apar ca notificări în Home Assistant sau prin *Serviciu de notificare*
-și, în limba cardului, în *Detaliile* camerei. O alertă se repetă cel mult la
-câteva ore.
+Alertele apar în card, în *Detaliile* camerei, în limba cardului. Se și
+trimit, în limba Home Assistant (română sau engleză), destinatarilor aleși în
+opțiuni (*Alerte*), după cât de importante sunt:
+
+- **importante**: fără încălzire, sursa de căldură sau un termostat
+  indisponibil. Se trimit imediat, și în orele de liniște;
+- **avertizări**: toate celelalte alerte din lista de mai jos. În orele de
+  liniște așteaptă sfârșitul lor și se trimit doar dacă mai sunt valabile;
+- **informații**: ce a făcut casa singură, a pornit sau s-a încheiat vacanța
+  automată. Nu apar în card.
+
+O categorie fără destinatari devine notificare în Home Assistant (informațiile
+atunci nu se anunță). Cu *Anunță când o alertă se încheie* se anunță și un
+dispozitiv care funcționează din nou, o fereastră închisă, o baterie schimbată
+sau o comandă acceptată din nou; pe telefon (`notify.mobile_app_...`) mesajul
+înlocuiește alerta. O alertă se repetă cel mult la câteva ore.
+
+O casă configurată înainte de 2.5 cu un *Serviciu de notificare* trimite în
+continuare toate alertele acolo până când opțiunile *Alerte* sunt salvate din
+nou: formularul îl propune atunci ca destinatar pentru alertele importante și
+pentru avertizări.
 
 | Alertă | Când |
 | --- | --- |
 | O fereastră e deschisă de peste … min | fereastra deschisă mai mult de pragul de alertă, cât e nevoie de căldură |
-| … e indisponibil de peste … min | un termostat sau senzor indisponibil mai mult de pragul de alertă |
-| Sursa de căldură … e indisponibilă | atunci nu se încălzește deloc, nici pentru antiîngheț |
+| … e indisponibil de peste … min | un termostat sau senzor indisponibil mai mult de pragul de alertă (importantă) |
+| Sursa de căldură … e indisponibilă | atunci nu se încălzește deloc, nici pentru antiîngheț (importantă) |
 | Nicio temperatură de afară de la … | nicio sursă configurată (senzor, meteo) nu dă temperatura mai mult de pragul de alertă |
 | Pornite, dar nu funcționează fără senzor de temperatură exterioară sau entitate meteo | funcții de vreme pornite fără sursa de care au nevoie |
 | Senzorii de temperatură sunt indisponibili | se folosește senzorul dispozitivului sau `eco` |

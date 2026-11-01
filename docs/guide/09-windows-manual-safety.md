@@ -211,15 +211,33 @@ learned.
 
 ## The alerts
 
-Alerts appear as Home Assistant notifications or through the *Notification
-service* and, in the card language, in the room *Details*. An alert is not
-repeated often.
+Alerts are shown in the card, in the room *Details*, in the language of the
+card. They are also sent, in the language of Home Assistant (Romanian or
+English), to the recipients chosen in the options (*Alerts*), by how much they
+matter:
+
+- **important**: no heating, the heat source or a thermostat unavailable.
+  Sent at once, also in the quiet hours;
+- **warnings**: every other alert of the list below. In the quiet hours they
+  wait until the quiet hours end and are sent only if they still apply;
+- **information**: what the house did by itself, the automatic vacation started
+  or ended. Not shown in the card.
+
+A category without recipients becomes a notification in Home Assistant
+(information is then not told). With *Tell when an alert ends*, an unavailable
+device that works again, a closed window, a replaced battery or a command
+accepted again is told too; on a phone (`notify.mobile_app_...`) the message
+replaces the alert. An alert is not repeated often.
+
+A house set up before 2.5 with a *Notification service* keeps sending every
+alert to it until the *Alerts* options are saved again: the form then offers it
+as the recipient of the important alerts and of the warnings.
 
 | Alert | When |
 | --- | --- |
 | A window has been open for more than … min | the window open longer than the alert threshold, while heat is needed |
-| … has been unavailable for more than … min | a thermostat or sensor unavailable longer than the alert threshold |
-| The heat source … has been unavailable | then nothing heats, not even frost protection |
+| … has been unavailable for more than … min | a thermostat or sensor unavailable longer than the alert threshold (important) |
+| The heat source … has been unavailable | then nothing heats, not even frost protection (important) |
 | No outdoor temperature from … | no configured source (sensor, weather) gives a temperature for longer than the alert threshold |
 | On but not working without an outdoor temperature sensor or a weather entity | weather functions on without the source they need |
 | The temperature sensors are unavailable | the device sensor or `eco` is used |

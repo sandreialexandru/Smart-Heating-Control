@@ -250,7 +250,11 @@ Detalii: [capitolul 9](09-ferestre-manual-siguranta.ro.md) și
 
 | Setare | Implicit | Ce face |
 | --- | --- | --- |
-| Serviciu de notificare | – | De exemplu `notify.mobile_app_telefon`. Gol = notificări doar în Home Assistant. |
+| Alerte importante către | – | Telefoane (`notify.mobile_app_...`), email sau alte servicii de notificare. Se trimit imediat, și în orele de liniște. Gol = notificări în Home Assistant. |
+| Avertizări către | – | La fel, pentru alertele de verificat. Gol = notificări în Home Assistant. |
+| Informații către | – | Ce a făcut casa singură (vacanța automată). Gol = fără anunț. |
+| Anunță când o alertă se încheie | pornit | Un mesaj când un dispozitiv funcționează din nou, o fereastră s-a închis sau o baterie a fost schimbată. |
+| Ore de liniște de la / până la | – | În acest interval doar alertele importante; celelalte se trimit la sfârșitul lui, dacă mai sunt valabile. |
 | Alertă când o fereastră e deschisă mai mult de | 30 min | Cât timp încălzirea e necesară. |
 | Alertă când un dispozitiv e indisponibil mai mult de | 15 min | Termostat sau senzor. |
 | Baterie descărcată sub | 20 % | Dispozitivele camerei (TRV, senzori). |

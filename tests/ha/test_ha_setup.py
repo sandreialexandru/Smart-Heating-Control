@@ -2296,3 +2296,155 @@ async def test_room_with_its_own_heat_does_not_start_the_heat_source(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def _alert_house(hass, freezer, **options):
+    """A house with one relay room and the given alert options."""
+    entry = await _setup(hass, freezer, house_options=options)
+    await _tick(hass, freezer, 15)
+    house = entry.runtime_data
+    return entry, house, next(iter(house.rooms.values()))
+
+
+async def test_alerts_by_category(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Important alerts, warnings and information go to their own recipients."""
+    phone = async_mock_service(hass, "notify", "mobile_app_phone")
+    email = async_mock_service(hass, "notify", "email")
+    entry, house, room = await _alert_house(
+        hass,
+        freezer,
+        notify_critical=["notify.mobile_app_phone"],
+        notify_warning=["notify.email"],
+        notify_info=["notify.mobile_app_phone", "notify.email"],
+    )
+    house.notify("dev", "x", code="device_unavailable", params={"entity": "climate.trv", "minutes": 15}, room=room.id)
+    house.notify("win", "x", code="window_long", params={"minutes": 30}, room=room.id)
+    house.inform("auto_vacation_on")
+    await hass.async_block_till_done()
+    assert [c.data["message"] for c in phone] == [
+        "Bedroom: climate.trv has been unavailable for more than 15 min.",
+        "Everyone has been away for a long time: the automatic vacation started.",
+    ]
+    assert [c.data["message"] for c in email] == [
+        "Bedroom: A window has been open for more than 30 min.",
+        "Everyone has been away for a long time: the automatic vacation started.",
+    ]
+    assert phone[0].data["title"] == "Home"
+    # The phone gets a tag, so the end of the alert replaces it.
+    assert phone[0].data["data"] == {"tag": "advanced_climate_dev", "group": "advanced_climate"}
+    assert "data" not in email[0].data
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_alerts_resolved(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """The end of an alert is told when worth it; a setting alert ends silently."""
+    phone = async_mock_service(hass, "notify", "mobile_app_phone")
+    entry, house, room = await _alert_house(
+        hass, freezer, notify_critical=["notify.mobile_app_phone"], notify_warning=["notify.mobile_app_phone"]
+    )
+    house.notify("win", "x", code="window_long", params={"minutes": 30}, room=room.id)
+    house.notify("gap", "x", code="schedule_gap", params={"days": ["sat"], "free_days": True, "workdays": False}, room=room.id)
+    house.clear_alert("win")
+    house.clear_alert("gap")
+    house.clear_alert("never_sent")
+    await hass.async_block_till_done()
+    assert [c.data["message"] for c in phone] == [
+        "Bedroom: A window has been open for more than 30 min.",
+        "Bedroom: No active schedule profile: Saturday, free days (holidays); the room keeps its frost protection on those days.",
+        "Bedroom: The window is closed again.",
+    ]
+    assert phone[2].data["data"]["tag"] == "advanced_climate_win"
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_alerts_resolved_off(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """With the end messages off, only the alert is sent."""
+    phone = async_mock_service(hass, "notify", "mobile_app_phone")
+    entry, house, room = await _alert_house(
+        hass, freezer, notify_warning=["notify.mobile_app_phone"], notify_resolved=False
+    )
+    house.notify("win", "x", code="window_long", params={"minutes": 30}, room=room.id)
+    house.clear_alert("win")
+    await hass.async_block_till_done()
+    assert len(phone) == 1
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_alerts_quiet_hours(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """In the quiet hours only important alerts go out; the rest wait, if still valid."""
+    phone = async_mock_service(hass, "notify", "mobile_app_phone")
+    entry, house, room = await _alert_house(
+        hass,
+        freezer,
+        notify_critical=["notify.mobile_app_phone"],
+        notify_warning=["notify.mobile_app_phone"],
+        quiet_start="11:00:00",
+        quiet_end="13:00:00",
+    )
+    # 12:00 local: quiet.
+    house.notify("src", "x", code="source_unavailable", params={"entity": "switch.boiler", "minutes": 15})
+    house.notify("win", "x", code="window_long", params={"minutes": 30}, room=room.id)
+    house.notify("bat", "x", code="battery_low", params={"device": "TRV", "level": 10}, room=room.id)
+    house.clear_alert("bat")  # ended before morning: never told, nor its end
+    await hass.async_block_till_done()
+    assert [c.data["message"] for c in phone] == [
+        "The heat source switch.boiler has been unavailable for more than 15 min: no heating, not even frost protection."
+    ]
+    await _tick(hass, freezer, 3600 + 60)  # 13:01
+    await hass.async_block_till_done()
+    assert [c.data["message"] for c in phone][1:] == ["Bedroom: A window has been open for more than 30 min."]
+    assert not house._deferred
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_alerts_in_romanian_and_legacy_service(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The texts follow the language of Home Assistant; the one service of before still works."""
+    hass.config.language = "ro"
+    phone = async_mock_service(hass, "notify", "mobile_app_phone")
+    entry, house, room = await _alert_house(hass, freezer, notify_service="notify.mobile_app_phone")
+    house.notify("win", "x", code="window_long", params={"minutes": 30}, room=room.id)
+    house.inform("auto_vacation_off")  # no information with the old setting
+    await hass.async_block_till_done()
+    assert [c.data["message"] for c in phone] == [
+        "Bedroom: O fereastră e deschisă de peste 30 min."
+    ]
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_alerts_without_recipients(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Without recipients the alerts are Home Assistant notifications, dismissed at their end."""
+    entry, house, room = await _alert_house(hass, freezer)
+    house.notify("win", "x", code="window_long", params={"minutes": 30}, room=room.id)
+    house.inform("auto_vacation_on")
+    await hass.async_block_till_done()
+    from homeassistant.components import persistent_notification
+
+    shown = persistent_notification._async_get_or_create_notifications(hass)
+    assert list(shown) == ["advanced_climate_win"]
+    assert shown["advanced_climate_win"]["message"] == "Bedroom: A window has been open for more than 30 min."
+    house.clear_alert("win")
+    await hass.async_block_till_done()
+    assert not persistent_notification._async_get_or_create_notifications(hass)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_auto_vacation_is_told(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """The start and the end of the automatic vacation are information."""
+    phone = async_mock_service(hass, "notify", "mobile_app_phone")
+    entry, house, room = await _alert_house(
+        hass, freezer, notify_info=["notify.mobile_app_phone"], auto_vacation_hours=2, departure_delay=0
+    )
+    hass.states.async_set("person.andrei", "not_home")
+    for _ in range(4):
+        await _tick(hass, freezer, 3600)
+    assert house.auto_vacation
+    hass.states.async_set("person.andrei", "home")
+    await _tick(hass, freezer, 60)
+    assert not house.auto_vacation
+    assert [c.data["message"] for c in phone] == [
+        "Everyone has been away for a long time: the automatic vacation started.",
+        "The automatic vacation ended.",
+    ]
+    assert await hass.config_entries.async_unload(entry.entry_id)

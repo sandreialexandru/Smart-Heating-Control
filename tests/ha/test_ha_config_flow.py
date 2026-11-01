@@ -774,3 +774,40 @@ async def test_frost_hysteresis_for_trvs_with_a_room_sensor(hass: HomeAssistant)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     data = next(sub for sub in entry.subentries.values() if sub.title == "Office").data
     assert data["hysteresis"] == 0.5
+
+
+async def test_options_alerts_recipients(hass: HomeAssistant) -> None:
+    """The one service of earlier versions is offered as the recipient; saving replaces it."""
+    hass.services.async_register("notify", "mobile_app_phone", lambda call: None)
+    entry = MockConfigEntry(
+        domain=DOMAIN, title="Home", options={"notify_service": "notify.mobile_app_phone"}
+    )
+    entry.add_to_hass(hass)
+    flow = hass.config_entries.options
+    result = await flow.async_init(entry.entry_id)
+    result = await flow.async_configure(result["flow_id"], {"next_step_id": "alerts"})
+    assert result["step_id"] == "alerts"
+    assert {"notify_critical", "notify_warning", "notify_info", "notify_resolved",
+            "quiet_start", "quiet_end"} <= _keys(result)
+    suggested = {
+        str(k): k.description.get("suggested_value")
+        for k in result["data_schema"].schema
+        if getattr(k, "description", None)
+    }
+    assert suggested["notify_critical"] == ["notify.mobile_app_phone"]
+    assert suggested["notify_warning"] == ["notify.mobile_app_phone"]
+    assert not suggested["notify_info"]
+    result = await flow.async_configure(
+        result["flow_id"],
+        {
+            "notify_critical": ["notify.mobile_app_phone"],
+            "notify_warning": [],
+            "notify_resolved": True,
+            "quiet_start": "22:00:00",
+            "quiet_end": "07:00:00",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert "notify_service" not in entry.options
+    assert entry.options["notify_critical"] == ["notify.mobile_app_phone"]
+    assert entry.options["quiet_start"] == "22:00:00"

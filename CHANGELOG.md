@@ -9,6 +9,16 @@ GitHub releases.
 
 ### Integration
 
+- Notifications by how much an alert matters: *Important alerts to*,
+  *Warnings to* and *Information to* (phones, email or any notify service or
+  entity, several each). The texts are in the language of Home Assistant
+  (Romanian or English), with the room. Quiet hours send only the important
+  alerts; the others follow when they end, if they still apply. The end of an
+  alert (a device back, a window closed, a battery replaced) is told too, and on
+  a phone it replaces the alert. The start and the end of the automatic vacation
+  are sent as information. A *Notification service* of an earlier version keeps
+  working until the *Alerts* options are saved again; the form offers it as the
+  recipient.
 - A room can be set not to heat from the heat source of the house (*Heats from
   the heat source of the house*, in the room's devices step, shown only when the
   house has a heat source; on by default). A room with its own heat (electric

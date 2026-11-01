@@ -234,7 +234,12 @@
       "alerts": {
         "title": "Alerts",
         "data": {
-          "notify_service": "Notification service",
+          "notify_critical": "Important alerts to",
+          "notify_warning": "Warnings to",
+          "notify_info": "Information to",
+          "notify_resolved": "Tell when an alert ends",
+          "quiet_start": "Quiet hours from",
+          "quiet_end": "Quiet hours until",
           "alert_window_minutes": "Alert when a window is open longer than",
           "alert_unavailable_minutes": "Alert when a device is unavailable longer than",
           "battery_threshold": "Low battery below",
@@ -242,7 +247,12 @@
           "room_diff_alert": "Alert when a room stays colder than"
         },
         "data_description": {
-          "notify_service": "e.g. notify.mobile_app_phone. Leave empty for notifications in Home Assistant only.",
+          "notify_critical": "No heating: the heat source or a thermostat unavailable. Sent at once, also in the quiet hours. Choose phones (notify.mobile_app_...), email or other notify services; leave empty for notifications in Home Assistant.",
+          "notify_warning": "Something to look at: an open window, a low battery, a failed sensor, a room colder than the others, a setting that does not work. Leave empty for notifications in Home Assistant.",
+          "notify_info": "What the house did by itself, e.g. the automatic vacation started or ended. Leave empty to not be told.",
+          "notify_resolved": "A message when a device works again, a window is closed or a battery was replaced (only for alerts sent to the recipients above). On a phone it replaces the alert.",
+          "quiet_start": "From this time only the important alerts are sent; the others wait until the quiet hours end and are sent only if they still apply. Leave both empty for no quiet hours.",
+          "quiet_end": "End of the quiet hours (may be the next morning).",
           "alert_window_minutes": "Alert when a window stays open this long while heating is needed.",
           "alert_unavailable_minutes": "Alert when a thermostat or sensor is unavailable this long.",
           "battery_threshold": "Alert when the battery of a room device (TRV, sensor) drops below this.",

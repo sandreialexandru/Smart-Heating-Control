@@ -75,7 +75,11 @@ from .const import (
     CONF_NEARBY_MODE,
     CONF_NEARBY_TEMP,
     CONF_NEARBY_ZONES,
+    CONF_NOTIFY_CRITICAL,
+    CONF_NOTIFY_INFO,
+    CONF_NOTIFY_RESOLVED,
     CONF_NOTIFY_SERVICE,
+    CONF_NOTIFY_WARNING,
     CONF_OCCUPANCY_MINUTES,
     CONF_OCCUPANCY_SENSORS,
     CONF_OPTIMAL_START,
@@ -100,6 +104,8 @@ from .const import (
     CONF_PV_OFFSET,
     CONF_PV_SENSOR,
     CONF_PV_THRESHOLD,
+    CONF_QUIET_END,
+    CONF_QUIET_START,
     CONF_REEVAL_MINUTES,
     CONF_REFERENCE_ROOM,
     CONF_ROOM_DIFF_ALERT,
@@ -582,11 +588,44 @@ def _behavior_details(v: dict[str, Any]) -> vol.Schema:
     return vol.Schema({})
 
 
-def _alerts_schema(v: dict[str, Any], rooms: int) -> vol.Schema:
-    """Notifications: service, unavailable devices, batteries, windows, a colder room."""
+NOTIFY_KEYS = (CONF_NOTIFY_CRITICAL, CONF_NOTIFY_WARNING, CONF_NOTIFY_INFO)
+
+
+def _notify_targets(hass: Any) -> list[str]:
+    """The notify services and entities of Home Assistant, for the recipients."""
+    names = [
+        f"notify.{name}"
+        for name in sorted(hass.services.async_services_for_domain("notify"))
+        if name not in ("send_message", "persistent_notification")
+    ]
+    names += sorted(hass.states.async_entity_ids("notify"))
+    return list(dict.fromkeys(names))
+
+
+def _alerts_schema(v: dict[str, Any], rooms: int, targets: list[str] | None = None) -> vol.Schema:
+    """Notifications: who gets what, quiet hours, and when an alert is raised."""
     d = HOUSE_DEFAULTS
+    if not any(k in v for k in NOTIFY_KEYS) and v.get(CONF_NOTIFY_SERVICE):
+        # Before 2.5 one service got every alert: shown for the important ones
+        # and the warnings, as it worked.
+        legacy = str(v[CONF_NOTIFY_SERVICE])
+        legacy = legacy if "." in legacy else f"notify.{legacy}"
+        v = {**v, CONF_NOTIFY_CRITICAL: [legacy], CONF_NOTIFY_WARNING: [legacy]}
+    recipients = selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=targets or [],
+            multiple=True,
+            custom_value=True,
+            mode=selector.SelectSelectorMode.DROPDOWN,
+        )
+    )
     fields: dict[Any, Any] = {
-        _opt(CONF_NOTIFY_SERVICE, v): _text(),
+        _opt(CONF_NOTIFY_CRITICAL, v): recipients,
+        _opt(CONF_NOTIFY_WARNING, v): recipients,
+        _opt(CONF_NOTIFY_INFO, v): recipients,
+        _req(CONF_NOTIFY_RESOLVED, v, d): _bool(),
+        _opt(CONF_QUIET_START, v): selector.TimeSelector(),
+        _opt(CONF_QUIET_END, v): selector.TimeSelector(),
         _req(CONF_ALERT_WINDOW_MINUTES, v, d): _number(1, 720, 1, "min"),
         _req(CONF_ALERT_UNAVAILABLE_MINUTES, v, d): _number(1, 720, 1, "min"),
         _req(CONF_BATTERY_THRESHOLD, v, d): _number(1, 100, 1, "%"),
@@ -1309,9 +1348,12 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
 
     async def async_step_alerts(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Notifications."""
-        schema = _alerts_schema(self._values, self._room_count())
+        schema = _alerts_schema(self._values, self._room_count(), _notify_targets(self.hass))
         if user_input is not None:
-            return self._save(schema, user_input)
+            data = _merge(dict(self.config_entry.options), schema, _kept(user_input, self._unit()))
+            # The recipients replace the one service of earlier versions.
+            data.pop(CONF_NOTIFY_SERVICE, None)
+            return self.async_create_entry(data=data)
         return self.async_show_form(step_id="alerts", data_schema=schema)
 
 

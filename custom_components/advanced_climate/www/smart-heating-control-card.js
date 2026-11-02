@@ -656,10 +656,23 @@ class SmartHeatingControlCard extends HTMLElement {
       });
     }
     this._io?.observe(this);
+    clearTimeout(this._leaveTimer);
+    // A moved card: its open chart window becomes modal again at once.
+    if (this._hass && this._card && this.shadowRoot.querySelector("dialog.chartpop")) this._render();
   }
 
   disconnectedCallback() {
     this._io?.disconnect();
+    // Leaving the dashboard closes the chart window, so it does not pop up
+    // again later. A card only moved (the columns laid out again, e.g. a phone
+    // turned) is back at once and keeps it.
+    clearTimeout(this._leaveTimer);
+    this._leaveTimer = setTimeout(() => {
+      if (this.isConnected) return;
+      clearTimeout(this._touchTimer);
+      this._touched = null;
+      if (Object.keys(this._open || {}).some((k) => k.startsWith("chart-") && this._open[k])) this._closeChart();
+    }, 1000);
   }
 
   /** Visual editor of the card (Home Assistant form). */

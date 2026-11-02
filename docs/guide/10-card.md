@@ -115,7 +115,7 @@ sections:
 
 Opened with the **Chart** button in a window over the dashboard, so it has room
 (its history is loaded only then); one room at a time. It closes with the ✕, a
-click outside it or Esc. It keeps **7 days** of history and the next 12 hours,
+click outside it or Esc, and when another dashboard view is opened. It keeps **7 days** of history and the next 12 hours,
 and opens on the last 24 hours and the next 12:
 
 - the room temperature;

@@ -69,7 +69,8 @@ alert, and the code split in smaller parts. Install it only to help test.
   the room (one room at a time; closes with ✕, a click outside or Esc).
   The window is always opaque, also with themes whose cards are transparent.
   It stays open and in place while the values update, and a click inside it
-  (on its margin too) does not close it.
+  (on its margin too) does not close it. Leaving the dashboard closes it (it
+  does not pop up again on return); a phone turned keeps it open.
 - **The chart keeps 7 days of history**: it opens on the last 24 hours and the
   next 12, zooms out up to the 7 days and moves through them with the
   navigation bar (shown only while the mouse is over the chart or a finger is

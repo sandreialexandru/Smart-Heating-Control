@@ -115,7 +115,7 @@ Graficul și secțiunile:
 
 Se deschide cu butonul **Grafic** într-o fereastră peste dashboard, ca să aibă
 loc (istoricul se încarcă doar atunci); câte o cameră pe rând. Se închide cu ✕,
-cu un clic în afara ei sau cu Esc. Păstrează **7 zile** de istoric și
+cu un clic în afara ei, cu Esc și la trecerea pe altă pagină a dashboard-ului. Păstrează **7 zile** de istoric și
 următoarele 12 ore și se deschide pe ultimele 24 de ore și următoarele 12:
 
 - temperatura camerei;

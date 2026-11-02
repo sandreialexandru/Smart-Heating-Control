@@ -4,6 +4,9 @@ name: Release
 # only after every test passed (the Tests workflow). Run it manually from the
 # Actions tab to (re)check.
 #
+# Note: a workflow_run uses this file as it is on main; until a change here
+# reaches main, run it by hand on the branch (Run workflow, Branch: refactor).
+#
 # main:     a stable version (e.g. 2.3.30) becomes a normal release (the latest).
 # dev:      a beta version (e.g. 2.3.30b1) becomes a pre-release, shown in HACS
 #           only to those who turned on the beta versions for this repository.
@@ -122,12 +125,16 @@ jobs:
       # pre-release names as text (a10 between a1 and a2), so a new alpha could
       # be missing in HACS. The earlier alphas of the same version are removed
       # (only their release pages: the tags and the code stay).
+      # Also when the release exists already (run by hand on refactor to tidy up).
       - name: Remove the earlier alphas of this version
-        if: steps.version.outputs.exists == 'false' && contains(steps.version.outputs.version, 'a')
+        if: contains(steps.version.outputs.version, 'a')
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
+          BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
         run: |
+          [[ "$BRANCH" == "refactor" ]] || exit 0
+          gh release view "$TAG" >/dev/null 2>&1 || { echo "$TAG has no release yet."; exit 0; }
           base="${TAG%a*}"
           gh release list --limit 200 --json tagName,isPrerelease --jq '.[] | select(.isPrerelease) | .tagName' |
             while read -r old; do

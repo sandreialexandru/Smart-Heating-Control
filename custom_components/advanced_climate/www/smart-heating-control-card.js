@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.0a9";
+const CARD_VERSION = "2.6.0a10";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -982,6 +982,7 @@ class SmartHeatingControlCard extends HTMLElement {
         this._closeChart();
       });
       dlg.showModal();
+      this._opaque(dlg);
     }
   }
 
@@ -1002,6 +1003,35 @@ class SmartHeatingControlCard extends HTMLElement {
           )}">${this._icon("close")}</button></div>
         ${body}
       </dialog>`;
+  }
+
+  /**
+   * Make the chart window opaque whatever the theme: a theme may give the cards
+   * a transparent or half transparent background (glass themes), which over the
+   * dashboard would make the chart unreadable. The color of the theme is kept,
+   * laid over the page background, then over white or black.
+   */
+  _opaque(dlg) {
+    const rgba = (color) => {
+      const ctx = (this._colorCtx ||= document.createElement("canvas").getContext("2d", { willReadFrequently: true }));
+      if (!ctx || !color) return null;
+      ctx.clearRect(0, 0, 1, 1);
+      ctx.fillStyle = "#000";
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, 1, 1);
+      const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
+      return [r, g, b, a / 255];
+    };
+    const over = (top, base) => top.slice(0, 3).map((c, i) => Math.round(c * top[3] + base[i] * (1 - top[3])));
+    const style = getComputedStyle(dlg);
+    const own = rgba(style.backgroundColor) || [0, 0, 0, 0];
+    if (own[3] >= 0.99) return;
+    const dark = this._hass?.themes?.darkMode ?? matchMedia("(prefers-color-scheme: dark)").matches;
+    let base = dark ? [28, 28, 28] : [255, 255, 255];
+    const page = rgba(style.getPropertyValue("--primary-background-color").trim());
+    if (page && page[3] > 0) base = over(page, base);
+    const [r, g, b] = over(own, base);
+    dlg.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
   }
 
   /** Close the chart window. */
@@ -3606,7 +3636,8 @@ const STYLE = `
   .hchart.with-out { height: 210px; }
   dialog.chartpop { width: min(960px, calc(100vw - 24px)); max-width: none; max-height: calc(100vh - 24px);
     padding: 12px 14px 14px; border: none; border-radius: 18px; color: var(--primary-text-color);
-    background: var(--ha-card-background, var(--card-background-color, #1c1c1c)); box-sizing: border-box;
+    background: var(--ha-card-background, var(--card-background-color, var(--primary-background-color, #1c1c1c)));
+    background-image: none; backdrop-filter: none; opacity: 1; box-sizing: border-box;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45); overflow: auto; }
   dialog.chartpop::backdrop { background: rgba(0, 0, 0, 0.55); }
   dialog.chartpop .pophead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }

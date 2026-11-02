@@ -66,6 +66,7 @@ alert, and the code split in smaller parts. Install it only to help test.
 
 - **The chart opens in a window** over the dashboard, larger, instead of inside
   the room (one room at a time; closes with ✕, a click outside or Esc).
+  The window is always opaque, also with themes whose cards are transparent.
 
 ### Development
 

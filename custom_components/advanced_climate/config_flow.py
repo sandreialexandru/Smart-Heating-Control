@@ -64,6 +64,7 @@ from .const import (
     CONF_HELPER_OFF_PRESET,
     CONF_HELPER_ON_PRESET,
     CONF_HOME_RULE,
+    CONF_HUMIDITY_SENSOR,
     CONF_HYSTERESIS,
     CONF_LEARN_TOLERANCE,
     CONF_LEVELS,
@@ -1719,6 +1720,7 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
         fields[_req(CONF_OCCUPANCY_SENSORS, d, ROOM_DEFAULTS)] = _entity(
             ["binary_sensor", "input_boolean"], multiple=True
         )
+        fields[_opt(CONF_HUMIDITY_SENSOR, d)] = _entity("sensor", device_class="humidity")
         schema = vol.Schema(fields)
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {"entity": "", "owner": ""}
@@ -1755,7 +1757,8 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
             {
                 _req(CONF_OCCUPANCY_SENSORS, d, ROOM_DEFAULTS): _entity(
                     ["binary_sensor", "input_boolean"], multiple=True
-                )
+                ),
+                _opt(CONF_HUMIDITY_SENSOR, d): _entity("sensor", device_class="humidity"),
             }
         )
         if user_input is not None:

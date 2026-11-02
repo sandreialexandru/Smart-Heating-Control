@@ -35,6 +35,7 @@ CATEGORIES: dict[str, str] = {
     "boiler_min_rooms": CATEGORY_WARNING,
     "frost_protection": CATEGORY_WARNING,
     "pause_long": CATEGORY_WARNING,
+    "mold_risk": CATEGORY_WARNING,
     # What the house did by itself.
     "auto_vacation_on": CATEGORY_INFO,
     "auto_vacation_off": CATEGORY_INFO,
@@ -56,6 +57,7 @@ RESOLVABLE = {
     "battery_low",
     "not_accepted",
     "frost_protection",
+    "mold_risk",
 }
 
 TEXTS: dict[str, dict[str, str]] = {
@@ -79,6 +81,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "auto_vacation_on": "Everyone has been away for a long time: the automatic vacation started.",
         "auto_vacation_off": "The automatic vacation ended.",
         "frost_protection": "The room is {current}°, below the frost protection temperature ({frost}°): the heating cannot keep it.",
+        "mold_risk": "Mold risk: the coldest wall is at about {surface}% humidity (room {humidity}%). Airing the room and keeping it warmer lower it.",
         "pause_long": "The heating has been paused for more than {hours} h: only frost protection works.",
         "season_on": "The heating season started.",
         "season_off": "The heating season ended: no heating until it starts again.",
@@ -94,6 +97,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "resolved_battery_low": "The battery of {device} is fine again.",
         "resolved_not_accepted": "{entities} follow the target again.",
         "resolved_frost_protection": "The room is back at the frost protection temperature.",
+        "resolved_mold_risk": "The mold risk is over: the walls are dry enough again.",
         # Values.
         "free_days": "free days (holidays)",
         "weekend_workdays": "workdays on the weekend",
@@ -123,6 +127,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "auto_vacation_on": "Toată lumea e plecată de mult: a pornit vacanța automată.",
         "auto_vacation_off": "Vacanța automată s-a încheiat.",
         "frost_protection": "Camera are {current}°, sub temperatura de antiîngheț ({frost}°): încălzirea nu o poate menține.",
+        "mold_risk": "Risc de mucegai: peretele cel mai rece are o umiditate de aproximativ {surface}% (camera {humidity}%). Aerisirea și o cameră mai caldă îl scad.",
         "pause_long": "Încălzirea e în pauză de peste {hours} h: funcționează doar antiînghețul.",
         "season_on": "A început sezonul de încălzire.",
         "season_off": "S-a încheiat sezonul de încălzire: nu se mai încălzește până nu reîncepe.",
@@ -137,6 +142,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "resolved_battery_low": "Bateria de la {device} e din nou în regulă.",
         "resolved_not_accepted": "{entities} urmează din nou ținta.",
         "resolved_frost_protection": "Camera a revenit la temperatura de antiîngheț.",
+        "resolved_mold_risk": "Riscul de mucegai a trecut: pereții sunt din nou destul de uscați.",
         "free_days": "zilele libere (sărbători)",
         "weekend_workdays": "zilele lucrătoare din weekend",
         "wf_cutoff": "oprirea când e cald",

@@ -304,6 +304,8 @@ class DecisionSensor(RoomEntity, SensorEntity):
             "alerts": room.house.alerts_for(room),
             "optimal_stop_cancelled": room.stop_cancelled,
             "rate_learned": room.learner.model.learned,
+            # Humidity at the coldest wall (mold risk), with a humidity sensor.
+            "surface_humidity": room.surface_humidity,
             "device_levels": room.device_levels,
             "heat_demand": room.heat_demand,
             "heating": room.heating,

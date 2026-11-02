@@ -545,22 +545,26 @@
           "data": {
             "temperature_sensors": "Temperature sensors",
             "calibration_mode": "TRV calibration",
-            "occupancy_sensors": "Occupancy sensors"
+            "occupancy_sensors": "Occupancy sensors",
+            "humidity_sensor": "Humidity sensor"
           },
           "data_description": {
             "temperature_sensors": "Sensors in the room, used instead of the thermostat sensor (more accurate when the thermostat sits next to a heat source). Leave empty to use the thermostat sensor; needed for relays, which have no sensor.",
             "calibration_mode": "Needs a room temperature sensor above. Offset: corrects the TRV sensor. External temperature: writes the room temperature into the TRV (if it supports it). Off otherwise.",
-            "occupancy_sensors": "Motion / presence sensors of the room: when the room is empty for a while it goes to eco even if someone is home. Leave empty for rooms that should follow only the schedule."
+            "occupancy_sensors": "Motion / presence sensors of the room: when the room is empty for a while it goes to eco even if someone is home. Leave empty for rooms that should follow only the schedule.",
+            "humidity_sensor": "Only for the mold risk alert: the humidity of the room, with the outdoor temperature of the house, gives the humidity at the coldest wall. Without it (or without an outdoor temperature) no mold alert is sent."
           }
         },
         "sensors_gt": {
           "title": "Sensors",
           "description": "A Generic Thermostat keeps the temperature by the sensor of its own configuration, so the integration uses that one too. To use another sensor, change it in the Generic Thermostat settings.",
           "data": {
-            "occupancy_sensors": "Occupancy sensors"
+            "occupancy_sensors": "Occupancy sensors",
+            "humidity_sensor": "Humidity sensor"
           },
           "data_description": {
-            "occupancy_sensors": "Motion / presence sensors of the room: when the room is empty for a while it goes to eco even if someone is home. Leave empty for rooms that should follow only the schedule."
+            "occupancy_sensors": "Motion / presence sensors of the room: when the room is empty for a while it goes to eco even if someone is home. Leave empty for rooms that should follow only the schedule.",
+            "humidity_sensor": "Only for the mold risk alert: the humidity of the room, with the outdoor temperature of the house, gives the humidity at the coldest wall. Without it (or without an outdoor temperature) no mold alert is sent."
           }
         },
         "windows": {

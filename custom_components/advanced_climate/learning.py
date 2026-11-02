@@ -369,6 +369,9 @@ class ThermalLearner:
         for fit in self.fits:
             fit.q, mean = _q_after(fit.q, u0, minutes, fit.tau)
             fit.q_area += mean * minutes
+            if fit.tau <= 0:
+                # Without inertia, the heating reaches the room as it starts.
+                fit.q = u
         self._last = (now, current, outdoor, u)
         if minutes > MAX_GAP_MINUTES:
             self._begin(now, current)

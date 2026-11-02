@@ -288,6 +288,8 @@ CONF_STOP_TOLERANCE: Final = "stop_tolerance"  # comfort kept by optimal stop (o
 CONF_MIN_ON: Final = "min_on_minutes"
 CONF_MIN_OFF: Final = "min_off_minutes"
 CONF_OCCUPANCY_SENSORS: Final = "occupancy_sensors"
+# Room humidity sensor: only for the mold risk alert.
+CONF_HUMIDITY_SENSOR: Final = "humidity_sensor"
 CONF_OCCUPANCY_MINUTES: Final = "occupancy_minutes"
 CONF_WINDOW_SENSORS: Final = "window_sensors"
 CONF_LINKED_WINDOW_SENSORS: Final = "linked_window_sensors"

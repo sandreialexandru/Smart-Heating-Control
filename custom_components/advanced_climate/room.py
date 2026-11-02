@@ -49,6 +49,7 @@ from .const import (
     CONF_FROST_TEMP,
     CONF_HELPER_OFF_PRESET,
     CONF_HELPER_ON_PRESET,
+    CONF_HUMIDITY_SENSOR,
     CONF_HYSTERESIS,
     CONF_LEARN_TOLERANCE,
     CONF_LEVELS,
@@ -146,6 +147,7 @@ from .engine import (
     optimal_stop_state,
 )
 from .learning import ThermalLearner
+from .mold import MOLD_CLEAR_RH, MOLD_MINUTES, MOLD_SURFACE_RH, surface_humidity
 from .schedule import (
     Schedule,
     ScheduleError,
@@ -162,6 +164,7 @@ from .util import (
     delta_to_celsius,
     finite,
     float_attr,
+    float_state,
     from_celsius,
     from_iso,
     heat_mode,
@@ -313,6 +316,9 @@ class Room:
         self._verify_unsub: Callable[[], None] | None = None
         self._verify_attempts = 0
         self._unavailable_since: dict[str, datetime] = {}
+        # Mold risk: since when the wall surface is humid enough, and its humidity now.
+        self._mold_since: datetime | None = None
+        self.surface_humidity: float | None = None
         self._calibration_written: dict[str, datetime] = {}
         self.sensor_failed = False
         self.external_failed = False
@@ -2203,6 +2209,38 @@ class Room:
     # ------------------------------------------------------------------
     # Alerts
     # ------------------------------------------------------------------
+    def _check_mold(self, now: datetime) -> None:
+        """Mold risk alert: only with a humidity sensor and a known outdoor temperature."""
+        house = self.house
+        humidity = float_state(self.hass, self.config.get(CONF_HUMIDITY_SENSOR))
+        outdoor = house.outdoor_now
+        if (
+            humidity is None
+            or not 0 <= humidity <= 100
+            or outdoor is None
+            or self.current_temp is None
+        ):
+            self.surface_humidity = None
+            self._mold_since = None
+            house.clear_alert(f"mold_{self.id}")
+            return
+        surface = surface_humidity(self.current_temp, humidity, outdoor)
+        self.surface_humidity = round(surface, 1)
+        if surface >= MOLD_SURFACE_RH:
+            since = self._mold_since = self._mold_since or now
+            if now - since >= timedelta(minutes=MOLD_MINUTES):
+                house.notify(
+                    f"mold_{self.id}",
+                    f"{self.name}: mold risk, the coldest wall is at about {surface:.0f}% "
+                    f"humidity (room {humidity:.0f}%).",
+                    code="mold_risk",
+                    params={"surface": round(surface), "humidity": round(humidity)},
+                    room=self.id,
+                )
+        elif surface < MOLD_CLEAR_RH:
+            self._mold_since = None
+            house.clear_alert(f"mold_{self.id}")
+
     def _check_alerts(self, now: datetime) -> None:
         """Alerts for long open windows, unavailable devices, failed sensors and schedule errors."""
         house = self.house
@@ -2236,6 +2274,7 @@ class Room:
             )
         elif self.current_temp is not None and self.current_temp >= frost:
             house.clear_alert(f"frost_{self.id}")
+        self._check_mold(now)
         # Unavailable devices.
         limit = timedelta(minutes=house.alert_unavailable_minutes)
         for entity_id in self.climates + self.switches:

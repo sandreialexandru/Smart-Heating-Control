@@ -102,9 +102,9 @@ async def test_relay_room(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -
     await hass.async_block_till_done()
     assert room.learner.heat_windows == 0.0
     assert room.learner.idle_windows == 0.0
-    assert hass.states.get("sensor.bedroom_decision").attributes["entities"][
-        "reset_learning"
-    ] == ("button.bedroom_reset_learning")
+    assert hass.states.get("sensor.bedroom_decision").attributes["entities"]["reset_learning"] == (
+        "button.bedroom_reset_learning"
+    )
 
     # Warm room: the relay turns off.
     hass.states.async_set("sensor.room_temp", "21.5", {"unit_of_measurement": "°C"})
@@ -2366,6 +2366,7 @@ async def test_diagnostics_show_the_thermal_model(
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
+
 async def test_room_with_its_own_heat_does_not_start_the_heat_source(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -2790,5 +2791,69 @@ async def test_window_timings_of_the_guide(
     assert not room.window_open
     assert calls[-1].data["temperature"] == 21.0
 
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_mold_alert_needs_humidity_and_outdoor(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Mold risk: told after an hour of a humid cold wall, only with both sensors."""
+    hass.states.async_set("sensor.outdoor", "0.0", {"unit_of_measurement": "°C"})
+    hass.states.async_set("sensor.room_humidity", "70", {"unit_of_measurement": "%"})
+    entry = await _setup(
+        hass,
+        freezer,
+        house_options={"outdoor_sensor": "sensor.outdoor"},
+        humidity_sensor="sensor.room_humidity",
+    )
+    house = entry.runtime_data
+    room = next(iter(house.rooms.values()))
+    # Room 18 °C, outdoor 0 °C: the coldest wall is 12.6 °C, about 99 % humidity.
+    await _tick(hass, freezer, 15)
+    assert hass.states.get("sensor.bedroom_decision").attributes["surface_humidity"] > 80
+    for _ in range(30):
+        await _tick(hass, freezer, 60)
+    assert f"mold_{room.id}" not in house.active_alerts  # not yet an hour
+    for _ in range(32):
+        await _tick(hass, freezer, 60)
+    alert = house.active_alerts[f"mold_{room.id}"]
+    assert alert["code"] == "mold_risk"
+
+    # Drier air: the alert ends (at the next look, within the reevaluation interval).
+    hass.states.async_set("sensor.room_humidity", "40", {"unit_of_measurement": "%"})
+    for _ in range(6):
+        await _tick(hass, freezer, 60)
+    assert f"mold_{room.id}" not in house.active_alerts
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_no_mold_alert_without_outdoor_temperature(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A humid room in a house without an outdoor temperature: no mold alert."""
+    hass.states.async_set("sensor.room_humidity", "70", {"unit_of_measurement": "%"})
+    entry = await _setup(hass, freezer, humidity_sensor="sensor.room_humidity")
+    house = entry.runtime_data
+    for _ in range(65):
+        await _tick(hass, freezer, 60)
+    assert not any(key.startswith("mold_") for key in house.active_alerts)
+    assert hass.states.get("sensor.bedroom_decision").attributes["surface_humidity"] is None
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_no_mold_alert_without_humidity_sensor(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Without a humidity sensor in the room, no mold alert is ever told."""
+    hass.states.async_set("sensor.outdoor", "0.0", {"unit_of_measurement": "°C"})
+    entry = await _setup(hass, freezer, house_options={"outdoor_sensor": "sensor.outdoor"})
+    house = entry.runtime_data
+    for _ in range(65):
+        await _tick(hass, freezer, 60)
+    assert not any(key.startswith("mold_") for key in house.active_alerts)
+    assert hass.states.get("sensor.bedroom_decision").attributes["surface_humidity"] is None
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

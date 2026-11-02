@@ -44,6 +44,7 @@ jobs:
           custom_components/advanced_climate/device_echo.py
           custom_components/advanced_climate/engine.py
           custom_components/advanced_climate/learning.py
+          custom_components/advanced_climate/mold.py
           custom_components/advanced_climate/notifier.py
           custom_components/advanced_climate/schedule.py
           custom_components/advanced_climate/util.py

@@ -257,9 +257,11 @@ class _Fit:
         values = [float(v) for v in item]
         if len(values) != 11 or not all(math.isfinite(v) for v in values):
             raise ValueError("bad fit")
-        fit = cls(*values[:10])
-        fit.windows = int(values[10])
-        return fit
+        tau, q, a11, a12, a22, b1, b2, error, weight, usual, windows = values
+        return cls(
+            tau=tau, q=q, a11=a11, a12=a12, a22=a22, b1=b1, b2=b2,
+            error=error, weight=weight, usual=usual, windows=int(windows),
+        )  # fmt: skip
 
 
 @dataclass(slots=True)

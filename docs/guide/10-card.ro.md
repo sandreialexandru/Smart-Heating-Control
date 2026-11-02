@@ -75,7 +75,8 @@ collapsed: true
 ## O cameră
 
 Antetul arată numele, decizia (de exemplu *Aproape*, *Program*; în culoarea
-nivelului) și flacăra și insignele pentru fereastră deschisă și modificare manuală.
+nivelului) și flacăra și insignele pentru fereastră deschisă și modificare manuală,
+plus *Risc de mucegai* (o picătură) cât e activă alerta de mucegai a camerei.
 
 O **flacără** arată căldura peste tot (casa, camera deschisă, rândul pliat,
 placa compactă): un cerc conturat cât există cerere de căldură (*Cere
@@ -83,8 +84,9 @@ căldură*), unul plin care pâlpâie cât sursa de căldură chiar merge
 (*Încălzește*); cuvintele apar la atingere sau la mouse.
 
 O cameră pliată (rând sau placă compactă) arată doar **nivelul** (de exemplu
-*Eco*) și iconițe mici: încălzire (flacără), fereastră deschisă, modificare
-manuală și modul oaspeți cât e pornit; decizia apare când camera e deschisă, cu
+*Eco*) și iconițe mici: încălzire (flacără), fereastră deschisă, risc de mucegai
+(o picătură, cât e activă alerta lui), modificare manuală și modul oaspeți cât
+e pornit; decizia apare când camera e deschisă, cu
 nivelul lângă arc. Sub antet:
 
 - un **arc** cu temperatura camerei și ținta sub ea; arcul e gol la antiîngheț
@@ -122,7 +124,9 @@ următoarele 12 ore și se deschide pe ultimele 24 de ore și următoarele 12:
   inerție) simulat minut cu minut după ținta planificată, cu prognoza orară;
 - ținta, ca linie în trepte, colorată după nivel;
 - nivelurile planificate;
-- perioadele în care camera a încălzit, pe o bandă separată;
+- perioadele în care camera a încălzit, pe o bandă separată, iar înainte, mai
+  deschis, perioadele în care încălzește predicția;
+- o linie fină la fiecare miezul nopții, între zile;
 - temperatura de afară pe banda ei (măsurată, apoi prognoza orară punctat) și
   pragul de oprire ca linie punctată;
 - următoarea pornire / oprire anticipată, ca perioadă umbrită.

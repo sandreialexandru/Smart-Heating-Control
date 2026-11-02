@@ -1686,6 +1686,14 @@ class SmartHeatingControlCard extends HTMLElement {
     if (alertIcon) badges.push(alertIcon);
     if (a.window_open)
       badges.push(`<span class="pill warn link" ${this._more(e.window_open)}>${this._icon("window-open-variant")}${this._t("window")}</span>`);
+    const mold = (a.alerts || []).find((x) => x.code === "mold_risk");
+    if (mold) {
+      badges.push(
+        `<span class="pill warn" title="${esc(this._alertText(mold))}">${this._icon("water-alert-outline")}${esc(
+          this._t("humidity_risk")
+        )}</span>`
+      );
+    }
     if (a.override) {
       const until = this._overrideUntil(a);
       const prefix = stateObj.state === "manual_override" ? "" : `${this._t("override")} `;
@@ -1758,6 +1766,7 @@ class SmartHeatingControlCard extends HTMLElement {
     if (a.heat_demand) icons.push(this._flame(!!a.heating, null, true));
     if ((a.alerts || []).length) icons.push(this._alertIcon(a, true));
     if (a.window_open) icons.push(`<span class="cicon warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>`);
+    icons.push(this._moldIcon(a, "cicon"));
     if (a.override) icons.push(`<span class="cicon" title="${esc(`${this._t("override")} ${this._overrideUntil(a)}`)}">${this._icon("hand-back-right-outline")}</span>`);
     if (this._guestOn(a)) icons.push(`<span class="cicon teal" title="${esc(this._t("guests_banner"))}">${this._icon("account-group-outline")}</span>`);
     return icons.join("");
@@ -1801,6 +1810,7 @@ class SmartHeatingControlCard extends HTMLElement {
       a.heat_demand ? this._flame(heating) : "",
       this._alertIcon(a),
       a.window_open ? `<span class="tstat warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>` : "",
+      this._moldIcon(a, "tstat"),
       a.override ? `<span class="tstat" title="${esc(this._t("override"))}">${this._icon("hand-back-right-outline")}</span>` : "",
       this._guestOn(a) ? `<span class="tstat teal" title="${esc(this._t("guests_banner"))}">${this._icon("account-group-outline")}</span>` : "",
     ].join("");
@@ -2154,8 +2164,8 @@ class SmartHeatingControlCard extends HTMLElement {
       ohi = olo + 4;
     }
     const cutoffAt = outdoorState?.attributes?.cutoff_enabled ? num(outdoorState.attributes.cutoff_temperature) : null;
-    const pred = this._prediction(a, segs, forecast, latest, now, t1);
-    return { t0, t1, now, segs, temp, heat, lo, hi, outdoor, forecast, olo, ohi, cutoffAt, pred, loading: !hist };
+    const { pts: pred, heat: predHeat } = this._prediction(a, segs, forecast, latest, now, t1);
+    return { t0, t1, now, segs, temp, heat, predHeat, lo, hi, outdoor, forecast, olo, ohi, cutoffAt, pred, loading: !hist };
   }
 
   /**
@@ -2170,7 +2180,7 @@ class SmartHeatingControlCard extends HTMLElement {
     const s = this._state(a.entities?.heating_rate);
     const m = s?.attributes?.model;
     const current = num(a.current_temperature);
-    if (!m || current === null) return [];
+    if (!m || current === null) return { pts: [], heat: [] };
     // The model is in °C; the chart in the unit of the house.
     const fahrenheit = String(s.attributes.unit_of_measurement || "").endsWith("°F");
     const toC = (v) => (v === null ? null : fahrenheit ? (v - 32) / 1.8 : v);
@@ -2194,6 +2204,8 @@ class SmartHeatingControlCard extends HTMLElement {
     let temp = toC(current);
     let q = Math.min(1, Math.max(0, num(m.q) ?? 0));
     const pts = [[now, current]];
+    // The periods the simulation heats: [start, end].
+    const heat = [];
     const minutes = Math.floor((t1 - now) / 60000);
     let seg = 0;
     for (let i = 1; i <= minutes; i++) {
@@ -2202,6 +2214,8 @@ class SmartHeatingControlCard extends HTMLElement {
       const sg = future[seg] && future[seg].s <= t ? future[seg] : null;
       const target = sg ? toC(sg.v) : null;
       const u = target !== null && temp < target ? 1 : 0;
+      if (u && (!heat.length || heat.at(-1)[1] < t - 60000)) heat.push([t - 60000, t]);
+      else if (u) heat.at(-1)[1] = t;
       // The heat reaching the room over the minute (its mean), then at its end.
       let qMean = u;
       if (tau > 0) {
@@ -2217,7 +2231,7 @@ class SmartHeatingControlCard extends HTMLElement {
       temp += (heating * qMean - loss) / 60;
       if (i % 5 === 0 || i === minutes) pts.push([t, +fromC(temp).toFixed(2)]);
     }
-    return pts;
+    return { pts, heat };
   }
 
   /** The window a chart opens on: the last 24 hours and the next 12. */
@@ -2337,7 +2351,20 @@ class SmartHeatingControlCard extends HTMLElement {
         ([s, e]) =>
           `<rect x="${x(s)}" y="${H - LANE}" width="${Math.max(2, x(e) - x(s))}" height="${LANE}" class="heatbar"></rect>`
       )
+      .join("")}${(d.predHeat || [])
+      .filter(([s, e]) => e >= view.v0 && s <= view.v1)
+      .map(
+        ([s, e]) =>
+          `<rect x="${x(s)}" y="${H - LANE}" width="${Math.max(2, x(e) - x(s))}" height="${LANE}" class="heatbar future"></rect>`
+      )
       .join("")}`;
+    // A fine line at every midnight (in the time zone of the card), between the days.
+    const days = [];
+    const off = this._offset(view.v0);
+    for (let t = Math.ceil((view.v0 + off) / 3600000) * 3600000 - off; t <= view.v1; t += 3600000) {
+      const p = this._parts(t);
+      if (p.h === 0 && p.mi === 0 && t > view.v0) days.push(`<line x1="${x(t)}" x2="${x(t)}" y1="0" y2="${H}" class="daysep"></line>`);
+    }
     const segs = d.segs
       .map((sg) => {
         const c = PRESET_COLORS[sg.preset] || TEMP_COLOR;
@@ -2519,7 +2546,7 @@ class SmartHeatingControlCard extends HTMLElement {
               <stop offset="1" stop-color="var(--ac-accent)" stop-opacity="0"></stop>
             </linearGradient></defs>
             <rect x="${Math.min(W, Math.max(0, nowX))}" y="0" width="${W - Math.min(W, Math.max(0, nowX))}" height="${BOTTOM}" class="futurebg"></rect>
-            ${grid}${optimal}${heat}${segs}${steps}${outdoorSvg}
+            ${grid}${days.join("")}${optimal}${heat}${segs}${steps}${outdoorSvg}
             ${tempArea ? `<path d="${tempArea}" fill="url(#${gid})" class="tempfill"></path>` : ""}
             ${tempPath ? `<path d="${tempPath}" class="templine"></path>` : ""}
             ${predPath ? `<path d="${predPath}" class="predline"></path>` : ""}
@@ -2596,6 +2623,7 @@ class SmartHeatingControlCard extends HTMLElement {
     }
     const seg = d.segs.find((sg) => sg.s <= t && t < sg.e);
     const heating = d.heat.some(([s, e]) => s <= t && t <= e);
+    const predHeating = t > d.now && (d.predHeat || []).some(([s, e]) => s <= t && t <= e);
     let out = null;
     let outForecast = false;
     if (t <= d.now) {
@@ -2634,6 +2662,9 @@ class SmartHeatingControlCard extends HTMLElement {
       );
     }
     if (heating) rows.push(`<span class="hotword"><i class="lg-heat"></i>${this._t("heating")}</span>`);
+    if (predHeating) {
+      rows.push(`<span class="hotword"><i class="lg-heat future"></i>${this._t("heating")} · ${esc(this._t("tip_pred"))}</span>`);
+    }
     if (out !== null) {
       rows.push(
         `<span><i class="lg-out"></i>${esc(this._t("legend_outdoor"))} ${out.toFixed(1)}°${
@@ -2877,6 +2908,16 @@ class SmartHeatingControlCard extends HTMLElement {
   }
 
   /** The alert icon of a room (folded and open); its title lists the alerts, the Details say more. */
+  /** A drop while the mold risk alert of the room is active (it shows and ends with the alert). */
+  _moldIcon(a, cls) {
+    const al = (a.alerts || []).find((x) => x.code === "mold_risk");
+    if (!al) return "";
+    const text = this._alertText(al);
+    return `<span class="${cls} warn" title="${esc(text)}" role="img" aria-label="${esc(text)}">${this._icon(
+      "water-alert-outline"
+    )}</span>`;
+  }
+
   _alertIcon(a, small = false) {
     const alerts = a.alerts || [];
     if (!alerts.length) return "";
@@ -3966,6 +4007,9 @@ const STYLE = `
   .lg-out { background: var(--ac-out); }
   .hchart .heatlane { fill: var(--primary-text-color); opacity: 0.05; }
   .hchart .heatbar { fill: var(--ac-hot); opacity: 0.9; }
+  .hchart .heatbar.future { opacity: 0.35; }
+  .lg-heat.future { opacity: 0.35 !important; }
+  .hchart .daysep { stroke: var(--primary-text-color); stroke-width: 1; opacity: 0.18; vector-effect: non-scaling-stroke; }
   .hchart .tline { stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-linecap: round; }
   .hchart .tline.future { stroke-dasharray: 6 5; opacity: 0.75; }
   .hchart .tstep { stroke: var(--primary-text-color); opacity: 0.25; stroke-width: 1; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }

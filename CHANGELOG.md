@@ -76,7 +76,11 @@ alert, and the code split in smaller parts. Install it only to help test.
   on it) or a sideways scroll. The values under the pointer are in an opaque
   box. After the first load only what is new is fetched.
 - **Predicted temperature** in the chart (dotted), once the room has learned:
-  the learned model simulated along the planned target, with the forecast.
+  the learned model simulated along the planned target, with the forecast; the
+  periods it heats are shown lighter in the heating lane.
+- A fine line at every midnight in the chart, between the days.
+- **A drop icon** (*Mold risk*) on the room, folded or open and in compact
+  mode, while its mold risk alert is active.
 - **Details**: the state of the learning (with its usual error), the weather
   curve, and with a humidity sensor the humidity of the air and at the coldest
   wall (marked *mold risk* from 80 %).

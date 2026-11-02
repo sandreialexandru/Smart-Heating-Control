@@ -75,7 +75,8 @@ collapsed: true
 ## A room
 
 The header shows the name, the decision (e.g. *Nearby*, *Schedule*; in the
-colour of the level) and the flame, open window and manual change badges.
+colour of the level) and the flame, open window and manual change badges, and
+*Mold risk* (a drop) while the mold risk alert of the room is active.
 
 A **flame** shows the heat everywhere (house, open room, folded row, compact
 tile): an outlined circle while there is a demand for heat (*Asks for heat*), a
@@ -83,8 +84,8 @@ full one that flickers while the heat source really runs (*Heating*); the words
 appear when it is touched or hovered.
 
 A folded room (row or compact tile) shows only the **level** (e.g. *Eco*) and
-small icons: heating (flame), window open, manual change and guest mode while
-it is on; the decision appears when the room is open, with the level next to
+small icons: heating (flame), window open, mold risk (a drop, while its alert
+is active), manual change and guest mode while it is on; the decision appears when the room is open, with the level next to
 the arc. Below the
 header:
 
@@ -124,7 +125,9 @@ and opens on the last 24 hours and the next 12:
   forecast;
 - the target, as a step line, coloured by level;
 - the planned levels;
-- the periods the room heated, in a lane of their own;
+- the periods the room heated, in a lane of their own, and ahead, lighter, the
+  periods the prediction heats;
+- a fine line at every midnight, between the days;
 - the outdoor temperature in its own band (measured, then the hourly forecast
   dashed) and the cutoff as a dotted line;
 - the next optimal start / stop, as a shaded period.

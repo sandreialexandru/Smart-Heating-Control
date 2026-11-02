@@ -8,7 +8,6 @@ from collections.abc import Callable, Iterable
 from datetime import date, datetime, time, timedelta
 from typing import Any
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
@@ -35,7 +34,6 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
-from . import alerts as alert_texts
 from .const import (
     CONF_ALERT_UNAVAILABLE_MINUTES,
     CONF_ARRIVAL_DELAY,
@@ -62,11 +60,6 @@ from .const import (
     CONF_HOME_RULE,
     CONF_NEARBY_GEOMETRIC,
     CONF_NEARBY_ZONES,
-    CONF_NOTIFY_CRITICAL,
-    CONF_NOTIFY_INFO,
-    CONF_NOTIFY_RESOLVED,
-    CONF_NOTIFY_SERVICE,
-    CONF_NOTIFY_WARNING,
     CONF_OPTIMAL_START,
     CONF_OPTIMAL_STOP,
     CONF_OUTDOOR_SENSOR,
@@ -84,8 +77,6 @@ from .const import (
     CONF_PV_OFFSET,
     CONF_PV_SENSOR,
     CONF_PV_THRESHOLD,
-    CONF_QUIET_END,
-    CONF_QUIET_START,
     CONF_REEVAL_MINUTES,
     CONF_REFERENCE_ROOM,
     CONF_ROOM_DIFF_ALERT,
@@ -114,6 +105,7 @@ from .const import (
     STORAGE_VERSION,
     SUBENTRY_ROOM,
 )
+from .notifier import Notifier
 from .outdoor import OutdoorTracker, expected_outdoor
 from .presence import (
     PersonInfo,
@@ -203,13 +195,8 @@ class House:
         self._source_wait_until: datetime | None = None
         self._source_unavailable_since: datetime | None = None
         self._outdoor_unavailable_since: datetime | None = None
-        self._alerts: dict[str, datetime] = {}
-        # Alerts that still apply (for the card): code, values, room, text.
-        self.active_alerts: dict[str, dict[str, Any]] = {}
-        # Alerts sent to notify targets, by key: what is needed to tell their end.
-        self._delivered: dict[str, dict[str, Any]] = {}
-        # Messages held by the quiet hours, in order: (key or None, message dict).
-        self._deferred: list[tuple[str | None, dict[str, Any]]] = []
+        # Alerts and messages: for the card and the notify services.
+        self.notifier = Notifier(self)
         # Since when the pause is on (for its reminder).
         self.paused_since: datetime | None = None
         # The last season / planned vacation state told (None: not known yet).
@@ -475,7 +462,7 @@ class House:
             self._check_house_events(now)
         except Exception:
             _LOGGER.exception("Error in the checks of %s", self.entry.title)
-        self._flush_deferred(now)
+        self.notifier.flush(now)
         self._schedule_timer(now)
         self.async_save()
         self.async_notify_listeners()
@@ -499,7 +486,7 @@ class House:
             if moment and moment > now:
                 candidates.append(moment)
         # The end of the quiet hours sends what they held.
-        if self._deferred and (quiet_end := self._quiet_end(now)) is not None:
+        if self.notifier.deferred and (quiet_end := self.notifier.quiet_end(now)) is not None:
             candidates.append(quiet_end)
         candidates = [t for t in candidates if t > now]
         if self._timer_unsub:
@@ -1444,6 +1431,11 @@ class House:
         """Minutes before an unavailable device triggers an alert."""
         return float(self.options[CONF_ALERT_UNAVAILABLE_MINUTES])
 
+    @property
+    def active_alerts(self) -> dict[str, dict[str, Any]]:
+        """Alerts that still apply (for the card): code, values, room, text."""
+        return self.notifier.active
+
     def notify(
         self,
         key: str,
@@ -1455,195 +1447,22 @@ class House:
         params: dict[str, Any] | None = None,
         room: str | None = None,
     ) -> None:
-        """Send an alert once (or again after ``repeat``).
-
-        ``code`` and ``params`` let the card and the notifications show it in
-        their language; ``room`` is the room it belongs to (None: the whole
-        house). ``message`` is the English text, used when a code is unknown.
-        """
-        now = dt_util.utcnow()
-        self.active_alerts[key] = {
-            "code": code,
-            "params": params or {},
-            "room": room,
-            "message": message,
-        }
-        last = self._alerts.get(key)
-        if last is not None and (repeat is None or now - last < repeat):
-            return
-        self._alerts[key] = now
-        _LOGGER.info("%s: %s", title, message)
-        self._deliver(key, {"code": code, "params": params or {}, "room": room, "message": message})
+        """Send an alert once (or again after ``repeat``); see ``Notifier.notify``."""
+        self.notifier.notify(
+            key, message, title=title, repeat=repeat, code=code, params=params, room=room
+        )
 
     def inform(self, code: str, params: dict[str, Any] | None = None) -> None:
         """Tell what the house did by itself (information, not an alert of the card)."""
-        message = alert_texts.alert_text("en", code, params, code)
-        _LOGGER.info("%s: %s", self.entry.title, message)
-        self._deliver(
-            None, {"code": code, "params": params or {}, "room": None, "message": message}
-        )
-
-    # -- delivery ---------------------------------------------------------
-    def _targets(self, category: str) -> list[str]:
-        """Notify services or entities for a category of alerts.
-
-        Before 2.5 one service got every alert: it still does until the
-        options are saved again.
-        """
-        opts = self.options
-        keys = {
-            alert_texts.CATEGORY_CRITICAL: CONF_NOTIFY_CRITICAL,
-            alert_texts.CATEGORY_WARNING: CONF_NOTIFY_WARNING,
-            alert_texts.CATEGORY_INFO: CONF_NOTIFY_INFO,
-        }
-        if not any(k in opts for k in keys.values()):
-            legacy = alert_texts.targets(opts.get(CONF_NOTIFY_SERVICE))
-            return legacy if category != alert_texts.CATEGORY_INFO else []
-        return alert_texts.targets(opts.get(keys[category]))
-
-    def _quiet(self, now: datetime) -> bool:
-        """True in the quiet hours of the options."""
-        return alert_texts.in_quiet_hours(
-            dt_util.as_local(now),
-            alert_texts.parse_time(self.options.get(CONF_QUIET_START)),
-            alert_texts.parse_time(self.options.get(CONF_QUIET_END)),
-        )
-
-    def _quiet_end(self, now: datetime) -> datetime | None:
-        """When the current quiet hours end (UTC), None outside them."""
-        end = alert_texts.parse_time(self.options.get(CONF_QUIET_END))
-        if end is None or not self._quiet(now):
-            return None
-        local = dt_util.as_local(now)
-        moment = local.replace(hour=end.hour, minute=end.minute, second=0, microsecond=0)
-        if moment <= local:
-            moment += timedelta(days=1)
-        return dt_util.as_utc(moment)
-
-    def _text(self, item: dict[str, Any], *, resolved: bool = False) -> str:
-        """The text of an alert in the language of Home Assistant, with its room."""
-        lang = alert_texts.language(self.hass.config.language)
-        text = alert_texts.alert_text(
-            lang, item.get("code"), item.get("params"), "", resolved=resolved
-        )
-        if not text:
-            return str(item["message"])  # no text for its code: the English one, as written
-        room = self.rooms.get(item.get("room") or "")
-        if room is not None and not text.startswith(room.name):
-            text = f"{room.name}: {text}"
-        return text
-
-    def _deliver(self, key: str | None, item: dict[str, Any], *, resolved: bool = False) -> None:
-        """Send an alert (or its end) now, or hold it for the end of the quiet hours."""
-        category = alert_texts.category(item.get("code"))
-        targets = self._targets(category)
-        if not targets:
-            if category == alert_texts.CATEGORY_INFO or resolved:
-                return
-            # No one chosen: a notification in Home Assistant, as always.
-            persistent_notification.async_create(
-                self.hass,
-                self._text(item),
-                title=self.entry.title,
-                notification_id=f"{DOMAIN}_{key}",
-            )
-            return
-        if category != alert_texts.CATEGORY_CRITICAL and self._quiet(dt_util.utcnow()):
-            self._deferred.append((key, {**item, "resolved": resolved}))
-            return
-        self._send(key, item, targets, resolved=resolved)
-
-    def _send(
-        self, key: str | None, item: dict[str, Any], targets: list[str], *, resolved: bool
-    ) -> None:
-        """Send one message to every target of its category."""
-        message = self._text(item, resolved=resolved)
-        if key is not None and not resolved:
-            self._delivered[key] = item
-        for target in targets:
-            self.hass.async_create_task(
-                self._async_call_notify(target, self.entry.title, message, key)
-            )
-
-    def _flush_deferred(self, now: datetime) -> None:
-        """After the quiet hours: send what they held and still applies."""
-        if not self._deferred or self._quiet(now):
-            return
-        held, self._deferred = self._deferred, []
-        for key, item in held:
-            resolved = bool(item.pop("resolved", False))
-            if key is not None and not resolved and key not in self.active_alerts:
-                continue  # it ended meanwhile
-            category = alert_texts.category(item.get("code"))
-            targets = self._targets(category)
-            if targets:
-                self._send(key, item, targets, resolved=resolved)
-
-    async def _async_call_notify(
-        self, recipient: str, title: str, message: str, key: str | None
-    ) -> None:
-        """Send with a notify service or entity (persistent notification if it fails).
-
-        Email addresses written after the service go as its ``target``.
-        """
-        target, addresses = alert_texts.split_recipient(recipient)
-        domain, _, name = target.partition(".")
-        try:
-            if self.hass.states.get(target) is not None and domain == "notify":
-                # A notify entity (the newer kind): it knows where it sends.
-                await self.hass.services.async_call(
-                    "notify",
-                    "send_message",
-                    {"entity_id": target, "title": title, "message": message},
-                    blocking=True,
-                )
-                return
-            data: dict[str, Any] = {"title": title, "message": message}
-            if addresses:
-                data["target"] = addresses
-            if name.startswith("mobile_app_") and key is not None:
-                # The phone replaces the alert with its end (same tag).
-                data["data"] = {"tag": f"{DOMAIN}_{key}", "group": DOMAIN}
-            await self.hass.services.async_call(domain, name, data, blocking=True)
-        except (HomeAssistantError, ValueError) as err:
-            _LOGGER.warning("Notification via %s failed: %s", target, err)
-            persistent_notification.async_create(self.hass, message, title=title)
+        self.notifier.inform(code, params)
 
     def alerts_for(self, room: Room) -> list[dict[str, Any]]:
-        """Alerts that apply to a room: its own and those of the whole house.
-
-        Cold rooms (while others are warm) are told only in those rooms.
-        """
-        result = []
-        for key, alert in self.active_alerts.items():
-            if alert.get("room") not in (None, room.id):
-                continue
-            if alert.get("code") == "room_difference" and room.name not in [
-                name for name, _gap in alert["params"].get("rooms", [])
-            ]:
-                continue
-            result.append({"key": key, **{k: v for k, v in alert.items() if k != "room"}})
-        return result
+        """Alerts that apply to a room: its own and those of the whole house."""
+        return self.notifier.alerts_for(room)
 
     def clear_alert(self, key: str) -> None:
         """The alert no longer applies: tell it when worth it, allow it again."""
-        self.active_alerts.pop(key, None)
-        sent = self._alerts.pop(key, None) is not None
-        item = self._delivered.pop(key, None)
-        if not sent:
-            return
-        persistent_notification.async_dismiss(self.hass, f"{DOMAIN}_{key}")
-        held = [k for k, i in self._deferred if k == key and not i.get("resolved")]
-        if held:
-            # Never sent (the quiet hours held it): no end to tell either.
-            self._deferred = [(k, i) for k, i in self._deferred if k != key]
-            return
-        if (
-            item is not None
-            and item.get("code") in alert_texts.RESOLVABLE
-            and self.options.get(CONF_NOTIFY_RESOLVED, True)
-        ):
-            self._deliver(key, item, resolved=True)
+        self.notifier.clear(key)
 
     # ------------------------------------------------------------------
     # Diagnostics

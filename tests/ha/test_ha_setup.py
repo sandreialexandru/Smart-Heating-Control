@@ -867,9 +867,9 @@ async def test_heat_source_unavailable_alert(
     hass.states.async_set("input_boolean.boiler", "unavailable")
     await _tick(hass, freezer, 60)
     house = entry.runtime_data
-    assert "unavailable_input_boolean.boiler" not in house._alerts  # noqa: SLF001
+    assert "unavailable_input_boolean.boiler" not in house.notifier.sent_at
     await _tick(hass, freezer, 16 * 60)
-    assert "unavailable_input_boolean.boiler" in house._alerts  # noqa: SLF001
+    assert "unavailable_input_boolean.boiler" in house.notifier.sent_at
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -1313,9 +1313,9 @@ async def test_card_manual_change_is_verified(
     # The thermostat keeps 17 °C (the mocked service changes nothing).
     await _tick(hass, freezer, 121)  # VERIFY_DELAY is 120 s
     assert len([c for c in calls if c.data["temperature"] == 23.0]) == sent + 1
-    assert f"verify_{room.id}" not in house._alerts  # noqa: SLF001
+    assert f"verify_{room.id}" not in house.notifier.sent_at
     await _tick(hass, freezer, 121)
-    assert f"verify_{room.id}" in house._alerts  # noqa: SLF001
+    assert f"verify_{room.id}" in house.notifier.sent_at
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -2568,7 +2568,7 @@ async def test_alerts_quiet_hours(hass: HomeAssistant, freezer: FrozenDateTimeFa
     assert [c.data["message"] for c in phone][1:] == [
         "Bedroom: A window has been open for more than 30 min."
     ]
-    assert not house._deferred
+    assert not house.notifier.deferred
     assert await hass.config_entries.async_unload(entry.entry_id)
 
 

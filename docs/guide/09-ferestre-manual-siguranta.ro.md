@@ -275,12 +275,16 @@ Fără oricare dintre ele nu se trimite nicio alertă de mucegai.
 
 1. Peretele cel mai rece: afară + 0,70 × (cameră − afară). 0,70 e minimul cerut
    de standard unui perete la o punte termică; o casă mai veche poate fi mai
-   rece.
+   rece. Când e mai cald afară decât înăuntru, niciun perete nu e mai rece
+   decât camera, deci se folosește temperatura camerei: umiditatea la pereți e
+   atunci cea a camerei.
 2. Umiditatea acolo: vaporii din aerul camerei (umiditatea ei × presiunea de
    saturație la temperatura camerei) împărțiți la presiunea de saturație la
    temperatura peretelui (formula Magnus).
 3. Alerta se trimite când a rămas la 80 % sau mai mult **60 de minute** (ca un
-   duș sau gătitul să nu o declanșeze) și se încheie sub **75 %**.
+   duș sau gătitul să nu o declanșeze) și se încheie sub **75 %**. Cât timp
+   senzorul de umiditate sau temperatura de afară e indisponibil, o alertă deja
+   trimisă rămâne: nu se știe dacă riscul a trecut.
 
 **Exemplu**: camera la 20 °C cu 60 % umiditate, afară 0 °C. Peretele: 0 + 0,70 ×
 20 = 14 °C. Presiunea de saturație: 23,3 hPa la 20 °C, 16,0 hPa la 14 °C;

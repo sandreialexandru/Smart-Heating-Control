@@ -2820,6 +2820,20 @@ async def test_mold_alert_needs_humidity_and_outdoor(
     alert = house.active_alerts[f"mold_{room.id}"]
     assert alert["code"] == "mold_risk"
 
+    # The humidity sensor or the outdoor sensor unavailable for a while: the risk
+    # is not known, so the alert stays (it is not told as ended).
+    hass.states.async_set("sensor.room_humidity", "unavailable")
+    for _ in range(10):
+        await _tick(hass, freezer, 60)
+    assert f"mold_{room.id}" in house.active_alerts
+    assert hass.states.get("sensor.bedroom_decision").attributes["surface_humidity"] is None
+    hass.states.async_set("sensor.room_humidity", "70", {"unit_of_measurement": "%"})
+    hass.states.async_set("sensor.outdoor", "unavailable")
+    for _ in range(10):
+        await _tick(hass, freezer, 60)
+    assert f"mold_{room.id}" in house.active_alerts
+    hass.states.async_set("sensor.outdoor", "0.0", {"unit_of_measurement": "°C"})
+
     # Drier air: the alert ends (at the next look, within the reevaluation interval).
     hass.states.async_set("sensor.room_humidity", "40", {"unit_of_measurement": "%"})
     for _ in range(6):
@@ -2936,5 +2950,72 @@ async def test_room_returns_from_eco_at_once_by_default(
     hass.states.async_set("binary_sensor.motion", "on")
     await _tick(hass, freezer, 1)
     assert hass.states.get("sensor.bedroom_decision").state == "schedule"
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_optimal_start_when_the_target_cannot_be_reached(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A heating too weak for the next level: the optimal start begins as early as it may."""
+    from custom_components.advanced_climate.learning import ThermalModel
+
+    entry = await _setup(
+        hass,
+        freezer,
+        optimal_start=True,
+        schedule="workday: 00:00 sleep, 13:00 home",
+    )
+    room = next(iter(entry.runtime_data.rooms.values()))
+    # Learned: 0.5 °C/h of heating against 1 °C/h of loss, the room never warms.
+    room.learner.constant_loss = True
+    room.learner._model = ThermalModel(h=0.5, k=1.0, constant_loss=True, learned=True)
+    await _tick(hass, freezer, 15)
+    decision = hass.states.get("sensor.bedroom_decision")
+    # Monday 12:00 local, home at 13:00: within the longest early start (120 min).
+    assert decision.state == "optimal_start", decision.attributes["reason"]
+    assert decision.attributes["next_estimate"]["minutes"] == 120
+    assert decision.attributes["time_to_target"] is None
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_presence_time_with_two_sensors_and_before_eco(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Any occupancy sensor counts; the presence time applies only to a room in eco."""
+    hass.states.async_set("binary_sensor.motion", "off")
+    hass.states.async_set("binary_sensor.radar", "off")
+    entry = await _setup(
+        hass,
+        freezer,
+        occupancy_sensors=["binary_sensor.motion", "binary_sensor.radar"],
+        occupancy_minutes=30,
+        occupancy_return_minutes=10,
+    )
+
+    def state() -> str:
+        return hass.states.get("sensor.bedroom_decision").state
+
+    # Not in eco yet: a presence keeps the room on the schedule at once.
+    for _ in range(20):
+        await _tick(hass, freezer, 60)
+    hass.states.async_set("binary_sensor.radar", "on")
+    await _tick(hass, freezer, 60)
+    hass.states.async_set("binary_sensor.radar", "off")
+    await _tick(hass, freezer, 60)
+    assert state() == "schedule"
+    # 30 minutes empty: eco (the house wakes up for it).
+    for _ in range(31):
+        await _tick(hass, freezer, 60)
+    assert state() == "room_unoccupied"
+    # The other sensor counts too, after the presence time.
+    hass.states.async_set("binary_sensor.motion", "on")
+    for _ in range(9):
+        await _tick(hass, freezer, 60)
+    assert state() == "room_unoccupied"
+    for _ in range(2):
+        await _tick(hass, freezer, 60)
+    assert state() == "schedule"
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

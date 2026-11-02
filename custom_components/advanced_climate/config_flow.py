@@ -747,6 +747,31 @@ def _outdoor_error(hass: Any, sensors: list[str], placeholders: dict[str, str]) 
     return None
 
 
+def _outdoor_humidity_error(
+    hass: Any, humidity: str | None, placeholders: dict[str, str]
+) -> str | None:
+    """Error key when the humidity sensor of a room is outdoors.
+
+    It is outdoors when it belongs to the device of the outdoor sensor or of
+    the weather entity of a house (a weather station gives both).
+    """
+    if not humidity:
+        return None
+    registry = er.async_get(hass)
+    item = registry.async_get(humidity)
+    device = item.device_id if item else None
+    if device is None:
+        return None
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        options = {**entry.data, **entry.options}
+        for outdoor in (options.get(CONF_OUTDOOR_SENSOR), options.get(CONF_WEATHER)):
+            other = registry.async_get(outdoor) if outdoor else None
+            if other is not None and other.device_id == device:
+                placeholders.update({"entity": humidity, "owner": entry.title})
+                return "humidity_sensor_is_outdoor"
+    return None
+
+
 def _room_sensor_owner(hass: Any, sensor: str) -> str | None:
     """The room (house → room) that uses ``sensor`` as a temperature sensor."""
     for entry in hass.config_entries.async_entries(DOMAIN):
@@ -1734,6 +1759,10 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                 self.hass, list(user_input.get(CONF_TEMP_SENSORS) or []), placeholders
             ):
                 errors[CONF_TEMP_SENSORS] = error
+            elif error := _outdoor_humidity_error(
+                self.hass, user_input.get(CONF_HUMIDITY_SENSOR), placeholders
+            ):
+                errors[CONF_HUMIDITY_SENSOR] = error
             else:
                 self._data = _merge(self._data, schema, self._kept(user_input))
                 if not trv:
@@ -1762,12 +1791,24 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                 _opt(CONF_HUMIDITY_SENSOR, d): _entity("sensor", device_class="humidity"),
             }
         )
+        errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {"entity": "", "owner": ""}
         if user_input is not None:
-            self._data = _merge(self._data, schema, self._kept(user_input))
-            self._data[CONF_TEMP_SENSORS] = []
-            self._data[CONF_CALIBRATION_MODE] = CALIBRATION_OFF
-            return await self.async_step_sensors_details()
-        return self.async_show_form(step_id="sensors_gt", data_schema=schema)
+            if error := _outdoor_humidity_error(
+                self.hass, user_input.get(CONF_HUMIDITY_SENSOR), placeholders
+            ):
+                errors[CONF_HUMIDITY_SENSOR] = error
+            else:
+                self._data = _merge(self._data, schema, self._kept(user_input))
+                self._data[CONF_TEMP_SENSORS] = []
+                self._data[CONF_CALIBRATION_MODE] = CALIBRATION_OFF
+                return await self.async_step_sensors_details()
+        return self.async_show_form(
+            step_id="sensors_gt",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders=placeholders,
+        )
 
     async def async_step_sensors_details(
         self, user_input: dict[str, Any] | None = None

@@ -146,7 +146,7 @@ from .engine import (
     optimal_schedule,
     optimal_stop_state,
 )
-from .learning import ThermalLearner
+from .learning import MAX_MINUTES, ThermalLearner
 from .mold import MOLD_CLEAR_RH, MOLD_MINUTES, MOLD_SURFACE_RH, surface_humidity
 from .schedule import (
     Schedule,
@@ -900,7 +900,7 @@ class Room:
             if kind == RULE_OPTIMAL_START:
                 if gap <= 0:
                     return 0.0
-                return model.minutes_to_heat(self.current_temp, next_temp, outdoor, q)
+                return self._minutes_to_heat(next_temp, outdoor)
             if floor is None:
                 return None
             return model.minutes_to_fall(self.current_temp, floor, outdoor, q)
@@ -951,7 +951,20 @@ class Room:
         level = self.level_temp(preset)
         if level is None or level <= self.current_temp:
             return None
-        return self.learner.model.minutes_to_heat(self.current_temp, level, outdoor, self.learner.q)
+        return self._minutes_to_heat(level, outdoor)
+
+    def _minutes_to_heat(self, target: float, outdoor: float | None) -> float:
+        """Minutes to heat up to ``target``; a whole day when the model never gets there.
+
+        The heating may be too weak for that target at that outdoor
+        temperature: the optimal start then begins as early as it may.
+        """
+        if self.current_temp is None:
+            return float(MAX_MINUTES)
+        minutes = self.learner.model.minutes_to_heat(
+            self.current_temp, target, outdoor, self.learner.q
+        )
+        return float(MAX_MINUTES) if minutes is None else minutes
 
     def time_to_target(self, outdoor: float | None) -> int | None:
         """Minutes until the target is reached, as learned (None when not heating up)."""
@@ -2234,8 +2247,20 @@ class Room:
     # Alerts
     # ------------------------------------------------------------------
     def _check_mold(self, now: datetime) -> None:
-        """Mold risk alert: only with a humidity sensor and a known outdoor temperature."""
+        """Mold risk alert: only with a humidity sensor and a known outdoor temperature.
+
+        Without a humidity sensor or without an outdoor source in the house
+        there is no alert. While a value is unknown for a moment (a sensor
+        unavailable), an alert already told stays as it is: ending it would
+        tell that the risk is over, and it is not known.
+        """
         house = self.house
+        key = f"mold_{self.id}"
+        if not self.config.get(CONF_HUMIDITY_SENSOR) or not house.outdoor_configured:
+            self.surface_humidity = None
+            self._mold_since = None
+            house.clear_alert(key)
+            return
         humidity = float_state(self.hass, self.config.get(CONF_HUMIDITY_SENSOR))
         outdoor = house.outdoor_now
         if (
@@ -2246,7 +2271,6 @@ class Room:
         ):
             self.surface_humidity = None
             self._mold_since = None
-            house.clear_alert(f"mold_{self.id}")
             return
         surface = surface_humidity(self.current_temp, humidity, outdoor)
         self.surface_humidity = round(surface, 1)
@@ -2254,7 +2278,7 @@ class Room:
             since = self._mold_since = self._mold_since or now
             if now - since >= timedelta(minutes=MOLD_MINUTES):
                 house.notify(
-                    f"mold_{self.id}",
+                    key,
                     f"{self.name}: mold risk, the coldest wall is at about {surface:.0f}% "
                     f"humidity (room {humidity:.0f}%).",
                     code="mold_risk",
@@ -2263,7 +2287,7 @@ class Room:
                 )
         elif surface < MOLD_CLEAR_RH:
             self._mold_since = None
-            house.clear_alert(f"mold_{self.id}")
+            house.clear_alert(key)
 
     def _check_alerts(self, now: datetime) -> None:
         """Alerts for long open windows, unavailable devices, failed sensors and schedule errors."""

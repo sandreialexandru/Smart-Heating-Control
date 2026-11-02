@@ -369,6 +369,14 @@ together, for the reason above.)
 - **The weather curve is a straight line.** A boiler whose curve bends, or that
   reaches its highest water temperature in hard frost, is learned as the
   straight line closest to it over the recent weeks.
+- **A sensor with a coarse step (0.5 °C) in steady weather.** When for a week
+  the outdoor temperature changes only between day and night, such a sensor
+  can lead to a wrong weather curve. In a simulation (7 days, outdoor 0 –
+  10 °C between night and day, no curve in the house, three runs) the time to
+  heat at −5 °C came out up to 48 % wrong; with a 0.1 °C sensor at most 5 %, and
+  with the 0.5 °C sensor but days of different temperatures also at most 5 %.
+  It corrects itself once days of other temperatures are seen; the *Maximum
+  early start* of the room still limits the start.
 - **Day to day differences are not learned.** The sun, people, cooking or
   walls colder after a long absence change the room; the least squares
   average them.

@@ -332,6 +332,87 @@ class ThermalModelTest(unittest.TestCase):
         learner.reset()
         self.assertFalse(learner.model.learned)
 
+    def test_restore_keeps_the_model_and_the_heat_reaching_now(self) -> None:
+        import json
+
+        learner = learning.ThermalLearner()
+        _room(learner, days=3)
+        again = learning.ThermalLearner.from_dict(json.loads(json.dumps(learner.as_dict())))
+        a, b = again.model, learner.model
+        self.assertEqual((a.h, a.k, a.c, a.tau, a.learned), (b.h, b.k, b.c, b.tau, b.learned))
+        self.assertAlmostEqual(again.q, learner.q)
+
+    def test_broken_saved_learning_is_learned_again(self) -> None:
+        fits = [learning._Fit(t).as_list() for t in learning.TAU_GRID]
+        for data in (
+            None,
+            {},
+            "x",
+            {"version": learning.DATA_VERSION, "fits": "x"},
+            {"version": learning.DATA_VERSION, "fits": [[1, 2]]},
+            {"version": learning.DATA_VERSION, "fits": fits[:-1]},
+            {"version": learning.DATA_VERSION, "fits": fits, "heat_windows": "inf"},
+            {"version": learning.DATA_VERSION, "fits": fits, "outdoor": [1]},
+        ):
+            restored = learning.ThermalLearner.from_dict(data)  # type: ignore[arg-type]
+            self.assertFalse(restored.learned, data)
+            self.assertEqual(restored.model.h, learning.DEFAULT_RATE)
+
+    def test_unreachable_target_and_a_room_that_does_not_fall(self) -> None:
+        model = learning.ThermalModel(h=1.0, k=0.05, learned=True)
+        # 1 °C/h of heating holds at most 0 + 1 / 0.05 = 20 °C above the outdoors.
+        self.assertIsNone(model.minutes_to_heat(18.0, 40.0, 0.0))
+        self.assertEqual(model.minutes_to_heat(21.0, 21.0, 0.0), 0.0)
+        # Warmer outside than the comfort: the room never falls to it.
+        self.assertIsNone(model.minutes_to_fall(21.0, 20.5, 25.0))
+        # Not learned: no fall time (the longest optimal stop is used).
+        self.assertIsNone(learning.ThermalModel().minutes_to_fall(21.0, 20.0, 0.0))
+        # A room that cannot rise at that temperature has no minutes per degree.
+        self.assertIsNone(learning.ThermalModel(h=1.0, k=0.1).minutes_per_degree(25.0, 0.0))
+
+    def test_heat_pump_curve_is_negative(self) -> None:
+        # A heat pump that gives 0.03 °C/h less for each °C colder outdoors.
+        learner = learning.ThermalLearner()
+        _room(learner, h=2.0, k=0.04, tau=30.0, days=6, curve=-0.03)
+        self.assertAlmostEqual(learner.model.c, -0.03, delta=0.01)
+
+    def test_heating_never_below_zero_and_no_curve_with_a_constant_loss(self) -> None:
+        self.assertEqual(learning.ThermalModel(h=1.0, c=0.1).heating(20.0), 0.0)
+        model = learning.ThermalModel(h=1.0, k=0.5, c=0.05, constant_loss=True)
+        self.assertEqual(model.heating(-10.0), 1.0)
+        self.assertEqual(model.rate(20.0, -10.0, 1.0), 0.5)
+
+    def test_only_heating_is_not_enough(self) -> None:
+        # Heating and loss cannot be told apart without stretches without heating.
+        learner = learning.ThermalLearner()
+        t0 = datetime(2026, 11, 1, tzinfo=TZ)
+        for i in range(0, 3 * 1440, 5):
+            learner.observe(t0 + timedelta(minutes=i), True, 15 + i / 1440, 0.0)
+        self.assertFalse(learner.learned)
+
+    def test_unknown_outdoor_in_a_house_that_has_one(self) -> None:
+        learner = learning.ThermalLearner()
+        t0 = datetime(2026, 11, 1, tzinfo=TZ)
+        for i in range(0, 2 * 1440, 5):
+            learner.observe(t0 + timedelta(minutes=i), (i // 60) % 2 == 0, 20.0, None)
+        self.assertEqual(learner.heat_windows, 0.0)
+        self.assertEqual(learner.idle_windows, 0.0)
+
+    def test_one_wild_reading_barely_moves_the_model(self) -> None:
+        learner = learning.ThermalLearner()
+        _room(learner, days=3)
+        h = learner.model.h
+        end = datetime(2026, 11, 4, tzinfo=TZ)
+        learner.observe(end + timedelta(minutes=5), True, 85.0, 5.0)
+        learner.observe(end + timedelta(minutes=35), True, 21.0, 5.0)
+        self.assertAlmostEqual(learner.model.h, h, delta=0.1 * h)
+
+    def test_the_clock_going_back_is_ignored(self) -> None:
+        learner = learning.ThermalLearner()
+        t0 = datetime(2026, 11, 1, tzinfo=TZ)
+        learner.observe(t0, True, 20.0, 5.0)
+        self.assertFalse(learner.observe(t0 - timedelta(minutes=5), True, 20.5, 5.0))
+
 
 class ExpectedOutdoorTest(unittest.TestCase):
     """The outdoor temperature expected during an optimal start / stop."""

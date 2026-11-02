@@ -115,6 +115,10 @@ până când cineva a fost prezent fără întrerupere atât timp, deci o vizit�
 scurtă nu pornește încălzirea. **Exemplu** cu 10 minute: la 14:00 cineva intră
 să ia o carte și iese la 14:02: biroul rămâne pe `eco`. La 14:30 cineva intră
 și rămâne: la 14:40 biroul revine la program.
+Prezența se numără **fără întrerupere**: un senzor de mișcare care se stinge
+între mișcări (cineva stă nemișcat) reia numărătoarea. Pentru această opțiune
+se potrivește mai bine un senzor de prezență (mmWave) sau unul de mișcare cu
+timp lung de stingere.
 
 ## Vacanța
 

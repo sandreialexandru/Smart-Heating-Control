@@ -915,3 +915,113 @@ async def test_options_alerts_recipient_capital_letter(hass: HomeAssistant) -> N
         "notify.me_gmail_com",
         ["Ana@Example.com"],
     )
+
+
+async def test_occupancy_and_humidity_fields(hass: HomeAssistant) -> None:
+    """The presence time is asked only with occupancy sensors; the humidity sensor can be cleared."""
+    hass.states.async_set(
+        "sensor.hum", "55", {"device_class": "humidity", "unit_of_measurement": "%"}
+    )
+    hass.states.async_set("binary_sensor.motion", "off", {"device_class": "motion"})
+    entry = _house_with_rooms(hass, rooms=[("Bedroom", RELAY_ROOM)])
+    rooms = hass.config_entries.subentries
+    subentry = next(iter(entry.subentries.values()))
+
+    async def to_sensors():
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        result = await rooms.async_configure(
+            result["flow_id"], {"name": "Bedroom", "source": "switch"}
+        )
+        result = await rooms.async_configure(
+            result["flow_id"], {"switches": ["input_boolean.heater"]}
+        )
+        return await _until(hass, result, rooms, stop={"sensors"})
+
+    result = await to_sensors()
+    assert result["step_id"] == "sensors"
+    result = await rooms.async_configure(
+        result["flow_id"],
+        {
+            "temperature_sensors": ["sensor.room"],
+            "occupancy_sensors": ["binary_sensor.motion"],
+            "humidity_sensor": "sensor.hum",
+        },
+    )
+    assert result["step_id"] == "sensors_details"
+    assert _keys(result) == {"occupancy_minutes", "occupancy_return_minutes"}
+    result = await rooms.async_configure(
+        result["flow_id"], {"occupancy_minutes": 20, "occupancy_return_minutes": 5}
+    )
+    result = await _until(hass, result, rooms, stop=set())
+    assert result["type"] is FlowResultType.ABORT
+    data = entry.subentries[subentry.subentry_id].data
+    assert data["humidity_sensor"] == "sensor.hum"
+    assert (data["occupancy_minutes"], data["occupancy_return_minutes"]) == (20, 5)
+
+    # Without occupancy sensors no details form; the humidity sensor is cleared.
+    result = await to_sensors()
+    result = await rooms.async_configure(
+        result["flow_id"], {"temperature_sensors": ["sensor.room"], "occupancy_sensors": []}
+    )
+    assert result["step_id"] == "windows"
+    result = await _until(hass, result, rooms, stop=set())
+    assert result["type"] is FlowResultType.ABORT
+    assert "humidity_sensor" not in entry.subentries[subentry.subentry_id].data
+
+
+async def test_whole_house_thermostat_page_skipped_with_hvac_action(hass: HomeAssistant) -> None:
+    """A thermostat that reports hvac_action needs no hysteresis: the page is skipped."""
+    hass.states.async_set(
+        "climate.trv", "heat", {"hvac_modes": ["heat", "off"], "hvac_action": "idle"}
+    )
+    entry = MockConfigEntry(domain=DOMAIN, title="Home 101", options={})
+    entry.add_to_hass(hass)
+    flow = hass.config_entries.options
+    result = await flow.async_init(entry.entry_id)
+    result = await flow.async_configure(result["flow_id"], {"next_step_id": "heating"})
+    result = await flow.async_configure(result["flow_id"], {"source": "climate"})
+    result = await flow.async_configure(
+        result["flow_id"], {"climates": ["climate.trv"], "command_mode": "temperature"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    zone = next(iter(entry.subentries.values()))
+    assert "learn_tolerance" not in zone.data
+
+
+async def test_outdoor_humidity_sensor_is_refused(hass: HomeAssistant) -> None:
+    """A humidity sensor of the outdoor sensor's device (a weather station) measures outdoors."""
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
+
+    station = MockConfigEntry(domain="station")
+    station.add_to_hass(hass)
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=station.entry_id, identifiers={("station", "garden")}
+    )
+    ent = er.async_get(hass)
+    outdoor = ent.async_get_or_create(
+        "sensor", "station", "t", config_entry=station, device_id=device.id
+    ).entity_id
+    outdoor_humidity = ent.async_get_or_create(
+        "sensor", "station", "h", config_entry=station, device_id=device.id
+    ).entity_id
+    room_humidity = ent.async_get_or_create("sensor", "other", "room_h").entity_id
+    entry = _house_with_rooms(
+        hass, options={"outdoor_sensor": outdoor}, rooms=[("Bedroom", RELAY_ROOM)]
+    )
+    rooms = hass.config_entries.subentries
+    subentry = next(iter(entry.subentries.values()))
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+    result = await rooms.async_configure(result["flow_id"], {"name": "Bedroom", "source": "switch"})
+    result = await rooms.async_configure(result["flow_id"], {"switches": ["input_boolean.heater"]})
+    result = await _until(hass, result, rooms, stop={"sensors"})
+    result = await rooms.async_configure(
+        result["flow_id"],
+        {"temperature_sensors": ["sensor.room"], "humidity_sensor": outdoor_humidity},
+    )
+    assert result["errors"] == {"humidity_sensor": "humidity_sensor_is_outdoor"}
+    result = await rooms.async_configure(
+        result["flow_id"],
+        {"temperature_sensors": ["sensor.room"], "humidity_sensor": room_humidity},
+    )
+    assert result["step_id"] != "sensors"

@@ -275,11 +275,16 @@ no mold alert is sent.
 
 1. The coldest wall: outdoor + 0.70 × (room − outdoor). 0.70 is the least the
    standard asks of a wall at a thermal bridge; an older house may be colder.
+   When it is warmer outside than inside, no wall is colder than the room, so
+   the room temperature is used: the humidity at the walls is then the one of
+   the room.
 2. The humidity there: the vapour of the room air (its humidity × the
    saturation pressure at the room temperature) over the saturation pressure at
    the wall temperature (Magnus formula).
 3. The alert is sent when it has stayed at 80 % or more for **60 minutes** (so a
-   shower or cooking does not raise it), and ends below **75 %**.
+   shower or cooking does not raise it), and ends below **75 %**. While the
+   humidity sensor or the outdoor temperature is unavailable, an alert already
+   sent stays: it is not known whether the risk is over.
 
 **Example**: room 20 °C with 60 % humidity, outdoors 0 °C. Wall: 0 + 0.70 × 20 =
 14 °C. Saturation pressure: 23.3 hPa at 20 °C, 16.0 hPa at 14 °C; the vapour

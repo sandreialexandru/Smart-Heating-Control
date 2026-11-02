@@ -377,6 +377,14 @@ c adevărat 0,03 × putere):
 - **Curba de temperatură este o linie dreaptă.** O centrală a cărei curbă se
   îndoaie sau care ajunge la temperatura maximă a apei la ger se învață ca
   linia dreaptă cea mai apropiată, pe ultimele săptămâni.
+- **Un senzor cu pas mare (0,5 °C) pe vreme constantă.** Când o săptămână
+  temperatura de afară se schimbă doar între zi și noapte, un astfel de senzor
+  poate duce la o curbă de temperatură greșită. Într-o simulare (7 zile, afară
+  0 – 10 °C între noapte și zi, fără curbă în casă, trei rulări) timpul de
+  încălzire la −5 °C a ieșit greșit cu până la 48 %; cu un senzor de 0,1 °C cu
+  cel mult 5 %, iar cu senzorul de 0,5 °C dar zile cu temperaturi diferite tot
+  cu cel mult 5 %. Se corectează singur când apar zile cu alte temperaturi;
+  *Pornirea anticipată maximă* a camerei limitează în continuare pornirea.
 - **Diferențele de la o zi la alta nu se învață.** Soarele, oamenii, gătitul
   sau pereții mai reci după o absență lungă schimbă camera; metoda celor mai
   mici pătrate le face media.

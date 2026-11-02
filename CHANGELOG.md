@@ -51,7 +51,8 @@ alert, and the code split in smaller parts. Install it only to help test.
   room temperature and humidity and the outdoor temperature (DIN 4108-2
   method); 80 % or more for an hour raises it, below 75 % it ends. Without a
   humidity sensor or without an outdoor temperature (sensor or weather entity)
-  no mold alert is sent. The *Decision* sensor shows `surface_humidity`.
+  no mold alert is sent; a humidity sensor of the outdoor sensor's or weather
+  entity's device is refused. The *Decision* sensor shows `surface_humidity`.
 
 - The code of a room is split: what was sent to the devices and their limits
   (`device_echo.py`), open windows (`window.py`), alerts and notifications

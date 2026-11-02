@@ -6,7 +6,9 @@ higher relative humidity there. The method of DIN 4108-2 (also EN ISO 13788):
 
 * the coldest wall surface is ``T_out + F_RSI · (T_room − T_out)``. ``F_RSI``
   is the temperature factor of that place; DIN 4108-2 requires at least 0.70
-  at thermal bridges, so 0.70 is used (an older house may be worse);
+  at thermal bridges, so 0.70 is used (an older house may be worse). When it is
+  warmer outside than inside, no wall is colder than the room: the room
+  temperature is used;
 * the vapour pressure of the room air is ``RH · p_sat(T_room)``, the same at
   the wall; the humidity at the wall is that over ``p_sat(T_wall)`` (Magnus
   formula for ``p_sat``);
@@ -34,8 +36,8 @@ def saturation_pressure(temperature: float) -> float:
 
 
 def surface_temperature(room: float, outdoor: float, factor: float = F_RSI) -> float:
-    """Temperature of the coldest wall surface (°C)."""
-    return outdoor + factor * (room - outdoor)
+    """Temperature of the coldest wall surface (°C), never above the room."""
+    return min(room, outdoor + factor * (room - outdoor))
 
 
 def surface_humidity(room: float, humidity: float, outdoor: float, factor: float = F_RSI) -> float:

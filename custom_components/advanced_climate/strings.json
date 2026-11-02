@@ -620,7 +620,7 @@
             "temperature_aggregation": "With several sensors: average, the coldest or the median.",
             "calibration_entities": "The TRV number entities (offset or external temperature).",
             "occupancy_minutes": "How long the room must be empty before eco.",
-            "occupancy_return_minutes": "How long someone must be present without a break before a room in eco for no occupancy follows its schedule again. 0 = at once (as before). A shorter visit (someone takes something and leaves) keeps the room in eco, and the count starts again at the next presence.",
+            "occupancy_return_minutes": "How long someone must be present without a break before a room in eco for no occupancy follows its schedule again. 0 = at once (as before). A shorter visit (someone takes something and leaves) keeps the room in eco, and the count starts again at the next presence. Presence counts without a break: a motion sensor that turns off between movements starts the count again, so a presence sensor (mmWave) or a motion sensor with a long clear time suits it better.",
             "hysteresis": "The room sensor decides the frost protection: below it the TRVs are boosted to open, until frost protection plus this value."
           }
         },
@@ -714,6 +714,7 @@
         "entity_is_source": "{entity} is the heat source of {owner}. It cannot also be a device of a room.",
         "entity_is_gt_heater": "{entity} is the relay of a Generic Thermostat used by {owner}. It cannot also be controlled here.",
         "room_sensor_is_outdoor": "{entity} is the outdoor sensor of {owner}. Choose a sensor in the room.",
+        "humidity_sensor_is_outdoor": "{entity} is on the device of the outdoor sensor or of the weather entity of {owner}: it measures outdoors. Choose a humidity sensor in the room.",
         "boost_sensor_required": "The TRV boost needs a temperature sensor of the room.",
         "boost_temperature_only": "The TRV boost works only with the Temperature command.",
         "invalid_level_name": "The level name “{name}” cannot be used in the schedule: use letters, digits, spaces, “_” or “-” (no “,” “:” “#”).",

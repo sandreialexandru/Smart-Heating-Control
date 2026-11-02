@@ -227,6 +227,7 @@ class DecisionSensor(RoomEntity, SensorEntity):
             "levels",
             "climate_entities",
             "current_temperature",
+            "surface_humidity",
             "day_boundary",
             "schedule_editable",
             "entry_id",
@@ -385,7 +386,10 @@ class NextChangeSensor(RoomEntity, SensorEntity):
 class HeatingRateSensor(RoomEntity, SensorEntity):
     """Learned heating: minutes per degree now, the thermal model as attributes."""
 
-    _unrecorded_attributes = frozenset({"minutes_per_degree"})
+    # Values that change at every look are not recorded (only the state is).
+    _unrecorded_attributes = frozenset(
+        {"minutes_per_degree", "heat_reaching_now", "error_per_hour", "hours_heating", "hours_idle"}
+    )
 
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC

@@ -115,6 +115,9 @@ to the schedule at once.
 visit does not start the heating. **Example** with 10 minutes: at 14:00 someone
 comes in to take a book and leaves at 14:02: the office stays on `eco`. At
 14:30 someone comes in and stays: at 14:40 the office returns to the schedule.
+The presence counts **without a break**: a motion sensor that turns off between
+movements (someone sitting still) starts the count again. A presence sensor
+(mmWave) or a motion sensor with a long clear time suits this option better.
 
 ## Vacation
 

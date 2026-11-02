@@ -620,7 +620,7 @@
             "temperature_aggregation": "Cu mai mulți senzori: media, cel mai rece sau mediana.",
             "calibration_entities": "Entitățile number ale TRV-urilor (offset sau temperatură externă).",
             "occupancy_minutes": "Cât timp trebuie să fie camera goală până la eco.",
-            "occupancy_return_minutes": "Cât timp trebuie să fie cineva prezent fără întrerupere până când o cameră aflată pe eco din lipsă de ocupare revine la program. 0 = imediat (ca înainte). O vizită mai scurtă (cineva ia ceva și pleacă) lasă camera pe eco, iar numărătoarea reîncepe la următoarea prezență.",
+            "occupancy_return_minutes": "Cât timp trebuie să fie cineva prezent fără întrerupere până când o cameră aflată pe eco din lipsă de ocupare revine la program. 0 = imediat (ca înainte). O vizită mai scurtă (cineva ia ceva și pleacă) lasă camera pe eco, iar numărătoarea reîncepe la următoarea prezență. Prezența se numără fără întrerupere: un senzor de mișcare care se stinge între mișcări reia numărătoarea, deci se potrivește mai bine un senzor de prezență (mmWave) sau unul de mișcare cu timp lung de stingere.",
             "hysteresis": "Senzorul camerei decide antiînghețul: sub el TRV-urile sunt forțate să se deschidă, până la antiîngheț plus această valoare."
           }
         },
@@ -714,6 +714,7 @@
         "entity_is_source": "{entity} e sursa de căldură a casei {owner}. Nu poate fi și dispozitivul unei camere.",
         "entity_is_gt_heater": "{entity} e releul unui Generic Thermostat folosit de {owner}. Nu poate fi comandat și aici.",
         "room_sensor_is_outdoor": "{entity} e senzorul exterior al casei {owner}. Alege un senzor din cameră.",
+        "humidity_sensor_is_outdoor": "{entity} e pe dispozitivul senzorului exterior sau al entității meteo a casei {owner}: măsoară afară. Alege un senzor de umiditate din cameră.",
         "boost_sensor_required": "Forțarea TRV are nevoie de un senzor de temperatură al camerei.",
         "boost_temperature_only": "Forțarea TRV merge doar cu comanda Temperatură.",
         "invalid_level_name": "Numele de nivel „{name}” nu poate fi folosit în program: folosește litere, cifre, spații, „_” sau „-” (fără „,” „:” „#”).",

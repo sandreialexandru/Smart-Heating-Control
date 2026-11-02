@@ -26,10 +26,14 @@ temperature (sensor or weather entity).
 
 You do not have to describe the house (radiators, insulation, boiler, floor
 heating). The room **watches itself** all the time, with and without heating,
-and learns three numbers:
+and learns four numbers:
 
 - **Heating**: how many °C per hour the heating adds when it gives its full
   heat.
+- **Weather curve**: how much more (or less) the heating gives when it is
+  colder outside. A boiler with outdoor compensation heats the water more in
+  the cold; a heat pump may give less; a fixed water temperature or an
+  electric heater gives the same, and the curve is learned as 0.
 - **Heat loss**: how fast the room cools, in proportion to how much warmer it
   is than outside (colder outside, faster).
 - **Inertia**: how slowly the heating reacts. After a start the boiler, the
@@ -37,7 +41,8 @@ and learns three numbers:
   giving heat for a while. Radiators: usually 10 – 30 minutes; floor heating:
   hours. Nothing has to be set: it is learned.
 
-**Example** (values assumed for the example): heating 2 °C per hour, loss 0.05
+**Example** (values assumed for the example): heating 2 °C per hour, no
+weather curve, loss 0.05
 per hour per degree of difference, inertia 30 minutes. At 19 °C inside and 5 °C
 outside the room loses 0.05 × (19 − 5) = 0.7 °C per hour, so with the heating
 fully on it rises 2 − 0.7 = 1.3 °C per hour. From 18 to 21 °C, starting cold,
@@ -59,7 +64,7 @@ The card shows *learning… 2 of 4 h with heating, 1 of 4 h without* and below
 *default 60 min/1°C*.
 
 **Without an outdoor temperature** in the house, the heat loss is learned as a
-constant number of degrees per hour.
+constant number of degrees per hour, and no weather curve is learned.
 
 ## Optimal start, step by step
 

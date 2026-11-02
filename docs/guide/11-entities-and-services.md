@@ -31,7 +31,7 @@ the house or the room, e.g. `sensor.bedroom_decision`.
 | *Target temperature* (sensor) | The target, in the unit of the house. |
 | *Room temperature* (sensor) | The room temperature used by the integration. |
 | *Next change* (sensor) | The next schedule change; attributes: the next level, the profile. |
-| *Heating rate* (sensor) | Minutes per degree with the heating on, at the room and outdoor temperatures now; attributes: the learned heating (`heating_per_hour`), heat loss (`loss_per_hour`), inertia (`inertia_minutes`), the heat reaching the room now, the minutes per degree at −10 / 0 / 10 / 20 °C, the learning progress (`hours_heating`, `hours_idle`, `hours_needed`) (see [chapter 7](07-optimal-start-stop-and-learning.md) and [How the integration learns](../learning.md#11-where-to-see-it)). |
+| *Heating rate* (sensor) | Minutes per degree with the heating on, at the room and outdoor temperatures now; attributes: the learned heating (`heating_per_hour`), weather curve (`weather_curve`), heat loss (`loss_per_hour`), inertia (`inertia_minutes`), the heat reaching the room now, the minutes per degree at −10 / 0 / 10 / 20 °C, the learning progress (`hours_heating`, `hours_idle`, `hours_needed`) (see [chapter 7](07-optimal-start-stop-and-learning.md) and [How the integration learns](../learning.md#11-where-to-see-it)). |
 | *Cooling rate* (sensor) | How fast the room falls now without heating (empty until learned). |
 | *Heating time* (sensor) | Total heating hours of the room. |
 | *Heat demand* (binary sensor) | Whether the room asks for heat; the `heating` attribute shows whether its source runs. |

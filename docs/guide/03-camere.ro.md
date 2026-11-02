@@ -72,15 +72,17 @@ a fost oprit de mână, rămâne oprit.
 
 ### *Temperatură* sau *Preset*: **Termostat**
 
+Apare doar dacă termostatul nu raportează când încălzește (`hvac_action`) sau e
+indisponibil la configurare; altfel pagina se sare.
+
 | Câmp | Implicit | Ce face |
 | --- | --- | --- |
-| Toleranța termostatului | 0 (0 – 2 °C) | Cât lasă termostatul camera să coboare sub țintă înainte să încălzească (toleranța lui proprie). Învățarea încălzirii pornește de la atât sub țintă. Când nu se cunoaște, rămâne 0. |
 | Histerezis | 0,3 °C | Apare doar dacă termostatul nu raportează când încălzește (`hvac_action`) sau e indisponibil la configurare. Atunci se consideră că încălzește de la histerezis sub temperatura setată până la histerezis peste ea, ca un releu. Se folosește pentru cererea de căldură, centrală, timpul de încălzire, învățare și ca toleranță a opririi anticipate. |
 
 ### *Temperatură* cu forțare: **Forțarea TRV**
 
-Cu forțarea, pagina *Termostat* nu mai apare: toleranța termostatului și
-toleranța opririi anticipate nu se folosesc, histerezisul le ține locul.
+Cu forțarea, pagina *Termostat* nu mai apare: toleranța opririi anticipate nu
+se folosește, histerezisul îi ține locul.
 
 Un TRV măsoară temperatura lângă calorifer, unde e mai cald decât în cameră, așa
 că se poate închide înainte să se încălzească camera. Cu *Forțează temperatura

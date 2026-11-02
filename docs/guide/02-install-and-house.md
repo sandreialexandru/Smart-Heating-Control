@@ -84,12 +84,9 @@ uses every option of the house.
   - *Minimum on time* and *Minimum off time* (0 by default, no wait): set
     them (e.g. a few minutes) when the relay starts a boiler without its own
     anti-cycling, or to spare a mechanical relay; 0 suits electric heaters.
-- **Thermostat** (other thermostats commanded by *Temperature* or *Preset*):
-  - *Thermostat tolerance* (0 by default): how far below the target the
-    thermostat lets the room fall before heating. Matters for the learning
-    ([chapter 7](07-optimal-start-stop-and-learning.md)).
-  - *Hysteresis*: only when the thermostat does not report when it heats (no
-    `hvac_action`). The integration then counts it as heating from hysteresis
+- **Thermostat** (other thermostats commanded by *Temperature* or *Preset*),
+  only when the thermostat does not report when it heats (no `hvac_action`):
+  - *Hysteresis*. The integration then counts it as heating from hysteresis
     below its set temperature to hysteresis above it.
 - **Generic Thermostat**: no step, GT has its own settings.
 

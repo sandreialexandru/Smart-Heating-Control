@@ -155,8 +155,8 @@ nimic:
 - **Încălzire**: sursa, apoi dispozitivele ei (și comanda pentru alte
   termostate), apoi setările comenzii: histerezis și timpi minimi pentru relee
   și control on / off (releele au nevoie și de un senzor de temperatură în
-  cameră), toleranța termostatului pentru comenzile prin temperatură / preset,
-  nimic pentru Generic Thermostat.
+  cameră), histerezisul pentru comenzile prin temperatură / preset doar când
+  termostatul nu raportează `hvac_action`, nimic pentru Generic Thermostat.
 - **Camere**: calibrarea TRV și mișcarea robinetelor doar pentru TRV-uri;
   temperatura fixă pentru *aproape* doar cu această alegere; agregarea doar cu
   mai mulți senzori de temperatură; timpul de ocupare doar cu senzori de
@@ -241,10 +241,17 @@ fără Generic Thermostat, temperaturile nivelurilor (numere).
 
 Fiecare cameră își învață un mic model fizic, continuu, cu și fără încălzire:
 
-**creștere pe oră = încălzire × q − pierdere × (cameră − afară)**
+**creștere pe oră = (încălzire − curbă × afară) × q − pierdere × (cameră − afară)**
 
 - **Încălzirea** (`heating_per_hour`): °C pe oră adăugate de încălzire la toată
-  căldura.
+  căldura, la 0 °C afară.
+- **Curba de temperatură** (`weather_curve`): câte °C pe oră în plus adaugă
+  încălzirea pentru fiecare °C mai frig afară: pozitivă la o centrală cu
+  compensare după exterior, negativă la o pompă de căldură care dă mai puțin
+  la ger, 0 la o temperatură fixă a apei sau la un radiator electric. Se învață
+  după ce camera a încălzit la temperaturi de afară diferite cu cel puțin 1 °C
+  (abatere standard); până atunci și într-o casă fără temperatură de afară
+  este 0.
 - **Pierderea de căldură** (`loss_per_hour`): partea din diferența interior /
   exterior pierdută pe oră (cu cât e mai frig afară, cu atât mai repede).
 - **Inerția** (`inertia_minutes`): q, partea din încălzire care ajunge în
@@ -253,7 +260,7 @@ Fiecare cameră își învață un mic model fizic, continuu, cu și fără înc
   și mai dau căldură după oprire. Se învață, nu se setează: zece candidați
   (0 – 240 de minute) se învață împreună și se folosește cel care prezice cel
   mai bine camera.
-- Fiecare **30 de minute** de măsurători sunt o ecuație; încălzirea și
+- Fiecare **30 de minute** de măsurători sunt o ecuație; încălzirea, curba și
   pierderea sunt soluția ei prin **metoda celor mai mici pătrate**. Intervalele
   mai vechi contează mai puțin (pe jumătate după 7 zile), deci modelul urmează
   o cameră care se schimbă; un interval departe de ce așteaptă modelul (peste
@@ -299,7 +306,7 @@ cameră). Graficul din card arată aceste perioade.
 
 Senzorul *Viteză de încălzire* arată **minutele pe grad** cu încălzirea
 pornită, la temperatura camerei și cea de afară de acum; atributele arată
-modelul (`heating_per_hour`, `loss_per_hour`, `constant_loss`,
+modelul (`heating_per_hour`, `weather_curve`, `loss_per_hour`, `constant_loss`,
 `inertia_minutes`, `heat_reaching_now`, `error_per_hour`), minutele pe grad la
 −10 / 0 / 10 / 20 °C afară și progresul învățării (`hours_heating`,
 `hours_idle`, `hours_needed`). Pornirea anticipată folosește același model. Cu *Camere necesare pentru pornirea sursei* mai

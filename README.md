@@ -143,8 +143,8 @@ then asks only for the values they need, and is skipped when nothing applies:
 - **Heating**: the source, then its devices (and the command for other
   thermostats), then the command settings: hysteresis and minimum times for
   relays and on / off control (relays also need a room temperature sensor),
-  the thermostat tolerance for temperature / preset commands, nothing for
-  Generic Thermostat.
+  the hysteresis for temperature / preset commands only when the thermostat
+  does not report `hvac_action`, nothing for Generic Thermostat.
 - **Rooms**: TRV calibration and valve exercise only for TRVs; the fixed
   *nearby* temperature only with that choice; aggregation only with several
   temperature sensors; occupancy time only with occupancy sensors; window
@@ -225,9 +225,16 @@ Thermostat, the level temperatures (numbers).
 Each room learns a small physical model of itself, continuously, with and
 without heating:
 
-**rise per hour = heating × q − loss × (room − outdoor)**
+**rise per hour = (heating − curve × outdoor) × q − loss × (room − outdoor)**
 
-- **Heating** (`heating_per_hour`): °C per hour the heating adds at full heat.
+- **Heating** (`heating_per_hour`): °C per hour the heating adds at full heat,
+  at 0 °C outdoors.
+- **Weather curve** (`weather_curve`): how many °C per hour more the heating
+  adds for each °C colder outdoors: positive for a boiler with outdoor
+  compensation, negative for a heat pump that gives less in the cold, 0 for a
+  fixed water temperature or an electric heater. Learned once the room has
+  heated at outdoor temperatures at least 1 °C apart (standard deviation);
+  0 until then and in a house without an outdoor temperature.
 - **Heat loss** (`loss_per_hour`): the part of the inside / outside difference
   lost per hour (colder outside, faster).
 - **Inertia** (`inertia_minutes`): q, the part of the heating that reaches the
@@ -235,8 +242,8 @@ without heating:
   the radiators or the floor warm up first after a start and keep giving heat
   after a stop. It is learned, not set: ten candidates (0 – 240 minutes) are
   learned together and the one that predicts the room best is used.
-- Every **30 minutes** of measurements is one equation; heating and loss are
-  its **least squares** fit. Older stretches count less (half after 7 days),
+- Every **30 minutes** of measurements is one equation; heating, curve and
+  loss are its **least squares** fit. Older stretches count less (half after 7 days),
   so the model follows a room that changes; a stretch far from what the model
   expects (more than 2.5 times the usual difference: a door left open,
   cooking) counts less.
@@ -279,7 +286,7 @@ at least one room heats). The chart of the card shows these periods.
 
 The *Heating rate* sensor shows the **minutes per degree** with the heating on,
 at the room and outdoor temperatures of now; its attributes show the model
-(`heating_per_hour`, `loss_per_hour`, `constant_loss`, `inertia_minutes`,
+(`heating_per_hour`, `weather_curve`, `loss_per_hour`, `constant_loss`, `inertia_minutes`,
 `heat_reaching_now`, `error_per_hour`), the minutes per degree at
 −10 / 0 / 10 / 20 °C outdoors and the learning progress (`hours_heating`,
 `hours_idle`, `hours_needed`). Optimal start uses the same model. With *Rooms

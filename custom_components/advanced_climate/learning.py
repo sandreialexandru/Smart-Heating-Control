@@ -85,8 +85,9 @@ ROBUST_MIN_WINDOWS = 10
 RIDGE = 0.01
 # The weather curve needs heating stretches whose outdoor temperatures have at
 # least this standard deviation (°C); with less, it cannot be told from the
-# heating itself.
-CURVE_MIN_SPREAD = 2.0
+# heating itself. Chosen by simulation: learning a curve that is not there costs
+# less than missing one that is (docs/learning.md, section 9).
+CURVE_MIN_SPREAD = 1.0
 # With the curve, the heating must stay above zero between these outdoor
 # temperatures (°C), the range of a heating season; otherwise no curve.
 CURVE_CHECK = (-20.0, 20.0)

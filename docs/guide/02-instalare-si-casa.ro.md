@@ -86,12 +86,9 @@ cameră și folosește toate opțiunile casei.
     setează (de exemplu câteva minute) când releul pornește o centrală fără
     protecție proprie la cicluri scurte sau ca să fie cruțat un releu mecanic;
     0 e potrivit pentru radiatoarele electrice.
-- **Termostat** (alte termostate comandate prin *Temperatură* sau *Preset*):
-  - *Toleranța termostatului* (implicit 0): cât lasă termostatul camera să
-    coboare sub țintă înainte să încălzească. Contează pentru învățare
-    ([capitolul 7](07-anticipare-si-invatare.ro.md)).
-  - *Histerezis*: apare doar dacă termostatul nu spune când încălzește (nu
-    are `hvac_action`). Atunci integrarea consideră că încălzește de la
+- **Termostat** (alte termostate comandate prin *Temperatură* sau *Preset*),
+  doar dacă termostatul nu spune când încălzește (nu are `hvac_action`):
+  - *Histerezis*. Atunci integrarea consideră că încălzește de la
     histerezis sub temperatura setată până la histerezis peste ea.
 - **Generic Thermostat**: niciun pas, GT are propriile setări.
 

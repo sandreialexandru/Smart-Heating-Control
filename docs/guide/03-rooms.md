@@ -71,15 +71,17 @@ off, it stays off.
 
 ### *Temperature* or *Preset*: **Thermostat**
 
+Shown only when the thermostat does not report when it heats (`hvac_action`)
+or is unavailable during the setup; otherwise this page is skipped.
+
 | Field | Default | What it does |
 | --- | --- | --- |
-| Thermostat tolerance | 0 (0 – 2 °C) | How far below the target the thermostat lets the room fall before heating (its own tolerance). The heating is learned from rises that start at least this far below the target. If unsure, leave 0. |
 | Hysteresis | 0.3 °C | Only when the thermostat does not report when it heats (`hvac_action`) or is unavailable during the setup. It then counts as heating from hysteresis below its set temperature to hysteresis above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the tolerance of the optimal stop. |
 
 ### *Temperature* with boost: **TRV boost**
 
-With the boost the *Thermostat* page is not shown: the thermostat tolerance and
-the optimal stop tolerance are not used, the hysteresis takes their place.
+With the boost the *Thermostat* page is not shown: the optimal stop tolerance
+is not used, the hysteresis takes its place.
 
 A TRV measures the temperature next to the radiator, which is warmer than the
 room, so it may close before the room is warm. With *Boost TRV temperature while

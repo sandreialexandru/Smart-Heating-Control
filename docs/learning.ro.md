@@ -2,7 +2,8 @@
 
 *[English](learning.md)*
 
-Documentul explică cum învață fiecare cameră cum se încălzește, cum pierde
+Documentul explică cum învață fiecare cameră cum se încălzește, cum se
+schimbă încălzirea cu temperatura de afară (curba de temperatură), cum pierde
 căldură și cât de încet reacționează încălzirea ei (inerția termică), cum se
 calculează numerele și cum sunt folosite pentru **pornirea anticipată**,
 **oprirea anticipată** și **timpul până la țintă** afișat pe card. Fiecare
@@ -33,7 +34,8 @@ devreme. Cât de devreme depinde de cameră: sursa de căldură, caloriferele sa
 încălzirea în pardoseală, izolația, temperatura de afară. În loc să ceară
 aceste valori, fiecare cameră își măsoară propriul comportament și învață din
 el. Nu trebuie setat nimic: și inerția (o pardoseală lentă sau calorifere
-rapide) se învață, nu se alege în configurare.
+rapide) și curba de temperatură a centralei se învață, nu se aleg în
+configurare.
 
 ---
 
@@ -44,12 +46,13 @@ Camera este tratată ca o singură masă termică ce primește căldură de la
 decât afară:
 
 ```
-creștere pe oră = h × q − k × (cameră − afară)
+creștere pe oră = (h − c × afară) × q − k × (cameră − afară)
 ```
 
 | Număr | Nume în atribute | Semnificație |
 |---|---|---|
-| h | `heating_per_hour` | câte °C pe oră adaugă încălzirea când dă toată căldura |
+| h | `heating_per_hour` | câte °C pe oră adaugă încălzirea când dă toată căldura, la 0 °C afară |
+| c | `weather_curve` | câte °C pe oră în plus adaugă încălzirea pentru fiecare °C mai frig afară (*Curba de temperatură* mai jos) |
 | k | `loss_per_hour` | ce parte din diferența interior / exterior se pierde pe oră |
 | q | `heat_reaching_now` | cât din încălzire ajunge acum în cameră, de la 0 (nimic) la 1 (tot) |
 | τ | `inertia_minutes` | cât de încet urmează q încălzirea (inerția termică) |
@@ -65,8 +68,8 @@ q se apropie de 1 (încălzire pornită) sau de 0 (oprită) cu (țintă − q) �
 deci după τ minute q a parcurs circa 63 % din drum (1 − e⁻¹), după 3 × τ circa
 95 %. τ = 0 înseamnă fără inerție: q este 1 imediat ce încălzirea merge.
 
-**Exemplu** (valori presupuse pentru exemplu): h = 2 °C/h, k = 0,05 pe oră,
-τ = 30 de minute. Camera la 19 °C, afară 5 °C, încălzirea ajunsă complet
+**Exemplu** (valori presupuse pentru exemplu): h = 2 °C/h, c = 0 (fără curbă
+de temperatură), k = 0,05 pe oră, τ = 30 de minute. Camera la 19 °C, afară 5 °C, încălzirea ajunsă complet
 (q = 1):
 
 - pierdere: 0,05 × (19 − 5) = **0,7 °C/h**;
@@ -79,6 +82,24 @@ pentru a ridica temperatura, deci fiecare grad durează mai mult: la 20 °C în
 cameră, 60 ÷ (2 − 0,05 × 20) = **60 de minute pe grad** la 0 °C afară,
 60 ÷ (2 − 0,05 × 10) = **40 de minute** la 10 °C.
 
+**Curba de temperatură.** O centrală cu curbă de temperatură (compensare după
+exterior) face apa mai caldă când e mai frig afară, deci caloriferele dau mai
+multă căldură; o pompă de căldură poate da mai puțin la ger; o centrală cu
+temperatura apei fixă sau un radiator electric dă la fel. c învață asta:
+pozitiv când încălzirea dă mai mult la frig, negativ când dă mai puțin, 0 când
+dă la fel. Exemplu: camera de mai sus cu c = 0,05 °C/h pe °C dă
+2 − 0,05 × (−5) = **2,25 °C/h** la −5 °C afară și 2 − 0,05 × 10 = **1,5 °C/h**
+la 10 °C. De la 18 la 21 °C, pornind la rece:
+
+| Afară | fără curbă (c = 0) | cu c = 0,05 |
+|---|---|---|
+| −5 °C | 303 minute | 237 de minute |
+| 5 °C | 186 de minute | 224 de minute |
+| 10 °C | 156 de minute | 217 minute |
+
+Un model fără curbă ar porni cu o oră prea devreme la −5 °C și cu o oră prea
+târziu la 10 °C într-o astfel de casă.
+
 ---
 
 ## 3. Ce se măsoară: intervale de 30 de minute
@@ -88,7 +109,8 @@ Camera este urmărită tot timpul, cu sau fără încălzire. Fiecare **interval
 
 - cât a crescut sau a scăzut camera, pe oră;
 - media lui q pe interval (pentru fiecare τ candidat, secțiunea 5);
-- media diferenței (cameră − afară) pe interval.
+- media diferenței (cameră − afară) pe interval;
+- media lui q × afară pe interval (pentru curba de temperatură).
 
 De ce 30 de minute: destul de lung încât pasul senzorului (de obicei 0,1 °C)
 să fie mic față de schimbare, destul de scurt încât să se vadă un ciclu de
@@ -116,7 +138,7 @@ setată).
 q de la 0,5 la 0,82 (cu τ = 30: 1 − 0,5 × e⁻¹ = 0,82; media 0,68), camera la
 circa 19 °C, afară 5 °C. Creștere: 2 × 0,68 − 0,05 × 14 = 1,36 − 0,7 =
 0,66 °C/h, deci 0,33 °C în cele 30 de minute. Integrarea vede cele 0,33 °C,
-pe 0,68 și pe 14; trebuie să găsească h și k.
+pe 0,68 și pe 14; trebuie să găsească h, c și k.
 
 Nu se păstrează nimic pe interval: doar sumele metodei celor mai mici pătrate
 (secțiunea 4), deci memoria nu crește, iar o repornire păstrează tot ce s-a
@@ -129,20 +151,22 @@ Nu se păstrează nimic pe interval: doar sumele metodei celor mai mici pătrate
 Fiecare interval este o ecuație:
 
 ```
-creșterea măsurată pe oră = h × (q mediu) − k × (cameră − afară, medie)
+creșterea măsurată pe oră = h × (q mediu) − c × (q × afară, medie) − k × (cameră − afară, medie)
 ```
 
-h și k sunt numerele pentru care ecuațiile tuturor intervalelor sunt **cât mai
-aproape** de ce s-a măsurat: suma diferențelor la pătrat este cea mai mică
-(**metoda celor mai mici pătrate**). Două necunoscute dau două ecuații,
-rezolvate după fiecare interval:
+h, c și k sunt numerele pentru care ecuațiile tuturor intervalelor sunt **cât
+mai aproape** de ce s-a măsurat: suma diferențelor la pătrat este cea mai mică
+(**metoda celor mai mici pătrate**). Trei necunoscute dau trei ecuații
+(ecuațiile normale), rezolvate după fiecare interval prin eliminare Gauss:
 
 ```
-h × Σ q²     − k × Σ q·d  = Σ q·r
-h × Σ q·d    − k × Σ d²   = Σ d·r
+h × Σ q²   − c × Σ q·p   − k × Σ q·d   = Σ q·r
+h × Σ q·p  − c × Σ p²    − k × Σ p·d   = Σ p·r
+h × Σ q·d  − c × Σ p·d   − k × Σ d²    = Σ d·r
 ```
 
-(q: q mediu, d: media cameră − afară, r: creșterea pe oră a fiecărui interval.)
+(q: q mediu, p: media q × afară, d: media cameră − afară, r: creșterea pe oră a
+fiecărui interval.)
 
 **Intervalele mai vechi contează mai puțin.** Un interval își păstrează
 ponderea o săptămână, apoi contează pe jumătate, după două săptămâni un sfert
@@ -159,15 +183,32 @@ obișnuită contează cu o pondere proporțional mai mică (la de 5 ori diferen�
 obișnuită: pe jumătate). Un astfel de interval contează totuși puțin, deci
 când camera s-a schimbat cu adevărat modelul o urmează.
 
-**O tragere foarte mică spre valoarea implicită** (1 °C/h, fără pierdere), cât
+**O tragere foarte mică spre valoarea implicită** (1 °C/h, fără curbă, fără
+pierdere), cât
 circa 1 % dintr-un interval, împiedică primele intervale să dea numere
 aberante; după o zi nu mai contează.
 
 **Valori imposibile:**
 
 - o **pierdere negativă** (camera s-ar încălzi singură): pierderea devine 0 și
-  se potrivește doar încălzirea;
+  restul se potrivește din nou;
+- o **curbă de temperatură care n-ar mai lăsa încălzire** (h − c × afară zero
+  sau mai puțin) la −20 °C sau la 20 °C afară, intervalul unui sezon de
+  încălzire: curba devine 0 și restul se potrivește din nou;
 - o **încălzire de zero sau mai puțin**: acel candidat nu se folosește.
+
+**Când se învață curba.** Curba se poate deosebi de încălzire doar dacă
+camera a încălzit la temperaturi de afară diferite. Se folosește după ce
+temperaturile de afară ale intervalelor cu încălzire au o abatere standard de
+cel puțin **1 °C** (de exemplu o zi și o noapte la ±1,5 °C distanță); până
+atunci e 0. De ce 1 °C: într-o simulare (10 zile, afară 5 °C cu o variație
+zilnică, predicții până la −10 °C), o casă cu o curbă de 0,05 °C/h pe °C a
+greșit cu până la 540 de minute cât timp curba nu era învățată, iar o casă
+fără curbă, cu o curbă mică greșită învățată, a greșit cu până la 90 de
+minute. Cu 1 °C curba primei case s-a învățat (eroare de cel mult 8 minute)
+când temperaturile ei de afară au avut o abatere de 1,5 °C; sub 1 °C o curbă
+greșită a ajuns la 330 de minute. În câteva săptămâni de iarnă temperaturile
+de afară variază mult mai mult de atât.
 
 ---
 
@@ -180,8 +221,8 @@ aberante; după o zi nu mai contează.
 0, 10, 20, 30, 45, 60, 90, 120, 180, 240 de minute
 ```
 
-Pentru fiecare candidat q se urmărește cu τ-ul lui, iar h și k se potrivesc ca
-în secțiunea 4. Înainte de a învăța dintr-un interval, fiecare candidat îl
+Pentru fiecare candidat q se urmărește cu τ-ul lui, iar h, c și k se potrivesc
+ca în secțiunea 4. Înainte de a învăța dintr-un interval, fiecare candidat îl
 **prezice**; se folosește candidatul cu cea mai mică eroare pătratică medie de
 predicție (uitată la fel ca intervalele). Diagnosticul îi arată pe toți zece,
 cu erorile lor.
@@ -210,7 +251,7 @@ fiecare. Sunt necesare amândouă: doar cu încălzire, încălzirea și pierder
 se pot deosebi. Aceste numărători se uită la fel ca intervalele.
 
 Până atunci se folosește valoarea implicită: **1 °C pe oră (60 de minute pe
-grad), fără pierdere, fără inerție**, iar oprirea anticipată nu se calculează
+grad), fără curbă, fără pierdere, fără inerție**, iar oprirea anticipată nu se calculează
 (se folosește *Oprirea anticipată maximă* a camerei ca atare). Într-o cameră
 locuită cele 4 + 4 ore se adună de obicei în prima zi.
 
@@ -272,7 +313,8 @@ schimbare, din aceeași simulare.
 Fără senzor de exterior și fără entitate meteo, pierderea nu poate depinde de
 temperatura de afară: se învață ca **un număr constant de °C pe oră**
 (`constant_loss: true`, `loss_per_hour` în °C pe oră). Este pierderea medie a
-ultimelor săptămâni; zilele mai reci nu se văd. Oprirea anticipată are nevoie
+ultimelor săptămâni; zilele mai reci nu se văd. Nici curba de temperatură nu
+se învață (are nevoie de temperatura de afară). Oprirea anticipată are nevoie
 de o temperatură de afară și nu se face.
 
 Când se adaugă sau se elimină o sursă de temperatură de afară, modelul se
@@ -300,35 +342,41 @@ minut). Din ziua 8, în fiecare dimineață la 06:00 se prezice timpul până la
 21 °C cu temperatura medie de afară a încălzirii (o prognoză perfectă) și se
 compară cu cel real.
 
-| Cameră | model folosit după | h / k / τ învățate | eroare: medie / cea mai mare (minute) |
+**Fără curbă de temperatură:**
+
+| Cameră | model folosit după | h / c / k / τ învățate | eroare: medie / cea mai mare (minute) |
 |---|---|---|---|
-| Apartament izolat | 0,4 zile | 1,59 / 0,035 / 20 | 2 / 8 |
-| Casă obișnuită | 0,5 zile | 2,78 / 0,070 / 30 | 2 / 5 |
-| Casă veche | 0,8 zile | 3,76 / 0,100 / 20 | 9 / 16 |
-| Încălzire în pardoseală | 0,7 zile | 1,60 / 0,040 / 180 | 2 / 9 |
+| Apartament izolat | 0,4 zile | 1,59 / −0,001 / 0,035 / 20 | 2 / 8 |
+| Casă obișnuită | 0,5 zile | 2,78 / 0,000 / 0,070 / 30 | 2 / 5 |
+| Casă veche | 0,8 zile | 3,75 / −0,008 / 0,100 / 20 | 9 / 18 |
+| Încălzire în pardoseală | 0,7 zile | 1,60 / −0,001 / 0,040 / 180 | 2 / 7 |
 
-La casa veche h și k au ieșit mai mici în aceeași proporție (3,76 ÷ 0,100 ≈
-4,5 ÷ 0,12): camera vede rar diferențele mari care le-ar deosebi, iar
-predicțiile rămân apropiate.
+Curba a ieșit aproape de 0, cum trebuie. La casa veche h și k au ieșit mai mici
+în aceeași proporție (3,75 ÷ 0,100 ≈ 4,5 ÷ 0,12): camera vede rar diferențele
+mari care le-ar deosebi, iar predicțiile rămân apropiate.
 
-**Cu curbă de temperatură** (centrala dă mai multă căldură când e mai frig:
-aici h este cu 3 % mai mare pentru fiecare °C sub 5 °C afară), modelul, care
-are un singur h, este mai puțin exact:
+**Cu curbă de temperatură** (centrala dă cu 3 % mai multă căldură pentru
+fiecare °C sub 5 °C afară: încălzire = putere × (1 + 0,03 × (5 − afară)) =
+1,15 × putere − 0,03 × putere × afară, deci h adevărat este 1,15 × putere, iar
+c adevărat 0,03 × putere):
 
-| Cameră, cu curbă de temperatură | eroare: medie / cea mai mare (minute) |
-|---|---|
-| Apartament izolat | 28 / 56 |
-| Casă obișnuită | 22 / 52 |
-| Casă veche | 16 / 38 |
-| Încălzire în pardoseală | 42 / 122 |
+| Cameră, cu curbă | h / c adevărate | h / c învățate | eroare cu curba învățată: medie / cea mai mare | eroare fără curbă (înainte): medie / cea mai mare |
+|---|---|---|---|---|
+| Apartament izolat | 1,84 / 0,048 | 1,82 / 0,047 | 4 / 6 | 28 / 56 |
+| Casă obișnuită | 3,22 / 0,084 | 2,76 / 0,062 | 8 / 15 | 22 / 52 |
+| Casă veche | 5,17 / 0,135 | 4,22 / 0,094 | 7 / 14 | 16 / 38 |
+| Încălzire în pardoseală | 1,84 / 0,048 | 1,84 / 0,048 | 5 / 11 | 42 / 122 |
+
+(Erori în minute. La casa obișnuită și la cea veche h, c și k au ieșit mai mici
+împreună, din motivul de mai sus.)
 
 ---
 
 ## 10. Limite
 
-- **O curbă de temperatură** la centrală schimbă puterea încălzirii cu
-  temperatura de afară; modelul are un singur h, o medie pe ultimele
-  săptămâni (secțiunea 9).
+- **Curba de temperatură este o linie dreaptă.** O centrală a cărei curbă se
+  îndoaie sau care ajunge la temperatura maximă a apei la ger se învață ca
+  linia dreaptă cea mai apropiată, pe ultimele săptămâni.
 - **Diferențele de la o zi la alta nu se învață.** Soarele, oamenii, gătitul
   sau pereții mai reci după o absență lungă schimbă camera; metoda celor mai
   mici pătrate le face media.
@@ -353,7 +401,8 @@ complet pornită, la temperatura camerei și cea de afară de acum (`min/°C` sa
 | Atribut | Semnificație |
 |---|---|
 | `learned` | se folosește modelul învățat (secțiunea 6) |
-| `heating_per_hour` | h |
+| `heating_per_hour` | h (la 0 °C afară) |
+| `weather_curve` | c (°C pe oră în plus pentru fiecare °C mai frig afară) |
 | `loss_per_hour` | k (pe oră sau, cu `constant_loss`, °C pe oră) |
 | `constant_loss` | pierderea este constantă (secțiunea 8) |
 | `inertia_minutes` | τ |
@@ -380,4 +429,5 @@ implicită dedesubt) și *Pierdere de căldură învățată* (*scade 0,70 °C/h
 după ce se învață), cu butonul **Resetează**.
 
 **Diagnostic** – `thermal_model` cu toate numerele modelului și cei zece
-candidați de inerție.
+candidați de inerție (fiecare cu h, c, k, eroarea și `outdoor_spread`, abaterea
+temperaturilor de afară ale încălzirii lui, secțiunea 4).

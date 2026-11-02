@@ -26,9 +26,13 @@ de o temperatură de afară (senzor sau entitate meteo).
 
 Nu trebuie introdus nimic despre casă (calorifere, izolație, centrală,
 încălzire în pardoseală). Camera **se urmărește singură** tot timpul, cu și fără
-încălzire, și învață trei numere:
+încălzire, și învață patru numere:
 
 - **Încălzirea**: câte °C pe oră adaugă încălzirea când dă toată căldura.
+- **Curba de temperatură**: cu cât dă încălzirea mai mult (sau mai puțin) când
+  e mai frig afară. O centrală cu compensare după exterior încălzește apa mai
+  tare la frig; o pompă de căldură poate da mai puțin; o temperatură fixă a
+  apei sau un radiator electric dă la fel, iar curba se învață 0.
 - **Pierderea de căldură**: cât de repede se răcește camera, proporțional cu
   cât e mai caldă decât afară (cu cât e mai frig afară, cu atât mai repede).
 - **Inerția**: cât de încet reacționează încălzirea. După pornire se încălzesc
@@ -36,7 +40,8 @@ Nu trebuie introdus nimic despre casă (calorifere, izolație, centrală,
   căldură o vreme. Calorifere: de obicei 10 – 30 de minute; încălzire în
   pardoseală: ore. Nu se setează nimic: se învață.
 
-**Exemplu** (valori presupuse pentru exemplu): încălzire 2 °C pe oră, pierdere
+**Exemplu** (valori presupuse pentru exemplu): încălzire 2 °C pe oră, fără
+curbă de temperatură, pierdere
 0,05 pe oră pentru fiecare grad de diferență, inerție 30 de minute. La 19 °C în
 cameră și 5 °C afară, camera pierde 0,05 × (19 − 5) = 0,7 °C pe oră, deci cu
 încălzirea complet pornită urcă 2 − 0,7 = 1,3 °C pe oră. De la 18 la 21 °C,
@@ -60,7 +65,7 @@ folosește o valoare sigură: 60 de minute pe grad, fără inerție. În card ap
 60 min/1°C*.
 
 **Fără temperatură de afară** în casă, pierderea de căldură se învață ca un
-număr constant de grade pe oră.
+număr constant de grade pe oră, iar curba de temperatură nu se învață.
 
 ## Pornirea anticipată, pas cu pas
 

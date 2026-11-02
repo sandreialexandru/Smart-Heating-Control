@@ -14,15 +14,19 @@ alert, and the code split in smaller parts. Install it only to help test.
 
 - **New learning: a physical model of every room.** Instead of heating and
   cooling episodes, each room learns, continuously and with or without
-  heating, how fast its heating warms it, how fast it loses heat to the
-  outdoors and its **thermal inertia** (how slowly the heating reacts: the
+  heating, how fast its heating warms it, how that changes with the outdoor
+  temperature (the **weather curve** of a boiler with outdoor compensation, or
+  a heat pump that gives less in the cold; 0 when there is none), how fast it
+  loses heat to the outdoors and its **thermal inertia** (how slowly the heating reacts: the
   boiler, the radiators or a floor heating warm up first after a start and keep
   giving heat after a stop). The inertia is learned, nothing has to be set.
   Optimal start, optimal stop, the time to target and the expected temperature
   at the change are a minute by minute simulation of that model. Older
   measurements count less (half after 7 days), so the model follows a house
   that changes; measurements far from the model (a door left open, cooking)
-  count less. See [How the integration learns](docs/learning.md).
+  count less. In simulations of houses with a weather curve the mean error of
+  the optimal start fell from 16 – 42 to 4 – 8 minutes. See
+  [How the integration learns](docs/learning.md).
 - **The learning starts again after the update.** The saved episodes do not
   fit the model and are discarded. Until a room has seen 4 hours with heating
   and 4 without (usually within the first day) the default is used: 60 minutes
@@ -33,6 +37,10 @@ alert, and the code split in smaller parts. Install it only to help test.
   loss, inertia, the heat reaching the room now, the learning progress); the
   episode attributes are gone. The card shows *45 min/°C now · inertia 30 min*,
   or the learning progress.
+- **The *Thermostat tolerance* field is removed** (thermostats commanded by
+  temperature or preset): it only marked where a heating episode started, and
+  the new learning has no episodes. The *Thermostat* page now appears only for
+  a thermostat that does not report `hvac_action`, to ask for its hysteresis.
 - **Mold risk alert** (a warning) for a room with the new optional *Humidity
   sensor* (rooms step *Sensors*): the humidity at the coldest wall, from the
   room temperature and humidity and the outdoor temperature (DIN 4108-2

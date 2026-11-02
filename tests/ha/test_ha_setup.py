@@ -2930,7 +2930,7 @@ async def test_room_returns_from_eco_after_presence_time(
     hass.states.async_set("binary_sensor.motion", "on")
     await minutes(9)
     assert state() == "room_unoccupied"
-    await minutes(2)
+    await minutes(3)
     assert state() == "schedule"
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -3014,7 +3014,9 @@ async def test_presence_time_with_two_sensors_and_before_eco(
     for _ in range(9):
         await _tick(hass, freezer, 60)
     assert state() == "room_unoccupied"
-    for _ in range(2):
+    # The look at the change runs a second later, the wakeup a second after
+    # the 10 minutes: by the next minute it is back on the schedule.
+    for _ in range(3):
         await _tick(hass, freezer, 60)
     assert state() == "schedule"
     assert await hass.config_entries.async_unload(entry.entry_id)

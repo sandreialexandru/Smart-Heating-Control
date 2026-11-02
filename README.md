@@ -396,7 +396,7 @@ type: custom:smart-heating-control-card
 | `rooms` | all | List of room *Decision* sensors to show |
 | `show_house` | `true` | Presence and people (round badges in the colour of where they are), tiles for the outdoor average (over the *Average over* hours), season, heat demand and heating time, mode (Auto / Vacation / Off / Summer), and a row of buttons: Pause and Guests (on / off; guest mode shows a band at the top), Vacation (opens the dates), Reevaluate, Automatic (clears all manual changes) |
 | `show_rooms` | `true` | The rooms |
-| `show_timeline` | `true` | A **Chart** button in every room that opens, in a window over the dashboard, the chart of the last 24 hours and the next 12: room temperature, target (colored by level), planned levels and the periods when the room heated. Hover, touch or drag on the chart to read the values. Zoom with the buttons (1h, 6h, −, +), double-click, pinch or Ctrl + wheel down to 20 minutes; when zoomed, drag the window in the bar under the chart (or tap a place on it) to move in time |
+| `show_timeline` | `true` | A **Chart** button in every room that opens, in a window over the dashboard, the chart: 7 days of history and the next 12 hours, opened on the last 24 hours and the next 12: room temperature, the temperature the learned model predicts ahead, target (colored by level), planned levels and the periods when the room heated. Hover, touch or drag on the chart to read the values (in an opaque box). Zoom with the buttons (1h, 6h, −, +), double-click, pinch or Ctrl + wheel, from 20 minutes up to the 7 days (⤢ goes back); move through the history by dragging the window in the navigation bar under the chart (shown while the mouse is over the chart or a finger is on it) or by scrolling sideways |
 | `show_quick_override` | `true` | Set a level or a temperature for a number of hours (empty = the configured rule) |
 | `show_levels` | `true` | Level temperatures (rooms without Generic Thermostat, fixed *nearby* temperature) |
 | `show_details` | `true` | Room and target temperature, learned heating, heating time, active adjustments, level temperatures |
@@ -442,10 +442,12 @@ at once), and a *Lock* button for the child lock of the room.
   *Pause* switch stays the only control).
 - **Details**, grouped: the alerts of the room and of the house (first, in the
   language of the card); *Temperatures* (room, target, thermostat preset,
+  humidity of the air and at the coldest wall with a humidity sensor,
   adjustments, level temperatures); *Schedule* (next optimal start / stop,
-  heating time); *Learning* (heating: minutes per degree now and the inertia,
-  or the learning progress; heat loss: how fast the room falls now; a
-  **Reset** button that asks to confirm with a second click).
+  heating time); *Learning* (its state or progress, with a **Reset** button
+  that asks to confirm with a second click; once learned the heating: minutes
+  per degree now and the inertia; the weather curve; the heat loss: how fast
+  the room falls now).
 - **Manual change**: where it was made (card / service or on the device), until
   when, *applies after: …* while a higher rule keeps a change from the card off
   the devices, and *comes back after: …* while a higher rule interrupts it.

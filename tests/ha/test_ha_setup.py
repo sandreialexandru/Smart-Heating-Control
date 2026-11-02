@@ -91,6 +91,9 @@ async def test_relay_room(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -
     assert heating.attributes["learned"] is False
     assert heating.attributes["inertia_minutes"] == 0
     assert heating.attributes["hours_needed"] == 4.0
+    # The model for the card's prediction: only once learned.
+    assert heating.attributes["model"] is None
+    assert heating.attributes["weather_curve"] == 0.0
 
     # The learning can be reset from its button.
     room = next(iter(entry.runtime_data.rooms.values()))
@@ -2812,6 +2815,7 @@ async def test_mold_alert_needs_humidity_and_outdoor(
     # Room 18 °C, outdoor 0 °C: the coldest wall is 12.6 °C, about 99 % humidity.
     await _tick(hass, freezer, 15)
     assert hass.states.get("sensor.bedroom_decision").attributes["surface_humidity"] > 80
+    assert hass.states.get("sensor.bedroom_decision").attributes["humidity"] == 70.0
     for _ in range(30):
         await _tick(hass, freezer, 60)
     assert f"mold_{room.id}" not in house.active_alerts  # not yet an hour

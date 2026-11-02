@@ -114,9 +114,14 @@ sections:
 
 Opened with the **Chart** button in a window over the dashboard, so it has room
 (its history is loaded only then); one room at a time. It closes with the ✕, a
-click outside it or Esc. The last 24 hours and the next 12:
+click outside it or Esc. It keeps **7 days** of history and the next 12 hours,
+and opens on the last 24 hours and the next 12:
 
 - the room temperature;
+- the **predicted temperature** ahead (dotted), once the room has learned: the
+  learned model of the room (heating, weather curve, heat loss, inertia)
+  simulated minute by minute along the planned target, with the hourly
+  forecast;
 - the target, as a step line, coloured by level;
 - the planned levels;
 - the periods the room heated, in a lane of their own;
@@ -124,10 +129,14 @@ click outside it or Esc. The last 24 hours and the next 12:
   dashed) and the cutoff as a dotted line;
 - the next optimal start / stop, as a shaded period.
 
-Values are read with the mouse, by tapping or by dragging on the chart. Zoom
-with the buttons (1h, 6h, −, +), double click, pinch or Ctrl + wheel, down to 20
-minutes; when zoomed, move in time by dragging the window in the bar below the
-chart.
+Values are read with the mouse, by tapping or by dragging on the chart, in an
+opaque box (also with themes whose cards are transparent). Zoom with the
+buttons (1h, 6h, −, +), double click, pinch or Ctrl + wheel, from 20 minutes up
+to the 7 days; **⤢** goes back to the last 24 hours and the next 12. Move through
+the history by dragging the window in the **navigation bar** below the chart, or
+by scrolling sideways (a touchpad, or Shift + wheel). The navigation bar shows
+while the mouse is over the chart, or while a finger is on it and for a moment
+after, then hides again.
 
 The planned part shows what will happen: the schedule; a manual change with a
 duration until its end; a planned vacation until the preheating; a calendar
@@ -161,14 +170,16 @@ Every profile with its days and an on / off switch:
 In groups:
 
 - the **alerts** of the room and the house, first;
-- **Temperatures**: the room, the target, the thermostat preset, the active
-  adjustments, the level temperatures;
+- **Temperatures**: the room, the target, the thermostat preset, the
+  **humidity** (with a humidity sensor: of the air and at the coldest wall,
+  marked *mold risk* from 80 %), the active adjustments, the level temperatures;
 - **Schedule**: the next optimal start / stop, the heating time;
-- **Learning**: the heating (minutes per degree now and the inertia, e.g.
-  *45 min/°C now · inertia 30 min*; while learning, the hours seen with and
-  without heating out of the 4 needed, and the default under it) with a
-  **Reset** button (with a second click to confirm), and the heat loss (how
-  fast the room falls now, once learned).
+- **Learning**: its state (*learned* with the usual error of the model, or the
+  hours seen with and without heating out of the 4 needed, with the default
+  under it) with a **Reset** button (with a second click to confirm); once
+  learned, the heating (minutes per degree now and the inertia, e.g. *45 min/°C
+  now · inertia 30 min*), the **weather curve** (e.g. *+0.050 °C/h for each °C
+  colder outdoors*, or *none*) and the heat loss (how fast the room falls now).
 
 With a manual change, the card shows where it was made (card / service or on the
 device), until when, *applies after: …* or *returns after: …*.

@@ -227,6 +227,7 @@ class DecisionSensor(RoomEntity, SensorEntity):
             "levels",
             "climate_entities",
             "current_temperature",
+            "humidity",
             "surface_humidity",
             "day_boundary",
             "schedule_editable",
@@ -305,7 +306,8 @@ class DecisionSensor(RoomEntity, SensorEntity):
             "alerts": room.house.alerts_for(room),
             "optimal_stop_cancelled": room.stop_cancelled,
             "rate_learned": room.learner.model.learned,
-            # Humidity at the coldest wall (mold risk), with a humidity sensor.
+            # Humidity of the room and at the coldest wall (mold risk), with a humidity sensor.
+            "humidity": room.humidity,
             "surface_humidity": room.surface_humidity,
             "device_levels": room.device_levels,
             "heat_demand": room.heat_demand,
@@ -388,7 +390,14 @@ class HeatingRateSensor(RoomEntity, SensorEntity):
 
     # Values that change at every look are not recorded (only the state is).
     _unrecorded_attributes = frozenset(
-        {"minutes_per_degree", "heat_reaching_now", "error_per_hour", "hours_heating", "hours_idle"}
+        {
+            "minutes_per_degree",
+            "heat_reaching_now",
+            "error_per_hour",
+            "hours_heating",
+            "hours_idle",
+            "model",
+        }
     )
 
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -448,6 +457,18 @@ class HeatingRateSensor(RoomEntity, SensorEntity):
             "hours_heating": round(learner.heat_windows * hours, 1),
             "hours_idle": round(learner.idle_windows * hours, 1),
             "hours_needed": LEARNED_WINDOWS * hours,
+            # The model in °C, for the prediction drawn by the card.
+            "model": {
+                "h": model.h,
+                "c": model.c,
+                "k": model.k,
+                "tau": model.tau,
+                "q": round(learner.q, 4),
+                "constant_loss": model.constant_loss,
+                "outdoor_mean": model.outdoor_mean,
+            }
+            if model.learned
+            else None,
         }
 
 

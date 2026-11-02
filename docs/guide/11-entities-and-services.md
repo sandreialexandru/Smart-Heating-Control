@@ -77,6 +77,7 @@ the house or the room, e.g. `sensor.bedroom_decision`.
 | `time_to_target` | Minutes to the target |
 | `next_estimate` | The next optimal start / stop: `kind`, `at`, `preset`, `minutes`, `starts_at`, `started_at`, `outdoor`, `outdoor_source`, `learned`, `sent_as`, `temperature` |
 | `stop_forecast` | The expected temperature at the change, during an optimal stop |
+| `humidity` | With a humidity sensor: the humidity of the room (%) |
 | `surface_humidity` | With a humidity sensor and an outdoor temperature: the humidity at the coldest wall (%), for the mold risk alert ([chapter 9](09-windows-manual-safety.md)) |
 | `optimal_stop_cancelled` | Whether the optimal stop was cancelled |
 | `no_heat_reason` | Why a room below its target does not heat |

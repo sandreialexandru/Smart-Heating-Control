@@ -323,6 +323,7 @@ class Room:
         self._unavailable_since: dict[str, datetime] = {}
         # Mold risk: since when the wall surface is humid enough, and its humidity now.
         self._mold_since: datetime | None = None
+        self.humidity: float | None = None
         self.surface_humidity: float | None = None
         self._calibration_written: dict[str, datetime] = {}
         self.sensor_failed = False
@@ -2269,12 +2270,13 @@ class Room:
         """
         house = self.house
         key = f"mold_{self.id}"
+        humidity = float_state(self.hass, self.config.get(CONF_HUMIDITY_SENSOR))
+        self.humidity = humidity if humidity is not None and 0 <= humidity <= 100 else None
         if not self.config.get(CONF_HUMIDITY_SENSOR) or not house.outdoor_configured:
             self.surface_humidity = None
             self._mold_since = None
             house.clear_alert(key)
             return
-        humidity = float_state(self.hass, self.config.get(CONF_HUMIDITY_SENSOR))
         outdoor = house.outdoor_now
         if (
             humidity is None

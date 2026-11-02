@@ -113,9 +113,13 @@ Graficul și secțiunile:
 
 Se deschide cu butonul **Grafic** într-o fereastră peste dashboard, ca să aibă
 loc (istoricul se încarcă doar atunci); câte o cameră pe rând. Se închide cu ✕,
-cu un clic în afara ei sau cu Esc. Ultimele 24 de ore și următoarele 12:
+cu un clic în afara ei sau cu Esc. Păstrează **7 zile** de istoric și
+următoarele 12 ore și se deschide pe ultimele 24 de ore și următoarele 12:
 
 - temperatura camerei;
+- **temperatura prezisă** (punctat), după ce camera a învățat: modelul
+  învățat al camerei (încălzire, curbă de temperatură, pierdere de căldură,
+  inerție) simulat minut cu minut după ținta planificată, cu prognoza orară;
 - ținta, ca linie în trepte, colorată după nivel;
 - nivelurile planificate;
 - perioadele în care camera a încălzit, pe o bandă separată;
@@ -123,10 +127,14 @@ cu un clic în afara ei sau cu Esc. Ultimele 24 de ore și următoarele 12:
   pragul de oprire ca linie punctată;
 - următoarea pornire / oprire anticipată, ca perioadă umbrită.
 
-Valorile se citesc cu mouse-ul, la atingere sau trăgând pe grafic. Zoom cu
-butoanele (1h, 6h, −, +), dublu clic, ciupire sau Ctrl + rotiță, până la 20 de
-minute; când e mărit, deplasarea în timp se face trăgând fereastra din bara de sub
-grafic.
+Valorile se citesc cu mouse-ul, la atingere sau trăgând pe grafic, într-o
+căsuță opacă (și la temele cu carduri transparente). Zoom cu butoanele (1h, 6h,
+−, +), dublu clic, ciupire sau Ctrl + rotiță, de la 20 de minute până la cele 7
+zile; **⤢** revine la ultimele 24 de ore și următoarele 12. Deplasarea prin
+istoric se face trăgând fereastra din **bara de navigare** de sub grafic sau
+derulând lateral (touchpad sau Shift + rotiță). Bara de navigare apare cât
+timp mouse-ul e peste grafic sau cât timp un deget e pe el și încă puțin după,
+apoi dispare.
 
 Partea planificată arată ce se va întâmpla: programul; o modificare manuală cu
 durată până la sfârșitul ei; o vacanță planificată până la preîncălzire; un
@@ -159,14 +167,17 @@ Fiecare profil cu zilele lui și un comutator pornit / oprit:
 Pe grupuri:
 
 - **alertele** camerei și ale casei, primele;
-- **Temperaturi**: camera, ținta, presetul termostatului, ajustările active,
-  temperaturile nivelurilor;
+- **Temperaturi**: camera, ținta, presetul termostatului, **umiditatea** (cu
+  senzor de umiditate: a aerului și la peretele cel mai rece, marcată *risc de
+  mucegai* de la 80 %), ajustările active, temperaturile nivelurilor;
 - **Program**: următoarea pornire / oprire anticipată, timpul de încălzire;
-- **Învățare**: încălzirea (minutele pe grad acum și inerția, de exemplu
-  *45 min/°C acum · inerție 30 min*; în timpul învățării, orele văzute cu și
-  fără încălzire din cele 4 necesare, cu valoarea implicită dedesubt) cu
-  butonul **Resetează** (cu un al doilea clic pentru confirmare), și pierderea
-  de căldură (cât de repede scade camera acum, după ce se învață).
+- **Învățare**: starea ei (*învățat*, cu eroarea obișnuită a modelului, sau
+  orele văzute cu și fără încălzire din cele 4 necesare, cu valoarea implicită
+  dedesubt) cu butonul **Resetează** (cu un al doilea clic pentru confirmare);
+  după ce s-a învățat, încălzirea (minutele pe grad acum și inerția, de exemplu
+  *45 min/°C acum · inerție 30 min*), **curba de temperatură** (de exemplu
+  *+0.050 °C/h pentru fiecare °C mai frig afară* sau *fără*) și pierderea de
+  căldură (cât de repede scade camera acum).
 
 La o modificare manuală, cardul arată unde a fost făcută (card / serviciu sau pe
 dispozitiv), până când, *se aplică după: …* sau *revine după: …*.

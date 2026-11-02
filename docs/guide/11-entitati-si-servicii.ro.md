@@ -77,6 +77,7 @@ Numele entităților sunt date ca în interfața în română. ID-urile încep c
 | `time_to_target` | Minutele până la țintă |
 | `next_estimate` | Următoarea pornire / oprire anticipată: `kind`, `at`, `preset`, `minutes`, `starts_at`, `started_at`, `outdoor`, `outdoor_source`, `learned`, `sent_as`, `temperature` |
 | `stop_forecast` | Temperatura estimată la schimbare, în timpul unei opriri anticipate |
+| `humidity` | Cu senzor de umiditate: umiditatea camerei (%) |
 | `surface_humidity` | Cu senzor de umiditate și temperatură de afară: umiditatea la peretele cel mai rece (%), pentru alerta de risc de mucegai ([capitolul 9](09-ferestre-manual-siguranta.ro.md)) |
 | `optimal_stop_cancelled` | Dacă oprirea anticipată a fost anulată |
 | `no_heat_reason` | De ce nu încălzește o cameră sub țintă |

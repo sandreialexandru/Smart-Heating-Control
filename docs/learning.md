@@ -410,6 +410,7 @@ Attributes:
 | `error_per_hour` | the usual prediction error of a stretch (°C per hour) |
 | `minutes_per_degree` | minutes per degree at −10 / 0 / 10 / 20 °C (14 / 32 / 50 / 68 °F) outdoors |
 | `hours_heating`, `hours_idle`, `hours_needed` | learning progress (section 6) |
+| `model` | the model in °C (h, c, k, τ, q, constant loss, mean outdoor temperature) for the prediction of the card; empty until learned |
 
 **`sensor.<room>_cooling_rate`** – state: how fast the room falls now without
 heating (°C/h, empty until learned); attributes: `learned`, `loss_per_hour`,
@@ -422,11 +423,16 @@ default) and `time_to_target`.
 **`button.<room>_reset_learning`** – forgets the model of the room (also in the
 card *Details*, with a second click to confirm).
 
-**Card, Details** – group *Learning*: *Heating learned* (minutes per degree now
-and the inertia, e.g. *45 min/°C now · inertia 30 min*, or while learning
-*learning… 2 of 4 h with heating, 1 of 4 h without*, with the default under
-it) and *Heat loss learned* (*falls 0.70 °C/h now*, once learned), with the
-**Reset** button.
+**Card, Details** – group *Learning*: *Learning* (*learned · usual error
+±0.12 °C/h*, or while learning *learning… 2 of 4 h with heating, 1 of 4 h
+without*, with the default under it) with the **Reset** button; once learned
+*Heating learned* (minutes per degree now and the inertia, e.g. *45 min/°C now
+· inertia 30 min*), *Weather curve* (*+0.050 °C/h for each °C colder
+outdoors*, or *none*) and *Heat loss learned* (*falls 0.70 °C/h now*).
+
+**Card, chart** – once learned, the predicted temperature for the next 12
+hours (dotted): the model of section 2 simulated minute by minute along the
+planned target (heating while the room is below it), with the hourly forecast.
 
 **Diagnostics** – `thermal_model` with all the numbers of the model and the
 ten inertia candidates (each with its h, c, k, error and `outdoor_spread`, the

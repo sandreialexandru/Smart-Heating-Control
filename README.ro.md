@@ -420,7 +420,7 @@ type: custom:smart-heating-control-card
 | `rooms` | toate | Lista senzorilor *Decizie* ai camerelor de arătat |
 | `show_house` | `true` | Prezența și persoanele (cercuri în culoarea locului unde sunt), plăci pentru media temperaturii de afară (pe orele din *Medie pe*), sezon, cererea de căldură și timpul de încălzire, modul (Auto / Vacanță / Oprit / Vară) și un rând de butoane: Pauză și Oaspeți (pornit / oprit; modul oaspeți arată o bandă sus), Vacanță (deschide datele), Reevaluează, Automat (anulează toate modificările manuale) |
 | `show_rooms` | `true` | Camerele |
-| `show_timeline` | `true` | Un buton **Grafic** în fiecare cameră care deschide, într-o fereastră peste dashboard, graficul ultimelor 24 de ore și al următoarelor 12: temperatura camerei, ținta (colorată după nivel), nivelurile planificate și perioadele în care camera s-a încălzit. Valorile se citesc cu mouse-ul, la atingere sau trăgând pe grafic. Zoom cu butoanele (1h, 6h, −, +), dublu clic, ciupire sau Ctrl + rotiță, până la 20 de minute; când e mărit, deplasarea în timp se face trăgând fereastra din bara de sub grafic (sau atingând un loc pe ea) |
+| `show_timeline` | `true` | Un buton **Grafic** în fiecare cameră care deschide, într-o fereastră peste dashboard, graficul: 7 zile de istoric și următoarele 12 ore, deschis pe ultimele 24 de ore și următoarele 12: temperatura camerei, temperatura prezisă de modelul învățat, ținta (colorată după nivel), nivelurile planificate și perioadele în care camera s-a încălzit. Valorile se citesc cu mouse-ul, la atingere sau trăgând pe grafic (într-o căsuță opacă). Zoom cu butoanele (1h, 6h, −, +), dublu clic, ciupire sau Ctrl + rotiță, de la 20 de minute până la cele 7 zile (⤢ revine); deplasarea prin istoric se face trăgând fereastra din bara de navigare de sub grafic (vizibilă cât timp mouse-ul sau un deget e pe grafic) sau derulând lateral |
 | `show_quick_override` | `true` | Setează un nivel sau o temperatură pentru un număr de ore (gol = regula configurată) |
 | `show_levels` | `true` | Temperaturile nivelurilor (camere fără Generic Thermostat, temperatura fixă pentru *aproape*) |
 | `show_details` | `true` | Temperatura camerei și ținta, încălzirea învățată, timpul de încălzire, ajustările active, temperaturile nivelurilor |
@@ -468,11 +468,12 @@ multe deodată) și un buton *Blocare* pentru blocarea modificărilor în camer�
   rămâne singurul control).
 - **Detalii**, pe grupuri: alertele camerei și ale casei (primele, în limba
   cardului); *Temperaturi* (camera, ținta, presetul termostatului, ajustările,
+  umiditatea aerului și la peretele cel mai rece cu senzor de umiditate,
   temperaturile nivelurilor); *Program* (următoarea pornire / oprire
-  anticipată, timpul de încălzire); *Învățare* (încălzire: minutele pe grad acum
-  și inerția sau progresul învățării; pierdere de căldură: cât de repede scade
-  camera acum; un buton **Resetează** care cere confirmare printr-un al doilea
-  clic).
+  anticipată, timpul de încălzire); *Învățare* (starea sau progresul, cu un
+  buton **Resetează** care cere confirmare printr-un al doilea clic; după ce s-a
+  învățat, încălzirea: minutele pe grad acum și inerția; curba de temperatură;
+  pierderea de căldură: cât de repede scade camera acum).
 - **Modificare manuală**: unde a fost făcută (card / serviciu sau pe dispozitiv),
   până când, *se aplică după: …* cât timp o regulă de mai sus ține o schimbare
   din card departe de dispozitive și *revine după: …* cât timp o regulă de mai

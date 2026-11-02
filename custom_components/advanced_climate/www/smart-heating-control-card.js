@@ -39,6 +39,11 @@ const PRESET_COLORS = {
 };
 
 const MIN_ZOOM_SPAN = 20 * 60 * 1000; // closest zoom: 20 minutes
+// The chart keeps 7 days of history to scroll back to; it opens on the last 24
+// hours and the next 12 (the plan).
+const HISTORY_DAYS = 7;
+const VIEW_PAST = 24 * 3600 * 1000;
+const VIEW_AHEAD = 12 * 3600 * 1000;
 
 const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
@@ -265,6 +270,18 @@ const TEXT = {
     learn_progress: "learning… {heat} of {need} h with heating, {idle} of {need} h without",
     learn_heat_value: "{rate} now · inertia {tau} min",
     learn_cool_value: "falls {rate} now",
+    learn_state: "Learning",
+    learn_state_done: "learned · usual error ±{err}/h",
+    learn_state_done_short: "learned",
+    learn_curve: "Weather curve",
+    learn_curve_value: "{value} {u}/h for each {u} colder outdoors",
+    learn_curve_none: "none (the heating gives the same at any outdoor temperature)",
+    humidity: "Humidity",
+    humidity_value: "air {air}% · coldest wall {wall}%",
+    humidity_air: "air {air}%",
+    humidity_risk: "mold risk",
+    legend_pred: "Predicted",
+    tip_pred: "predicted",
     origin_card: "card / service",
     origin_device: "on the device",
     back_after: "comes back after: {rule}",
@@ -502,6 +519,18 @@ const TEXT = {
     learn_progress: "se învață… {heat} din {need} h cu încălzire, {idle} din {need} h fără",
     learn_heat_value: "{rate} acum · inerție {tau} min",
     learn_cool_value: "scade {rate} acum",
+    learn_state: "Învățare",
+    learn_state_done: "învățat · eroare obișnuită ±{err}/h",
+    learn_state_done_short: "învățat",
+    learn_curve: "Curba de temperatură",
+    learn_curve_value: "{value} {u}/h pentru fiecare {u} mai frig afară",
+    learn_curve_none: "fără (încălzirea dă la fel la orice temperatură de afară)",
+    humidity: "Umiditate",
+    humidity_value: "aer {air}% · peretele cel mai rece {wall}%",
+    humidity_air: "aer {air}%",
+    humidity_risk: "risc de mucegai",
+    legend_pred: "Prezis",
+    tip_pred: "prezis",
     origin_card: "card / serviciu",
     origin_device: "pe dispozitiv",
     back_after: "revine după: {rule}",
@@ -977,6 +1006,7 @@ class SmartHeatingControlCard extends HTMLElement {
     if (popup) blocks.unshift(popup);
     this._card.className = cfg.compact ? "compact" : "";
     this._patch(this._card, blocks);
+    this._tipColor();
     const dlg = this.shadowRoot.querySelector("dialog.chartpop");
     const modal = (d) => {
       try {
@@ -1036,6 +1066,15 @@ class SmartHeatingControlCard extends HTMLElement {
    * laid over the page background, then over white or black.
    */
   _opaque(dlg) {
+    const color = this._opaqueColor(dlg);
+    if (color) dlg.style.backgroundColor = color;
+  }
+
+  /**
+   * The background of ``el`` made opaque: laid over the page background, then
+   * over white or black (None when it is opaque already).
+   */
+  _opaqueColor(el) {
     const rgba = (color) => {
       const ctx = (this._colorCtx ||= document.createElement("canvas").getContext("2d", { willReadFrequently: true }));
       if (!ctx || !color) return null;
@@ -1047,15 +1086,25 @@ class SmartHeatingControlCard extends HTMLElement {
       return [r, g, b, a / 255];
     };
     const over = (top, base) => top.slice(0, 3).map((c, i) => Math.round(c * top[3] + base[i] * (1 - top[3])));
-    const style = getComputedStyle(dlg);
+    const style = getComputedStyle(el);
     const own = rgba(style.backgroundColor) || [0, 0, 0, 0];
-    if (own[3] >= 0.99) return;
+    if (own[3] >= 0.99) return null;
     const dark = this._hass?.themes?.darkMode ?? matchMedia("(prefers-color-scheme: dark)").matches;
     let base = dark ? [28, 28, 28] : [255, 255, 255];
     const page = rgba(style.getPropertyValue("--primary-background-color").trim());
     if (page && page[3] > 0) base = over(page, base);
     const [r, g, b] = over(own, base);
-    dlg.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+
+  /** The info box of the charts is opaque too, whatever the theme (``--ac-opaque``). */
+  _tipColor() {
+    if (!this._card) return;
+    const own = getComputedStyle(this._card).backgroundColor;
+    if (own === this._tipBase) return;
+    this._tipBase = own;
+    const color = this._opaqueColor(this._card) || own;
+    this.style.setProperty("--ac-opaque", color);
   }
 
   /** Close the chart window. */
@@ -1879,7 +1928,11 @@ class SmartHeatingControlCard extends HTMLElement {
     return cached && cached.temp ? cached : null;
   }
 
-  /** Fetch the last 24 h of room temperature, target and heat demand. */
+  /**
+   * Fetch the room temperature, target, heat demand and outdoor temperature of
+   * the last 7 days; later only what came since the last fetch (with an hour
+   * of overlap), joined to what is kept.
+   */
   async _fetchHistory(a) {
     const key = a.room_id;
     const e = a.entities || {};
@@ -1892,7 +1945,10 @@ class SmartHeatingControlCard extends HTMLElement {
     }
     this._hist[key] = { ...(previous || {}), at: Date.now(), loading: true };
     const end = new Date();
-    const start = new Date(end.getTime() - 24 * 3600 * 1000);
+    const oldest = end.getTime() - HISTORY_DAYS * 24 * 3600 * 1000;
+    const join = previous && previous.temp && !previous.failed && previous.end && previous.ids === ids.join("|");
+    const from = join ? Math.max(oldest, previous.end - 3600 * 1000) : oldest;
+    const start = new Date(from);
     try {
       const res = await this._hass.callWS({
         type: "history/history_during_period",
@@ -1907,9 +1963,7 @@ class SmartHeatingControlCard extends HTMLElement {
         ((id && res[id]) || [])
           .map((p) => ({ t: (p.lu ?? p.lc) * 1000, s: p.s, a: p.a || {} }))
           .filter((p) => Number.isFinite(p.t));
-      this._hist[key] = {
-        at: Date.now(),
-        loading: false,
+      const fresh = {
         temp: rows(e.room_temperature)
           .map((p) => [p.t, num(p.s)])
           .filter((p) => p[1] !== null),
@@ -1921,6 +1975,15 @@ class SmartHeatingControlCard extends HTMLElement {
           .map((p) => [p.t, num(p.a.latest)])
           .filter((p) => p[1] !== null),
       };
+      // What is kept before the new part, then the new part (its first point is
+      // the state at its start); older than 7 days is dropped.
+      const time = (p) => (Array.isArray(p) ? p[0] : p.t);
+      const merged = {};
+      for (const name of Object.keys(fresh)) {
+        const kept = join ? (previous[name] || []).filter((p) => time(p) < from && time(p) >= oldest - 3600 * 1000) : [];
+        merged[name] = [...kept, ...fresh[name]].sort((p, q) => time(p) - time(q));
+      }
+      this._hist[key] = { at: Date.now(), end: end.getTime(), ids: ids.join("|"), loading: false, ...merged };
     } catch (err) {
       this._hist[key] = { at: Date.now(), loading: false, temp: [], target: [], heat: [], outdoor: [], failed: true };
     }
@@ -1934,8 +1997,8 @@ class SmartHeatingControlCard extends HTMLElement {
   _chartData(a) {
     const HOUR = 3600 * 1000;
     const now = Date.now();
-    const t0 = now - 24 * HOUR;
-    const t1 = now + 12 * HOUR;
+    const t0 = now - HISTORY_DAYS * 24 * HOUR;
+    const t1 = now + VIEW_AHEAD;
     const hist = this._history(a);
     // A day without an active profile keeps the frost protection.
     const levels = { ...(a.levels || {}), frost: a.min_temperature };
@@ -2091,28 +2154,99 @@ class SmartHeatingControlCard extends HTMLElement {
       ohi = olo + 4;
     }
     const cutoffAt = outdoorState?.attributes?.cutoff_enabled ? num(outdoorState.attributes.cutoff_temperature) : null;
-    return { t0, t1, now, segs, temp, heat, lo, hi, outdoor, forecast, olo, ohi, cutoffAt, loading: !hist };
+    const pred = this._prediction(a, segs, forecast, latest, now, t1);
+    return { t0, t1, now, segs, temp, heat, lo, hi, outdoor, forecast, olo, ohi, cutoffAt, pred, loading: !hist };
   }
 
-  /** Visible time window of a chart (zoom); the whole range when not zoomed. */
+  /**
+   * The room temperature the learned model expects until the end of the chart,
+   * following the planned target: a minute by minute simulation of
+   * rise per hour = (h − c × outdoor) × q − k × (room − outdoor), as in the
+   * integration, with the heating on while the room is below the target and q
+   * following it with the inertia. The outdoor temperature is the hourly
+   * forecast (the measured value until its first hour). Empty until learned.
+   */
+  _prediction(a, segs, forecast, outdoorNow, now, t1) {
+    const s = this._state(a.entities?.heating_rate);
+    const m = s?.attributes?.model;
+    const current = num(a.current_temperature);
+    if (!m || current === null) return [];
+    // The model is in °C; the chart in the unit of the house.
+    const fahrenheit = String(s.attributes.unit_of_measurement || "").endsWith("°F");
+    const toC = (v) => (v === null ? null : fahrenheit ? (v - 32) / 1.8 : v);
+    const fromC = (v) => (fahrenheit ? v * 1.8 + 32 : v);
+    const h = num(m.h) ?? 1;
+    const c = num(m.c) ?? 0;
+    const k = num(m.k) ?? 0;
+    const tau = num(m.tau) ?? 0;
+    const constant = !!m.constant_loss;
+    const mean = num(m.outdoor_mean);
+    const future = segs.filter((sg) => sg.future && sg.e > now);
+    const steps = forecast.filter(([t]) => t > now);
+    const outdoorAt = (t) => {
+      let out = toC(outdoorNow);
+      for (const [ft, v] of steps) {
+        if (ft <= t) out = toC(v);
+        else break;
+      }
+      return out ?? mean;
+    };
+    let temp = toC(current);
+    let q = Math.min(1, Math.max(0, num(m.q) ?? 0));
+    const pts = [[now, current]];
+    const minutes = Math.floor((t1 - now) / 60000);
+    let seg = 0;
+    for (let i = 1; i <= minutes; i++) {
+      const t = now + i * 60000;
+      while (seg < future.length && future[seg].e <= t) seg++;
+      const sg = future[seg] && future[seg].s <= t ? future[seg] : null;
+      const target = sg ? toC(sg.v) : null;
+      const u = target !== null && temp < target ? 1 : 0;
+      // The heat reaching the room over the minute (its mean), then at its end.
+      let qMean = u;
+      if (tau > 0) {
+        const decay = Math.exp(-1 / tau);
+        qMean = u + (q - u) * tau * (1 - decay);
+        q = u + (q - u) * decay;
+      } else {
+        q = u;
+      }
+      const out = constant ? null : outdoorAt(t);
+      const heating = constant || out === null ? h : Math.max(0, h - c * out);
+      const loss = constant ? k : out === null ? 0 : k * (temp - out);
+      temp += (heating * qMean - loss) / 60;
+      if (i % 5 === 0 || i === minutes) pts.push([t, +fromC(temp).toFixed(2)]);
+    }
+    return pts;
+  }
+
+  /** The window a chart opens on: the last 24 hours and the next 12. */
+  _defaultView(d) {
+    return { v0: Math.max(d.t0, d.now - VIEW_PAST), v1: d.t1 };
+  }
+
+  /**
+   * Visible time window of a chart. Until it is zoomed or moved it is the
+   * default one and follows the time; ``zoomed`` is true otherwise.
+   */
   _viewOf(room, d) {
-    const v = this._view?.[room];
-    if (!v) return { v0: d.t0, v1: d.t1, zoomed: false };
+    const v = this._view?.[room] || this._defaultView(d);
     const span = Math.min(d.t1 - d.t0, Math.max(MIN_ZOOM_SPAN, v.v1 - v.v0));
     const v0 = Math.min(d.t1 - span, Math.max(d.t0, v.v0));
-    return { v0, v1: v0 + span, zoomed: span < d.t1 - d.t0 - 1000 };
+    return { v0, v1: v0 + span, zoomed: !!this._view?.[room] };
   }
 
-  /** Show the time window v0 … v1 (limited to the chart range); the whole range resets the zoom. */
+  /** Show the time window v0 … v1 (within the 7 days and the next 12 hours); the default one follows the time again. */
   _setView(room, v0, v1) {
     const d = this._charts?.[room];
     if (!d) return;
     this._view = this._view || {};
     const span = Math.min(d.t1 - d.t0, Math.max(MIN_ZOOM_SPAN, v1 - v0));
-    if (span >= d.t1 - d.t0 - 1000) {
+    const start = Math.min(d.t1 - span, Math.max(d.t0, v0));
+    const def = this._defaultView(d);
+    if (Math.abs(start - def.v0) < 60000 && Math.abs(start + span - def.v1) < 60000) {
       delete this._view[room];
     } else {
-      const start = Math.min(d.t1 - span, Math.max(d.t0, v0));
       this._view[room] = { v0: start, v1: start + span };
     }
     this._redrawChart(room);
@@ -2144,18 +2278,34 @@ class SmartHeatingControlCard extends HTMLElement {
     const view = this._viewOf(a.room_id, d);
     d.v0 = view.v0;
     d.v1 = view.v1;
-    if (view.zoomed) {
-      // Zoomed in: the temperature scale follows what is visible, for detail.
-      const vis = [
-        ...d.temp.filter(([t]) => t >= view.v0 - 3600000 && t <= view.v1 + 3600000).map((p) => p[1]),
-        ...d.segs.filter((sg) => sg.e >= view.v0 && sg.s <= view.v1).map((sg) => sg.v),
-      ].filter((v) => v !== null);
-      if (vis.length) {
-        let lo = Math.floor((Math.min(...vis) - 0.3) * 2) / 2;
-        let hi = Math.ceil((Math.max(...vis) + 0.3) * 2) / 2;
-        if (hi - lo < 1) hi = lo + 1;
-        d.lo = lo;
-        d.hi = hi;
+    // The scales follow what is visible (7 days are kept, a part is shown).
+    const inView = (t) => t >= view.v0 - 3600000 && t <= view.v1 + 3600000;
+    const vis = [
+      ...d.temp.filter(([t]) => inView(t)).map((p) => p[1]),
+      ...d.segs.filter((sg) => sg.e >= view.v0 && sg.s <= view.v1).map((sg) => sg.v),
+      ...d.pred.filter(([t]) => inView(t)).map((p) => p[1]),
+    ].filter((v) => v !== null);
+    if (vis.length) {
+      const fine = view.v1 - view.v0 < 6 * 3600000;
+      let lo = fine ? Math.floor((Math.min(...vis) - 0.3) * 2) / 2 : Math.floor(Math.min(...vis) - 0.5);
+      let hi = fine ? Math.ceil((Math.max(...vis) + 0.3) * 2) / 2 : Math.ceil(Math.max(...vis) + 0.5);
+      const least = fine ? 1 : 4;
+      if (hi - lo < least) {
+        const mid = (hi + lo) / 2;
+        lo = fine ? Math.floor((mid - least / 2) * 2) / 2 : Math.floor(mid - least / 2);
+        hi = lo + least;
+      }
+      d.lo = lo;
+      d.hi = hi;
+    }
+    const outVis = [...d.outdoor.filter(([t]) => inView(t)), ...d.forecast.filter(([t]) => inView(t))].map((p) => p[1]);
+    if (outVis.length) {
+      d.olo = Math.floor(Math.min(...outVis));
+      d.ohi = Math.ceil(Math.max(...outVis));
+      if (d.ohi - d.olo < 4) {
+        const mid = (d.olo + d.ohi) / 2;
+        d.olo = Math.floor(mid - 2);
+        d.ohi = d.olo + 4;
       }
     }
     const W = 1000;
@@ -2182,6 +2332,7 @@ class SmartHeatingControlCard extends HTMLElement {
       .map((v) => `<line x1="0" x2="${W}" y1="${y(v)}" y2="${y(v)}" class="grid"></line>`)
       .join("");
     const heat = `<rect x="0" y="${H - LANE}" width="${W}" height="${LANE}" class="heatlane"></rect>${d.heat
+      .filter(([s, e]) => e >= view.v0 && s <= view.v1)
       .map(
         ([s, e]) =>
           `<rect x="${x(s)}" y="${H - LANE}" width="${Math.max(2, x(e) - x(s))}" height="${LANE}" class="heatbar"></rect>`
@@ -2205,13 +2356,22 @@ class SmartHeatingControlCard extends HTMLElement {
       .join("");
     let tempPath = "";
     let tempArea = "";
-    if (d.temp.length > 1) {
-      const pts = d.temp.map(([t, v]) => `${x(Math.max(t, d.t0)).toFixed(1)} ${y(v).toFixed(1)}`);
+    // Only what is visible (and a point on each side), so 7 days draw fast.
+    const first = d.temp.findIndex(([t]) => t >= view.v0);
+    const lastIn = d.temp.findLastIndex(([t]) => t <= view.v1);
+    const shown = first < 0 ? [] : d.temp.slice(Math.max(0, first - 1), Math.min(d.temp.length, lastIn + 2));
+    if (shown.length > 1) {
+      const pts = shown.map(([t, v]) => `${x(Math.max(t, d.t0)).toFixed(1)} ${y(v).toFixed(1)}`);
       tempPath = `M${pts.join(" L")}`;
-      tempArea = `${tempPath} L${x(d.temp[d.temp.length - 1][0]).toFixed(1)} ${BOTTOM} L${x(
-        Math.max(d.temp[0][0], d.t0)
+      tempArea = `${tempPath} L${x(shown[shown.length - 1][0]).toFixed(1)} ${BOTTOM} L${x(
+        Math.max(shown[0][0], d.t0)
       ).toFixed(1)} ${BOTTOM} Z`;
     }
+    // The temperature the learned model expects ahead (dashed).
+    const predPath =
+      d.pred.length > 1 && d.pred.at(-1)[0] >= view.v0 && d.pred[0][0] <= view.v1
+        ? `M${d.pred.map(([t, v]) => `${x(t).toFixed(1)} ${y(v).toFixed(1)}`).join(" L")}`
+        : "";
     const last = d.temp.length ? d.temp[d.temp.length - 1] : null;
 
     // Outdoor band: its own scale, measured line and the forecast (dashed steps).
@@ -2306,7 +2466,7 @@ class SmartHeatingControlCard extends HTMLElement {
 
     // Ticks adapt to the zoom: from every 6 hours down to every 5 minutes.
     const span = view.v1 - view.v0;
-    const stepMin = [5, 10, 15, 30, 60, 120, 180, 360].find((m) => span / (m * 60000) <= 7) || 360;
+    const stepMin = [5, 10, 15, 30, 60, 120, 180, 360, 720, 1440].find((m) => span / (m * 60000) <= 7) || 1440;
     const ticks = [];
     // In the time zone of the card: a tick every step of its clock (midnight shows the weekday).
     const inc = 60000 * Math.min(stepMin, 60);
@@ -2326,7 +2486,15 @@ class SmartHeatingControlCard extends HTMLElement {
       )}" title="${esc(title)}" aria-label="${esc(title)}">${label}</button>`;
     const spanH = Math.round(span / 3600000);
     const zoombar = `<div class="zoombar">
-        <span class="zrange">${view.zoomed ? `${esc(fmt(view.v0))} – ${esc(fmt(view.v1))}` : esc(this._t("chart_label"))}</span>
+        <span class="zrange">${
+          view.zoomed
+            ? span > 20 * 3600000
+              ? `${esc(this._fmt(view.v0, { weekday: "short", hour: "2-digit", minute: "2-digit" }))} – ${esc(
+                  this._fmt(view.v1, { weekday: "short", hour: "2-digit", minute: "2-digit" })
+                )}`
+              : `${esc(fmt(view.v0))} – ${esc(fmt(view.v1))}`
+            : esc(this._t("chart_label"))
+        }</span>
         <span class="zbtns">
           ${zoomBtn("1h", "1h", this._t("zoom_1h"), view.zoomed && spanH === 1)}
           ${zoomBtn("6h", "6h", this._t("zoom_6h"), view.zoomed && spanH === 6)}
@@ -2354,6 +2522,7 @@ class SmartHeatingControlCard extends HTMLElement {
             ${grid}${optimal}${heat}${segs}${steps}${outdoorSvg}
             ${tempArea ? `<path d="${tempArea}" fill="url(#${gid})" class="tempfill"></path>` : ""}
             ${tempPath ? `<path d="${tempPath}" class="templine"></path>` : ""}
+            ${predPath ? `<path d="${predPath}" class="predline"></path>` : ""}
             <line x1="${nowX}" x2="${nowX}" y1="0" y2="${BOTTOM}" class="now"></line>
           </svg>
           <div class="overlay">
@@ -2371,17 +2540,19 @@ class SmartHeatingControlCard extends HTMLElement {
           </div>
         </div>
         <div class="ticks">${ticks.join("")}</div>
-        ${view.zoomed ? this._navHtml(a.room_id, d, view) : ""}
+        ${this._navHtml(a.room_id, d, view)}
         <div class="readout">
           <span class="lg"><i class="lg-temp"></i>${this._t("legend_temp")}</span>
           <span class="lg"><i class="lg-target"></i>${this._t("legend_target")}</span>
           <span class="lg"><i class="lg-heat"></i>${this._t("legend_heat")}</span>
+          ${d.pred.length ? `<span class="lg"><i class="lg-pred"></i>${this._t("legend_pred")}</span>` : ""}
           ${hasOut ? `<span class="lg"><i class="lg-out"></i>${this._t("legend_outdoor")}</span>` : ""}
           ${d.loading ? `<span class="muted">${this._t("loading")}</span>` : ""}
         </div>
         <div class="meta"><span>${this._t("today")}: <b>${esc(a.profile || (a.profile_days && a.schedule ? this._t("frost_level") : "–"))}</b></span>${next}</div>`;
     if (innerOnly) return inner;
-    return `<div class="chart-card" data-chartcard="${esc(a.room_id)}">${inner}</div>`;
+    const touching = this._touched === a.room_id ? " touching" : "";
+    return `<div class="chart-card${touching}" data-chartcard="${esc(a.room_id)}">${inner}</div>`;
   }
 
   /** Bar of the whole period with the visible window (only when zoomed). */
@@ -2444,6 +2615,14 @@ class SmartHeatingControlCard extends HTMLElement {
     const time = this._fmt(t, { weekday: "short", hour: "2-digit", minute: "2-digit" });
     const rows = [`<b>${esc(time)}</b>`];
     if (t <= d.now && temp !== null) rows.push(`<span><i class="lg-temp"></i>${temp.toFixed(1)}°</span>`);
+    if (t > d.now && d.pred?.length) {
+      let pred = null;
+      for (const [pt, v] of d.pred) {
+        if (pt <= t) pred = v;
+        else break;
+      }
+      if (pred !== null) rows.push(`<span><i class="lg-pred"></i>${esc(this._t("tip_pred"))} ${pred.toFixed(1)}°</span>`);
+    }
     if (seg && seg.opt) {
       rows.push(`<span class="optword">${esc(this._t(seg.opt === "optimal_start" ? "tip_early_start" : "tip_early_stop"))}</span>`);
     }
@@ -2581,6 +2760,7 @@ class SmartHeatingControlCard extends HTMLElement {
               )
             : ""
         }
+        ${this._humidityHtml(a, dl)}
         ${dl(this._t("adjustments"), esc(offsets))}
       </dl>
       ${
@@ -2599,7 +2779,25 @@ class SmartHeatingControlCard extends HTMLElement {
     return this._fold(`details-${a.room_id}`, this._t("details"), html);
   }
 
-  /** The learned thermal model (heating and heat loss), each linked to its sensor, with the reset. */
+  /** Humidity of the room and at its coldest wall (with a humidity sensor). */
+  _humidityHtml(a, dl) {
+    const air = num(a.humidity);
+    if (air === null) return "";
+    const wall = num(a.surface_humidity);
+    const text =
+      wall === null
+        ? this._t("humidity_air").replace("{air}", Math.round(air))
+        : this._t("humidity_value").replace("{air}", Math.round(air)).replace("{wall}", Math.round(wall));
+    // 80 % at the coldest wall is where mold can grow (DIN 4108-2).
+    const risk = wall !== null && wall >= 80 ? ` <small class="warn">${esc(this._t("humidity_risk"))}</small>` : "";
+    return dl(this._t("humidity"), `${esc(text)}${risk}`);
+  }
+
+  /**
+   * The learned thermal model, each value linked to its sensor: the state of
+   * the learning (with the reset), the heating and its inertia, the weather
+   * curve and the heat loss.
+   */
   _learnHtml(e) {
     const heat = this._state(e.heating_rate);
     const cool = this._state(e.cooling_rate);
@@ -2611,13 +2809,15 @@ class SmartHeatingControlCard extends HTMLElement {
     let html = "";
     if (heat) {
       const unit = heat.attributes.unit_of_measurement || "min/°C";
+      const deg = unit.replace(/^min\//, "");
       const value = num(heat.state);
       const tau = num(heat.attributes.inertia_minutes) ?? 0;
       const need = num(heat.attributes.hours_needed) ?? 4;
-      const text = learned
-        ? this._t("learn_heat_value")
-            .replace("{rate}", value === null ? "–" : `${Math.round(value)} ${unit}`)
-            .replace("{tau}", String(Math.round(tau)))
+      const err = num(heat.attributes.error_per_hour);
+      const state = learned
+        ? err === null
+          ? this._t("learn_state_done_short")
+          : this._t("learn_state_done").replace("{err}", `${err.toFixed(2)} ${deg}`)
         : this._t("learn_progress")
             .replace("{heat}", String(Math.min(need, num(heat.attributes.hours_heating) ?? 0)))
             .replace("{idle}", String(Math.min(need, num(heat.attributes.hours_idle) ?? 0)))
@@ -2633,7 +2833,23 @@ class SmartHeatingControlCard extends HTMLElement {
               kind: confirming ? "soft-warn" : "",
             })
           : "";
-      html += row(heat, e.heating_rate, this._t("learn_heat"), text, sub, reset);
+      html += row(heat, e.heating_rate, this._t("learn_state"), state, sub, reset);
+      if (learned) {
+        const text = this._t("learn_heat_value")
+          .replace("{rate}", value === null ? "–" : `${Math.round(value)} ${unit}`)
+          .replace("{tau}", String(Math.round(tau)));
+        html += row(heat, e.heating_rate, this._t("learn_heat"), text, "", "");
+        // The curve is °C/h per °C, the same number in °F/h per °F.
+        const c = num(heat.attributes.weather_curve) ?? 0;
+        const curve =
+          Math.abs(c) < 0.0005
+            ? this._t("learn_curve_none")
+            : this._t("learn_curve_value")
+                .replace("{value}", `${c > 0 ? "+" : "−"}${Math.abs(c).toFixed(3)}`)
+                .split("{u}")
+                .join(deg);
+        html += row(heat, e.heating_rate, this._t("learn_curve"), curve, "", "");
+      }
     }
     if (cool && learned) {
       const value = num(cool.state);
@@ -3032,11 +3248,45 @@ class SmartHeatingControlCard extends HTMLElement {
     if (p && !p.moved && chart) this._chartHover({ type: "pointermove", clientX: ev.clientX, target: chart });
   }
 
-  /** Ctrl + wheel or touchpad pinch zooms the chart around the pointer. */
+  /**
+   * A finger on a chart: its navigation bar shows (``on``); after the finger
+   * leaves, the bar, the line and the values under it hide again a moment later.
+   */
+  _touch(card, on) {
+    clearTimeout(this._touchTimer);
+    const room = card.dataset.chartcard;
+    if (on) {
+      this._touched = room;
+      card.classList.add("touching");
+      return;
+    }
+    this._touchTimer = setTimeout(() => {
+      this._touched = null;
+      const now = this.shadowRoot.querySelector(`[data-chartcard="${CSS.escape(room)}"]`);
+      if (!now) return;
+      now.classList.remove("touching");
+      now.querySelectorAll(".cross, .tip").forEach((el) => (el.hidden = true));
+    }, 2500);
+  }
+
+  /**
+   * Ctrl + wheel or touchpad pinch zooms the chart around the pointer; a
+   * sideways scroll (or Shift + wheel) moves it through the history.
+   */
   _chartWheel(ev) {
     const chart = ev.target.closest?.(".hchart");
+    if (!chart) return;
+    if (!(ev.ctrlKey || ev.metaKey)) {
+      const sideways = Math.abs(ev.deltaX) > Math.abs(ev.deltaY) ? ev.deltaX : ev.shiftKey ? ev.deltaY : 0;
+      if (!sideways) return; // the page scrolls normally
+      ev.preventDefault();
+      const d = this._charts?.[chart.dataset.chart];
+      if (!d) return;
+      const shift = (sideways / chart.getBoundingClientRect().width) * (d.v1 - d.v0);
+      this._setView(chart.dataset.chart, d.v0 + shift, d.v1 + shift);
+      return;
+    }
     // Only pinch on a touchpad or Ctrl + wheel zoom, so the page still scrolls normally.
-    if (!chart || !(ev.ctrlKey || ev.metaKey)) return;
     ev.preventDefault();
     const d = this._charts?.[chart.dataset.chart];
     if (!d) return;
@@ -3062,7 +3312,13 @@ class SmartHeatingControlCard extends HTMLElement {
 
   /** Pointer pressed: chart pan, or dragging a handle of the schedule editor. */
   _pointerDown(ev) {
-    if (this._navPointerDown(ev)) return;
+    // A finger on a chart shows its navigation bar (a mouse shows it on hover).
+    const chartCard = ev.target.closest?.(".chart-card");
+    if (chartCard && ev.pointerType !== "mouse") this._touch(chartCard, true);
+    if (this._navPointerDown(ev)) {
+      this._nav?.card?.classList.add("navigating");
+      return;
+    }
     if (this._chartPointerDown(ev)) return;
     const handle = ev.target.closest?.("[data-handle]");
     if (!handle || !this._draft) return;
@@ -3102,7 +3358,10 @@ class SmartHeatingControlCard extends HTMLElement {
 
   /** Pointer released: end the pan or the drag. */
   _pointerUp(ev) {
+    const card = this._nav?.card || this._pan?.card;
+    if (card && ev && ev.pointerType !== "mouse") this._touch(card, false);
     if (this._nav && (!ev || ev.pointerId === this._nav.pointer)) {
+      this._nav.card?.classList.remove("navigating");
       this._nav = null;
       return;
     }
@@ -3336,7 +3595,10 @@ class SmartHeatingControlCard extends HTMLElement {
         const z = el.dataset.zoom;
         if (z === "in") this._zoom(room, 0.5);
         else if (z === "out") this._zoom(room, 2);
-        else if (z === "reset") this._setView(room, d.t0, d.t1);
+        else if (z === "reset") {
+          const def = this._defaultView(d);
+          this._setView(room, def.v0, def.v1);
+        }
         else {
           const span = (z === "1h" ? 1 : 6) * 3600000;
           const end = Math.min(d.t1, Math.max(d.now + span * 0.15, d.t0 + span));
@@ -3709,6 +3971,9 @@ const STYLE = `
   .hchart .tstep { stroke: var(--primary-text-color); opacity: 0.25; stroke-width: 1; stroke-dasharray: 2 3; vector-effect: non-scaling-stroke; }
   .hchart .templine { fill: none; stroke: var(--ac-accent); stroke-width: 2.25; vector-effect: non-scaling-stroke;
     stroke-linejoin: round; stroke-linecap: round; }
+  .hchart .predline { fill: none; stroke: var(--ac-accent); stroke-width: 2; stroke-dasharray: 2 4; opacity: 0.85;
+    vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+  .lg-pred { background: repeating-linear-gradient(90deg, var(--ac-accent) 0 3px, transparent 3px 6px); }
   .hchart .now { stroke: var(--primary-text-color); stroke-width: 1.25; opacity: 0.55; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
   .overlay { position: absolute; inset: 0; pointer-events: none; }
   .overlay .lvl { position: absolute; transform: translate(4px, calc(-100% - 4px)); font-size: 0.7em; white-space: nowrap;
@@ -3727,7 +3992,13 @@ const STYLE = `
   .ticks { position: relative; height: 14px; margin-left: 32px; font-size: 0.68em; color: var(--ac-muted); }
   .cross[hidden], .tip[hidden] { display: none; }
   .navbar { position: relative; height: 18px; margin: 6px 0 2px 32px; border-radius: 6px; background: var(--ac-surface-2);
-    cursor: pointer; touch-action: none; user-select: none; overflow: hidden; }
+    cursor: pointer; touch-action: none; user-select: none; overflow: hidden;
+    opacity: 0; transition: opacity 0.25s ease; }
+  /* Shown while the mouse is over the chart or a finger is on it, then hidden
+     (still there to be dragged: a finger on its place shows it). */
+  @media (hover: hover) { .chart-card:hover .navbar { opacity: 1; } }
+  .chart-card.touching .navbar, .chart-card.navigating .navbar { opacity: 1; }
+  .details small.warn { color: var(--ac-warn); font-weight: 600; }
   .navbar i { position: absolute; top: 0; bottom: 0; display: block; }
   .navbar .navheat { top: auto; height: 4px; bottom: 0; background: var(--ac-hot); opacity: 0.7; }
   .navbar .navnow { width: 0; border-left: 1px dashed var(--primary-text-color); opacity: 0.5; }
@@ -3739,7 +4010,7 @@ const STYLE = `
     min-height: 20px; font-variant-numeric: tabular-nums; }
   .tip { position: absolute; top: 4px; display: flex; flex-direction: column; gap: 2px; padding: 6px 9px; border-radius: 10px;
     font-size: 0.75em; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--primary-text-color);
-    background: color-mix(in srgb, var(--card-background-color) 92%, transparent); box-shadow: 0 2px 10px rgba(0,0,0,.18);
+    background: var(--ac-opaque, var(--card-background-color, #fff)); box-shadow: 0 2px 10px rgba(0,0,0,.18);
     border: 1px solid var(--ac-line); z-index: 3; }
   .tip span { display: inline-flex; align-items: center; gap: 6px; }
   .tip i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; }

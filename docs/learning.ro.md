@@ -418,6 +418,7 @@ complet pornită, la temperatura camerei și cea de afară de acum (`min/°C` sa
 | `error_per_hour` | eroarea obișnuită de predicție a unui interval (°C pe oră) |
 | `minutes_per_degree` | minute pe grad la −10 / 0 / 10 / 20 °C (14 / 32 / 50 / 68 °F) afară |
 | `hours_heating`, `hours_idle`, `hours_needed` | progresul învățării (secțiunea 6) |
+| `model` | modelul în °C (h, c, k, τ, q, pierdere constantă, temperatura medie de afară) pentru predicția cardului; gol până se învață |
 
 **`sensor.<cameră>_cooling_rate`** – stare: cât de repede scade acum camera
 fără încălzire (°C/h, gol până se învață); atribute: `learned`,
@@ -430,11 +431,17 @@ sau implicită) și `time_to_target`.
 **`button.<cameră>_reset_learning`** – uită modelul camerei (și în *Detalii* pe
 card, cu un al doilea clic pentru confirmare).
 
-**Card, Detalii** – grupul *Învățare*: *Încălzire învățată* (minute pe grad
-acum și inerția, de ex. *45 min/°C acum · inerție 30 min*, sau în timpul
-învățării *se învață… 2 din 4 h cu încălzire, 1 din 4 h fără*, cu valoarea
-implicită dedesubt) și *Pierdere de căldură învățată* (*scade 0,70 °C/h acum*,
-după ce se învață), cu butonul **Resetează**.
+**Card, Detalii** – grupul *Învățare*: *Învățare* (*învățat · eroare obișnuită
+±0,12 °C/h* sau, în timpul învățării, *se învață… 2 din 4 h cu încălzire, 1 din
+4 h fără*, cu valoarea implicită dedesubt) cu butonul **Resetează**; după ce
+s-a învățat, *Încălzire învățată* (minute pe grad acum și inerția, de ex.
+*45 min/°C acum · inerție 30 min*), *Curba de temperatură* (*+0.050 °C/h
+pentru fiecare °C mai frig afară* sau *fără*) și *Pierdere de căldură
+învățată* (*scade 0,70 °C/h acum*).
+
+**Card, grafic** – după ce s-a învățat, temperatura prezisă pentru următoarele
+12 ore (punctat): modelul din secțiunea 2 simulat minut cu minut după ținta
+planificată (încălzire cât camera e sub ea), cu prognoza orară.
 
 **Diagnostic** – `thermal_model` cu toate numerele modelului și cei zece
 candidați de inerție (fiecare cu h, c, k, eroarea și `outdoor_spread`, abaterea

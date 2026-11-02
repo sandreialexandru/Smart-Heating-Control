@@ -863,11 +863,8 @@
       "clear_override": {
         "name": "Anulează modificarea manuală"
       },
-      "reset_heating_learning": {
-        "name": "Resetează învățarea încălzirii"
-      },
-      "reset_cooling_learning": {
-        "name": "Resetează învățarea răcirii"
+      "reset_learning": {
+        "name": "Resetează învățarea"
       }
     }
   },

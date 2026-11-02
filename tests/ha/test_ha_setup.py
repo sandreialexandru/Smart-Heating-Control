@@ -84,32 +84,27 @@ async def test_relay_room(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -
     assert hass.states.get("sensor.home_presence").state == "home"
     # Nothing learned yet: no cooling rate.
     assert hass.states.get("sensor.bedroom_cooling_rate").state == "unknown"
-    # Heating: 60 minutes per degree until the first episode.
+    # Heating: 60 minutes per degree until the model is learned.
     heating = hass.states.get("sensor.bedroom_heating_rate")
     assert float(heating.state) == 60.0
     assert heating.attributes["unit_of_measurement"] == "min/°C"
-    assert heating.attributes["fixed_minutes"] == 0.0
-    assert heating.attributes["episodes"] == 0
+    assert heating.attributes["learned"] is False
+    assert heating.attributes["inertia_minutes"] == 0
+    assert heating.attributes["hours_needed"] == 4.0
 
-    # The learning of each kind can be reset from its button.
+    # The learning can be reset from its button.
     room = next(iter(entry.runtime_data.rooms.values()))
-    room.learner.episodes.append([5.0, 2.0, 120.0, ""])
+    room.learner.heat_windows = room.learner.idle_windows = 20.0
     room.learner._model = None
-    room.cooling.episodes.append([5.0, 0.02, ""])
     await hass.services.async_call(
-        "button", "press", {"entity_id": "button.bedroom_reset_heating_learning"}, blocking=True
+        "button", "press", {"entity_id": "button.bedroom_reset_learning"}, blocking=True
     )
     await hass.async_block_till_done()
-    assert room.learner.episodes == []
-    assert room.cooling.episodes == [[5.0, 0.02, ""]]
-    await hass.services.async_call(
-        "button", "press", {"entity_id": "button.bedroom_reset_cooling_learning"}, blocking=True
-    )
-    await hass.async_block_till_done()
-    assert room.cooling.episodes == []
+    assert room.learner.heat_windows == 0.0
+    assert room.learner.idle_windows == 0.0
     assert hass.states.get("sensor.bedroom_decision").attributes["entities"][
-        "reset_heating_learning"
-    ] == ("button.bedroom_reset_heating_learning")
+        "reset_learning"
+    ] == ("button.bedroom_reset_learning")
 
     # Warm room: the relay turns off.
     hass.states.async_set("sensor.room_temp", "21.5", {"unit_of_measurement": "°C"})
@@ -646,7 +641,8 @@ async def test_heating_counts_only_while_the_heat_source_runs(
     demand = hass.states.get("binary_sensor.office_heat_demand")
     assert demand.state == "on"
     assert demand.attributes["heating"] is False
-    assert room.learner.episode_start is None
+    # Not heating: no heat reaches the room in its model.
+    assert room.learner.fits[0].q == 0.0
     await _tick(hass, freezer, 1800)
     assert room.runtime_s == 0
 
@@ -660,7 +656,8 @@ async def test_heating_counts_only_while_the_heat_source_runs(
     )
     await _tick(hass, freezer, 5)
     assert hass.states.get("binary_sensor.office_heat_demand").attributes["heating"] is True
-    assert room.learner.episode_start is not None
+    await _tick(hass, freezer, 60)
+    assert room.learner.fits[0].q == 1.0
     await _tick(hass, freezer, 600)
     assert room.runtime_s >= 600
 
@@ -2348,36 +2345,26 @@ async def test_trv_already_at_its_limit_is_learned_without_a_report(
     await hass.async_block_till_done()
 
 
-async def test_diagnostics_list_every_learned_episode(
+async def test_diagnostics_show_the_thermal_model(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """The diagnostics have every kept heating and cooling episode, not only their number."""
+    """The diagnostics show the learned thermal model and every inertia candidate."""
     from custom_components.advanced_climate.diagnostics import (
         async_get_config_entry_diagnostics,
     )
 
     entry = await _setup(hass, freezer)
     room = next(iter(entry.runtime_data.rooms.values()))
-    room.learner.episodes = [
-        [12.3, 0.9, 111.0, "2026-10-29T16:18:37+00:00"],
-        [10.0, 0.7, 60.0, "2026-10-31T07:56:08+00:00"],
-    ]
-    room.learner._model = None
-    room.cooling.episodes = [[11.0, 0.034, "2026-10-30T02:00:00+00:00"]]
     data = await async_get_config_entry_diagnostics(hass, entry)
-    learned = data["state"]["rooms"][room.name]["learned_heating"]
-    assert learned["episodes"] == 2
-    assert learned["episode_list"] == [
-        {"outdoor": 12.3, "rise": 0.9, "minutes": 111.0, "at": "2026-10-29T16:18:37+00:00"},
-        {"outdoor": 10.0, "rise": 0.7, "minutes": 60.0, "at": "2026-10-31T07:56:08+00:00"},
-    ]
-    assert data["state"]["rooms"][room.name]["cooling_episode_list"] == [
-        {"outdoor": 11.0, "coefficient": 0.034, "at": "2026-10-30T02:00:00+00:00"}
-    ]
+    model = data["state"]["rooms"][room.name]["thermal_model"]
+    assert model["learned"] is False
+    assert model["heating_per_hour"] == 1.0
+    assert [c["inertia_minutes"] for c in model["candidates"]] == [
+        0.0, 10.0, 20.0, 30.0, 45.0, 60.0, 90.0, 120.0, 180.0, 240.0,
+    ]  # fmt: skip
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-
 
 async def test_room_with_its_own_heat_does_not_start_the_heat_source(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory

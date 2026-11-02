@@ -115,8 +115,7 @@ ROOM_ENTITY_KEYS: dict[str, str] = {
     "manual_override": "binary_sensor",
     "child_lock": "switch",
     "clear_override": "button",
-    "reset_heating_learning": "button",
-    "reset_cooling_learning": "button",
+    "reset_learning": "button",
     **{f"level_{preset}": "number" for preset in (*PRESETS, "nearby")},
 }
 

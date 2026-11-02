@@ -1,42 +1,38 @@
-"""Heating and cooling learning for optimal start and stop (pure Python).
+"""Thermal model of a room, learned for optimal start and stop (pure Python).
 
-Heating: the learner observes heating episodes (the room asks for heat and the
-temperature rises) and keeps, for each one, the degrees risen, the minutes it
-took and the mean outdoor temperature. An episode starts when the room is at
-least the thermostat tolerance below the target, so the cycles of a thermostat
-that keeps the temperature are learned too.
+The room is one thermal mass that gains heat from its heating and loses heat
+to the outdoors in proportion to the difference between inside and outside:
 
-The time to heat is learned as
+    dT/dt = h · q − k · (T − T_out)
 
-    minutes = fixed + degrees × (per_degree + per_outdoor × outdoor)
+* ``h``: how fast the room warms with the heating fully on (°C per hour);
+* ``k``: how fast it loses heat per degree warmer than outdoors (per hour);
+* ``q``: how much of the heating reaches the room now (0 … 1). It follows the
+  heating on / off with a delay ``τ`` (the thermal inertia): the water, the
+  radiators or the floor warm up first after a start, and keep giving heat
+  for a while after a stop:
 
-* ``fixed``: the minutes before the room starts to rise (the boiler starts, the
-  water and the radiators warm up); it does not grow with the degrees;
-* ``per_degree``: minutes per degree at 0 °C outdoors;
-* ``per_outdoor``: how the minutes per degree change per degree outdoors.
+      dq/dt = (u − q) / τ        (u = 1 while the heating runs, else 0)
 
-The three numbers are the least squares fit of all the kept episodes, so the
-learning follows the room as measured (all the delays of the heat source are
-in the minutes) and outdoor temperatures not seen yet are estimated from the
-trend. A term is used only when the episodes can tell it: the fixed part needs
-episodes of different sizes, the outdoor term episodes at different outdoor
-temperatures. A term that comes out impossible (a negative fixed part, a
-negative number of minutes) is set to zero.
+All three numbers are learned per room, continuously, from what the room
+does: every stretch of ``WINDOW_MINUTES`` minutes with heating or without it
+is one equation ``rise per hour = h · q̄ − k · (T − T_out)̄`` (the bars are the
+means over the stretch). ``h`` and ``k`` are the least squares solution of
+those equations; older stretches weigh less (half of their weight after
+``HALF_LIFE_DAYS`` days), so the model follows a room that changes. ``τ`` is
+the one of ``TAU_GRID`` whose model predicted the stretches best (each one is
+judged before it is learned from). A stretch far from what the model says (a
+door left open, cooking, the sun) weighs less: beyond ``ROBUST_LIMIT`` times
+the usual error its weight shrinks in proportion (a Huber weight).
 
-Small and large episodes are kept apart (25 of each), so the many small cycles
-of a thermostat never push the few large ones out.
+Stretches with a window or door sensor open, with an unknown state of the heat
+source, during the valve exercise, or with the outdoor temperature unknown in a
+house that has one, are not used. Without any outdoor temperature in the house
+the loss is learned as a constant (``k`` then is degrees per hour).
 
-Episodes during which a window or door sensor of the room was open are not
-used.
-
-Episodes far from the others are left out of the fit (they are kept, and come
-back when they fit again): a door left open, cooking, a sensor that jumped.
-"Far" is measured from the episodes themselves, so nothing is set for a
-particular house: the minutes of each episode are compared with what the fit
-of all of them says, and an episode more than 3.5 times the usual difference
-away (the median absolute difference, scaled to a standard deviation) is left
-out and the rest is fitted again. Only with at least 8 episodes, and at most
-until 5 are left.
+Until the model has seen ``LEARNED_WINDOWS`` stretches with the heating on and
+as many with it off, the room uses ``DEFAULT_RATE`` (60 minutes per degree)
+and no inertia, as before any learning.
 """
 
 from __future__ import annotations
@@ -51,220 +47,293 @@ def _finite(value: float | None) -> float | None:
     return value if value is not None and math.isfinite(value) else None
 
 
-# An episode (with heat demand for heating, without it for cooling) is used
-# only when it lasted at least this long.
-MIN_DEMAND_MINUTES = 10
-# Until the first heating episode: 60 minutes per degree (1 °C per hour).
+DATA_VERSION = 5  # saved learning of other versions is discarded
+# One equation per stretch of this length (minutes): long enough that a 0.1 °C
+# step of the sensor is small against the change, short enough to see a cycle.
+WINDOW_MINUTES = 30.0
+# Two observations further apart than this (minutes): the stretch is dropped.
+MAX_GAP_MINUTES = 20.0
+# Inertia candidates (minutes): 0 = none, up to 4 hours (underfloor heating).
+TAU_GRID: tuple[float, ...] = (0.0, 10.0, 20.0, 30.0, 45.0, 60.0, 90.0, 120.0, 180.0, 240.0)
+# Weight of a stretch halves after this many days (stretches of 30 minutes).
+HALF_LIFE_DAYS = 7.0
+FORGET = 0.5 ** (1.0 / (HALF_LIFE_DAYS * 24 * 60 / WINDOW_MINUTES))
+# Stretches with the heating on (mean q ≥ 0.5) and off (mean q ≤ 0.2) needed
+# before the learned model is used: 8 of 30 minutes = 4 hours of each.
+LEARNED_WINDOWS = 8
+HEAT_WINDOW_Q = 0.5
+IDLE_WINDOW_Q = 0.2
+# Before the model is learned: 1 °C per hour (60 minutes per degree), no loss.
+DEFAULT_RATE = 1.0
 DEFAULT_MINUTES_PER_DEGREE = 60.0
-DATA_VERSION = 4  # saved heating data of other versions is discarded
-# Heating episodes kept: the small ones and the large ones apart.
-LARGE_EPISODE = 1.0  # °C risen: from this on an episode is large
-MAX_SMALL_EPISODES = 25
-MAX_LARGE_EPISODES = 25
-# The fixed part needs episodes that differ in size by at least this much.
-MIN_SIZE_SPREAD = 1.0  # °C
-# The outdoor term needs episodes whose outdoor temperatures differ this much.
-MIN_FIT_SPREAD = 1.0  # °C
-# Episodes far from the others are left out of the fit: from this many episodes,
-# beyond this many times their usual difference (at least a minute).
-ROBUST_MIN_EPISODES = 8
-ROBUST_LIMIT = 3.5
-ROBUST_KEEP = 5
-COOLING_MAX_EPISODES = 30
+# Stretches with an error beyond this many times the usual one weigh less.
+ROBUST_LIMIT = 2.5
+ROBUST_MIN_WINDOWS = 10
+# A tiny pull towards the default, so a few stretches never give wild numbers.
+RIDGE = 0.01
+# Predictions look at most this far ahead (minutes), in steps of one minute.
+MAX_MINUTES = 24 * 60
 
 
-def start_gap(tolerance: float) -> float:
-    """Degrees below the target (at least) needed to start an episode."""
-    return round(max(0.0, tolerance), 2)
+def _q_after(q: float, u: float, minutes: float, tau: float) -> tuple[float, float]:
+    """q after ``minutes`` with input ``u``, and its mean over that time."""
+    if tau <= 0:
+        return u, u
+    decay = math.exp(-minutes / tau)
+    end = u + (q - u) * decay
+    mean = u + (q - u) * tau * (1 - decay) / minutes if minutes > 0 else q
+    return end, mean
 
 
-def _solve(matrix: list[list[float]], vector: list[float]) -> list[float] | None:
-    """Solve a small linear system (Gaussian elimination); None when singular."""
-    n = len(vector)
-    a = [row[:] + [vector[i]] for i, row in enumerate(matrix)]
-    for col in range(n):
-        pivot = max(range(col, n), key=lambda r: abs(a[r][col]))
-        if abs(a[pivot][col]) < 1e-9:
-            return None
-        a[col], a[pivot] = a[pivot], a[col]
-        for r in range(n):
-            if r != col:
-                factor = a[r][col] / a[col][col]
-                for c in range(col, n + 1):
-                    a[r][c] -= factor * a[col][c]
-    return [a[i][n] / a[i][i] for i in range(n)]
-
-
-def _least_squares(rows: list[list[float]], values: list[float]) -> list[float] | None:
-    """Coefficients that bring rows · coefficients closest to the values."""
-    n = len(rows[0])
-    ata = [[sum(r[i] * r[j] for r in rows) for j in range(n)] for i in range(n)]
-    atb = [sum(r[i] * v for r, v in zip(rows, values)) for i in range(n)]
-    return _solve(ata, atb)
-
-
+# ---------------------------------------------------------------------------
+# The model
+# ---------------------------------------------------------------------------
 @dataclass(slots=True)
-class HeatingModel:
-    """The learned time to heat (see the module docstring)."""
+class ThermalModel:
+    """A learned (or default) room model; see the module docstring."""
 
-    fixed: float = 0.0  # minutes
-    per_degree: float = DEFAULT_MINUTES_PER_DEGREE  # minutes per °C at 0 °C outdoors
-    per_outdoor: float = 0.0  # change of the minutes per °C, per °C outdoors
-    # Mean outdoor temperature of the episodes (used when outdoor is unknown).
+    h: float = DEFAULT_RATE  # °C per hour at full heating
+    k: float = 0.0  # per hour (or °C per hour when ``constant_loss``)
+    tau: float = 0.0  # minutes of inertia
+    constant_loss: bool = False
+    learned: bool = False
     outdoor_mean: float | None = None
-    uses_fixed: bool = False
-    uses_outdoor: bool = False
-    # Episodes left out of the fit, far from the others.
-    left_out: int = 0
 
-    def minutes_per_degree(self, outdoor: float | None) -> float:
-        """Minutes per °C at the outdoor temperature (never negative)."""
-        if outdoor is None:
-            outdoor = self.outdoor_mean
-        value = self.per_degree + (self.per_outdoor * outdoor if outdoor is not None else 0.0)
-        return max(0.0, value)
+    def _outdoor(self, outdoor: float | None) -> float | None:
+        return outdoor if outdoor is not None else self.outdoor_mean
 
-    def minutes(self, gap: float, outdoor: float | None, elapsed: float = 0.0) -> float:
-        """Minutes to rise ``gap`` °C at the outdoor temperature.
+    def rate(self, indoor: float, outdoor: float | None, q: float) -> float:
+        """Degrees per hour the room changes now with ``q`` of the heating."""
+        if self.constant_loss:
+            return self.h * q - self.k
+        out = self._outdoor(outdoor)
+        loss = 0.0 if out is None else self.k * (indoor - out)
+        return self.h * q - loss
 
-        ``elapsed`` is how long the room has been heating already: that much of
-        the fixed part is behind it (the radiators are warm).
-        """
-        if gap <= 0:
+    def loss_rate(self, indoor: float, outdoor: float | None) -> float | None:
+        """Degrees per hour the room falls without heating (positive), if known."""
+        if not self.learned:
+            return None
+        if self.constant_loss:
+            return self.k
+        out = self._outdoor(outdoor)
+        return None if out is None else self.k * (indoor - out)
+
+    def minutes_per_degree(self, indoor: float, outdoor: float | None) -> float | None:
+        """Minutes per degree with the heating fully on, at ``indoor`` (None: it cannot rise)."""
+        rate = self.rate(indoor, outdoor, 1.0)
+        return 60.0 / rate if rate > 0 else None
+
+    def simulate(
+        self,
+        indoor: float,
+        outdoor: float | None,
+        q: float,
+        heating: bool,
+        minutes: float,
+    ) -> float:
+        """Room temperature after ``minutes`` (heating on or off all the time)."""
+        u = 1.0 if heating else 0.0
+        t = indoor
+        steps = max(0, math.ceil(minutes))
+        step = minutes / steps if steps else 0.0
+        for _ in range(steps):
+            q, q_mean = _q_after(q, u, step, self.tau)
+            t += self.rate(t, outdoor, q_mean) * step / 60
+        return t
+
+    def minutes_to_heat(
+        self, indoor: float, target: float, outdoor: float | None, q: float = 0.0
+    ) -> float | None:
+        """Minutes until the room reaches ``target`` with the heating on (None: never)."""
+        if indoor >= target:
             return 0.0
-        return max(0.0, self.fixed - max(0.0, elapsed)) + gap * self.minutes_per_degree(outdoor)
+        return self._minutes_until(indoor, outdoor, q, True, target)
+
+    def minutes_to_fall(
+        self, indoor: float, floor: float, outdoor: float | None, q: float = 0.0
+    ) -> float | None:
+        """Minutes until the room falls to ``floor`` without heating (None: not within a day)."""
+        if not self.learned:
+            return None
+        if indoor <= floor:
+            return 0.0
+        return self._minutes_until(indoor, outdoor, q, False, floor)
+
+    def _minutes_until(
+        self,
+        indoor: float,
+        outdoor: float | None,
+        q: float,
+        heating: bool,
+        limit: float,
+    ) -> float | None:
+        """Minutes until the room crosses ``limit`` (up while heating, down without)."""
+        u = 1.0 if heating else 0.0
+        t = indoor
+        for minute in range(1, MAX_MINUTES + 1):
+            q, q_mean = _q_after(q, u, 1.0, self.tau)
+            previous = t
+            t += self.rate(t, outdoor, q_mean) / 60
+            if (t >= limit) if heating else (t <= limit):
+                # Within the last minute, in proportion.
+                return minute - 1 + (limit - previous) / (t - previous)
+        return None
 
 
-def fit_model(episodes: list[list]) -> HeatingModel:
-    """Fit the time to heat to the episodes [outdoor or None, °C, minutes, at]."""
-    if not episodes:
-        return HeatingModel()
-    points = [(o, float(g), float(m)) for o, g, m, *_ in episodes]
-    with_outdoor = [(float(o), g, m) for o, g, m in points if o is not None]
-    outdoors = [o for o, _, _ in with_outdoor]
-    outdoor_mean = round(sum(outdoors) / len(outdoors), 2) if outdoors else None
-    use_outdoor = bool(outdoors) and max(outdoors) - min(outdoors) >= MIN_FIT_SPREAD
-    allow_fixed = True
-    while True:
-        # The outdoor term is fitted on the episodes that have an outdoor temperature.
-        data = with_outdoor if use_outdoor else points
-        sizes = [g for _, g, _ in data]
-        use_fixed = allow_fixed and max(sizes) - min(sizes) >= MIN_SIZE_SPREAD
-        rows = [
-            ([1.0] if use_fixed else []) + [g] + ([g * o] if use_outdoor else [])
-            for o, g, _ in data
-        ]
-        values = [m for _, _, m in data]
-        found = _least_squares(rows, values) if len(rows) >= len(rows[0]) else None
-        if found is None:
-            # The episodes cannot tell all the terms apart: fewer terms.
-            if use_outdoor:
-                use_outdoor = False
-            elif use_fixed:
-                allow_fixed = False
-            else:
-                return HeatingModel(outdoor_mean=outdoor_mean)
-            continue
-        fixed = found.pop(0) if use_fixed else 0.0
-        per_degree = found.pop(0)
-        per_outdoor = found.pop(0) if use_outdoor else 0.0
-        # An impossible term is set to zero and the rest is fitted again.
-        if use_fixed and fixed < 0:
-            allow_fixed = False
-            continue
-        if (
-            use_outdoor
-            and min(
-                per_degree + per_outdoor * min(outdoors), per_degree + per_outdoor * max(outdoors)
-            )
-            < 0
-        ):
-            use_outdoor = False
-            continue
-        if per_degree < 0 and not use_outdoor:
-            # Larger episodes were not slower: the minutes do not grow with the
-            # degrees, so only the fixed part (the mean of the episodes) is left.
-            fixed, per_degree = (sum(values) / len(values) if use_fixed else 0.0), 0.0
-        return HeatingModel(
-            fixed=round(fixed, 2),
-            per_degree=round(per_degree, 3),
-            per_outdoor=round(per_outdoor, 4),
-            outdoor_mean=outdoor_mean,
-            uses_fixed=use_fixed,
-            uses_outdoor=use_outdoor,
+# ---------------------------------------------------------------------------
+# Learning
+# ---------------------------------------------------------------------------
+@dataclass(slots=True)
+class _Fit:
+    """Weighted least squares of one inertia candidate."""
+
+    tau: float
+    q: float = 0.0
+    a11: float = 0.0
+    a12: float = 0.0
+    a22: float = 0.0
+    b1: float = 0.0
+    b2: float = 0.0
+    error: float = 0.0  # weighted sum of squared prediction errors
+    weight: float = 0.0
+    usual: float = 0.0  # weighted mean absolute prediction error
+    windows: int = 0
+    # Window being collected: integral of q over it.
+    q_area: float = 0.0
+
+    def solve(self) -> tuple[float, float] | None:
+        """(h, k) with a small pull towards the default; None when impossible."""
+        a11, a12, a22 = self.a11 + RIDGE, self.a12, self.a22 + RIDGE
+        b1, b2 = self.b1 + RIDGE * DEFAULT_RATE, self.b2
+        det = a11 * a22 - a12 * a12
+        if abs(det) < 1e-12:
+            return None
+        h = (b1 * a22 - b2 * a12) / det
+        k = (a11 * b2 - a12 * b1) / det
+        if k < 0:
+            # Without a loss the room would never cool: fit the heating alone.
+            k, h = 0.0, b1 / a11
+        if h <= 0 or not (math.isfinite(h) and math.isfinite(k)):
+            return None
+        return h, k
+
+    def add(self, x1: float, x2: float, y: float) -> None:
+        """Learn one stretch (judged first by the model so far)."""
+        solved = self.solve()
+        if solved is not None and self.windows >= 1:
+            residual = y - (solved[0] * x1 + solved[1] * x2)
+        else:
+            residual = y - DEFAULT_RATE * x1
+        weight = 1.0
+        if self.windows >= ROBUST_MIN_WINDOWS and self.usual > 0:
+            limit = ROBUST_LIMIT * self.usual
+            if abs(residual) > limit:
+                weight = limit / abs(residual)
+        f = FORGET
+        self.a11 = f * self.a11 + weight * x1 * x1
+        self.a12 = f * self.a12 + weight * x1 * x2
+        self.a22 = f * self.a22 + weight * x2 * x2
+        self.b1 = f * self.b1 + weight * x1 * y
+        self.b2 = f * self.b2 + weight * x2 * y
+        self.error = f * self.error + weight * residual * residual
+        self.usual = (
+            abs(residual)
+            if self.windows == 0
+            else (f * self.weight * self.usual + weight * abs(residual))
+            / (f * self.weight + weight)
         )
+        self.weight = f * self.weight + weight
+        self.windows += 1
 
+    def as_list(self) -> list[float]:
+        return [
+            self.tau, self.q, self.a11, self.a12, self.a22, self.b1, self.b2,
+            self.error, self.weight, self.usual, float(self.windows),
+        ]  # fmt: skip
 
-def fit_robust(episodes: list[list]) -> HeatingModel:
-    """The fit without the episodes far from the others (see the module docstring)."""
-    model = fit_model(episodes)
-    if len(episodes) < ROBUST_MIN_EPISODES:
-        return model
-    differences = [
-        float(e[2]) - model.minutes(float(e[1]), None if e[0] is None else float(e[0]))
-        for e in episodes
-    ]
-    middle = sorted(differences)[len(differences) // 2]
-    spread = sorted(abs(d - middle) for d in differences)[len(differences) // 2] * 1.4826
-    limit = max(ROBUST_LIMIT * spread, 1.0)
-    kept = [e for e, d in zip(episodes, differences, strict=True) if abs(d - middle) <= limit]
-    if len(kept) == len(episodes) or len(kept) < ROBUST_KEEP:
-        return model
-    robust = fit_model(kept)
-    robust.left_out = len(episodes) - len(kept)
-    return robust
+    @classmethod
+    def from_list(cls, item: list) -> _Fit:
+        values = [float(v) for v in item]
+        if len(values) != 11 or not all(math.isfinite(v) for v in values):
+            raise ValueError("bad fit")
+        fit = cls(*values[:10])
+        fit.windows = int(values[10])
+        return fit
 
 
 @dataclass(slots=True)
-class HeatingRateLearner:
-    """Learn how long a room takes to heat up (see the module docstring)."""
+class ThermalLearner:
+    """Learn the thermal model of a room (see the module docstring)."""
 
-    # [outdoor °C or None, °C risen, minutes, end time ISO]
-    episodes: list[list] = field(default_factory=list)
-    episode_start: datetime | None = None
-    episode_temp: float | None = None
-    # Sum and count of the outdoor temperatures seen during the episode.
-    episode_outdoor_sum: float = 0.0
-    episode_outdoor_count: int = 0
-    episode_disturbed: bool = False
-    # The episode in progress was restored after a restart: it continues only if
-    # the room still heats at the first observation.
-    _restored: bool = False
-    _model: HeatingModel | None = None
+    constant_loss: bool = False
+    fits: list[_Fit] = field(default_factory=lambda: [_Fit(tau) for tau in TAU_GRID])
+    heat_windows: float = 0.0  # forgotten like the stretches
+    idle_windows: float = 0.0
+    outdoor_sum: float = 0.0  # weighted, for the mean outdoor temperature
+    outdoor_weight: float = 0.0
+    # Last observation and the stretch being collected.
+    _last: tuple[datetime, float, float | None, float] | None = None
+    _start: datetime | None = None
+    _start_temp: float = 0.0
+    _area_loss: float = 0.0  # integral of (T − T_out), or of 1 with a constant loss
+    _minutes: float = 0.0
+    _disturbed: bool = False
+    _model: ThermalModel | None = None
 
     # ------------------------------------------------------------------ model
     @property
-    def model(self) -> HeatingModel:
-        """The fitted model (refitted when the episodes change)."""
+    def learned(self) -> bool:
+        """Enough stretches with and without heating."""
+        return self.heat_windows >= LEARNED_WINDOWS and self.idle_windows >= LEARNED_WINDOWS
+
+    def _best(self) -> tuple[_Fit, float, float] | None:
+        best = None
+        for fit in self.fits:
+            solved = fit.solve()
+            if solved is None or fit.weight <= 0:
+                continue
+            score = fit.error / fit.weight
+            if best is None or score < best[0]:
+                best = (score, fit, solved)
+        return None if best is None else (best[1], *best[2])
+
+    @property
+    def model(self) -> ThermalModel:
+        """The learned model, or the default one until it is learned."""
         if self._model is None:
-            self._model = fit_robust(self.episodes)
+            mean = self.outdoor_sum / self.outdoor_weight if self.outdoor_weight > 0 else None
+            best = self._best() if self.learned else None
+            if best is None:
+                self._model = ThermalModel(constant_loss=self.constant_loss, outdoor_mean=mean)
+            else:
+                fit, h, k = best
+                self._model = ThermalModel(
+                    h=round(h, 4),
+                    k=round(k, 5),
+                    tau=fit.tau,
+                    constant_loss=self.constant_loss,
+                    learned=True,
+                    outdoor_mean=mean,
+                )
         return self._model
 
-    def minutes(self, gap: float, outdoor: float | None, now: datetime | None = None) -> float:
-        """Minutes to rise ``gap`` °C at the outdoor temperature.
+    @property
+    def q(self) -> float:
+        """How much of the heating reaches the room now (of the model in use)."""
+        model = self.model
+        for fit in self.fits:
+            if fit.tau == model.tau:
+                return fit.q
+        return 0.0
 
-        With ``now`` during an episode, the time already heated counts against
-        the fixed part.
-        """
-        return self.model.minutes(gap, outdoor, self.heated_minutes(now))
-
-    def heated_minutes(self, now: datetime | None) -> float:
-        """Minutes the episode in progress has been heating (0 without one)."""
-        if now is None or self.episode_start is None:
-            return 0.0
-        return max(0.0, (now - self.episode_start).total_seconds() / 60)
-
-    def minutes_per_degree(self, outdoor: float | None) -> float:
-        """Learned minutes per °C at the outdoor temperature."""
-        return self.model.minutes_per_degree(outdoor)
-
-    def _keep(self) -> None:
-        """Keep the last small and the last large episodes, in time order."""
-        small = [e for e in self.episodes if float(e[1]) < LARGE_EPISODE][-MAX_SMALL_EPISODES:]
-        large = [e for e in self.episodes if float(e[1]) >= LARGE_EPISODE][-MAX_LARGE_EPISODES:]
-        kept = {id(e) for e in small + large}
-        self.episodes = [e for e in self.episodes if id(e) in kept]
-        self._model = None
+    @property
+    def error(self) -> float | None:
+        """Usual prediction error of the model in use (°C per hour), once learned."""
+        best = self._best() if self.learned else None
+        if best is None or best[0].weight <= 0:
+            return None
+        return math.sqrt(best[0].error / best[0].weight)
 
     # -------------------------------------------------------------- learning
     def observe(
@@ -272,291 +341,133 @@ class HeatingRateLearner:
         now: datetime,
         heating: bool,
         current: float | None,
-        target: float | None,
         outdoor: float | None,
-        window_open: bool = False,
-        tolerance: float = 0.0,
-    ) -> float | None:
-        """Feed an observation. Returns the minutes of the episode when it is used.
-
-        ``window_open`` is True while a window or door sensor of the room is open;
-        such an episode is not used. ``tolerance`` is how far below the target the
-        thermostat lets the room fall before heating (its normal cycle).
-        """
-        current, target, outdoor = _finite(current), _finite(target), _finite(outdoor)
+        disturbed: bool = False,
+        outdoor_configured: bool = True,
+    ) -> bool:
+        """Feed an observation. Returns True when a stretch was learned."""
+        current, outdoor = _finite(current), _finite(outdoor)
+        if self.constant_loss == outdoor_configured:
+            # The house got (or lost) its outdoor temperature: learn anew.
+            self.reset(constant_loss=not outdoor_configured)
+        u = 1.0 if heating else 0.0
+        last = self._last
         if current is None:
-            return None
-        if self._restored:
-            self._restored = False
-            # Not heating any more after the restart: it is not known when the
-            # heating stopped, so the restored episode cannot be measured.
-            if self.episode_start is not None and not heating:
-                self.cancel()
-                return None
-        if heating and self.episode_start is None:
-            if (
-                target is not None
-                and target - current >= start_gap(tolerance) - 1e-9
-                and not window_open
-            ):
-                self.episode_start = now
-                self.episode_temp = current
-                self.episode_outdoor_sum = outdoor if outdoor is not None else 0.0
-                self.episode_outdoor_count = 1 if outdoor is not None else 0
-                self.episode_disturbed = False
-            return None
-        if self.episode_start is None:
-            return None
-        if window_open:
-            self.episode_disturbed = True
-        if outdoor is not None:
-            self.episode_outdoor_sum += outdoor
-            self.episode_outdoor_count += 1
-        reached = target is not None and current >= target
-        if heating and not reached:
-            return None
-        # Episode finished (target reached or heating stopped).
-        minutes = (now - self.episode_start).total_seconds() / 60
-        rise = current - (self.episode_temp if self.episode_temp is not None else current)
-        outdoor_mean = self._outdoor_mean()
-        disturbed = self.episode_disturbed
-        self.cancel()
-        # The heat demand lasted at least 10 minutes; any rise counts, a slow one
-        # too (it may show a problem, but it is real). Without a rise there is
-        # nothing to learn.
-        if disturbed or minutes < MIN_DEMAND_MINUTES or rise <= 0:
-            return None
-        mean_outdoor = round(outdoor_mean, 1) if outdoor_mean is not None else None
-        self.episodes.append([mean_outdoor, round(rise, 2), round(minutes, 1), now.isoformat()])
-        self._keep()
-        return round(minutes, 1)
+            self._drop()
+            self._last = None
+            return False
+        if last is None:
+            self._last = (now, current, outdoor, u)
+            self._begin(now, current)
+            return False
+        then, t0, o0, u0 = last
+        minutes = (now - then).total_seconds() / 60
+        if minutes <= 0:
+            self._last = (then, t0, o0, u)
+            return False
+        # The heating reaches the room with its inertia, also across a gap.
+        for fit in self.fits:
+            fit.q, mean = _q_after(fit.q, u0, minutes, fit.tau)
+            fit.q_area += mean * minutes
+        self._last = (now, current, outdoor, u)
+        if minutes > MAX_GAP_MINUTES:
+            self._begin(now, current)
+            return False
+        if disturbed:
+            self._disturbed = True
+        if self.constant_loss:
+            self._area_loss += minutes
+        elif o0 is None or outdoor is None:
+            self._disturbed = True
+        else:
+            self._area_loss += minutes * ((t0 - o0) + (current - outdoor)) / 2
+            self.outdoor_sum = FORGET * self.outdoor_sum + (o0 + outdoor) / 2 * minutes / 60
+            self.outdoor_weight = FORGET * self.outdoor_weight + minutes / 60
+        self._minutes += minutes
+        if self._minutes < WINDOW_MINUTES:
+            return False
+        learned = False
+        if not self._disturbed:
+            hours = self._minutes / 60
+            y = (current - self._start_temp) / hours
+            x2 = -self._area_loss / self._minutes
+            q_mean = 0.0
+            for fit in self.fits:
+                x1 = fit.q_area / self._minutes
+                fit.add(x1, x2, y)
+                if fit.tau == 0.0:
+                    q_mean = x1
+            f = FORGET
+            self.heat_windows = f * self.heat_windows + (1.0 if q_mean >= HEAT_WINDOW_Q else 0.0)
+            self.idle_windows = f * self.idle_windows + (1.0 if q_mean <= IDLE_WINDOW_Q else 0.0)
+            self._model = None
+            learned = True
+        self._begin(now, current)
+        return learned
 
-    def _outdoor_mean(self) -> float | None:
-        """Mean outdoor temperature during the episode in progress."""
-        if not self.episode_outdoor_count:
-            return None
-        return self.episode_outdoor_sum / self.episode_outdoor_count
+    def _begin(self, now: datetime, current: float) -> None:
+        self._start = now
+        self._start_temp = current
+        self._area_loss = 0.0
+        self._minutes = 0.0
+        self._disturbed = False
+        for fit in self.fits:
+            fit.q_area = 0.0
+
+    def _drop(self) -> None:
+        self._start = None
+        self._minutes = 0.0
+        self._area_loss = 0.0
+        self._disturbed = False
+        for fit in self.fits:
+            fit.q_area = 0.0
 
     def cancel(self) -> None:
-        """Drop the episode in progress (e.g. outside the heating season)."""
-        self.episode_start = None
-        self.episode_temp = None
-        self.episode_outdoor_sum = 0.0
-        self.episode_outdoor_count = 0
-        self.episode_disturbed = False
+        """Drop the stretch being collected (e.g. outside the heating season)."""
+        self._drop()
+        self._last = None
+
+    def reset(self, constant_loss: bool | None = None) -> None:
+        """Forget everything learned."""
+        if constant_loss is not None:
+            self.constant_loss = constant_loss
+        self.fits = [_Fit(tau) for tau in TAU_GRID]
+        self.heat_windows = self.idle_windows = 0.0
+        self.outdoor_sum = self.outdoor_weight = 0.0
+        self._model = None
+        self.cancel()
 
     # ----------------------------------------------------------- persistence
     def as_dict(self) -> dict:
-        """Serialize (with the episode in progress, so a restart does not lose it)."""
-        data: dict = {"version": DATA_VERSION, "episodes": self.episodes}
-        if self.episode_start is not None and self.episode_temp is not None:
-            data["in_progress"] = {
-                "start": self.episode_start.isoformat(),
-                "temp": self.episode_temp,
-                "outdoor_sum": self.episode_outdoor_sum,
-                "outdoor_count": self.episode_outdoor_count,
-                "disturbed": self.episode_disturbed,
-            }
-        return data
+        """Serialize (the stretch being collected is not kept)."""
+        return {
+            "version": DATA_VERSION,
+            "constant_loss": self.constant_loss,
+            "fits": [fit.as_list() for fit in self.fits],
+            "heat_windows": self.heat_windows,
+            "idle_windows": self.idle_windows,
+            "outdoor": [self.outdoor_sum, self.outdoor_weight],
+        }
 
     @classmethod
-    def from_dict(cls, data: dict | None) -> HeatingRateLearner:
-        """Restore the saved episodes (data of other versions is discarded).
-
-        Older versions kept only a rate per episode, without the degrees and the
-        minutes, so they cannot be converted: the heating is learned again.
-        """
+    def from_dict(cls, data: dict | None) -> ThermalLearner:
+        """Restore (learning of other versions is discarded: it is learned again)."""
         obj = cls()
-        if not data or data.get("version") != DATA_VERSION:
+        if not isinstance(data, dict) or data.get("version") != DATA_VERSION:
             return obj
-        episodes = data.get("episodes")
-        if isinstance(episodes, list):
-            for item in episodes:
-                try:
-                    outdoor = None if item[0] is None else float(item[0])
-                    gap, minutes = float(item[1]), float(item[2])
-                    # A value that is not a real number (nan / inf) is dropped.
-                    if outdoor is not None and not math.isfinite(outdoor):
-                        continue
-                    if not (math.isfinite(gap) and math.isfinite(minutes)):
-                        continue
-                    if gap <= 0 or minutes <= 0:
-                        continue
-                    obj.episodes.append(
-                        [outdoor, gap, minutes, str(item[3]) if len(item) > 3 else ""]
-                    )
-                except (TypeError, ValueError, IndexError):
-                    continue
-        obj._keep()
-        obj._restore_in_progress(data.get("in_progress"))
-        return obj
-
-    def _restore_in_progress(self, item: object) -> None:
-        """The episode that was in progress at the restart (dropped when malformed)."""
-        if not isinstance(item, dict):
-            return
         try:
-            start = datetime.fromisoformat(str(item["start"]))
-            temp = float(item["temp"])
-            outdoor_sum = float(item.get("outdoor_sum", 0.0))
-            outdoor_count = int(item.get("outdoor_count", 0))
-        except (KeyError, TypeError, ValueError):
-            return
-        if start.tzinfo is None or not (math.isfinite(temp) and math.isfinite(outdoor_sum)):
-            return
-        self.episode_start = start
-        self.episode_temp = temp
-        self.episode_outdoor_sum = outdoor_sum if outdoor_count > 0 else 0.0
-        self.episode_outdoor_count = max(0, outdoor_count)
-        self.episode_disturbed = bool(item.get("disturbed", False))
-        self._restored = True
-
-
-# ---------------------------------------------------------------------------
-# Cooling
-# ---------------------------------------------------------------------------
-def cooling_coefficient(start: float, end: float, outdoor: float, hours: float) -> float | None:
-    """How fast a room cools per degree warmer than outdoors (per hour).
-
-    A room loses heat in proportion to the difference between inside and
-    outside: T(t) = outdoor + (start - outdoor) * exp(-k * t). Returns k, or
-    None when it cannot be measured (no drop, or not warmer than outdoors).
-    """
-    if hours <= 0 or end >= start or end <= outdoor:
-        return None
-    return math.log((start - outdoor) / (end - outdoor)) / hours
-
-
-@dataclass(slots=True)
-class CoolingLearner:
-    """Learn how fast a room cools without heating.
-
-    It is the opposite of the heating learning: an episode starts when the heat
-    demand stops (no window or door sensor open) and ends when the heat demand
-    starts again. It is used when it lasted at least 10 minutes and the
-    temperature fell, however little. The cooling depends on the difference
-    between inside and outside, so one coefficient per room is learned (the
-    walls, radiators and insulation of each house are in it, not modelled).
-    """
-
-    # [outdoor °C, coefficient 1/h, end time ISO]
-    episodes: list[list] = field(default_factory=list)
-    episode_start: datetime | None = None
-    episode_temp: float | None = None
-    # Sum and count of the outdoor temperatures seen during the episode.
-    episode_outdoor_sum: float = 0.0
-    episode_outdoor_count: int = 0
-    episode_disturbed: bool = False
-
-    @property
-    def coefficient(self) -> float | None:
-        """Mean learned coefficient (1/h), None before the first episode."""
-        if not self.episodes:
-            return None
-        return round(sum(float(k) for _, k, *_ in self.episodes) / len(self.episodes), 5)
-
-    def rate(self, indoor: float | None, outdoor: float | None) -> float | None:
-        """Degrees per hour the room falls now (positive), if known."""
-        k = self.coefficient
-        if k is None or indoor is None or outdoor is None:
-            return None
-        return round(k * (indoor - outdoor), 3)
-
-    def minutes_to_fall(self, indoor: float, floor: float, outdoor: float | None) -> float | None:
-        """Minutes until the room falls from ``indoor`` to ``floor`` without heating."""
-        k = self.coefficient
-        if k is None or outdoor is None or k <= 0:
-            return None
-        if indoor <= floor:
-            return 0.0
-        if floor <= outdoor:
-            return None  # it never gets that cold
-        return math.log((indoor - outdoor) / (floor - outdoor)) / k * 60
-
-    def temperature_after(
-        self, indoor: float, outdoor: float | None, minutes: float
-    ) -> float | None:
-        """Room temperature after ``minutes`` without heating."""
-        k = self.coefficient
-        if k is None or outdoor is None:
-            return None
-        return outdoor + (indoor - outdoor) * math.exp(-k * minutes / 60)
-
-    def observe(
-        self,
-        now: datetime,
-        heating: bool,
-        current: float | None,
-        outdoor: float | None,
-        window_open: bool = False,
-    ) -> float | None:
-        """Feed an observation. Returns the coefficient when an episode is used."""
-        current, outdoor = _finite(current), _finite(outdoor)
-        if current is None:
-            return None
-        if not heating and self.episode_start is None:
-            if not window_open:
-                self.episode_start = now
-                self.episode_temp = current
-                self.episode_outdoor_sum = outdoor if outdoor is not None else 0.0
-                self.episode_outdoor_count = 1 if outdoor is not None else 0
-                self.episode_disturbed = False
-            return None
-        if self.episode_start is None:
-            return None
-        if window_open:
-            self.episode_disturbed = True
-        if outdoor is not None:
-            self.episode_outdoor_sum += outdoor
-            self.episode_outdoor_count += 1
-        if not heating:
-            return None
-        # The heat demand started again: the episode is finished.
-        minutes = (now - self.episode_start).total_seconds() / 60
-        start = self.episode_temp
-        mean_outdoor = self._outdoor_mean()
-        disturbed = self.episode_disturbed
-        self.cancel()
-        if disturbed or minutes < MIN_DEMAND_MINUTES or start is None or mean_outdoor is None:
-            return None
-        k = cooling_coefficient(start, current, mean_outdoor, minutes / 60)
-        if k is None or not math.isfinite(k):
-            return None
-        k = round(k, 5)
-        self.episodes.append([round(mean_outdoor, 1), k, now.isoformat()])
-        del self.episodes[:-COOLING_MAX_EPISODES]
-        return k
-
-    def _outdoor_mean(self) -> float | None:
-        """Mean outdoor temperature during the episode in progress."""
-        if not self.episode_outdoor_count:
-            return None
-        return self.episode_outdoor_sum / self.episode_outdoor_count
-
-    def cancel(self) -> None:
-        """Drop the episode in progress (e.g. outside the heating season)."""
-        self.episode_start = None
-        self.episode_temp = None
-        self.episode_outdoor_sum = 0.0
-        self.episode_outdoor_count = 0
-        self.episode_disturbed = False
-
-    def as_dict(self) -> dict:
-        """Serialize."""
-        return {"version": 1, "episodes": self.episodes}
-
-    @classmethod
-    def from_dict(cls, data: dict | None) -> CoolingLearner:
-        """Restore."""
-        obj = cls()
-        if not data or data.get("version") != 1:
+            fits = [_Fit.from_list(item) for item in data.get("fits") or []]
+            if [fit.tau for fit in fits] != list(TAU_GRID):
+                return obj
+            heat = float(data.get("heat_windows", 0.0))
+            idle = float(data.get("idle_windows", 0.0))
+            outdoor_sum, outdoor_weight = (float(v) for v in data.get("outdoor") or [0, 0])
+        except (TypeError, ValueError):
             return obj
-        for item in data.get("episodes") or []:
-            try:
-                outdoor, k = float(item[0]), float(item[1])
-                if math.isfinite(outdoor) and math.isfinite(k):
-                    obj.episodes.append([outdoor, k, str(item[2])])
-            except (TypeError, ValueError, IndexError):
-                continue
-        del obj.episodes[:-COOLING_MAX_EPISODES]
+        if not all(math.isfinite(v) for v in (heat, idle, outdoor_sum, outdoor_weight)):
+            return obj
+        obj.constant_loss = bool(data.get("constant_loss", False))
+        obj.fits = fits
+        obj.heat_windows, obj.idle_windows = heat, idle
+        obj.outdoor_sum, obj.outdoor_weight = outdoor_sum, outdoor_weight
         return obj

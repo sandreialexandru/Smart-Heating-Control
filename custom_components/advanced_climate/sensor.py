@@ -34,7 +34,7 @@ from .const import (
 )
 from .entity import HOUSE_ENTITY_KEYS, ROOM_ENTITY_KEYS, HouseEntity, RoomEntity, entity_map
 from .house import House
-from .learning import LARGE_EPISODE, start_gap
+from .learning import LEARNED_WINDOWS, WINDOW_MINUTES
 from .room import Room
 from .schedule import profiles_to_dict
 from .util import delta_from_celsius, from_celsius, iso
@@ -303,7 +303,7 @@ class DecisionSensor(RoomEntity, SensorEntity):
             "hold_until": iso(room.hold_until(dt_util.utcnow())),
             "alerts": room.house.alerts_for(room),
             "optimal_stop_cancelled": room.stop_cancelled,
-            "rate_learned": bool(room.learner.episodes),
+            "rate_learned": room.learner.model.learned,
             "device_levels": room.device_levels,
             "heat_demand": room.heat_demand,
             "heating": room.heating,
@@ -381,9 +381,9 @@ class NextChangeSensor(RoomEntity, SensorEntity):
 
 
 class HeatingRateSensor(RoomEntity, SensorEntity):
-    """Learned heating: minutes per degree now, the fixed part as an attribute."""
+    """Learned heating: minutes per degree now, the thermal model as attributes."""
 
-    _unrecorded_attributes = frozenset({"minutes_per_degree", "last_episodes"})
+    _unrecorded_attributes = frozenset({"minutes_per_degree"})
 
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -400,48 +400,47 @@ class HeatingRateSensor(RoomEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | None:
-        """Minutes per degree at the current outdoor temperature."""
+        """Minutes per degree with the heating on, for the room and outdoor temperatures of now."""
+        indoor = self.room.current_temp
+        if indoor is None:
+            return None
+        model = self.room.learner.model
         return _per_degree(
-            self.room.learner.minutes_per_degree(self.house.outdoor_now), self.house.unit
+            model.minutes_per_degree(indoor, self.house.outdoor_now), self.house.unit
         )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """The learned model and the last episodes."""
+        """The learned thermal model."""
         learner = self.room.learner
         model = learner.model
         unit = self.house.unit
+        indoor = self.room.current_temp
         # Estimates at round outdoor temperatures of the unit of the house.
         points = (14, 32, 50, 68) if unit == "°F" else (-10, 0, 10, 20)
-        per_outdoor = model.per_outdoor / 3.24 if unit == "°F" else model.per_outdoor
+        hours = WINDOW_MINUTES / 60
         return {
-            "fixed_minutes": round(model.fixed, 1),
+            "learned": model.learned,
+            "heating_per_hour": _d(model.h, unit, 2),
+            "loss_per_hour": model.k if not model.constant_loss else _d(model.k, unit, 3),
+            "constant_loss": model.constant_loss,
+            "inertia_minutes": round(model.tau),
+            "heat_reaching_now": round(learner.q, 2),
+            "error_per_hour": None if learner.error is None else _d(learner.error, unit, 2),
             "minutes_per_degree": (
                 {
                     f"{t}{unit}": _per_degree(
-                        learner.minutes_per_degree((t - 32) / 1.8 if unit == "°F" else t), unit
+                        model.minutes_per_degree(indoor, (t - 32) / 1.8 if unit == "°F" else t),
+                        unit,
                     )
                     for t in points
                 }
-                if learner.episodes
+                if model.learned and indoor is not None and not model.constant_loss
                 else {}
             ),
-            "per_outdoor_degree": round(per_outdoor, 3),
-            "uses_fixed": model.uses_fixed,
-            "uses_outdoor": model.uses_outdoor,
-            "episodes": len(learner.episodes),
-            "episodes_left_out": model.left_out,
-            "large_episodes": sum(1 for e in learner.episodes if e[1] >= LARGE_EPISODE),
-            "learning_starts_below_target": _d(start_gap(self.room.learn_tolerance()), unit),
-            "last_episodes": [
-                {
-                    "outdoor": _t(o, unit, 1),
-                    "rise": _d(g, unit, 2),
-                    "minutes": round(m),
-                    "at": at or None,
-                }
-                for o, g, m, at in learner.episodes[-5:]
-            ],
+            "hours_heating": round(learner.heat_windows * hours, 1),
+            "hours_idle": round(learner.idle_windows * hours, 1),
+            "hours_needed": LEARNED_WINDOWS * hours,
         }
 
 
@@ -519,8 +518,6 @@ def _estimate(room: Room, unit: str) -> dict[str, Any] | None:
 class CoolingRateSensor(RoomEntity, SensorEntity):
     """Learned cooling: how fast the room falls now without heating."""
 
-    _unrecorded_attributes = frozenset({"last_episodes"})
-
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_suggested_display_precision = 2
@@ -537,22 +534,22 @@ class CoolingRateSensor(RoomEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Fall per hour for the current room and outdoor temperatures."""
-        rate = self.room.cooling.rate(self.room.current_temp, self.house.outdoor_now)
+        indoor = self.room.current_temp
+        if indoor is None:
+            return None
+        rate = self.room.learner.model.loss_rate(indoor, self.house.outdoor_now)
         return _d(rate, self.house.unit, 3)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Learned coefficient and the last episodes."""
-        cooling = self.room.cooling
+        """The learned heat loss."""
+        model = self.room.learner.model
         unit = self.house.unit
         return {
-            "coefficient_per_hour": cooling.coefficient,
-            "episodes": len(cooling.episodes),
+            "learned": model.learned,
+            "loss_per_hour": model.k if not model.constant_loss else _d(model.k, unit, 3),
+            "inertia_minutes": round(model.tau),
             "optimal_stop_tolerance": _d(self.room.stop_tolerance(), unit),
-            "last_episodes": [
-                {"outdoor": _t(o, unit, 1), "coefficient": k, "at": at or None}
-                for o, k, at in cooling.episodes[-5:]
-            ],
         }
 
 

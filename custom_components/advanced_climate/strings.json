@@ -863,11 +863,8 @@
       "clear_override": {
         "name": "Clear manual change"
       },
-      "reset_heating_learning": {
-        "name": "Reset heating learning"
-      },
-      "reset_cooling_learning": {
-        "name": "Reset cooling learning"
+      "reset_learning": {
+        "name": "Reset learning"
       }
     }
   },

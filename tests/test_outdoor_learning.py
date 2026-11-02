@@ -1,4 +1,4 @@
-"""Tests for outdoor tracking and heating rate learning."""
+"""Tests for outdoor tracking and the thermal model of a room."""
 
 from __future__ import annotations
 
@@ -160,301 +160,151 @@ class OutdoorTest(unittest.TestCase):
         self.assertTrue(again.cutoff_active)
 
 
-class LearningTest(unittest.TestCase):
-    T0 = datetime(2026, 10, 12, 6, tzinfo=TZ)
+def _room(
+    learner,
+    *,
+    h=1.5,
+    k=0.04,
+    tau=60.0,
+    days=2.0,
+    start=19.0,
+    step=5,
+    outdoor=None,
+    spike_every=None,
+    configured=True,
+):
+    """Simulate a room with a thermostat (21 °C by day, 18 °C at night) and feed the learner.
 
-    def _episode(self, learner, start, outdoor, rise=3.0, minutes=90, window=False):
-        learner.observe(start, True, 19.0, 22.0, outdoor)
-        learner.observe(start + timedelta(minutes=30), True, 20.0, 22.0, outdoor, window)
-        return learner.observe(start + timedelta(minutes=minutes), True, 19.0 + rise, 22.0, outdoor)
+    Returns the room temperature at the end. ``spike_every``: every so many
+    minutes the sensor reads 1 °C too high once (a disturbance).
+    """
+    t0 = datetime(2026, 11, 1, tzinfo=TZ)
+    temp, q, heat = start, 0.0, False
+    for i in range(int(days * 24 * 60)):
+        now = t0 + timedelta(minutes=i)
+        target = 21.0 if 6 <= (i // 60) % 24 < 23 else 18.0
+        out = outdoor if outdoor is not None else 5 + 5 * math.sin(2 * math.pi * i / 1440)
+        if temp < target - 0.3:
+            heat = True
+        elif temp > target + 0.3:
+            heat = False
+        u = 1.0 if heat else 0.0
+        q = u + (q - u) * math.exp(-1 / tau) if tau > 0 else u
+        temp += (h * q - k * (temp - out)) / 60
+        if i % step == 0:
+            reading = round(temp, 1)
+            if spike_every and i % spike_every == 0:
+                reading += 1.0
+            learner.observe(now, heat, reading, round(out, 1), False, configured)
+    return temp
 
-    def _feed(self, learner, day, outdoor, rise, minutes):
-        """One episode that rises ``rise`` °C to the target in ``minutes``."""
-        start = self.T0 + timedelta(days=day)
-        learner.observe(start, True, 22.0 - rise, 22.0, outdoor)
-        return learner.observe(start + timedelta(minutes=minutes), True, 22.0, 22.0, outdoor)
+
+class ThermalModelTest(unittest.TestCase):
+    """The physical room model and its learning."""
 
     def test_default_before_learning(self) -> None:
-        learner = learning.HeatingRateLearner()
-        # 60 minutes per degree until the first episode.
-        self.assertEqual(learner.minutes(3.0, 5.0), 180.0)
-        self.assertEqual(learner.minutes_per_degree(None), learning.DEFAULT_MINUTES_PER_DEGREE)
-        self.assertEqual(learner.minutes(0.0, 5.0), 0.0)
-
-    def test_episode(self) -> None:
-        learner = learning.HeatingRateLearner()
-        # Just below the target the episode goes on (no margin): it ends at the target.
-        self.assertIsNone(self._episode(learner, self.T0, 5.0, rise=2.95))
-        minutes = learner.observe(self.T0 + timedelta(minutes=90), True, 22.0, 22.0, 5.0)
-        self.assertEqual(minutes, 90.0)
-        self.assertEqual(learner.episodes[0][:3], [5.0, 3.0, 90.0])
-        # One episode: 30 minutes per degree, at every outdoor temperature.
-        self.assertAlmostEqual(learner.minutes(3.0, 5.0), 90.0)
-        self.assertAlmostEqual(learner.minutes(1.5, -5.0), 45.0)
-
-    def test_short_demand_ignored(self) -> None:
-        # The heat demand must last at least 10 minutes.
-        learner = learning.HeatingRateLearner()
-        learner.observe(self.T0, True, 19.0, 22.0, 5.0)
-        self.assertIsNone(learner.observe(self.T0 + timedelta(minutes=9), False, 19.5, 22.0, 5.0))
-        self.assertEqual(learner.episodes, [])
-        learner.observe(self.T0, True, 19.0, 22.0, 5.0)
-        self.assertEqual(
-            learner.observe(self.T0 + timedelta(minutes=10), False, 19.1, 22.0, 5.0), 10.0
-        )
-
-    def test_window_episode_ignored(self) -> None:
-        learner = learning.HeatingRateLearner()
-        self.assertIsNone(self._episode(learner, self.T0, 5.0, window=True))
-        self.assertEqual(learner.episodes, [])
-        # No episode starts while a window is open.
-        learner.observe(self.T0, True, 19.0, 22.0, 5.0, True)
-        self.assertIsNone(learner.episode_start)
-
-    def test_fixed_part_and_outdoor_learned(self) -> None:
-        # A room with 25 minutes before it rises and 60 - 2 × outdoor minutes per degree.
-        learner = learning.HeatingRateLearner()
-        for day, (outdoor, rise) in enumerate([(10.0, 0.4), (0.0, 3.0), (5.0, 2.0), (0.0, 0.5)]):
-            self._feed(learner, day, outdoor, rise, 25 + rise * (60 - 2 * outdoor))
+        learner = learning.ThermalLearner()
         model = learner.model
-        self.assertTrue(model.uses_fixed and model.uses_outdoor)
-        self.assertAlmostEqual(model.fixed, 25.0, places=1)
-        self.assertAlmostEqual(model.per_degree, 60.0, places=1)
-        self.assertAlmostEqual(model.per_outdoor, -2.0, places=2)
-        # Never seen -3 °C: estimated from the trend, 25 + 3 × 66.
-        self.assertAlmostEqual(learner.minutes(3.0, -3.0), 223.0, places=0)
-        # Unknown outdoor temperature: the mean of the episodes (3.75 °C).
-        self.assertAlmostEqual(learner.minutes_per_degree(None), 60 - 2 * 3.75, places=1)
+        self.assertFalse(model.learned)
+        # 60 minutes per degree, as before any learning.
+        self.assertAlmostEqual(model.minutes_to_heat(18.0, 21.0, 5.0), 180.0, delta=1)
+        # Nothing is known about the cooling yet.
+        self.assertIsNone(model.minutes_to_fall(21.0, 20.0, 5.0))
+        self.assertIsNone(model.loss_rate(21.0, 5.0))
 
-    def test_terms_need_spread(self) -> None:
-        # Same sizes (less than 1 °C apart): no fixed part.
-        learner = learning.HeatingRateLearner()
-        for day, (outdoor, minutes) in enumerate([(0.0, 40.0), (5.0, 30.0), (10.0, 20.0)]):
-            self._feed(learner, day, outdoor, 0.5, minutes)
-        self.assertFalse(learner.model.uses_fixed)
-        self.assertTrue(learner.model.uses_outdoor)
-        self.assertEqual(learner.model.fixed, 0.0)
-        # Outdoor temperatures less than 1 °C apart: no outdoor term.
-        flat = learning.HeatingRateLearner()
-        for day, (outdoor, rise) in enumerate([(5.0, 0.5), (5.5, 2.0)]):
-            self._feed(flat, day, outdoor, rise, 20 + rise * 50)
-        self.assertFalse(flat.model.uses_outdoor)
-        self.assertTrue(flat.model.uses_fixed)
-        self.assertAlmostEqual(flat.minutes(1.0, -10.0), 70.0, places=1)
-
-    def test_impossible_terms_set_to_zero(self) -> None:
-        # Large episodes not slower than small ones: only a fixed part is left.
-        learner = learning.HeatingRateLearner()
-        self._feed(learner, 0, 5.0, 0.5, 300)
-        self._feed(learner, 1, 5.0, 2.5, 100)
-        self.assertEqual(learner.model.per_degree, 0.0)
-        self.assertAlmostEqual(learner.minutes(3.0, 5.0), 200.0)
-        # A negative fixed part: set to zero, the minutes per degree refitted.
-        neg = learning.HeatingRateLearner()
-        self._feed(neg, 0, 5.0, 0.5, 10)
-        self._feed(neg, 1, 5.0, 2.0, 100)
-        self.assertEqual(neg.model.fixed, 0.0)
-        self.assertGreater(neg.model.per_degree, 0.0)
-        # Far outside the learned range the minutes per degree never go below zero.
-        trend = learning.HeatingRateLearner()
-        for day, (outdoor, minutes) in enumerate([(0.0, 40.0), (5.0, 30.0), (10.0, 20.0)]):
-            self._feed(trend, day, outdoor, 0.5, minutes)
-        self.assertEqual(trend.minutes_per_degree(60.0), 0.0)
-
-    def test_time_heated_counts_against_the_fixed_part(self) -> None:
-        learner = learning.HeatingRateLearner()
-        for day, (outdoor, rise) in enumerate([(5.0, 0.5), (5.0, 2.5)]):
-            self._feed(learner, day, outdoor, rise, 30 + rise * 40)
-        self.assertAlmostEqual(learner.model.fixed, 30.0, places=1)
-        start = self.T0 + timedelta(days=5)
-        self.assertAlmostEqual(learner.minutes(1.0, 5.0, start), 70.0, places=1)
-        # Heating for 20 minutes already: 10 minutes of the fixed part are left.
-        learner.observe(start, True, 20.0, 22.0, 5.0)
-        later = start + timedelta(minutes=20)
-        self.assertAlmostEqual(learner.minutes(1.0, 5.0, later), 50.0, places=1)
-        # After the whole fixed part: only the minutes per degree.
-        self.assertAlmostEqual(
-            learner.minutes(1.0, 5.0, start + timedelta(hours=1)), 40.0, places=1
-        )
-
-    def test_outdoor_term_with_a_negative_value_at_zero(self) -> None:
-        # Learned only at 10 … 15 °C: the line may cross zero below the range; the
-        # model is kept (never below zero far away) and not cut at 0 °C.
-        learner = learning.HeatingRateLearner()
-        for day, (outdoor, minutes) in enumerate([(10.0, 15.0), (12.5, 20.0), (15.0, 25.0)]):
-            self._feed(learner, day, outdoor, 0.5, minutes)
-        self.assertTrue(learner.model.uses_outdoor)
-        self.assertAlmostEqual(learner.minutes(0.5, 12.5), 20.0, places=1)
-        self.assertEqual(learner.minutes_per_degree(-20.0), 0.0)
-
-    def test_episodes_without_outdoor(self) -> None:
-        learner = learning.HeatingRateLearner()
-        self._feed(learner, 0, None, 0.5, 30)
-        self._feed(learner, 1, None, 2.5, 110)
-        self.assertTrue(learner.model.uses_fixed)
-        self.assertAlmostEqual(learner.minutes(1.0, None), 50.0, places=1)
-
-    def test_small_and_large_kept_apart(self) -> None:
-        learner = learning.HeatingRateLearner()
-        for day in range(3):
-            self._feed(learner, day, 5.0, 3.0, 200)
-        for day in range(3, 40):
-            self._feed(learner, day, 5.0, 0.4, 40)
-        sizes = [e[1] for e in learner.episodes]
-        self.assertEqual(sizes.count(3.0), 3)
-        self.assertEqual(sizes.count(0.4), learning.MAX_SMALL_EPISODES)
-        # In time order, the large ones first here.
-        self.assertEqual(sizes[:3], [3.0, 3.0, 3.0])
-        for day in range(40, 70):
-            self._feed(learner, day, 5.0, 2.0, 150)
-        sizes = [e[1] for e in learner.episodes]
-        self.assertEqual(len([g for g in sizes if g >= 1]), learning.MAX_LARGE_EPISODES)
-        self.assertEqual(sizes.count(0.4), learning.MAX_SMALL_EPISODES)
-
-    def test_cancel(self) -> None:
-        # Outside the cold season the episode in progress is dropped.
-        learner = learning.HeatingRateLearner()
-        learner.observe(self.T0, True, 19.0, 22.0, 5.0)
-        learner.cancel()
-        self.assertIsNone(learner.episode_start)
-        cooling = learning.CoolingLearner()
-        cooling.observe(self.T0, False, 22.0, 5.0)
-        cooling.cancel()
-        self.assertIsNone(cooling.observe(self.T0 + timedelta(hours=2), True, 21.0, 5.0))
-
-    def test_learning_is_free(self) -> None:
-        # A very slow room is learned as measured: 0.4 °C in 3 h.
-        slow = learning.HeatingRateLearner()
-        slow.observe(self.T0, True, 21.3, 22.0, 7.0, tolerance=0.5)
-        self.assertEqual(
-            slow.observe(self.T0 + timedelta(hours=3), False, 21.7, 22.0, 7.0, tolerance=0.5),
-            180.0,
-        )
-        self.assertAlmostEqual(slow.minutes_per_degree(7.0), 450.0)
-        # A rise of only 0.1 °C is learned too; no rise is nothing to learn.
-        tiny = learning.HeatingRateLearner()
-        tiny.observe(self.T0, True, 21.4, 22.0, 7.0, tolerance=0.5)
-        self.assertEqual(
-            tiny.observe(self.T0 + timedelta(hours=1), False, 21.5, 22.0, 7.0, tolerance=0.5), 60.0
-        )
-        flat = learning.HeatingRateLearner()
-        flat.observe(self.T0, True, 21.4, 22.0, 7.0, tolerance=0.5)
-        self.assertIsNone(
-            flat.observe(self.T0 + timedelta(hours=1), False, 21.4, 22.0, 7.0, tolerance=0.5)
-        )
-
-    def test_restore_and_migrate(self) -> None:
-        learner = learning.HeatingRateLearner()
-        self._episode(learner, self.T0, 5.0)
-        again = learning.HeatingRateLearner.from_dict(learner.as_dict())
-        self.assertEqual(again.episodes, learner.episodes)
-        self.assertEqual(again.minutes(3.0, 5.0), learner.minutes(3.0, 5.0))
-        # Older versions kept only a rate per episode: they are discarded.
-        for old in (
-            {"version": 3, "episodes": [[5.0, 0.8, "b"]]},
-            {"version": 2, "episodes": [[5.0, 0.8, "b"]]},
-            {"rates": {"above_10": 0.284}},
-            None,
+    def test_learns_heating_loss_and_inertia(self) -> None:
+        for h, k, tau in (
+            (1.5, 0.04, 60.0),
+            (3.0, 0.08, 20.0),
+            (1.0, 0.03, 180.0),
+            (2.0, 0.05, 0.0),
         ):
-            restored = learning.HeatingRateLearner.from_dict(old)
-            self.assertEqual(restored.episodes, [])
-            self.assertEqual(restored.minutes(1.0, 2.0), learning.DEFAULT_MINUTES_PER_DEGREE)
-        # Broken entries are skipped.
-        broken = learning.HeatingRateLearner.from_dict(
-            {
-                "version": learning.DATA_VERSION,
-                "episodes": [[5.0, 0.0, 30, ""], ["x"], [None, 1.0, 50, "a"]],
-            }
+            learner = learning.ThermalLearner()
+            _room(learner, h=h, k=k, tau=tau, days=3)
+            model = learner.model
+            self.assertTrue(model.learned)
+            self.assertAlmostEqual(model.h, h, delta=0.05 * h)
+            self.assertAlmostEqual(model.k, k, delta=0.1 * k)
+            self.assertEqual(model.tau, tau)
+
+    def test_learned_within_a_day(self) -> None:
+        learner = learning.ThermalLearner()
+        _room(learner, days=1)
+        self.assertTrue(learner.model.learned)
+
+    def test_physical_extrapolation_to_the_cold(self) -> None:
+        learner = learning.ThermalLearner()
+        _room(learner, h=1.5, k=0.04, tau=90.0, days=4)
+        true = learning.ThermalModel(h=1.5, k=0.04, tau=90.0, learned=True)
+        for outdoor in (10.0, 0.0, -10.0):
+            learned = learner.model.minutes_to_heat(18.0, 21.0, outdoor)
+            self.assertAlmostEqual(learned, true.minutes_to_heat(18.0, 21.0, outdoor), delta=15)
+        # A target above what the heating can hold is never reached.
+        self.assertIsNone(true.minutes_to_heat(18.0, 60.0, -10.0))
+
+    def test_inertia_keeps_warming_after_a_stop(self) -> None:
+        model = learning.ThermalModel(h=2.0, k=0.04, tau=90.0, learned=True)
+        # Right after heating (all the heat still in the floor) the room still rises.
+        later = model.simulate(21.0, 5.0, 1.0, False, 30)
+        self.assertGreater(later, 21.0)
+        # So it takes longer to fall to 20.5 °C than without inertia.
+        none = learning.ThermalModel(h=2.0, k=0.04, tau=0.0, learned=True)
+        self.assertGreater(
+            model.minutes_to_fall(21.0, 20.5, 5.0, 1.0), none.minutes_to_fall(21.0, 20.5, 5.0, 0.0)
         )
-        self.assertEqual(broken.episodes, [[None, 1.0, 50.0, "a"]])
+        # A room already heating reaches its target sooner than one starting cold.
+        self.assertLess(
+            model.minutes_to_heat(20.0, 21.0, 5.0, 1.0), model.minutes_to_heat(20.0, 21.0, 5.0, 0.0)
+        )
 
-    def test_episode_in_progress_survives_a_restart(self) -> None:
-        # 20.3 °C at the start, target 22: heating for 7 hours with a restart in between.
-        learner = learning.HeatingRateLearner()
-        self.assertIsNone(learner.observe(self.T0, True, 20.3, 22.0, 14.0, tolerance=0.5))
-        saved = learner.as_dict()
-        self.assertEqual(saved["in_progress"]["temp"], 20.3)
-        again = learning.HeatingRateLearner.from_dict(saved)
-        self.assertEqual(again.episode_start, self.T0)
-        # Still heating after the restart: the same episode goes on.
-        self.assertIsNone(again.observe(self.T0 + timedelta(hours=7), True, 21.4, 22.0, 12.0))
-        minutes = again.observe(self.T0 + timedelta(hours=8), False, 21.4, 19.0, 12.0)
-        self.assertEqual(minutes, 480.0)
-        # 21.4 - 20.3 = 1.1 °C; outdoor mean of the 3 values (14 + 12 + 12) / 3 = 12.7.
-        self.assertEqual(again.episodes[-1][:3], [12.7, 1.1, 480.0])
-        self.assertNotIn("in_progress", again.as_dict())
+    def test_disturbances_weigh_less(self) -> None:
+        learner = learning.ThermalLearner()
+        _room(learner, h=1.5, k=0.04, tau=60.0, days=4, spike_every=360)
+        self.assertAlmostEqual(learner.model.h, 1.5, delta=0.15)
+        self.assertAlmostEqual(learner.model.k, 0.04, delta=0.008)
 
-    def test_restored_episode_dropped_when_not_heating(self) -> None:
-        # Not heating at the first observation after the restart: when the heating
-        # stopped is not known, so the episode is not used.
-        learner = learning.HeatingRateLearner()
-        learner.observe(self.T0, True, 20.3, 22.0, 14.0, tolerance=0.5)
-        again = learning.HeatingRateLearner.from_dict(learner.as_dict())
-        self.assertIsNone(again.observe(self.T0 + timedelta(hours=2), False, 21.0, 22.0, 12.0))
-        self.assertIsNone(again.episode_start)
-        self.assertEqual(again.episodes, [])
-        # Malformed saved data is ignored.
-        for bad in (
-            {"start": "x", "temp": 20.0},
-            {"start": self.T0.isoformat(), "temp": "nan"},
-            "x",
-        ):
-            restored = learning.HeatingRateLearner.from_dict(
-                {"version": learning.DATA_VERSION, "episodes": [], "in_progress": bad}
-            )
-            self.assertIsNone(restored.episode_start)
+    def test_disturbed_stretches_not_used(self) -> None:
+        learner = learning.ThermalLearner()
+        t0 = datetime(2026, 11, 1, tzinfo=TZ)
+        for i in range(0, 600, 5):
+            learner.observe(t0 + timedelta(minutes=i), True, 20.0 + i / 600, 5.0, True)
+        self.assertEqual(learner.heat_windows, 0.0)
 
-    def test_episode_starts_at_tolerance(self) -> None:
-        # Generic Thermostat with cold_tolerance 0.5: it heats from 0.5 below the target.
-        learner = learning.HeatingRateLearner()
-        learner.observe(self.T0, True, 21.6, 22.0, 5.0, tolerance=0.5)
-        self.assertIsNone(learner.episode_start)
-        # At least the tolerance below the target starts an episode (maintenance too).
-        learner.observe(self.T0, True, 21.5, 22.0, 5.0, tolerance=0.5)
-        self.assertIsNotNone(learner.episode_start)
-        self.assertEqual(learning.start_gap(0.5), 0.5)
+    def test_gap_drops_the_stretch(self) -> None:
+        learner = learning.ThermalLearner()
+        t0 = datetime(2026, 11, 1, tzinfo=TZ)
+        learner.observe(t0, True, 20.0, 5.0)
+        self.assertFalse(learner.observe(t0 + timedelta(minutes=45), True, 21.0, 5.0))
+        self.assertEqual(learner.heat_windows, 0.0)
 
-
-class CoolingLearnerTest(unittest.TestCase):
-    T0 = datetime(2026, 10, 12, 22, 0, tzinfo=timezone.utc)
-
-    def _cool(self, learner, start, indoor0, indoor1, outdoor, minutes, window=False):
-        learner.observe(start, False, indoor0, outdoor, window)
-        return learner.observe(start + timedelta(minutes=minutes), True, indoor1, outdoor, False)
-
-    def test_coefficient_from_inside_outside_difference(self) -> None:
-        learner = learning.CoolingLearner()
-        # 22 -> 21.5 °C in 1 h with 7 °C outside: k = ln(15 / 14.5).
-        k = self._cool(learner, self.T0, 22.0, 21.5, 7.0, 60)
-        self.assertAlmostEqual(k, math.log(15 / 14.5), places=4)
-        # The same house loses heat faster when it is colder outside.
-        self.assertGreater(learner.rate(22.0, -5.0), learner.rate(22.0, 7.0))
-        # Time to fall from 22 to 21.5 °C at 7 °C outside: 1 h.
-        self.assertAlmostEqual(learner.minutes_to_fall(22.0, 21.5, 7.0), 60.0, delta=0.01)
-        self.assertAlmostEqual(learner.temperature_after(22.0, 7.0, 60), 21.5, delta=0.001)
-
-    def test_episode_conditions(self) -> None:
-        learner = learning.CoolingLearner()
-        # Shorter than 10 minutes without heat demand: not used.
-        self.assertIsNone(self._cool(learner, self.T0, 22.0, 21.9, 7.0, 9))
-        # No fall (sun, cooking): not used.
-        self.assertIsNone(self._cool(learner, self.T0, 22.0, 22.0, 7.0, 60))
-        # A window open: not used.
-        self.assertIsNone(self._cool(learner, self.T0, 22.0, 21.0, 7.0, 60, window=True))
-        # Any fall over at least 10 minutes counts.
-        self.assertIsNotNone(self._cool(learner, self.T0, 22.0, 21.9, 7.0, 10))
-        self.assertEqual(len(learner.episodes), 1)
+    def test_without_outdoor_a_constant_loss(self) -> None:
+        learner = learning.ThermalLearner()
+        _room(learner, h=1.5, k=0.04, tau=0.0, days=3, outdoor=5.0, configured=False)
+        model = learner.model
+        self.assertTrue(model.learned and model.constant_loss)
+        # At about 20 °C inside and 5 °C outside the loss is 0.04 × 15 = 0.6 °C per hour.
+        self.assertAlmostEqual(model.k, 0.6, delta=0.1)
 
     def test_restore(self) -> None:
-        learner = learning.CoolingLearner()
-        self._cool(learner, self.T0, 22.0, 21.5, 7.0, 60)
-        again = learning.CoolingLearner.from_dict(learner.as_dict())
-        self.assertEqual(again.episodes, learner.episodes)
-        self.assertIsNone(learning.CoolingLearner.from_dict(None).coefficient)
+        learner = learning.ThermalLearner()
+        _room(learner, days=2)
+        again = learning.ThermalLearner.from_dict(learner.as_dict())
+        self.assertEqual(again.model.h, learner.model.h)
+        self.assertEqual(again.model.tau, learner.model.tau)
+        self.assertTrue(again.model.learned)
+        # Learning of an older version is learned again.
+        self.assertFalse(
+            learning.ThermalLearner.from_dict({"version": 4, "episodes": []}).model.learned
+        )
+        broken = learner.as_dict()
+        broken["fits"][0][2] = "nan"
+        self.assertFalse(learning.ThermalLearner.from_dict(broken).model.learned)
 
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_reset(self) -> None:
+        learner = learning.ThermalLearner()
+        _room(learner, days=2)
+        learner.reset()
+        self.assertFalse(learner.model.learned)
 
 
 class ExpectedOutdoorTest(unittest.TestCase):
@@ -530,45 +380,3 @@ class ExpectedOutdoorTest(unittest.TestCase):
         )
         self.assertEqual(source, "forecast")
         self.assertAlmostEqual(value, (0.0 * 40 - 2.0 * 10) / 50, places=2)
-
-
-class RobustFitTest(unittest.TestCase):
-    """Episodes far from the others are left out of the fit."""
-
-    def _episodes(self, extra):
-        # 10 episodes of 20 minutes + 30 minutes per degree, outdoor 5 °C.
-        base = [
-            [5.0, g, 20 + 30 * g, ""] for g in (0.5, 0.8, 1.0, 1.2, 1.5, 1.8, 2.0, 2.2, 2.5, 3.0)
-        ]
-        return base + extra
-
-    def test_far_episode_left_out(self) -> None:
-        # A door left open: 2 °C took 300 minutes instead of 80.
-        episodes = self._episodes([[5.0, 2.0, 300.0, ""]])
-        plain = learning.fit_model(episodes)
-        robust = learning.fit_robust(episodes)
-        self.assertEqual(robust.left_out, 1)
-        self.assertAlmostEqual(robust.minutes(2.0, 5.0), 80.0, delta=1.0)
-        self.assertGreater(abs(plain.minutes(2.0, 5.0) - 80.0), 5.0)
-
-    def test_usual_spread_kept(self) -> None:
-        # Ordinary day to day differences: nothing is left out.
-        episodes = [
-            [5.0, g, 20 + 30 * g + d, ""]
-            for g, d in zip(
-                (0.5, 0.8, 1.0, 1.2, 1.5, 1.8, 2.0, 2.2, 2.5, 3.0),
-                (3, -4, 2, -3, 5, -2, 4, -5, 1, -1),
-            )
-        ]
-        self.assertEqual(learning.fit_robust(episodes).left_out, 0)
-
-    def test_few_episodes_unchanged(self) -> None:
-        episodes = [[5.0, 1.0, 50.0, ""], [5.0, 2.0, 80.0, ""], [5.0, 2.0, 300.0, ""]]
-        self.assertEqual(learning.fit_robust(episodes), learning.fit_model(episodes))
-
-    def test_learner_uses_it(self) -> None:
-        learner = learning.HeatingRateLearner()
-        learner.episodes = self._episodes([[5.0, 2.0, 300.0, ""]])
-        self.assertEqual(learner.model.left_out, 1)
-        # The episode is still kept (it comes back when it fits again).
-        self.assertEqual(len(learner.episodes), 11)

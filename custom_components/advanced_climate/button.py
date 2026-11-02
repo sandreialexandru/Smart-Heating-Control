@@ -31,8 +31,7 @@ async def async_setup_entry(
         async_add_entities(
             [
                 ClearRoomOverrideButton(room),
-                ResetHeatingLearningButton(room),
-                ResetCoolingLearningButton(room),
+                ResetLearningButton(room),
             ],
             config_subentry_id=room.id,
         )
@@ -87,31 +86,16 @@ class ClearRoomOverrideButton(RoomEntity, ButtonEntity):
         await self.house.async_evaluate_or_notify()
 
 
-class ResetHeatingLearningButton(RoomEntity, ButtonEntity):
-    """Forget what the room learned about heating (it is learned again)."""
+class ResetLearningButton(RoomEntity, ButtonEntity):
+    """Forget the learned thermal model of the room (it is learned again)."""
 
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, room: Room) -> None:
         """Initialize."""
-        super().__init__(room, "reset_heating_learning")
+        super().__init__(room, "reset_learning")
 
     async def async_press(self) -> None:
         """Press."""
-        self.room.reset_heating_learning()
-        await self.house.async_evaluate_or_notify()
-
-
-class ResetCoolingLearningButton(RoomEntity, ButtonEntity):
-    """Forget what the room learned about cooling (it is learned again)."""
-
-    _attr_entity_category = EntityCategory.CONFIG
-
-    def __init__(self, room: Room) -> None:
-        """Initialize."""
-        super().__init__(room, "reset_cooling_learning")
-
-    async def async_press(self) -> None:
-        """Press."""
-        self.room.reset_cooling_learning()
+        self.room.reset_learning()
         await self.house.async_evaluate_or_notify()

@@ -145,7 +145,7 @@ from .engine import (
     optimal_schedule,
     optimal_stop_state,
 )
-from .learning import CoolingLearner, HeatingRateLearner
+from .learning import ThermalLearner
 from .schedule import (
     Schedule,
     ScheduleError,
@@ -277,8 +277,8 @@ class Room:
             self.override["until"] = from_iso(self.override.get("until"))
             self.override["since"] = from_iso(self.override.get("since"))
         self.child_lock = bool(stored.get("child_lock", False))
-        self.learner = HeatingRateLearner.from_dict(stored.get("learner"))
-        self.cooling = CoolingLearner.from_dict(stored.get("cooling"))
+        # The thermal model of the room (heating, heat loss and inertia).
+        self.learner = ThermalLearner.from_dict(stored.get("thermal"))
         self.runtime_s = float(stored.get("runtime_s", 0.0))
         self.observed_temps: dict[str, float] = {
             str(k): float(v) for k, v in (stored.get("observed_temps") or {}).items()
@@ -409,8 +409,7 @@ class Room:
             "nearby_temp": self.nearby_temp,
             "override": override,
             "child_lock": self.child_lock,
-            "learner": self.learner.as_dict(),
-            "cooling": self.cooling.as_dict(),
+            "thermal": self.learner.as_dict(),
             "runtime_s": round(self.runtime_s, 1),
             "observed_temps": self.observed_temps,
             "decisions": list(self.decisions),
@@ -731,14 +730,9 @@ class Room:
         self.override = None
         self.house.async_save()
 
-    def reset_heating_learning(self) -> None:
-        """Forget the learned heating (episodes and the one in progress)."""
-        self.learner = HeatingRateLearner()
-        self.house.async_save()
-
-    def reset_cooling_learning(self) -> None:
-        """Forget the learned cooling (episodes and the one in progress)."""
-        self.cooling = CoolingLearner()
+    def reset_learning(self) -> None:
+        """Forget the learned thermal model (it is learned again from now)."""
+        self.learner.reset()
         self.house.async_save()
 
     def _check_override(self, now: datetime, signature: tuple) -> None:
@@ -861,7 +855,7 @@ class Room:
         floor = self.comfort_floor(preset)
         if floor is None or self.current_temp is None:
             return None
-        return self.cooling.minutes_to_fall(self.current_temp, floor, outdoor)
+        return self.learner.model.minutes_to_fall(self.current_temp, floor, outdoor, self.learner.q)
 
     def optimal_estimate(
         self, now: datetime, state: ScheduleState, outdoor_known: bool, stop_allowed: bool
@@ -897,11 +891,14 @@ class Room:
         floor = self.comfort_floor(state.preset)
 
         def minutes_for(outdoor: float | None) -> float | None:
+            model, q = self.learner.model, self.learner.q
             if kind == RULE_OPTIMAL_START:
-                return self.learner.minutes(gap, outdoor, now) if gap > 0 else 0.0
+                if gap <= 0:
+                    return 0.0
+                return model.minutes_to_heat(self.current_temp, next_temp, outdoor, q)
             if floor is None:
                 return None
-            return self.cooling.minutes_to_fall(self.current_temp, floor, outdoor)
+            return model.minutes_to_fall(self.current_temp, floor, outdoor, q)
 
         minutes, outdoor, source = optimal_period(
             limit,
@@ -918,9 +915,7 @@ class Room:
             "needed": needed,
             "outdoor": outdoor,
             "outdoor_source": source,
-            "learned": bool(
-                self.learner.episodes if kind == RULE_OPTIMAL_START else self.cooling.episodes
-            ),
+            "learned": self.learner.model.learned,
         }
 
     def stop_forecast(self, now: datetime) -> dict[str, Any] | None:
@@ -936,9 +931,10 @@ class Room:
             return None
         minutes = max(0.0, (state.next_change - now).total_seconds() / 60)
         outdoor, _ = self.house.outdoor_between(now, state.next_change)
-        value = self.cooling.temperature_after(self.current_temp, outdoor, minutes)
-        if value is None:
+        model = self.learner.model
+        if not model.learned:
             return None
+        value = model.simulate(self.current_temp, outdoor, self.learner.q, False, minutes)
         return {"at": state.next_change.isoformat(), "temperature": value}
 
     def _start_needed(
@@ -950,7 +946,7 @@ class Room:
         level = self.level_temp(preset)
         if level is None or level <= self.current_temp:
             return None
-        return self.learner.minutes(level - self.current_temp, outdoor, now)
+        return self.learner.model.minutes_to_heat(self.current_temp, level, outdoor, self.learner.q)
 
     def time_to_target(self, outdoor: float | None) -> int | None:
         """Minutes until the target is reached, as learned (None when not heating up)."""
@@ -961,7 +957,10 @@ class Room:
         gap = self.target_temperature - self.current_temp
         if gap <= 0:
             return None
-        return max(1, round(self.learner.minutes(gap, outdoor, dt_util.utcnow())))
+        minutes = self.learner.model.minutes_to_heat(
+            self.current_temp, self.target_temperature, outdoor, self.learner.q
+        )
+        return None if minutes is None else max(1, round(minutes))
 
     def _window_sensor_open(self) -> bool:
         """A window or door sensor of the room (or a linked one) is open right now."""
@@ -1333,15 +1332,12 @@ class Room:
                 now,
                 self.heating,
                 self.current_temp,
-                self.target_temperature,
                 outdoor,
                 disturbed,
-                self.learn_tolerance(),
+                house.outdoor_configured,
             )
-            self.cooling.observe(now, self.heating, self.current_temp, outdoor, disturbed)
         else:
             self.learner.cancel()
-            self.cooling.cancel()
 
     def _next_wakeup(self, now: datetime, state: ScheduleState | None) -> datetime | None:
         """When to look again: the next change of the schedule, an end, a start."""
@@ -2501,27 +2497,34 @@ class Room:
                 else None
             ),
             "levels": {p: self.level_temp(p) for p in PRESETS},
-            "learned_heating": {
-                "fixed_minutes": self.learner.model.fixed,
-                "minutes_per_degree_at_0": self.learner.model.per_degree,
-                "per_outdoor_degree": self.learner.model.per_outdoor,
-                "uses_fixed": self.learner.model.uses_fixed,
-                "uses_outdoor": self.learner.model.uses_outdoor,
-                "episodes": len(self.learner.episodes),
-                "episodes_left_out": self.learner.model.left_out,
-                # Every kept episode (°C, as stored), to check the fit.
-                "episode_list": [
-                    {"outdoor": o, "rise": g, "minutes": m, "at": at or None}
-                    for o, g, m, at in self.learner.episodes
-                ],
-            },
-            "cooling_coefficient": self.cooling.coefficient,
-            "cooling_episode_list": [
-                {"outdoor": o, "coefficient": k, "at": at or None}
-                for o, k, at, *_ in self.cooling.episodes
-            ],
+            "thermal_model": self._model_info(),
             "runtime_hours": round(self.runtime_s / 3600, 2),
             "decisions": list(self.decisions),
+        }
+
+    def _model_info(self) -> dict[str, Any]:
+        """The learned thermal model (°C), for the diagnostics."""
+        learner, model = self.learner, self.learner.model
+        return {
+            "learned": model.learned,
+            "heating_per_hour": model.h,
+            "loss": model.k,
+            "constant_loss": model.constant_loss,
+            "inertia_minutes": model.tau,
+            "heat_reaching_now": round(learner.q, 3),
+            "error_per_hour": None if learner.error is None else round(learner.error, 3),
+            "heating_stretches": round(learner.heat_windows, 1),
+            "idle_stretches": round(learner.idle_windows, 1),
+            "outdoor_mean": model.outdoor_mean,
+            "candidates": [
+                {
+                    "inertia_minutes": fit.tau,
+                    "heating_per_hour": None if (sol := fit.solve()) is None else round(sol[0], 4),
+                    "loss": None if sol is None else round(sol[1], 5),
+                    "error": round(fit.error / fit.weight, 5) if fit.weight > 0 else None,
+                }
+                for fit in learner.fits
+            ],
         }
 
     @property

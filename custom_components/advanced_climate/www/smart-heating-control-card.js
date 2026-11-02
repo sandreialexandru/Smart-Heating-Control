@@ -220,12 +220,9 @@ const TEXT = {
     grp_learning: "Learning",
     reset: "Reset",
     reset_confirm: "Confirm?",
-    last_episode: "Last heating episode",
-    last_episode_value: "+{rise} in {minutes} min, outdoor {outdoor}, {time}",
-    last_episode_value_no_out: "+{rise} in {minutes} min, {time}",
-    eta_help: "Time until the target, as learned from the heating episodes for the current outdoor temperature.",
+    eta_help: "Time until the target, from the learned thermal model of the room for the current outdoor temperature.",
     stop_at: "~{temp} at {time}",
-    stop_help: "Optimal stop: expected room temperature at the scheduled change, from the learned cooling and the outdoor temperature expected until then.",
+    stop_help: "Optimal stop: expected room temperature at the scheduled change, from the learned thermal model and the outdoor temperature expected until then.",
     est_label: "Optimal start / stop",
     est_start: "Start for {target} at {time}",
     est_stop: "Stop for {target} at {time}",
@@ -263,12 +260,10 @@ const TEXT = {
     est_mark_stop: "stop ~{time}",
     paused_banner: "Pause: only frost protection, the maximum temperature and taking a TRV boost back to the target are sent",
     learn_heat: "Heating learned",
-    learn_cool: "Cooling learned",
-    learn_none: "learning…",
-    learn_heat_value: "{n} episodes · {fixed} min + {rate} now",
-    learn_heat_value_1: "1 episode · {fixed} min + {rate} now",
-    learn_cool_value: "{n} episodes · falls {rate} now",
-    learn_cool_value_1: "1 episode · falls {rate} now",
+    learn_cool: "Heat loss learned",
+    learn_progress: "learning… {heat} of {need} h with heating, {idle} of {need} h without",
+    learn_heat_value: "{rate} now · inertia {tau} min",
+    learn_cool_value: "falls {rate} now",
     origin_card: "card / service",
     origin_device: "on the device",
     back_after: "comes back after: {rule}",
@@ -460,12 +455,9 @@ const TEXT = {
     grp_learning: "Învățare",
     reset: "Resetează",
     reset_confirm: "Confirmi?",
-    last_episode: "Ultimul episod de încălzire",
-    last_episode_value: "+{rise} în {minutes} min, afară {outdoor}, {time}",
-    last_episode_value_no_out: "+{rise} în {minutes} min, {time}",
-    eta_help: "Timpul până la țintă, după cât a durat încălzirea în episoadele învățate, la temperatura de afară de acum.",
+    eta_help: "Timpul până la țintă, după modelul termic învățat al camerei, la temperatura de afară de acum.",
     stop_at: "~{temp} la {time}",
-    stop_help: "Oprire anticipată: temperatura estimată a camerei la schimbarea din program, după răcirea învățată și temperatura de afară prognozată până atunci.",
+    stop_help: "Oprire anticipată: temperatura estimată a camerei la schimbarea din program, după modelul termic învățat și temperatura de afară prognozată până atunci.",
     est_label: "Pornire / oprire anticipată",
     est_start: "Pornire pentru {target} la {time}",
     est_stop: "Oprire pentru {target} la {time}",
@@ -502,13 +494,11 @@ const TEXT = {
     est_mark_start: "pornire ~{time}",
     est_mark_stop: "oprire ~{time}",
     paused_banner: "Pauză: se trimit doar antiînghețul, temperatura maximă și readucerea forțării TRV la țintă",
-    learn_heat: "Învățare încălzire",
-    learn_cool: "Învățare răcire",
-    learn_none: "se învață…",
-    learn_heat_value: "{n} episoade · {fixed} min + {rate} acum",
-    learn_heat_value_1: "1 episod · {fixed} min + {rate} acum",
-    learn_cool_value: "{n} episoade · scade {rate} acum",
-    learn_cool_value_1: "1 episod · scade {rate} acum",
+    learn_heat: "Încălzire învățată",
+    learn_cool: "Pierdere de căldură învățată",
+    learn_progress: "se învață… {heat} din {need} h cu încălzire, {idle} din {need} h fără",
+    learn_heat_value: "{rate} acum · inerție {tau} min",
+    learn_cool_value: "scade {rate} acum",
     origin_card: "card / serviciu",
     origin_device: "pe dispozitiv",
     back_after: "revine după: {rule}",
@@ -1074,10 +1064,10 @@ class SmartHeatingControlCard extends HTMLElement {
     return r ? `~${h} h ${r} min` : `~${h} h`;
   }
 
-  /** "default 60 min/1°C": the heating used until the first episode (empty once learned). */
+  /** "default 60 min/1°C": the heating used until the model is learned (empty once learned). */
   _heatDefault(e) {
     const s = e && e.heating_rate ? this._state(e.heating_rate) : null;
-    if (s && (num(s.attributes.episodes) ?? 0) > 0) return "";
+    if (s && s.attributes.learned) return "";
     const unit = ((s && s.attributes.unit_of_measurement) || "min/°C").replace(/^min\//, "");
     const value = s ? num(s.state) : null;
     return this._t("heat_default").replace("{value}", `${Math.round(value ?? 60)} min/1${unit}`);
@@ -2515,27 +2505,32 @@ class SmartHeatingControlCard extends HTMLElement {
     return this._fold(`details-${a.room_id}`, this._t("details"), html);
   }
 
-  /** What the room learned (heating and cooling), each linked to its sensor, with its reset. */
+  /** The learned thermal model (heating and heat loss), each linked to its sensor, with the reset. */
   _learnHtml(e) {
-    const row = (entityId, label, valueKey, resetId) => {
-      const s = this._state(entityId);
-      if (!s) return "";
-      const n = num(s.attributes.episodes) ?? 0;
-      const unit = s.attributes.unit_of_measurement || "°C/h";
-      const value = num(s.state);
-      // Heating: minutes per degree (whole minutes) plus the fixed part.
-      const heating = valueKey === "learn_heat_value";
-      const fixed = num(s.attributes.fixed_minutes);
-      const text = n
-        ? this._t(n === 1 ? `${valueKey}_1` : valueKey)
-            .replace("{n}", String(n))
-            .replace("{fixed}", fixed === null ? "–" : String(Math.round(fixed)))
-            .replace(
-              "{rate}",
-              value === null ? "–" : `${heating ? Math.round(value) : value.toFixed(2)} ${unit}`
-            )
-        : this._t("learn_none");
-      const sub = heating && !n ? this._heatDefault({ heating_rate: entityId }) : "";
+    const heat = this._state(e.heating_rate);
+    const cool = this._state(e.cooling_rate);
+    const learned = !!(heat && heat.attributes.learned);
+    const row = (s, entityId, label, text, sub, reset) =>
+      `<div class="wide learn"><div class="link" ${this._more(entityId)}><dt>${esc(label)}</dt><dd>${esc(text)}${
+        sub ? `<small class="sub">${esc(sub)}</small>` : ""
+      }</dd></div>${reset}</div>`;
+    let html = "";
+    if (heat) {
+      const unit = heat.attributes.unit_of_measurement || "min/°C";
+      const value = num(heat.state);
+      const tau = num(heat.attributes.inertia_minutes) ?? 0;
+      const need = num(heat.attributes.hours_needed) ?? 4;
+      const text = learned
+        ? this._t("learn_heat_value")
+            .replace("{rate}", value === null ? "–" : `${Math.round(value)} ${unit}`)
+            .replace("{tau}", String(Math.round(tau)))
+        : this._t("learn_progress")
+            .replace("{heat}", String(Math.min(need, num(heat.attributes.hours_heating) ?? 0)))
+            .replace("{idle}", String(Math.min(need, num(heat.attributes.hours_idle) ?? 0)))
+            .split("{need}")
+            .join(String(need));
+      const sub = learned ? "" : this._heatDefault(e);
+      const resetId = e.reset_learning;
       const confirming = this._confirmReset === resetId;
       const reset =
         resetId && this._state(resetId)
@@ -2544,32 +2539,15 @@ class SmartHeatingControlCard extends HTMLElement {
               kind: confirming ? "soft-warn" : "",
             })
           : "";
-      return `<div class="wide learn"><div class="link" ${this._more(entityId)}><dt>${esc(label)}</dt><dd>${esc(text)}${
-        sub ? `<small class="sub">${esc(sub)}</small>` : ""
-      }</dd></div>${reset}</div>`;
-    };
-    return (
-      row(e.heating_rate, this._t("learn_heat"), "learn_heat_value", e.reset_heating_learning) +
-      row(e.cooling_rate, this._t("learn_cool"), "learn_cool_value", e.reset_cooling_learning) +
-      this._lastEpisodeHtml(e)
-    );
-  }
-
-  /** The last heating episode learned: rise, minutes, outdoor temperature and time. */
-  _lastEpisodeHtml(e) {
-    const s = this._state(e.heating_rate);
-    const list = s && Array.isArray(s.attributes.last_episodes) ? s.attributes.last_episodes : [];
-    const last = list[list.length - 1];
-    if (!last || num(last.rise) === null || num(last.minutes) === null) return "";
-    const outdoor = num(last.outdoor);
-    const text = this._t(outdoor === null ? "last_episode_value_no_out" : "last_episode_value")
-      .replace("{rise}", this._temp(last.rise))
-      .replace("{minutes}", String(Math.round(last.minutes)))
-      .replace("{outdoor}", outdoor === null ? "" : this._temp(outdoor))
-      .replace("{time}", last.at ? this._fmtTime(last.at) : "–");
-    return `<div class="wide link" ${this._more(e.heating_rate)}><dt>${esc(this._t("last_episode"))}</dt><dd>${esc(
-      text
-    )}</dd></div>`;
+      html += row(heat, e.heating_rate, this._t("learn_heat"), text, sub, reset);
+    }
+    if (cool && learned) {
+      const value = num(cool.state);
+      const unit = cool.attributes.unit_of_measurement || "°C/h";
+      const text = this._t("learn_cool_value").replace("{rate}", value === null ? "–" : `${value.toFixed(2)} ${unit}`);
+      html += row(cool, e.cooling_rate, this._t("learn_cool"), text, "", "");
+    }
+    return html;
   }
 
   /** Text of one alert in the language of the card. */

@@ -132,6 +132,7 @@ from .const import (
     VERIFY_DELAY,
     WEEKDAYS,
 )
+from .device_echo import DeviceLimits, SentValues, close, limit_kind, step_margin
 from .engine import (
     KIND_NONE,
     KIND_OFF,
@@ -182,14 +183,6 @@ FROST_ALERT_MARGIN = 0.5
 SENT_RECENT = timedelta(minutes=SENT_RECENT_MINUTES)
 SENT_STABLE = timedelta(seconds=SENT_STABLE_SECONDS)
 DEVICE_LIMIT_KEEP = timedelta(hours=DEVICE_LIMIT_HOURS)
-
-
-def _close(value: Any, sent: Any, margin: float) -> bool:
-    """True when a reported temperature is a value that was sent (within the step)."""
-    try:
-        return abs(float(value) - float(sent)) < margin
-    except (TypeError, ValueError):
-        return False
 
 
 def device_values(state: State) -> dict[str, Any]:
@@ -344,21 +337,12 @@ class Room:
         self.relay_waiting: str | None = None
         # When the minimum on / off time of the relay ends (while it waits).
         self._relay_wait_until: datetime | None = None
-        # Values of the last commands, per device: a device that reports them
-        # later (e.g. a sleepy Zigbee TRV) is not a manual change.
-        self._sent: dict[str, dict[str, Any]] = {}
-        # Every value sent to a thermostat in the last minutes: a TRV may report
-        # an older command after a newer one was sent (e.g. 21 °C, then 12 °C for
-        # away, and only then the 21 °C); that is not a manual change either.
-        self._sent_recent: dict[str, list[tuple[datetime, str, Any]]] = {}
-        # Since when the device shows the last value sent, per value: the older
-        # values are forgotten only after it stayed there a while (some TRVs show
-        # the new value at once and then report the old one once more).
-        self._sent_confirmed: dict[str, dict[str, datetime]] = {}
+        # The values sent to each device: a device that reports them later (a
+        # sleepy Zigbee TRV), or reports an older one once more, is not a person.
+        self.sent = SentValues(SENT_RECENT, SENT_STABLE)
         # Limits a thermostat applies on the device itself, below its entity range
-        # (e.g. "Max temperature" 25 on a Tuya TRV whose entity goes to 35):
-        # {entity: {"max" | "min": (value in its unit, when learned)}}.
-        self._device_limits: dict[str, dict[str, tuple[float, datetime]]] = {}
+        # (e.g. "Max temperature" 25 on a Tuya TRV whose entity goes to 35).
+        self.limits = DeviceLimits(DEVICE_LIMIT_KEEP)
 
     # ------------------------------------------------------------------
     # Setup
@@ -623,7 +607,7 @@ class Room:
             elif self._is_manual_change(event, old, new):
                 self._handle_manual_change(entity_id, new)
             else:
-                self._confirm_sent(entity_id, new)
+                self.sent.confirm(entity_id, new, now)
         elif entity_id in self.switches:
             if (
                 old is not None
@@ -632,7 +616,7 @@ class Room:
                 and valid(new)
                 and old.state != new.state
                 and not self.house.is_own_context(event.context)
-                and not self._is_echo(entity_id, old, new)
+                and not self.sent.is_echo(entity_id, old, new, now)
             ):
                 self._handle_manual_change(entity_id, new)
         if entity_id in as_list(self.config.get(CONF_TEMP_SENSORS)) or entity_id in self.climates:
@@ -657,7 +641,7 @@ class Room:
             return False
         if not self.house.started:
             return False
-        if self._is_echo(event.data["entity_id"], old, new):
+        if self.sent.is_echo(event.data["entity_id"], old, new, dt_util.utcnow()):
             return False
         if old.state != new.state:
             return True
@@ -666,81 +650,11 @@ class Room:
                 return True
         return False
 
-    def _is_echo(self, entity_id: str, old: State, new: State) -> bool:
-        """True when a device only reports the values the integration sent it.
-
-        Devices that confirm a command late get a new context, so the context
-        alone cannot tell them apart from a person. Every changed value we sent
-        must match it, and at least one must have been sent.
-        """
-        sent = self._sent.get(entity_id) or {}
-        now = dt_util.utcnow()
-        stable = {
-            key
-            for key, since in self._sent_confirmed.get(entity_id, {}).items()
-            if now - since >= SENT_STABLE
-        }
-        recent = [
-            (key, value)
-            for at, key, value in self._sent_recent.get(entity_id, [])
-            if now - at <= SENT_RECENT and key not in stable
-        ]
-        if not sent and not recent:
-            return False
-        changed: dict[str, Any] = {}
-        if old.state != new.state:
-            changed["state"] = new.state
-        for attr in ("preset_mode", ATTR_TEMPERATURE):
-            if old.attributes.get(attr) != new.attributes.get(attr):
-                changed[attr] = new.attributes.get(attr)
-        matched = False
-        for key, value in changed.items():
-            candidates = ([sent[key]] if key in sent else []) + [v for k, v in recent if k == key]
-            if not candidates:
-                continue
-            if key == ATTR_TEMPERATURE:
-                # The device may round to its own step.
-                step = float_attr(new, "target_temp_step")
-                margin = step / 2 + 0.01 if step else 0.05
-                same = any(_close(value, c, margin) for c in candidates)
-            else:
-                same = value in candidates
-            if not same:
-                return False
-            matched = True
-        return matched
-
-    def _confirm_sent(self, entity_id: str, new: State | None) -> None:
-        """Note since when the device shows the last value sent.
-
-        Once it has shown it for ``SENT_STABLE`` the older values are no longer
-        expected and any other value is a person's. A report of an older value
-        meanwhile (a device that bounces back once) restarts that time.
-        """
-        sent = self._sent.get(entity_id)
-        if not sent or new is None or not valid(new):
-            return
-        confirmed = self._sent_confirmed.setdefault(entity_id, {})
-        now = dt_util.utcnow()
-        for key, value in sent.items():
-            reported = new.state if key == "state" else new.attributes.get(key)
-            if key == ATTR_TEMPERATURE:
-                step = float_attr(new, "target_temp_step")
-                same = _close(reported, value, step / 2 + 0.01 if step else 0.05)
-            else:
-                same = reported == value
-            if same:
-                confirmed.setdefault(key, now)
-            else:
-                confirmed.pop(key, None)
-
     def _handle_manual_change(self, entity_id: str, new: State | None) -> None:
         """Respect a manual change (or revert it with the child lock)."""
         # From now on the device shows a person's values, not ours: if the person
         # later sets the value we sent before, that is a manual change too.
-        self._sent.pop(entity_id, None)
-        self._sent_recent.pop(entity_id, None)
-        self._sent_confirmed.pop(entity_id, None)
+        self.sent.forget(entity_id)
         self._boosted = False  # the person's value replaced the boost
         # In a pause the change is kept (it applies after the pause); the child
         # lock does not undo it then, since a pause sends nothing.
@@ -1824,7 +1738,7 @@ class Room:
                     {ATTR_ENTITY_ID: entity_id},
                 )
             ):
-                self._sent[entity_id] = {"state": wanted}
+                self.sent.set_last(entity_id, {"state": wanted})
                 if entity_id in self.switches:
                     self._relay_on = wanted == STATE_ON
                     self._relay_changed = dt_util.utcnow()
@@ -1904,8 +1818,7 @@ class Room:
         assert state is not None
         if not force and self._matches(state, target):
             return False
-        self._sent[entity_id] = {}
-        self._sent_confirmed.pop(entity_id, None)
+        self.sent.start(entity_id)
         modes = list(state.attributes.get("hvac_modes") or [])
         # Turned on only with a mode that heats (no guess when there is none).
         on_mode = heat_mode(modes) if {"heat", "auto"} & set(modes) else None
@@ -1971,14 +1884,9 @@ class Room:
 
     def _device_limit(self, entity_id: str, kind: str) -> float | None:
         """A limit learned from the device (its unit); forgotten after a day, to see a new setting."""
-        limit = self._device_limits.get(entity_id, {}).get(kind)
-        if limit is None:
-            return None
-        value, learned = limit
-        if dt_util.utcnow() - learned > DEVICE_LIMIT_KEEP:
-            self._device_limits[entity_id].pop(kind, None)
+        value, expired = self.limits.get(entity_id, kind, dt_util.utcnow())
+        if expired:
             self.house.clear_alert(f"limit_{entity_id}_{kind}")
-            return None
         return value
 
     def _check_device_limit(self, entity_id: str, old: State | None, new: State | None) -> bool:
@@ -2006,7 +1914,7 @@ class Room:
         """
         if new is None or not valid(new) or new.state == STATE_OFF:
             return False
-        sent = (self._sent.get(entity_id) or {}).get(ATTR_TEMPERATURE)
+        sent = self.sent.last_value(entity_id, ATTR_TEMPERATURE)
         reported = float_attr(new, ATTR_TEMPERATURE)
         if sent is None or reported is None:
             return False
@@ -2016,55 +1924,43 @@ class Room:
             return False
         # A TRV that has shown the value sent accepted it: any other value after
         # that is a person's, not its limit.
-        if ATTR_TEMPERATURE in self._sent_confirmed.get(entity_id, {}):
+        if self.sent.is_confirmed(entity_id, ATTR_TEMPERATURE):
+            return False
+        now = dt_util.utcnow()
+        # Only right after the command: a TRV holds its limit when it gets it.
+        sent_at = self.sent.last_sent_at(entity_id, ATTR_TEMPERATURE)
+        if sent_at is None or now - sent_at > SENT_RECENT:
             return False
         # A value sent before, reported now (late, or once more after the new one),
         # is an echo, not a limit. (At the check, the TRV has held what it shows
         # since before the command was sent again.)
-        step0 = float_attr(new, "target_temp_step")
-        margin0 = step0 / 2 + 0.01 if step0 else 0.05
-        now = dt_util.utcnow()
-        sent_at = [
-            at for at, key, _v in self._sent_recent.get(entity_id, []) if key == ATTR_TEMPERATURE
-        ]
-        # Only right after the command: a TRV holds its limit when it gets it.
-        if not sent_at or now - max(sent_at) > SENT_RECENT:
-            return False
-        earlier = [
-            v
-            for at, key, v in self._sent_recent.get(entity_id, [])
-            if key == ATTR_TEMPERATURE and now - at <= SENT_RECENT
-        ]
+        margin = step_margin(new)
+        earlier = self.sent.recent_values(entity_id, ATTR_TEMPERATURE, now)
         if (
             reported_now
-            and any(_close(reported, v, margin0) for v in earlier)
-            and not _close(reported, sent, margin0)
+            and any(close(reported, v, margin) for v in earlier)
+            and not close(reported, sent, margin)
         ):
             return False
         unit = system_unit(self.hass)
-        step = float_attr(new, "target_temp_step")
-        margin = step / 2 + 0.01 if step else 0.05
         base = self._target_temperature_of(self.decision.target) if self.decision else None
-        kind = None
-        if reported < sent - margin:
-            target = None if base is None else float(from_celsius(base, unit))
-            if self._exercise_until is not None or (
-                target is not None and sent > target + margin and reported >= target - margin
-            ):
-                kind = "max"
-        elif reported > sent + margin:
-            levels = [self.level_temp(p) for p in PRESETS]
-            lowest = min((v for v in levels if v is not None), default=None)
-            if lowest is not None and reported < float(from_celsius(lowest, unit)) - margin:
-                kind = "min"
+        levels = [self.level_temp(p) for p in PRESETS]
+        lowest = min((v for v in levels if v is not None), default=None)
+        kind = limit_kind(
+            sent,
+            reported,
+            margin,
+            target=None if base is None else float(from_celsius(base, unit)),
+            exercising=self._exercise_until is not None,
+            lowest_level=None if lowest is None else float(from_celsius(lowest, unit)),
+        )
         if kind is None:
             return False
-        previous = self._device_limits.get(entity_id, {}).get(kind)
-        if previous is not None and abs(previous[0] - reported) > margin:
+        previous = self.limits.learn(entity_id, kind, reported, now)
+        if previous is not None and abs(previous - reported) > margin:
             # The limit changed on the device: the alert tells the new value.
             self.house.clear_alert(f"limit_{entity_id}_{kind}")
-        self._device_limits.setdefault(entity_id, {})[kind] = (reported, dt_util.utcnow())
-        self._sent.setdefault(entity_id, {})[ATTR_TEMPERATURE] = reported
+        self.sent.replace(entity_id, ATTR_TEMPERATURE, reported)
         shown = f"{reported:g} {unit}"
         self.house.notify(
             f"limit_{entity_id}_{kind}",
@@ -2092,15 +1988,7 @@ class Room:
             shown = before.state if name == "state" else before.attributes.get(name)  # type: ignore[union-attr]
         ok = await self._call("climate", service, {ATTR_ENTITY_ID: entity_id, key: value})
         if ok:
-            self._sent.setdefault(entity_id, {})[name] = value
-            now = dt_util.utcnow()
-            recent = [r for r in self._sent_recent.get(entity_id, []) if now - r[0] <= SENT_RECENT]
-            if shown is not None and shown != value:
-                recent.append((now, name, shown))
-            recent.append((now, name, value))
-            self._sent_recent[entity_id] = recent
-            # A new value: not shown by the device yet.
-            self._sent_confirmed.get(entity_id, {}).pop(name, None)
+            self.sent.record(entity_id, name, value, shown, dt_util.utcnow())
         return ok
 
     async def _async_apply_relay(self, target: Target) -> bool:
@@ -2141,14 +2029,13 @@ class Room:
                     {ATTR_ENTITY_ID: entity_id},
                 )
                 if sent:
-                    self._sent[entity_id] = {"state": STATE_ON if want else STATE_OFF}
+                    self.sent.set_last(entity_id, {"state": STATE_ON if want else STATE_OFF})
                 ok &= sent
         else:
             for entity_id in self.climates:
                 state = self.hass.states.get(entity_id)
                 on_mode = heat_mode(state.attributes.get("hvac_modes") if valid(state) else None)  # type: ignore[union-attr]
-                self._sent[entity_id] = {}
-                self._sent_confirmed.pop(entity_id, None)
+                self.sent.start(entity_id)
                 ok &= await self._send(
                     entity_id, "set_hvac_mode", "hvac_mode", on_mode if want else STATE_OFF, "state"
                 )

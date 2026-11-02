@@ -2261,7 +2261,7 @@ async def test_lower_value_after_an_accepted_boost_is_a_manual_change(
     await _tick(hass, freezer, 5)
     assert hass.states.get("binary_sensor.office_manual_change").state == "on"
     assert not any(a["code"] == "device_limit_max" for a in room.house.alerts_for(room))
-    assert room._device_limits.get("climate.trv", {}).get("max") is None
+    assert room.limits.limits.get("climate.trv", {}).get("max") is None
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -2302,7 +2302,7 @@ async def test_higher_value_after_accepted_frost_is_a_manual_change(
     hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 10.0}, context=Context())
     await _tick(hass, freezer, 5)
     assert not any(a["code"] == "device_limit_min" for a in room.house.alerts_for(room))
-    assert room._device_limits.get("climate.trv", {}).get("min") is None
+    assert room.limits.limits.get("climate.trv", {}).get("min") is None
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

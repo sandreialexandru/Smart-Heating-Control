@@ -331,7 +331,7 @@ class HeatingRateLearner:
         minutes, so they cannot be converted: the heating is learned again.
         """
         obj = cls()
-        if (data or {}).get("version") != DATA_VERSION:
+        if not data or data.get("version") != DATA_VERSION:
             return obj
         episodes = data.get("episodes")
         if isinstance(episodes, list):

@@ -223,7 +223,7 @@ def overlap(a: object, b: object) -> bool:
     them.
     """
     a_list, b_list = isinstance(a, (list, tuple)), isinstance(b, (list, tuple))
-    if a_list and b_list:
+    if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
         return bool(set(a) & set(b))
     if a_list or b_list:
         return False
@@ -248,7 +248,8 @@ def normalize_profile_days(data: dict | None, names: Iterable[str]) -> dict[str,
         days = item.get("days") if isinstance(item, dict) else None
         if isinstance(days, tuple):
             days = list(days)
-        if not _days_valid(days):
+        # Not a mapping: no days, so not valid either.
+        if not isinstance(item, dict) or not _days_valid(days):
             result[name] = {"days": DAYS_ALL, "enabled": False}
             continue
         if isinstance(days, list):
@@ -272,8 +273,9 @@ def validate_profile_days(data: object, names: Iterable[str]) -> dict[str, dict]
     for name, item in data.items():
         if name not in names:
             raise ScheduleError(f"Unknown profile '{name}' in profile_days")
+        days = item.get("days") if isinstance(item, dict) else None
         if not isinstance(item, dict) or not _days_valid(
-            list(item.get("days")) if isinstance(item.get("days"), tuple) else item.get("days")
+            list(days) if isinstance(days, tuple) else days
         ):
             raise ScheduleError(f"Invalid days for profile '{name}'")
     active = [(n, data[n]["days"]) for n in names if n in data and data[n].get("enabled")]

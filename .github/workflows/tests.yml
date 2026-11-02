@@ -28,6 +28,27 @@ jobs:
       - run: ruff check --output-format=github .
       - run: ruff format --check custom_components tests
 
+  types:
+    name: Mypy (the plain modules)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: pip install mypy==2.4.1
+      # The modules without Home Assistant logic; the others follow step by step.
+      - run: >-
+          mypy --follow-imports=silent --ignore-missing-imports
+          custom_components/advanced_climate/alerts.py
+          custom_components/advanced_climate/device_echo.py
+          custom_components/advanced_climate/engine.py
+          custom_components/advanced_climate/learning.py
+          custom_components/advanced_climate/notifier.py
+          custom_components/advanced_climate/schedule.py
+          custom_components/advanced_climate/util.py
+          custom_components/advanced_climate/window.py
+
   home-assistant:
     name: Home Assistant ${{ matrix.name }}
     runs-on: ubuntu-latest

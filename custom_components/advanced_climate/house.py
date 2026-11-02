@@ -292,6 +292,8 @@ class House:
 
     async def async_unload(self) -> None:
         """Stop listening and save."""
+        # An evaluation still running does not plan a new timer afterwards.
+        self.started = False
         if self._started_unsub is not None:
             self._started_unsub()
             self._started_unsub = None
@@ -492,7 +494,7 @@ class House:
         if self._timer_unsub:
             self._timer_unsub()
             self._timer_unsub = None
-        if not candidates:
+        if not candidates or not self.started:
             return
         when = min(candidates) + timedelta(seconds=1)
 

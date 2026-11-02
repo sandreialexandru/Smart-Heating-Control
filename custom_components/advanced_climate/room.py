@@ -317,6 +317,7 @@ class Room:
         self._heating_since: datetime | None = None
         self._unsubs: list[Callable[[], None]] = []
         self._verify_unsub: Callable[[], None] | None = None
+        self._stopped = False
         self._verify_attempts = 0
         self._unavailable_since: dict[str, datetime] = {}
         # Mold risk: since when the wall surface is humid enough, and its humidity now.
@@ -394,6 +395,8 @@ class Room:
     @callback
     def async_stop(self) -> None:
         """Stop all listeners and timers."""
+        # A command still being sent does not plan new timers afterwards.
+        self._stopped = True
         for unsub in self._unsubs:
             unsub()
         self._unsubs.clear()
@@ -1031,7 +1034,8 @@ class Room:
                 self._update_window(dt_util.utcnow())
                 self.house.async_request_evaluate(0)
 
-            self._window_timer = async_call_later(self.hass, delay, _recheck)
+            if not self._stopped:
+                self._window_timer = async_call_later(self.hass, delay, _recheck)
 
     def _room_unoccupied(self, now: datetime) -> bool:
         """True when the room counts as empty (eco for no occupancy).
@@ -2110,6 +2114,9 @@ class Room:
         """Check later that the devices accepted the command; retry once, then alert."""
         if self._verify_unsub:
             self._verify_unsub()
+            self._verify_unsub = None
+        if self._stopped:
+            return
         expected = target
 
         async def _verify(_now: datetime) -> None:

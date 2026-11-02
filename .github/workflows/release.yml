@@ -4,16 +4,18 @@ name: Release
 # only after every test passed (the Tests workflow). Run it manually from the
 # Actions tab to (re)check.
 #
-# main: a stable version (e.g. 2.3.30) becomes a normal release (the latest).
-# dev:  a beta version (e.g. 2.3.30b1) becomes a pre-release, shown in HACS only
-#       to those who turned on the beta versions for this repository.
-# Any other combination (a beta on main, a stable version on dev) is skipped.
+# main:     a stable version (e.g. 2.3.30) becomes a normal release (the latest).
+# dev:      a beta version (e.g. 2.3.30b1) becomes a pre-release, shown in HACS
+#           only to those who turned on the beta versions for this repository.
+# refactor: an alpha version (e.g. 2.6.0a1) becomes a pre-release too, for
+#           trying bigger changes at home before they go to dev.
+# Any other combination (a beta on main, an alpha on dev...) is skipped.
 
 on:
   workflow_run:
     workflows: [Tests]
     types: [completed]
-    branches: [main, dev]
+    branches: [main, dev, refactor]
   workflow_dispatch:
 
 permissions:
@@ -45,9 +47,14 @@ jobs:
           beta=false
           if [[ "$version" =~ (a|b|rc)[0-9]+$ ]]; then beta=true; fi
           echo "beta=$beta" >> "$GITHUB_OUTPUT"
-          if [[ "$BRANCH" == "main" && "$beta" == "true" ]] || [[ "$BRANCH" == "dev" && "$beta" == "false" ]]; then
+          # The kind of version each branch releases.
+          allowed=false
+          if [[ "$BRANCH" == "main" && "$beta" == "false" ]]; then allowed=true; fi
+          if [[ "$BRANCH" == "dev" && "$version" =~ (b|rc)[0-9]+$ ]]; then allowed=true; fi
+          if [[ "$BRANCH" == "refactor" && "$version" =~ a[0-9]+$ ]]; then allowed=true; fi
+          if [[ "$allowed" == "false" ]]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Version $version on $BRANCH: only stable versions are released from main and beta versions from dev."
+            echo "Version $version on $BRANCH: main releases stable versions, dev beta versions (b, rc) and refactor alpha versions (a)."
           elif git rev-parse "v$version" >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
             echo "Release v$version already exists, nothing to do."
@@ -76,7 +83,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
           BETA: ${{ steps.version.outputs.beta }}
         run: |
-          # A beta takes the "Unreleased" section of CHANGELOG.md, a release its
+          # An alpha or beta takes the "Unreleased" section of CHANGELOG.md, a release its
           # own "## <version>" section; without one GitHub writes the notes.
           python3 - <<'PY'
           import os, pathlib, re

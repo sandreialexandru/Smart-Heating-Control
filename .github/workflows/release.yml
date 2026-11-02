@@ -117,3 +117,22 @@ jobs:
             --title "Smart Heating Control $TAG" \
             "${notes[@]}" \
             "${kind[@]}"
+
+      # HACS reads only the first releases GitHub lists, and GitHub sorts the
+      # pre-release names as text (a10 between a1 and a2), so a new alpha could
+      # be missing in HACS. The earlier alphas of the same version are removed
+      # (only their release pages: the tags and the code stay).
+      - name: Remove the earlier alphas of this version
+        if: steps.version.outputs.exists == 'false' && contains(steps.version.outputs.version, 'a')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          base="${TAG%a*}"
+          gh release list --limit 200 --json tagName,isPrerelease --jq '.[] | select(.isPrerelease) | .tagName' |
+            while read -r old; do
+              if [[ "$old" != "$TAG" && "$old" =~ ^${base//./\\.}a[0-9]+$ ]]; then
+                echo "Removing the release page of $old (the tag stays)"
+                gh release delete "$old" --yes
+              fi
+            done

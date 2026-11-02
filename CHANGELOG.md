@@ -62,6 +62,11 @@ alert, and the code split in smaller parts. Install it only to help test.
 - The log lines of the notifications come from
   `custom_components.advanced_climate.notifier` (before: `.house`).
 
+### Card
+
+- **The chart opens in a window** over the dashboard, larger, instead of inside
+  the room (one room at a time; closes with ✕, a click outside or Esc).
+
 ### Development
 
 - CI checks the formatting (`ruff format`) and the types of the plain modules

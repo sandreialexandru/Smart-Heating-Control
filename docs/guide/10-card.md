@@ -112,9 +112,9 @@ sections:
 
 ### The chart
 
-Opened with the **Chart** button (its history is loaded only then; while it is
-closed the next change is shown next to the arc). The last 24 hours and the
-next 12:
+Opened with the **Chart** button in a window over the dashboard, so it has room
+(its history is loaded only then); one room at a time. It closes with the ✕, a
+click outside it or Esc. The last 24 hours and the next 12:
 
 - the room temperature;
 - the target, as a step line, coloured by level;

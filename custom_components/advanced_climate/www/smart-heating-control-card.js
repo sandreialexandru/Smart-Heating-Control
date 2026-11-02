@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.0a8";
+const CARD_VERSION = "2.6.0a9";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -175,6 +175,7 @@ const TEXT = {
     edit: "Edit schedule",
     save: "Save schedule",
     cancel: "Cancel",
+    close: "Close",
     add_slot: "Add time",
     add_profile: "Add profile",
     profile_name: "New profile name",
@@ -411,6 +412,7 @@ const TEXT = {
     edit: "Editează programul",
     save: "Salvează programul",
     cancel: "Renunță",
+    close: "Închide",
     add_slot: "Adaugă oră",
     add_profile: "Adaugă profil",
     profile_name: "Numele profilului nou",
@@ -969,8 +971,43 @@ class SmartHeatingControlCard extends HTMLElement {
       if (cfg.compact) blocks.push({ k: `list-${house.id}`, html: `<div class="rooms-list"></div>`, children: rooms });
       else blocks.push(...rooms);
     }
+    const popup = this._chartPopup();
+    if (popup) blocks.push({ k: "chartpop", html: popup });
     this._card.className = cfg.compact ? "compact" : "";
     this._patch(this._card, blocks);
+    const dlg = this.shadowRoot.querySelector("dialog.chartpop");
+    if (dlg && !dlg.open && typeof dlg.showModal === "function") {
+      dlg.addEventListener("cancel", (ev) => {
+        ev.preventDefault();
+        this._closeChart();
+      });
+      dlg.showModal();
+    }
+  }
+
+  /** The chart of the open room, in a window over the dashboard (one at a time). */
+  _chartPopup() {
+    if (!this._config.show_timeline || !this._hass) return "";
+    const key = Object.keys(this._open).find((k) => k.startsWith("chart-") && this._open[k]);
+    if (!key) return "";
+    const room = key.slice(6);
+    const stateObj = this._rooms().find((st) => st.attributes.room_id === room);
+    if (!stateObj) return "";
+    const a = stateObj.attributes;
+    const body = this._timelineHtml(a) || `<p class="empty">${esc(this._t("loading") || "…")}</p>`;
+    return `<dialog class="chartpop" aria-label="${esc(a.room_name)}">
+        <div class="pophead"><span class="name">${esc(a.room_name)}</span>
+          <button class="popclose" data-action="closechart" title="${esc(this._t("close"))}" aria-label="${esc(
+            this._t("close")
+          )}">${this._icon("close")}</button></div>
+        ${body}
+      </dialog>`;
+  }
+
+  /** Close the chart window. */
+  _closeChart() {
+    for (const k of Object.keys(this._open)) if (k.startsWith("chart-")) this._open[k] = false;
+    this._render();
   }
 
   /** The card element and the styles, made once. */
@@ -1197,8 +1234,8 @@ class SmartHeatingControlCard extends HTMLElement {
         )}<span>${esc(eta)}${sub ? ` <small>${esc(sub)}</small>` : ""}</span></span>`
       );
     }
-    // The next change is in the chart; while the chart is not shown it is a line here.
-    if ((!this._config.show_timeline || !this._open[`chart-${a.room_id}`]) && a.next_change) {
+    // The next change (the chart opens in a window over the dashboard).
+    if (a.next_change) {
       chips.push(
         `<span class="chip">${this._icon("calendar-arrow-right")}<span>${this._t("next")}: ${esc(
           this._fmtTime(a.next_change)
@@ -1306,8 +1343,9 @@ class SmartHeatingControlCard extends HTMLElement {
           )}<span>${esc(this._t("lock_short"))}</span></button>`
         : "");
     const count = defs.length + (lock ? 1 : 0) + (a.override ? 1 : 0);
+    // The chart is not drawn here: it opens in a window (``_chartPopup``).
     const bodies = defs
-      .filter(([k]) => open(k))
+      .filter(([k]) => open(k) && !k.startsWith("chart-"))
       .map(([, , , html]) => html())
       .join("");
     // One row up to 5 buttons, else two even rows (no button left alone on a row).
@@ -3202,6 +3240,11 @@ class SmartHeatingControlCard extends HTMLElement {
 
   /** Every button of the card (data-action). */
   async _onClick(ev) {
+    // A click on the dark area around the chart window closes it.
+    if (ev.target?.tagName === "DIALOG" && ev.target.classList.contains("chartpop")) {
+      this._closeChart();
+      return;
+    }
     const el = ev.target.closest("[data-action]");
     if (!el || el.tagName === "SELECT" || el.tagName === "INPUT") return;
     const { action, room, profile, index, entity, option, key, house } = el.dataset;
@@ -3214,7 +3257,14 @@ class SmartHeatingControlCard extends HTMLElement {
     switch (action) {
       case "fold":
         this._open[key] = el.getAttribute("aria-expanded") !== "true";
+        // One chart window at a time.
+        if (key.startsWith("chart-") && this._open[key]) {
+          for (const k of Object.keys(this._open)) if (k !== key && k.startsWith("chart-")) this._open[k] = false;
+        }
         break;
+      case "closechart":
+        this._closeChart();
+        return;
       case "period": {
         const next = RUNTIME_PERIODS[(RUNTIME_PERIODS.indexOf(this._period()) + 1) % RUNTIME_PERIODS.length];
         this._runtimePeriod = next;
@@ -3554,6 +3604,18 @@ const STYLE = `
   .chart-card { border-radius: 14px; background: var(--ac-surface); padding: 12px 12px 10px;
     box-shadow: inset 0 0 0 1px var(--ac-line); display: flex; flex-direction: column; gap: 4px; }
   .hchart.with-out { height: 210px; }
+  dialog.chartpop { width: min(960px, calc(100vw - 24px)); max-width: none; max-height: calc(100vh - 24px);
+    padding: 12px 14px 14px; border: none; border-radius: 18px; color: var(--primary-text-color);
+    background: var(--ha-card-background, var(--card-background-color, #1c1c1c)); box-sizing: border-box;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45); overflow: auto; }
+  dialog.chartpop::backdrop { background: rgba(0, 0, 0, 0.55); }
+  dialog.chartpop .pophead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  dialog.chartpop .pophead .name { font-size: 1.15em; font-weight: 600; }
+  dialog.chartpop .popclose { background: none; border: none; color: inherit; cursor: pointer; padding: 6px;
+    border-radius: 50%; display: inline-flex; }
+  dialog.chartpop .popclose:hover { background: var(--ac-surface-2); }
+  dialog.chartpop .hchart { height: min(55vh, 420px); }
+  dialog.chartpop .hchart.with-out { height: min(62vh, 480px); }
   .hchart { position: relative; height: 170px; margin-left: 32px; touch-action: pan-y; cursor: crosshair; user-select: none; }
   .hchart svg { width: 100%; height: 100%; display: block; overflow: hidden; }
   .hchart.zoomed { cursor: grab; }

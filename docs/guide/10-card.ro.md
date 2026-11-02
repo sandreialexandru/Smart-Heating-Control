@@ -111,9 +111,9 @@ Graficul și secțiunile:
 
 ### Graficul
 
-Se deschide cu butonul **Grafic** (istoricul se încarcă doar atunci; cât e
-închis, următoarea schimbare apare lângă arc). Ultimele 24 de ore și
-următoarele 12:
+Se deschide cu butonul **Grafic** într-o fereastră peste dashboard, ca să aibă
+loc (istoricul se încarcă doar atunci); câte o cameră pe rând. Se închide cu ✕,
+cu un clic în afara ei sau cu Esc. Ultimele 24 de ore și următoarele 12:
 
 - temperatura camerei;
 - ținta, ca linie în trepte, colorată după nivel;

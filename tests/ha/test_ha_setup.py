@@ -2743,3 +2743,65 @@ async def test_house_events_are_told(
         "The vacation ends soon: the house is warmed up for your return.",
     ]
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_window_timings_of_the_guide(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Guide, chapter 9: open after 60 s, closed after 30 s, alert after 30 minutes."""
+    entry, calls, _trv = await _window_trv_house(hass, freezer)
+    house = entry.runtime_data
+    room = next(iter(house.rooms.values()))
+    decision = "sensor.office_decision"
+    assert calls[-1].data["temperature"] == 21.0
+
+    # Airing shorter than the open delay is ignored.
+    hass.states.async_set("binary_sensor.window", "on")
+    await _tick(hass, freezer, 50)
+    assert hass.states.get(decision).state != "window_open"
+    hass.states.async_set("binary_sensor.window", "off")
+    await _tick(hass, freezer, 30)
+    hass.states.async_set("binary_sensor.window", "on")
+    await _tick(hass, freezer, 50)
+    assert not room.window_open  # the delay started again
+    await _tick(hass, freezer, 11)
+    assert room.window_open
+    await _tick(hass, freezer, 1)  # the evaluation the window asked for
+    assert hass.states.get(decision).state == "window_open"
+    assert calls[-1].data["temperature"] == 7.0  # frost protection (default action)
+
+    # Closed: still open for the close delay, then the schedule again.
+    hass.states.async_set("binary_sensor.window", "off")
+    await _tick(hass, freezer, 20)
+    assert room.window_open
+    await _tick(hass, freezer, 11)
+    assert not room.window_open
+    await _tick(hass, freezer, 1)
+    assert hass.states.get(decision).state != "window_open"
+    assert calls[-1].data["temperature"] == 21.0
+
+    # Open longer than 30 minutes while heating matters: an alert, until closed.
+    hass.states.async_set("binary_sensor.window", "on")
+    await _tick(hass, freezer, 65)
+    assert f"window_{room.id}" not in house.active_alerts
+    for _ in range(28):
+        await _tick(hass, freezer, 60)
+    assert f"window_{room.id}" not in house.active_alerts
+    for _ in range(8):  # the next evaluation after 30 minutes
+        await _tick(hass, freezer, 60)
+    assert house.active_alerts[f"window_{room.id}"]["code"] == "window_long"
+    hass.states.async_set("binary_sensor.window", "off")
+    await _tick(hass, freezer, 35)
+    assert f"window_{room.id}" not in house.active_alerts
+
+    # Warm outside: with "Ignore windows above" an open window does not count.
+    hass.states.async_set("sensor.outdoor", "22", {"unit_of_measurement": "°C"})
+    house.options["outdoor_sensor"] = "sensor.outdoor"
+    house.options["window_ignore_above"] = 18
+    hass.states.async_set("binary_sensor.window", "on")
+    await _tick(hass, freezer, 65)
+    assert not room.window_open
+    assert calls[-1].data["temperature"] == 21.0
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

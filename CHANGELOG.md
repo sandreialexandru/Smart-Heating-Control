@@ -5,6 +5,26 @@ release (and of each beta pre-release) are taken from here: a beta shows the
 *Unreleased* section, a release its own section. Older versions: see the
 GitHub releases.
 
+## Unreleased
+
+Alpha: the same integration as 2.5.0, with the code split in smaller parts.
+Nothing changes in how it heats, in the options or in the card. Install it
+only to help test; report anything that behaves differently from 2.5.0.
+
+### Integration
+
+- The code of a room is split: what was sent to the devices and their limits
+  (`device_echo.py`), open windows (`window.py`), alerts and notifications
+  (`notifier.py`); the evaluation of a room runs in named steps.
+- The log lines of the notifications come from
+  `custom_components.advanced_climate.notifier` (before: `.house`).
+
+### Development
+
+- CI checks the formatting (`ruff format`) and the types of the plain modules
+  (mypy); new unit tests for the split parts and a test of the window timings
+  of the guide.
+
 ## 2.5.0 – 2026-11-02
 
 ### Integration

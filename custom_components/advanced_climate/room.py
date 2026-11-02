@@ -51,7 +51,6 @@ from .const import (
     CONF_HELPER_ON_PRESET,
     CONF_HUMIDITY_SENSOR,
     CONF_HYSTERESIS,
-    CONF_LEARN_TOLERANCE,
     CONF_LEVELS,
     CONF_LINKED_WINDOW_SENSORS,
     CONF_MAX_TEMP,
@@ -807,26 +806,22 @@ class Room:
         ]
         return aggregate(values, self.config[CONF_TEMP_AGGREGATION])
 
-    def learn_tolerance(self) -> float:
-        """How far below the target the thermostat lets the room fall before heating."""
-        if self.source == SOURCE_GT:
-            value = self._gt_options().get("cold_tolerance")
-            try:
-                return (
-                    float(delta_to_celsius(float(value), system_unit(self.hass)))
-                    if value is not None
-                    else 0.0
-                )
-            except (TypeError, ValueError):
-                return 0.0
-        if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost:
-            return float(self.config[CONF_HYSTERESIS])
-        return float(self.config.get(CONF_LEARN_TOLERANCE, 0.0))
+    def _gt_cold_tolerance(self) -> float:
+        """The cold tolerance of the Generic Thermostat of the room (°C)."""
+        value = self._gt_options().get("cold_tolerance")
+        try:
+            return (
+                float(delta_to_celsius(float(value), system_unit(self.hass)))
+                if value is not None
+                else 0.0
+            )
+        except (TypeError, ValueError):
+            return 0.0
 
     def stop_tolerance(self) -> float:
         """How far below a level the room may fall during an optimal stop (its comfort)."""
         if self.source == SOURCE_GT:
-            return self.learn_tolerance()  # the cold tolerance of Generic Thermostat
+            return self._gt_cold_tolerance()
         if (
             self.source == SOURCE_SWITCH
             or self.command_mode == COMMAND_HVAC
@@ -2547,6 +2542,7 @@ class Room:
         return {
             "learned": model.learned,
             "heating_per_hour": model.h,
+            "weather_curve": model.c,
             "loss": model.k,
             "constant_loss": model.constant_loss,
             "inertia_minutes": model.tau,
@@ -2560,6 +2556,8 @@ class Room:
                     "inertia_minutes": fit.tau,
                     "heating_per_hour": None if (sol := fit.solve()) is None else round(sol[0], 4),
                     "loss": None if sol is None else round(sol[1], 5),
+                    "weather_curve": None if sol is None else round(sol[2], 5),
+                    "outdoor_spread": round(fit.spread(), 2),
                     "error": round(fit.error / fit.weight, 5) if fit.weight > 0 else None,
                 }
                 for fit in learner.fits

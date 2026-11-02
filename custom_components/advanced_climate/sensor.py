@@ -424,6 +424,7 @@ class HeatingRateSensor(RoomEntity, SensorEntity):
         return {
             "learned": model.learned,
             "heating_per_hour": _d(model.h, unit, 2),
+            "weather_curve": round(model.c, 3),
             "loss_per_hour": model.k if not model.constant_loss else _d(model.k, unit, 3),
             "constant_loss": model.constant_loss,
             "inertia_minutes": round(model.tau),

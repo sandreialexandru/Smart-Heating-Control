@@ -277,7 +277,6 @@ CONF_TEMP_AGGREGATION: Final = "temperature_aggregation"
 CONF_CALIBRATION_MODE: Final = "calibration_mode"
 CONF_CALIBRATION_ENTITIES: Final = "calibration_entities"
 CONF_HYSTERESIS: Final = "hysteresis"
-CONF_LEARN_TOLERANCE: Final = "learn_tolerance"  # thermostat tolerance (other thermostats)
 # Temperature command: the TRVs get a higher temperature while the room asks for
 # heat (decided from the room sensor with the hysteresis), the target otherwise.
 CONF_TRV_BOOST: Final = "trv_boost"
@@ -364,7 +363,6 @@ ROOM_DEFAULTS: Final = {
     CONF_CALIBRATION_MODE: CALIBRATION_OFF,
     CONF_CALIBRATION_ENTITIES: [],
     CONF_HYSTERESIS: 0.3,
-    CONF_LEARN_TOLERANCE: 0.0,
     CONF_TRV_BOOST: False,
     CONF_STOP_TOLERANCE: 0.0,
     CONF_MIN_ON: 0,

@@ -172,6 +172,7 @@ def _room(
     outdoor=None,
     spike_every=None,
     configured=True,
+    curve=0.0,
 ):
     """Simulate a room with a thermostat (21 °C by day, 18 °C at night) and feed the learner.
 
@@ -190,7 +191,7 @@ def _room(
             heat = False
         u = 1.0 if heat else 0.0
         q = u + (q - u) * math.exp(-1 / tau) if tau > 0 else u
-        temp += (h * q - k * (temp - out)) / 60
+        temp += ((h - curve * out) * q - k * (temp - out)) / 60
         if i % step == 0:
             reading = round(temp, 1)
             if spike_every and i % spike_every == 0:
@@ -238,9 +239,34 @@ class ThermalModelTest(unittest.TestCase):
         true = learning.ThermalModel(h=1.5, k=0.04, tau=90.0, learned=True)
         for outdoor in (10.0, 0.0, -10.0):
             learned = learner.model.minutes_to_heat(18.0, 21.0, outdoor)
-            self.assertAlmostEqual(learned, true.minutes_to_heat(18.0, 21.0, outdoor), delta=15)
+            expected = true.minutes_to_heat(18.0, 21.0, outdoor)
+            # At −10 °C the room barely gains (1.5 − 0.04 × 29.5 = 0.32 °C/h): a
+            # small error of the numbers is a larger one in minutes, so 10 %.
+            self.assertAlmostEqual(learned, expected, delta=0.1 * expected)
+        # No weather curve in this room: it is learned as (almost) zero.
+        self.assertAlmostEqual(learner.model.c, 0.0, delta=0.005)
         # A target above what the heating can hold is never reached.
         self.assertIsNone(true.minutes_to_heat(18.0, 60.0, -10.0))
+
+    def test_weather_curve_is_learned(self) -> None:
+        # The heating gives 0.05 °C/h more for each °C colder outdoors.
+        learner = learning.ThermalLearner()
+        _room(learner, h=1.5, k=0.04, tau=30.0, days=6, curve=0.05)
+        model = learner.model
+        self.assertAlmostEqual(model.c, 0.05, delta=0.01)
+        self.assertAlmostEqual(model.h, 1.5, delta=0.05)
+        true = learning.ThermalModel(h=1.5, k=0.04, c=0.05, tau=30.0, learned=True)
+        for outdoor in (10.0, 0.0, -10.0):
+            expected = true.minutes_to_heat(18.0, 21.0, outdoor)
+            self.assertAlmostEqual(
+                model.minutes_to_heat(18.0, 21.0, outdoor), expected, delta=0.1 * expected
+            )
+
+    def test_no_curve_without_outdoor_spread(self) -> None:
+        # Always 5 °C outdoors: the curve cannot be told from the heating.
+        learner = learning.ThermalLearner()
+        _room(learner, days=3, outdoor=5.0, curve=0.05)
+        self.assertEqual(learner.model.c, 0.0)
 
     def test_inertia_keeps_warming_after_a_stop(self) -> None:
         model = learning.ThermalModel(h=2.0, k=0.04, tau=90.0, learned=True)

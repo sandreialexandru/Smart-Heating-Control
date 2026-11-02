@@ -85,12 +85,12 @@ async def test_options_heating_adds_zone(hass: HomeAssistant) -> None:
     )
     assert result["step_id"] == "heating_thermostat"
     # climate.trv is not available now: the hysteresis is asked for.
-    assert _keys(result) == {"learn_tolerance", "hysteresis"}
-    result = await flow.async_configure(result["flow_id"], {"learn_tolerance": 0.3})
+    assert _keys(result) == {"hysteresis"}
+    result = await flow.async_configure(result["flow_id"], {"hysteresis": 0.4})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     zone = next(iter(entry.subentries.values()))
     assert zone.title == "Whole house"
-    assert zone.data["learn_tolerance"] == 0.3
+    assert zone.data["hysteresis"] == 0.4
     # Editing again updates the same zone; the other devices are cleared.
     result = await flow.async_init(entry.entry_id)
     result = await flow.async_configure(result["flow_id"], {"next_step_id": "heating"})
@@ -332,12 +332,11 @@ async def test_room_with_thermostat_presets(hass: HomeAssistant) -> None:
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {"climates": ["climate.trv"], "command_mode": "preset"}
     )
-    # TRV with presets: only the thermostat tolerance.
-    assert result["step_id"] == "control_thermostat"
     # This TRV does not report hvac_action: its heat demand uses the hysteresis.
-    assert {str(k) for k in result["data_schema"].schema} == {"learn_tolerance", "hysteresis"}
+    assert result["step_id"] == "control_thermostat"
+    assert {str(k) for k in result["data_schema"].schema} == {"hysteresis"}
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"learn_tolerance": 0.3}
+        result["flow_id"], {"hysteresis": 0.4}
     )
     assert result["step_id"] == "levels"
     assert result["description_placeholders"]["presets"] == "comfort, eco, away, boost"
@@ -378,7 +377,7 @@ async def test_room_with_thermostat_presets(hass: HomeAssistant) -> None:
     assert subentry.data["preset_map"] == {"home": "comfort", "eco": "eco", "comfort": "boost"}
     assert subentry.data["levels"]["sleep"] == 18.5
     assert subentry.data["preset_names"] == {}
-    assert subentry.data["learn_tolerance"] == 0.3
+    assert subentry.data["hysteresis"] == 0.4
 
 
 async def test_fahrenheit_forms(hass: HomeAssistant) -> None:
@@ -819,9 +818,8 @@ async def test_frost_hysteresis_for_trvs_with_a_room_sensor(hass: HomeAssistant)
     result = await rooms.async_configure(
         result["flow_id"], {"climates": ["climate.trv"], "command_mode": "temperature"}
     )
-    # hvac_action is reported: no hysteresis on the thermostat step.
-    assert "hysteresis" not in _keys(result)
-    result = await rooms.async_configure(result["flow_id"], {"learn_tolerance": 0.0})
+    # hvac_action is reported: nothing to ask on the thermostat step, it is skipped.
+    assert result["step_id"] == "levels"
     result = await _until(hass, result, rooms, stop={"sensors"})
     result = await rooms.async_configure(
         result["flow_id"], {"temperature_sensors": ["sensor.office"]}

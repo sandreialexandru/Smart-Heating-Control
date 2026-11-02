@@ -66,7 +66,6 @@ from .const import (
     CONF_HOME_RULE,
     CONF_HUMIDITY_SENSOR,
     CONF_HYSTERESIS,
-    CONF_LEARN_TOLERANCE,
     CONF_LEVELS,
     CONF_LINKED_WINDOW_SENSORS,
     CONF_MAX_TEMP,
@@ -285,7 +284,6 @@ TEMP_DELTA_KEYS = {
     CONF_PV_OFFSET,
     CONF_ROOM_DIFF_ALERT,
     CONF_HYSTERESIS,
-    CONF_LEARN_TOLERANCE,
     CONF_STOP_TOLERANCE,
     CONF_WINDOW_DROP_DEGREES,
     CONF_SOLAR_OFFSET,
@@ -813,10 +811,8 @@ def _no_hvac_action(hass: Any, d: dict[str, Any]) -> bool:
 
 
 def _thermostat_schema(d: dict[str, Any], hass: Any) -> vol.Schema:
-    """Thermostat tolerance, and the hysteresis for thermostats that may not report hvac_action."""
-    fields: dict[Any, Any] = {
-        _req(CONF_LEARN_TOLERANCE, d, ROOM_DEFAULTS): _number(0, 2, 0.1, "°C")
-    }
+    """The hysteresis, for thermostats that may not report hvac_action (else nothing)."""
+    fields: dict[Any, Any] = {}
     # Without hvac_action the heat demand is decided with the hysteresis.
     if _no_hvac_action(hass, d):
         fields[_req(CONF_HYSTERESIS, d, ROOM_DEFAULTS)] = _number(0.1, 3, 0.1, "°C")
@@ -963,8 +959,10 @@ class _HouseHeatingSteps:
         )
 
     async def async_step_heating_thermostat(self, user_input: dict[str, Any] | None = None) -> Any:
-        """Thermostat tolerance."""
+        """The hysteresis of a thermostat without hvac_action (skipped otherwise)."""
         schema = _thermostat_schema(_shown(self._zone, self._unit()), self.hass)  # type: ignore[attr-defined]
+        if not schema.schema:
+            return await self._async_heating_done(self._zone)
         if user_input is not None:
             self._zone = _merge(self._zone, schema, _kept(user_input, self._unit()))  # type: ignore[attr-defined]
             return await self._async_heating_done(self._zone)
@@ -1505,8 +1503,10 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
     async def async_step_control_thermostat(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Thermostat tolerance (temperature / preset command)."""
+        """The hysteresis of a thermostat without hvac_action (skipped otherwise)."""
         schema = _thermostat_schema(self._shown(), self.hass)
+        if not schema.schema:
+            return await self.async_step_levels()
         if user_input is not None:
             self._data = _merge(self._data, schema, self._kept(user_input))
             return await self.async_step_levels()

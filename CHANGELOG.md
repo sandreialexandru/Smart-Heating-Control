@@ -51,8 +51,9 @@ alert, and the code split in smaller parts. Install it only to help test.
   room temperature and humidity and the outdoor temperature (DIN 4108-2
   method); 80 % or more for an hour raises it, below 75 % it ends. Without a
   humidity sensor or without an outdoor temperature (sensor or weather entity)
-  no mold alert is sent; a humidity sensor of the outdoor sensor's or weather
-  entity's device is refused. The *Decision* sensor shows `surface_humidity`.
+  no mold alert is sent; a humidity sensor that measures outdoors (on the
+  weather entity's device, or on the outdoor sensor's device when it has no
+  other temperature sensor) is refused. The *Decision* sensor shows `surface_humidity`.
 - **Fix:** after saving the options, the old settings could still wake up
   once (at the next schedule change) and send a command; it no longer does.
 
@@ -67,6 +68,8 @@ alert, and the code split in smaller parts. Install it only to help test.
 - **The chart opens in a window** over the dashboard, larger, instead of inside
   the room (one room at a time; closes with ✕, a click outside or Esc).
   The window is always opaque, also with themes whose cards are transparent.
+  It stays open and in place while the values update, and a click inside it
+  (on its margin too) does not close it.
 
 ### Development
 

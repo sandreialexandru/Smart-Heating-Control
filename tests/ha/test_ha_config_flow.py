@@ -1025,3 +1025,60 @@ async def test_outdoor_humidity_sensor_is_refused(hass: HomeAssistant) -> None:
         {"temperature_sensors": ["sensor.room"], "humidity_sensor": room_humidity},
     )
     assert result["step_id"] != "sensors"
+
+
+async def test_humidity_sensor_of_a_gateway_or_a_weather_service(hass: HomeAssistant) -> None:
+    """A gateway with indoor sensors too: accepted; a weather service device: refused."""
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
+
+    source = MockConfigEntry(domain="station")
+    source.add_to_hass(hass)
+    devices = dr.async_get(hass)
+    ent = er.async_get(hass)
+    gateway = devices.async_get_or_create(
+        config_entry_id=source.entry_id, identifiers={("station", "gateway")}
+    )
+    outdoor = ent.async_get_or_create(
+        "sensor", "station", "out_t", config_entry=source, device_id=gateway.id,
+        original_device_class="temperature",
+    ).entity_id  # fmt: skip
+    ent.async_get_or_create(
+        "sensor", "station", "in_t", config_entry=source, device_id=gateway.id,
+        original_device_class="temperature",
+    )  # fmt: skip
+    indoor_humidity = ent.async_get_or_create(
+        "sensor", "station", "in_h", config_entry=source, device_id=gateway.id,
+        original_device_class="humidity",
+    ).entity_id  # fmt: skip
+    service = devices.async_get_or_create(
+        config_entry_id=source.entry_id, identifiers={("station", "forecast")}
+    )
+    weather = ent.async_get_or_create(
+        "weather", "station", "w", config_entry=source, device_id=service.id
+    ).entity_id
+    service_humidity = ent.async_get_or_create(
+        "sensor", "station", "w_h", config_entry=source, device_id=service.id,
+        original_device_class="humidity",
+    ).entity_id  # fmt: skip
+    entry = _house_with_rooms(
+        hass,
+        options={"outdoor_sensor": outdoor, "weather": weather},
+        rooms=[("Bedroom", RELAY_ROOM)],
+    )
+    rooms = hass.config_entries.subentries
+    subentry = next(iter(entry.subentries.values()))
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+    result = await rooms.async_configure(result["flow_id"], {"name": "Bedroom", "source": "switch"})
+    result = await rooms.async_configure(result["flow_id"], {"switches": ["input_boolean.heater"]})
+    result = await _until(hass, result, rooms, stop={"sensors"})
+    result = await rooms.async_configure(
+        result["flow_id"],
+        {"temperature_sensors": ["sensor.room"], "humidity_sensor": service_humidity},
+    )
+    assert result["errors"] == {"humidity_sensor": "humidity_sensor_is_outdoor"}
+    result = await rooms.async_configure(
+        result["flow_id"],
+        {"temperature_sensors": ["sensor.room"], "humidity_sensor": indoor_humidity},
+    )
+    assert result["step_id"] != "sensors"

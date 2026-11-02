@@ -971,38 +971,62 @@ class SmartHeatingControlCard extends HTMLElement {
       if (cfg.compact) blocks.push({ k: `list-${house.id}`, html: `<div class="rooms-list"></div>`, children: rooms });
       else blocks.push(...rooms);
     }
+    // The chart window first: a node moved by the patch would leave the top
+    // layer (no longer modal); the first one is never moved.
     const popup = this._chartPopup();
-    if (popup) blocks.push({ k: "chartpop", html: popup });
+    if (popup) blocks.unshift(popup);
     this._card.className = cfg.compact ? "compact" : "";
     this._patch(this._card, blocks);
     const dlg = this.shadowRoot.querySelector("dialog.chartpop");
-    if (dlg && !dlg.open && typeof dlg.showModal === "function") {
-      dlg.addEventListener("cancel", (ev) => {
-        ev.preventDefault();
-        this._closeChart();
-      });
+    const modal = (d) => {
+      try {
+        return d.matches(":modal");
+      } catch (_err) {
+        return d.open; // a browser without :modal
+      }
+    };
+    if (dlg && typeof dlg.showModal === "function" && !modal(dlg)) {
+      if (!dlg.__cancel) {
+        dlg.__cancel = true;
+        dlg.addEventListener("cancel", (ev) => {
+          ev.preventDefault();
+          this._closeChart();
+        });
+      }
+      if (dlg.open) dlg.close();
       dlg.showModal();
       this._opaque(dlg);
     }
   }
 
-  /** The chart of the open room, in a window over the dashboard (one at a time). */
+  /**
+   * The chart of the open room, in a window over the dashboard (one at a time).
+   *
+   * The window itself stays the same element while it is open (only its
+   * content is patched), so an update does not close and open it again: no
+   * flicker, the focus and the scrolling are kept.
+   */
   _chartPopup() {
-    if (!this._config.show_timeline || !this._hass) return "";
+    if (!this._config.show_timeline || !this._hass) return null;
     const key = Object.keys(this._open).find((k) => k.startsWith("chart-") && this._open[k]);
-    if (!key) return "";
+    if (!key) return null;
     const room = key.slice(6);
     const stateObj = this._rooms().find((st) => st.attributes.room_id === room);
-    if (!stateObj) return "";
+    if (!stateObj) return null;
     const a = stateObj.attributes;
-    const body = this._timelineHtml(a) || `<p class="empty">${esc(this._t("loading") || "…")}</p>`;
-    return `<dialog class="chartpop" aria-label="${esc(a.room_name)}">
-        <div class="pophead"><span class="name">${esc(a.room_name)}</span>
+    const body = this._timelineHtml(a) || `<p class="empty">${esc(this._t("loading"))}</p>`;
+    const head = `<div class="pophead"><span class="name">${esc(a.room_name)}</span>
           <button class="popclose" data-action="closechart" title="${esc(this._t("close"))}" aria-label="${esc(
             this._t("close")
-          )}">${this._icon("close")}</button></div>
-        ${body}
-      </dialog>`;
+          )}">${this._icon("close")}</button></div>`;
+    return {
+      k: `chartpop-${room}`,
+      html: `<dialog class="chartpop" aria-label="${esc(a.room_name)}"></dialog>`,
+      children: [
+        { k: "head", html: head },
+        { k: "body", html: `<div class="popbody">${body}</div>` },
+      ],
+    };
   }
 
   /**
@@ -3270,10 +3294,16 @@ class SmartHeatingControlCard extends HTMLElement {
 
   /** Every button of the card (data-action). */
   async _onClick(ev) {
-    // A click on the dark area around the chart window closes it.
+    // A click on the dark area around the chart window closes it (not one on
+    // the window itself, its padding included).
     if (ev.target?.tagName === "DIALOG" && ev.target.classList.contains("chartpop")) {
-      this._closeChart();
-      return;
+      const r = ev.target.getBoundingClientRect();
+      const inside =
+        ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom;
+      if (!inside) {
+        this._closeChart();
+        return;
+      }
     }
     const el = ev.target.closest("[data-action]");
     if (!el || el.tagName === "SELECT" || el.tagName === "INPUT") return;

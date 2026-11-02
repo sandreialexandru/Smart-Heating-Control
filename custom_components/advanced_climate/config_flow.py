@@ -753,8 +753,11 @@ def _outdoor_humidity_error(
 ) -> str | None:
     """Error key when the humidity sensor of a room is outdoors.
 
-    It is outdoors when it belongs to the device of the outdoor sensor or of
-    the weather entity of a house (a weather station gives both).
+    It is outdoors when it belongs to the device of the weather entity of a
+    house (a weather service measures only outdoors), or to the device of the
+    outdoor sensor when that device has no other temperature sensor (an
+    outdoor sensor). A gateway that also has indoor sensors has one more
+    temperature sensor: its humidity sensors may be indoors and are accepted.
     """
     if not humidity:
         return None
@@ -763,13 +766,25 @@ def _outdoor_humidity_error(
     device = item.device_id if item else None
     if device is None:
         return None
+
+    def on_device(entity_id: str | None) -> bool:
+        other = registry.async_get(entity_id) if entity_id else None
+        return other is not None and other.device_id == device
+
     for entry in hass.config_entries.async_entries(DOMAIN):
         options = {**entry.data, **entry.options}
-        for outdoor in (options.get(CONF_OUTDOOR_SENSOR), options.get(CONF_WEATHER)):
-            other = registry.async_get(outdoor) if outdoor else None
-            if other is not None and other.device_id == device:
-                placeholders.update({"entity": humidity, "owner": entry.title})
-                return "humidity_sensor_is_outdoor"
+        outdoor = options.get(CONF_OUTDOOR_SENSOR)
+        outdoors = on_device(options.get(CONF_WEATHER))
+        if not outdoors and on_device(outdoor):
+            outdoors = not any(
+                e.entity_id != outdoor
+                and e.domain == "sensor"
+                and (e.device_class or e.original_device_class) == "temperature"
+                for e in er.async_entries_for_device(registry, device)
+            )
+        if outdoors:
+            placeholders.update({"entity": humidity, "owner": entry.title})
+            return "humidity_sensor_is_outdoor"
     return None
 
 

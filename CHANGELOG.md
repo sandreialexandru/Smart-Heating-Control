@@ -53,6 +53,8 @@ alert, and the code split in smaller parts. Install it only to help test.
   humidity sensor or without an outdoor temperature (sensor or weather entity)
   no mold alert is sent; a humidity sensor of the outdoor sensor's or weather
   entity's device is refused. The *Decision* sensor shows `surface_humidity`.
+- **Fix:** after saving the options, the old settings could still wake up
+  once (at the next schedule change) and send a command; it no longer does.
 
 - The code of a room is split: what was sent to the devices and their limits
   (`device_echo.py`), open windows (`window.py`), alerts and notifications

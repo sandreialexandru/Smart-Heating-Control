@@ -613,12 +613,14 @@
             "temperature_aggregation": "Mai mulți senzori",
             "calibration_entities": "Entități de calibrare",
             "occupancy_minutes": "Eco după lipsă de ocupare de",
+            "occupancy_return_minutes": "Revenire din eco după prezență de",
             "hysteresis": "Histerezis la antiîngheț"
           },
           "data_description": {
             "temperature_aggregation": "Cu mai mulți senzori: media, cel mai rece sau mediana.",
             "calibration_entities": "Entitățile number ale TRV-urilor (offset sau temperatură externă).",
             "occupancy_minutes": "Cât timp trebuie să fie camera goală până la eco.",
+            "occupancy_return_minutes": "Cât timp trebuie să fie cineva prezent fără întrerupere până când o cameră aflată pe eco din lipsă de ocupare revine la program. 0 = imediat (ca înainte). O vizită mai scurtă (cineva ia ceva și pleacă) lasă camera pe eco, iar numărătoarea reîncepe la următoarea prezență.",
             "hysteresis": "Senzorul camerei decide antiînghețul: sub el TRV-urile sunt forțate să se deschidă, până la antiîngheț plus această valoare."
           }
         },

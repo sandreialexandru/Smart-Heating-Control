@@ -290,6 +290,9 @@ CONF_OCCUPANCY_SENSORS: Final = "occupancy_sensors"
 # Room humidity sensor: only for the mold risk alert.
 CONF_HUMIDITY_SENSOR: Final = "humidity_sensor"
 CONF_OCCUPANCY_MINUTES: Final = "occupancy_minutes"
+# Minutes of continuous presence before a room in eco for no occupancy follows
+# its schedule again (0 = at once).
+CONF_OCCUPANCY_RETURN_MINUTES: Final = "occupancy_return_minutes"
 CONF_WINDOW_SENSORS: Final = "window_sensors"
 CONF_LINKED_WINDOW_SENSORS: Final = "linked_window_sensors"
 CONF_WINDOW_OPEN_DELAY: Final = "window_open_delay"
@@ -369,6 +372,7 @@ ROOM_DEFAULTS: Final = {
     CONF_MIN_OFF: 0,
     CONF_OCCUPANCY_SENSORS: [],
     CONF_OCCUPANCY_MINUTES: 30,
+    CONF_OCCUPANCY_RETURN_MINUTES: 0,
     CONF_WINDOW_SENSORS: [],
     CONF_LINKED_WINDOW_SENSORS: [],
     CONF_WINDOW_OPEN_DELAY: 60,

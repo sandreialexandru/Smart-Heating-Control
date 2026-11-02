@@ -60,6 +60,7 @@ from .const import (
     CONF_NEARBY_MODE,
     CONF_NEARBY_TEMP,
     CONF_OCCUPANCY_MINUTES,
+    CONF_OCCUPANCY_RETURN_MINUTES,
     CONF_OCCUPANCY_SENSORS,
     CONF_OPTIMAL_START,
     CONF_OPTIMAL_START_MAX,
@@ -305,6 +306,9 @@ class Room:
         self.temp_drop = TemperatureDrop()
         self._window_timer: Callable[[], None] | None = None
         self._last_occupied: datetime | None = None
+        # Since when someone is present in a room that is in eco for no occupancy.
+        self._present_since: datetime | None = None
+        self._occupancy_wakeup: datetime | None = None
         self._started_at = dt_util.utcnow()
         self._exercise_until: datetime | None = None
         self._relay_on: bool | None = None
@@ -1017,18 +1021,40 @@ class Room:
             self._window_timer = async_call_later(self.hass, delay, _recheck)
 
     def _room_unoccupied(self, now: datetime) -> bool:
-        """True when the occupancy sensors have been off for the configured time."""
+        """True when the room counts as empty (eco for no occupancy).
+
+        Empty after the occupancy sensors were off for *Eco after no occupancy
+        for*; occupied again after someone was present without a break for
+        *Back from eco after presence of* (0 = at once). A presence that ends
+        sooner leaves the room in eco and the count starts again.
+        """
+        self._occupancy_wakeup = None
         sensors = as_list(self.config.get(CONF_OCCUPANCY_SENSORS))
         if not sensors:
-            return False
-        if any(
-            (st := self.hass.states.get(eid)) is not None and st.state == STATE_ON
-            for eid in sensors
-        ):
-            self._last_occupied = now
+            self._present_since = None
             return False
         since = self._last_occupied or self._started_at
-        return now - since >= timedelta(minutes=float(self.config[CONF_OCCUPANCY_MINUTES]))
+        empty = now - since >= timedelta(minutes=float(self.config[CONF_OCCUPANCY_MINUTES]))
+        present = any(
+            (st := self.hass.states.get(eid)) is not None and st.state == STATE_ON
+            for eid in sensors
+        )
+        if not present:
+            self._present_since = None
+            if not empty:
+                self._occupancy_wakeup = since + timedelta(
+                    minutes=float(self.config[CONF_OCCUPANCY_MINUTES])
+                )
+            return empty
+        back = timedelta(minutes=float(self.config.get(CONF_OCCUPANCY_RETURN_MINUTES, 0)))
+        if empty and back > timedelta(0):
+            self._present_since = self._present_since or now
+            if now - self._present_since < back:
+                self._occupancy_wakeup = self._present_since + back
+                return True
+        self._present_since = None
+        self._last_occupied = now
+        return False
 
     def _day_info(self, day: date) -> tuple[bool, str | None]:
         """Whether a day is a workday, and a profile forced by the calendar.
@@ -1349,6 +1375,9 @@ class Room:
             wakeups.append(self.override["until"])
         if self._exercise_until:
             wakeups.append(self._exercise_until)
+        # The room becomes empty, or occupied again after the presence time.
+        if self._occupancy_wakeup is not None and self._occupancy_wakeup > now:
+            wakeups.append(self._occupancy_wakeup)
         # The end of the minimum on / off time the relay waits for.
         if self.relay_waiting and self._relay_wait_until is not None:
             wakeups.append(self._relay_wait_until)

@@ -82,6 +82,7 @@ from .const import (
     CONF_NOTIFY_SERVICE,
     CONF_NOTIFY_WARNING,
     CONF_OCCUPANCY_MINUTES,
+    CONF_OCCUPANCY_RETURN_MINUTES,
     CONF_OCCUPANCY_SENSORS,
     CONF_OPTIMAL_START,
     CONF_OPTIMAL_START_MAX,
@@ -1784,6 +1785,9 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
             )
         if as_list(d.get(CONF_OCCUPANCY_SENSORS)):
             fields[_req(CONF_OCCUPANCY_MINUTES, d, ROOM_DEFAULTS)] = _number(1, 720, 1, "min")
+            fields[_req(CONF_OCCUPANCY_RETURN_MINUTES, d, ROOM_DEFAULTS)] = _number(
+                0, 120, 1, "min"
+            )
         # TRVs with a room sensor are boosted for frost protection until frost
         # protection + hysteresis; asked here when no earlier step asked for it.
         if (

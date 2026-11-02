@@ -613,12 +613,14 @@
             "temperature_aggregation": "Several sensors",
             "calibration_entities": "Calibration entities",
             "occupancy_minutes": "Eco after no occupancy for",
+            "occupancy_return_minutes": "Back from eco after presence of",
             "hysteresis": "Frost protection hysteresis"
           },
           "data_description": {
             "temperature_aggregation": "With several sensors: average, the coldest or the median.",
             "calibration_entities": "The TRV number entities (offset or external temperature).",
             "occupancy_minutes": "How long the room must be empty before eco.",
+            "occupancy_return_minutes": "How long someone must be present without a break before a room in eco for no occupancy follows its schedule again. 0 = at once (as before). A shorter visit (someone takes something and leaves) keeps the room in eco, and the count starts again at the next presence.",
             "hysteresis": "The room sensor decides the frost protection: below it the TRVs are boosted to open, until frost protection plus this value."
           }
         },

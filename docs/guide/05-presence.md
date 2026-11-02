@@ -110,6 +110,12 @@ night, with `sleep` colder than `eco`, the room stays on `sleep`.
 the room. At 12:30 the office goes to `eco`; when you come back in, it returns
 to the schedule at once.
 
+**Back from eco after presence of** (0 minutes by default) keeps the room in
+`eco` until someone has been present without a break for that long, so a short
+visit does not start the heating. **Example** with 10 minutes: at 14:00 someone
+comes in to take a book and leaves at 14:02: the office stays on `eco`. At
+14:30 someone comes in and stays: at 14:40 the office returns to the schedule.
+
 ## Vacation
 
 Vacation sets every room to `away`. It can start in three ways:

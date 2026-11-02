@@ -132,7 +132,7 @@ per-room occupancy.
 | Departure delay | 10 min | Wait before the house counts as empty |
 | Arrival delay | 0 min | Wait before someone counts as arrived |
 | Presence sensors | none | mmWave / motion / switches keep the house *home* |
-| Room occupancy | off | The room goes to eco after X minutes without occupancy |
+| Room occupancy | off | The room goes to eco after X minutes without occupancy (30 by default); it follows the schedule again after Y minutes of presence without a break (0 by default = at once; a shorter presence keeps eco and the count starts again) |
 | Guest mode | off | Forces *home*, with optional automatic expiry; wins over every vacation (mode, dates, automatic), which goes on when it is turned off |
 
 `unknown` / `unavailable` person states are treated as "no change", never as a

@@ -24,8 +24,8 @@ every value counts for as long as it was valid.
 
 *Average over* is also **how long a value stays valid**: if the sensor sends
 nothing for that many hours, the outdoor temperature becomes **unknown**. Then
-the cutoff, the compensation and the ignoring of windows do not apply, no
-episodes are learned and no optimal stop is made, until the sensor reports
+the cutoff, the compensation and the ignoring of windows do not apply, nothing
+is learned and no optimal stop is made, until the sensor reports
 again.
 If no configured source gives a temperature (the sensor failed and the weather
 entity missing, unavailable or without a temperature) for longer than *Alert when

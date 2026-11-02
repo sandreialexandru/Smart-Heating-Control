@@ -83,7 +83,7 @@ nu pornește centrala (nici la *Camere necesare*, nici pentru antiîngheț), nu
 poate fi *Cameră de referință* și încălzește cât merge propriul dispozitiv.
 
 O cameră care cere căldură în timp ce sursa așteaptă alte camere se răcește, iar
-asta se învață ca răcire. Cât timp starea sursei e necunoscută, nu se învață
+asta se învață ca pierdere de căldură. Cât timp starea sursei e necunoscută, nu se învață
 nimic.
 
 ## Când nu încălzește o cameră sub țintă

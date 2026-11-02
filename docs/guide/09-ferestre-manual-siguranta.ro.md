@@ -40,7 +40,7 @@ valoare sau peste.
 fereastră e deschisă mai mult de* (implicit 30 de minute) cât timp încălzirea e
 necesară, apare o alertă.
 
-Episoadele de învățare în care o fereastră a fost deschisă nu se folosesc.
+Cât timp un senzor de fereastră sau ușă e deschis, nu se învață nimic.
 
 ## Modificările manuale
 
@@ -260,11 +260,41 @@ pentru avertizări.
 | Camere necesare pentru pornirea sursei de căldură: … | mai multe camere necesare decât are casa (au fost șterse camere): sursa pornește doar pentru antiîngheț |
 | Camera are …°, sub temperatura de antiîngheț | camera e cu 0,5° sau mai mult sub ea: încălzirea nu o poate menține (se anunță și când revine) |
 | Încălzirea e în pauză de peste … h | pauza e pornită mai mult de *Amintește când pauza durează mai mult de* (implicit 12 h), apoi o dată pe zi |
+| Risc de mucegai: peretele cel mai rece are circa …% umiditate | doar pentru o cameră cu *Senzor de umiditate* și o casă cu temperatură de afară: vezi *Riscul de mucegai* mai jos |
+
+### Riscul de mucegai
+
+Aerul camerei își păstrează vaporii de apă; locul cel mai rece al unui perete
+exterior (un colț, marginea unei ferestre) e mai rece decât aerul, deci aceiași
+vapori înseamnă acolo o umiditate mai mare. Mucegaiul poate crește unde acea
+umiditate rămâne la **80 %** sau mai mult (criteriul standardului DIN 4108-2).
+
+Alerta are nevoie de un **Senzor de umiditate** în cameră (pasul *Senzori* al
+camerei) și de o **temperatură de afară** a casei (senzor sau entitate meteo).
+Fără oricare dintre ele nu se trimite nicio alertă de mucegai.
+
+1. Peretele cel mai rece: afară + 0,70 × (cameră − afară). 0,70 e minimul cerut
+   de standard unui perete la o punte termică; o casă mai veche poate fi mai
+   rece.
+2. Umiditatea acolo: vaporii din aerul camerei (umiditatea ei × presiunea de
+   saturație la temperatura camerei) împărțiți la presiunea de saturație la
+   temperatura peretelui (formula Magnus).
+3. Alerta se trimite când a rămas la 80 % sau mai mult **60 de minute** (ca un
+   duș sau gătitul să nu o declanșeze) și se încheie sub **75 %**.
+
+**Exemplu**: camera la 20 °C cu 60 % umiditate, afară 0 °C. Peretele: 0 + 0,70 ×
+20 = 14 °C. Presiunea de saturație: 23,3 hPa la 20 °C, 16,0 hPa la 14 °C;
+vaporii 0,60 × 23,3 = 14,0 hPa înseamnă 14,0 ÷ 16,0 = **88 %** la perete: alerta
+se trimite după o oră. Cu 50 % în cameră: circa 73 %, nicio alertă. Senzorul
+*Decizie* arată valoarea în `surface_humidity`.
+
+Ce ajută: aerisirea scurtă și des, rufele uscate în altă parte, camera nu prea
+rece, mobila la câțiva centimetri de pereții exteriori.
 
 ## Repornirea Home Assistant
 
 Se păstrează: modificările manuale, vacanța și vacanța automată, modul, pauza,
-oaspeții, învățarea încălzirii și a răcirii (și episodul de încălzire în curs),
+oaspeții, învățarea fiecărei camere (nu și cele 30 de minute în curs de măsurare),
 mediile de afară (inclusiv
 mediile zilnice pentru sezon), oprirea după prognoză, timpii ultimelor comutări
 ale centralei și releelor și dacă centrala a fost pornită pentru antiîngheț.

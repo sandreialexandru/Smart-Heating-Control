@@ -31,15 +31,15 @@ Numele entităților sunt date ca în interfața în română. ID-urile încep c
 | *Temperatură țintă* (senzor) | Ținta, în unitatea casei. |
 | *Temperatura camerei* (senzor) | Temperatura camerei folosită de integrare. |
 | *Următoarea schimbare* (senzor) | Următoarea schimbare din program; atribute: nivelul următor, profilul. |
-| *Viteză de încălzire* (senzor) | Minute pe grad învățate pentru temperatura de afară de acum ([capitolul 7](07-anticipare-si-invatare.ro.md)). |
-| *Viteză de răcire* (senzor) | Cât de repede scade camera acum fără încălzire. |
+| *Viteză de încălzire* (senzor) | Minute pe grad cu încălzirea pornită, la temperatura camerei și cea de afară de acum; atribute: încălzirea învățată (`heating_per_hour`), pierderea de căldură (`loss_per_hour`), inerția (`inertia_minutes`), căldura care ajunge acum în cameră, minutele pe grad la −10 / 0 / 10 / 20 °C, progresul învățării (`hours_heating`, `hours_idle`, `hours_needed`) ([capitolul 7](07-anticipare-si-invatare.ro.md) și [Cum învață integrarea](../learning.ro.md#11-unde-se-vede)). |
+| *Viteză de răcire* (senzor) | Cât de repede scade camera acum fără încălzire (gol până se învață). |
 | *Timp de încălzire* (senzor) | Ore totale de încălzire ale camerei. |
 | *Cerere de căldură* (senzor binar) | Dacă camera cere căldură; atributul `heating` arată dacă sursa ei merge. |
 | *Fereastră deschisă* (senzor binar) | Dacă o fereastră contează acum ca deschisă. |
 | *Modificare manuală* (senzor binar) | Dacă e activă o modificare manuală. |
 | *Blocare modificări* (comutator) | Blocarea pentru copii. |
 | *Anulează modificarea manuală* (buton) | Anulează modificarea manuală a camerei. |
-| *Resetează învățarea încălzirii*, *Resetează învățarea răcirii* (butoane) | Șterg învățarea camerei. |
+| *Resetează învățarea* (buton) | Uită învățarea camerei; camera învață din nou în circa o zi. |
 | *Nivel Home* … *Nivel Activity*, *Temperatură „aproape”* (numere) | Temperaturile nivelurilor, doar la camerele fără Generic Thermostat. Un nivel cu nume propriu apare ca *Level „nume”*. |
 
 ### Stările senzorului *Decizie*
@@ -77,6 +77,7 @@ Numele entităților sunt date ca în interfața în română. ID-urile încep c
 | `time_to_target` | Minutele până la țintă |
 | `next_estimate` | Următoarea pornire / oprire anticipată: `kind`, `at`, `preset`, `minutes`, `starts_at`, `started_at`, `outdoor`, `outdoor_source`, `learned`, `sent_as`, `temperature` |
 | `stop_forecast` | Temperatura estimată la schimbare, în timpul unei opriri anticipate |
+| `surface_humidity` | Cu senzor de umiditate și temperatură de afară: umiditatea la peretele cel mai rece (%), pentru alerta de risc de mucegai ([capitolul 9](09-ferestre-manual-siguranta.ro.md)) |
 | `optimal_stop_cancelled` | Dacă oprirea anticipată a fost anulată |
 | `no_heat_reason` | De ce nu încălzește o cameră sub țintă |
 | `override`, `hold_until` | Modificarea manuală activă și până când ține planul actual |
@@ -222,7 +223,7 @@ actions:
 ## Diagnosticul
 
 Pe pagina integrării, **⋮ → Descarcă diagnosticul** dă configurația, învățarea
-(`learned_heating`, cu toate episoadele de încălzire păstrate în `episode_list`,
-și episoadele de răcire în `cooling_episode_list`) și ultimele 100 de decizii ale
+fiecărei camere (`thermal_model`: numerele învățate și cei zece candidați de
+inerție cu erorile lor) și ultimele 100 de decizii ale
 fiecărei camere. E util la
 raportarea unei probleme.

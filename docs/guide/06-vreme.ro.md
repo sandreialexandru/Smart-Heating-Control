@@ -26,7 +26,7 @@ contează cât timp a fost valabilă.
 *Medie pe* înseamnă și **cât rămâne valabilă o valoare**: dacă senzorul nu mai
 trimite nimic atâtea ore, temperatura de afară devine **necunoscută**. Atunci nu
 se aplică oprirea când e cald, compensarea și ignorarea ferestrelor, nu se
-învață episoade și nu se face oprire anticipată, până când senzorul revine.
+învață nimic și nu se face oprire anticipată, până când senzorul revine.
 Dacă nicio sursă configurată nu dă temperatura (senzorul căzut și entitatea meteo
 lipsă, indisponibilă sau fără temperatură) mai mult de *Alertă când un dispozitiv
 e indisponibil mai mult de* (implicit 15 minute), apare o alertă. Cu senzorul

@@ -97,7 +97,7 @@ No target can be below the frost protection. For Generic Thermostat the frost
 protection is its `min_temp`; lower it there if you want less.
 
 **The optimal start begins too early or too late.**
-In the first days the room learns (until then it uses 60 minutes per degree). If
+In the first day the room learns (until then it uses 60 minutes per degree). If
 you changed something in the heating, reset the learning. If the source waits for
 other rooms, the wait is not learned (see
 [chapter 7](07-optimal-start-stop-and-learning.md)).

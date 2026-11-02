@@ -164,9 +164,11 @@ In groups:
 - **Temperatures**: the room, the target, the thermostat preset, the active
   adjustments, the level temperatures;
 - **Schedule**: the next optimal start / stop, the heating time;
-- **Learning**: heating (episodes, the fixed part and the minutes per degree now)
-  and cooling (episodes and how fast the room falls now), each with a **Reset**
-  button (with a second click to confirm), then the last heating episode.
+- **Learning**: the heating (minutes per degree now and the inertia, e.g.
+  *45 min/°C now · inertia 30 min*; while learning, the hours seen with and
+  without heating out of the 4 needed, and the default under it) with a
+  **Reset** button (with a second click to confirm), and the heat loss (how
+  fast the room falls now, once learned).
 
 With a manual change, the card shows where it was made (card / service or on the
 device), until when, *applies after: …* or *returns after: …*.

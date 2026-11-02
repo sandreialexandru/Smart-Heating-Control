@@ -3,7 +3,7 @@
 *[English](07-optimal-start-stop-and-learning.md) · [Cuprins](README.ro.md)*
 
 Capitolul explică pe înțelesul tuturor cum învață fiecare cameră și cum
-folosește ce a învățat. Calculele complete, cu toate cazurile și simulările,
+folosește ce a învățat. Calculele complete, cu exemple și simulări,
 sunt în [Cum învață integrarea](../learning.ro.md).
 
 ## De ce e nevoie de anticipare
@@ -22,51 +22,45 @@ Ambele se pornesc pe cameră, la pasul *Program*
 ([capitolul 3](03-camere.ro.md#pasul-7-program)). Oprirea anticipată are nevoie
 de o temperatură de afară (senzor sau entitate meteo).
 
-## Cum învață o cameră să se încălzească
+## Cum învață o cameră
 
-Nu trebuie introdus nimic despre casă (calorifere, izolație, centrală). Camera
-își **măsoară singură** încălzirile, numite **episoade**:
+Nu trebuie introdus nimic despre casă (calorifere, izolație, centrală,
+încălzire în pardoseală). Camera **se urmărește singură** tot timpul, cu și fără
+încălzire, și învață trei numere:
 
-- un episod începe când camera cere căldură, e cu cel puțin *toleranța* sub
-  țintă și sursa ei de căldură chiar merge;
-- se termină când camera ajunge la țintă sau încălzirea se oprește;
-- se păstrează doar dacă a durat cel puțin 10 minute, temperatura a crescut,
-  nu a fost deschisă nicio fereastră și e sezonul rece (nu modul Oprit sau
-  Vară, nu în afara sezonului);
-- o repornire a Home Assistant nu îl termină: episodul în curs se salvează și
-  continuă dacă după repornire camera încă încălzește. Dacă nu mai încălzește,
-  se renunță la el, pentru că nu se știe când s-a oprit încălzirea.
+- **Încălzirea**: câte °C pe oră adaugă încălzirea când dă toată căldura.
+- **Pierderea de căldură**: cât de repede se răcește camera, proporțional cu
+  cât e mai caldă decât afară (cu cât e mai frig afară, cu atât mai repede).
+- **Inerția**: cât de încet reacționează încălzirea. După pornire se încălzesc
+  întâi centrala, apa și caloriferele (sau pardoseala); după oprire, ele mai dau
+  căldură o vreme. Calorifere: de obicei 10 – 30 de minute; încălzire în
+  pardoseală: ore. Nu se setează nimic: se învață.
 
-Pentru fiecare episod se notează cu câte grade a urcat camera, în câte minute
-și temperatura medie de afară.
+**Exemplu** (valori presupuse pentru exemplu): încălzire 2 °C pe oră, pierdere
+0,05 pe oră pentru fiecare grad de diferență, inerție 30 de minute. La 19 °C în
+cameră și 5 °C afară, camera pierde 0,05 × (19 − 5) = 0,7 °C pe oră, deci cu
+încălzirea complet pornită urcă 2 − 0,7 = 1,3 °C pe oră. De la 18 la 21 °C,
+pornind la rece, la 5 °C afară are nevoie de **186 de minute**, circa 3 ore
+(calculat minut cu minut, cu inerția).
 
-Din episoade se calculează o formulă simplă:
+**Cum învață.** La fiecare 30 de minute camera notează cât a urcat sau a
+coborât, dacă a încălzit și diferența față de afară. Numerele sunt cele care se
+potrivesc cel mai bine tuturor acestor măsurători (metoda celor mai mici
+pătrate). Măsurătorile mai vechi contează mai puțin (pe jumătate după o
+săptămână), deci învățarea urmează singură camera când se schimbă ceva. O
+măsurătoare departe de ce face camera de obicei (o ușă lăsată deschisă,
+gătitul) contează mai puțin. Nu se folosesc: măsurătorile cu o fereastră
+deschisă, cu starea sursei de căldură necunoscută, în timpul exercițiului
+robinetelor sau în afara sezonului rece (modul Oprit sau Vară, în afara
+sezonului).
 
-```
-minute = parte fixă + grade × minute pe grad
-```
+**Până se învață** (4 ore cu încălzire și 4 ore fără, de obicei în prima zi) se
+folosește o valoare sigură: 60 de minute pe grad, fără inerție. În card apare
+*se învață… 2 din 4 h cu încălzire, 1 din 4 h fără* și dedesubt *implicit
+60 min/1°C*.
 
-- **Partea fixă**: minutele până începe camera să urce (pornește centrala, se
-  încălzesc apa și caloriferele). E la fel pentru o urcare mică și pentru una
-  mare.
-- **Minutele pe grad**: cât durează fiecare grad. Depind de temperatura de
-  afară: când e mai frig, de obicei durează mai mult.
-
-**Exemplu** (valori presupuse pentru exemplu): partea fixă 25 de minute, iar la
-5 °C afară camera are nevoie de 50 de minute pe grad. Pentru o urcare de la 18
-la 21 °C (3 grade): 25 + 3 × 50 = **175 de minute**, deci aproape 3 ore.
-
-**Ce se păstrează.** Ultimele 25 de episoade mici (sub 1 °C) și ultimele 25
-mari (1 °C sau mai mult), separat, ca ciclurile mici și dese ale termostatului
-să nu scoată din memorie urcările mari de dimineață. Numerele se recalculează
-după fiecare episod, cu metoda celor mai mici pătrate (alegerea numerelor care
-se potrivesc cel mai bine tuturor episoadelor).
-
-**Până la primul episod** se folosește o valoare sigură: 60 de minute pe grad,
-fără parte fixă. În card apare *se învață…* și dedesubt *implicit 60 min/1°C*.
-
-**Cât durează învățarea.** Câteva zile. Cu cât sunt mai multe dimineți cu urcări
-mari (de exemplu după `sleep`), cu atât învață mai repede partea fixă.
+**Fără temperatură de afară** în casă, pierderea de căldură se învață ca un
+număr constant de grade pe oră.
 
 ## Pornirea anticipată, pas cu pas
 
@@ -77,17 +71,19 @@ Pentru următoarea schimbare spre un nivel **mai cald**:
    prognozei între pornire și ora schimbării; altfel temperatura de afară de
    acum. Fiindcă pornirea depinde de temperatură și invers, calculul se face de
    3 ori.
-3. **Câte minute**: formula de mai sus.
+3. **Câte minute**: camera se simulează minut cu minut cu încălzirea pornită,
+   de la temperatura ei de acum și de cât de calde îi sunt deja caloriferele
+   (inerția).
 4. **Limita**: niciodată mai devreme decât *Anticipare maximă* (implicit 120 de
    minute).
 5. Odată pornită, continuă până la ora schimbării, chiar dacă camera e caldă
    mai devreme. Regulile de mai sus de program (fereastră, prezență…) o pot
    întrerupe.
 
-**Exemplu** (valori alese, cu partea fixă 25 de minute și 50 de minute pe grad
-la 5 °C prognozate): dormitorul are 19,5 °C, `home` 22 °C la 07:00. Grade:
-22 − 19,5 = 2,5. Minute: 25 + 2,5 × 50 = 150. Cu limita implicită de 120 de
-minute pornirea e la 07:00 − 120 = **05:00** (fără limită ar fi fost 04:30).
+**Exemplu** (camera din exemplul de mai sus, 5 °C prognozate): dormitorul are
+18 °C, `home` 21 °C la 07:00. Minute: 186. Cu limita implicită de 120 de minute
+pornirea e la 07:00 − 120 = **05:00** (fără limită ar fi fost la 07:00 − 186 de
+minute = 03:54).
 
 Integrarea se trezește exact la momentul calculat al pornirii, nu doar la
 verificarea periodică.
@@ -98,21 +94,6 @@ minim oprit, *Camere necesare pentru pornirea sursei* mai mare de 1, camera de
 referință) nu intră în învățare. Cu astfel de așteptări, pornirea anticipată
 poate ajunge mai târziu la țintă.
 
-## Cum învață o cameră să se răcească
-
-Când camera nu mai cere căldură, se răcește. Integrarea măsoară și asta:
-**episodul de răcire** ține de la sfârșitul unei cereri de căldură până la
-următoarea și se păstrează dacă a durat cel puțin 10 minute, temperatura a
-scăzut și nicio fereastră nu a fost deschisă.
-
-O cameră pierde căldură cu atât mai repede cu cât e mai caldă decât afară. Din
-fiecare episod se calculează un **coeficient**, iar camera păstrează media
-ultimelor 30.
-
-**Exemplu** (valori alese): coeficientul 0,0345 pe oră. La 21 °C în cameră și
-0 °C afară, camera pierde 21 × 0,0345 = 0,72 °C pe oră; la 10 °C afară,
-(21 − 10) × 0,0345 = 0,38 °C pe oră.
-
 ## Oprirea anticipată, pas cu pas
 
 Înaintea unei schimbări spre un nivel **mai rece**:
@@ -120,9 +101,10 @@ ultimelor 30.
 1. **Confortul** nivelului curent: nivelul minus *toleranță*. Toleranța e
    `cold_tolerance` la Generic Thermostat, histerezisul la relee și termostatele
    fără `hvac_action`, *Toleranța opririi anticipate* la celelalte termostate.
-2. **Cât poate sta camera fără căldură** până coboară la confort, după
-   coeficientul învățat și temperatura de afară așteptată (prognoza din
-   perioada opririi, în 3 treceri).
+2. **Cât poate sta camera fără căldură** până coboară la confort, simulat cu
+   pierderea de căldură învățată, inerția (caloriferele calde încă dau căldură)
+   și temperatura de afară așteptată (prognoza din perioada opririi, în 3
+   treceri).
 3. **Limita**: niciodată mai devreme decât *Oprire anticipată maximă* (implicit
    30 de minute). Până se învață răcirea, nivelul mai rece începe exact atât de
    devreme.
@@ -147,19 +129,20 @@ implicită de 30 de minute, începe la **21:30**.
 - **Temperatura estimată la schimbare**, în timpul unei opriri anticipate, de
   exemplu *~21.5° la 22:00* (atributul `stop_forecast`).
 - În grafic, următoarea pornire / oprire anticipată e o perioadă umbrită.
-- **Învățarea**, în *Detalii*: numărul de episoade, partea fixă și minutele pe
-  grad acum (de exemplu *12 episoade · 25 min + 49 min/°C acum*), cât de repede
-  scade camera acum și ultimul episod.
-- Senzorii **Viteză de încălzire** (minute pe grad acum, cu atribute) și **Viteză
-  de răcire** (cât de repede scade camera acum fără încălzire).
+- **Învățarea**, în *Detalii*: minutele pe grad acum și inerția (de exemplu
+  *45 min/°C acum · inerție 30 min*) sau progresul în timpul învățării, și cât
+  de repede scade camera acum fără încălzire.
+- Senzorii **Viteză de încălzire** (minute pe grad acum, cu numerele învățate
+  ca atribute) și **Viteză de răcire** (cât de repede scade camera acum fără
+  încălzire).
 
 ## Resetarea învățării
 
 După o schimbare importantă (alte calorifere, altă curbă a centralei, izolație
-nouă), învățarea se adaptează singură în câteva săptămâni. Ca să înceapă imediat
-de la zero, există butoanele **Resetează învățarea încălzirii** și **Resetează
-învățarea răcirii** (butoanele camerei, sau *Resetează* în *Detaliile* cardului,
-cu un al doilea clic pentru confirmare).
+nouă), învățarea se adaptează singură în una – două săptămâni. Ca să înceapă imediat
+de la zero, există butonul **Resetează învățarea** (butonul camerei, sau
+*Resetează* în *Detaliile* cardului, cu un al doilea clic pentru confirmare);
+camera învață din nou în circa o zi.
 
 ## Când nu se recomandă
 

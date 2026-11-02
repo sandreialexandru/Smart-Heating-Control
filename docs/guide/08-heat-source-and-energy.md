@@ -84,7 +84,7 @@ the boiler (neither for *Rooms needed* nor for frost protection), cannot be the
 *Reference room*, and heats while its own device runs.
 
 A room that asks for heat while the source waits for other rooms cools down,
-and this is learned as cooling. While the state of the source is unknown,
+and this is learned as heat loss. While the state of the source is unknown,
 nothing is learned.
 
 ## When a room below its target does not heat

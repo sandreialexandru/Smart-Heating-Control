@@ -28,8 +28,8 @@ other thermostats or plain relays are supported as well.
 - **Schedules** with `workday` / `weekend` / weekday / custom profiles, holidays
   from the Workday integration, profiles chosen from a calendar, a day boundary
   for night shifts, or an existing Schedule helper.
-- **Optimal start / stop** with a learned heating time and a learned cooling per
-  room (see *Heating learning* and *Cooling learning and optimal stop*).
+- **Optimal start / stop** with a thermal model learned per room: heating,
+  heat loss and thermal inertia (see *Learning* and *Optimal stop*).
   Once an optimal start begins it continues until the scheduled time, even if
   the room is warm early; the rules above the schedule can still override it.
 - **Windows**: open/close delays, frost protection or off, detection from a
@@ -78,6 +78,10 @@ other thermostats or plain relays are supported as well.
   decided from the room and the TRVs are boosted to open), maximum temperature, command
   verification with retry, alerts for unavailable devices, failed sensors, low
   batteries and open windows, valve exercise for TRVs.
+- **Mold risk alert** for a room with a humidity sensor (and an outdoor
+  temperature of the house): the humidity at the coldest wall, by the method
+  of DIN 4108-2 (wall at outdoor + 0.70 × (room − outdoor), Magnus formula),
+  80 % or more for an hour raises it, below 75 % it ends.
 - **Visibility**: a *Decision* sensor per room with the winning rule and the
   reason, an event on every change, diagnostics with the last 100 decisions and
   a Lovelace card with an editable schedule.
@@ -211,76 +215,57 @@ buttons to clear manual changes, clear the vacation and reevaluate.
 Room: *Decision* (enum with the reason in the attributes), *Target temperature*,
 *Room temperature*, *Next change*, *Heating rate*, *Cooling rate*, *Heating time*, *Heat
 demand*, *Window open*, *Manual change*, *Child lock*
-(switch), *Clear manual change*, *Reset heating learning* and *Reset cooling
-learning* (buttons) and, for rooms without Generic
+(switch), *Clear manual change*, *Reset learning* (buttons) and, for rooms without Generic
 Thermostat, the level temperatures (numbers).
 
-## Heating learning
+## Learning
 
 *The full explanation, with worked examples and simulations: [docs/learning.md](docs/learning.md).*
 
-Each room learns how long it takes to heat up, from its own heating episodes:
+Each room learns a small physical model of itself, continuously, with and
+without heating:
 
-**minutes = fixed part + degrees × minutes per degree**, and the minutes per
-degree follow the outdoor temperature (a straight line).
+**rise per hour = heating × q − loss × (room − outdoor)**
 
-- The **fixed part** is the time before the room starts to rise: the heat
-  source starts, the water and the radiators warm up. It does not grow with
-  the degrees, so a small top-up and a large rise after a setback are both
-  estimated right.
-- The **minutes per degree** and how they change with the outdoor
-  temperature (heat losses, a weather-compensated boiler) come from the same
-  episodes. A temperature not seen yet is estimated from the trend (the line is
-  extended); the *Maximum early start* of the room still limits how early a
-  start can be.
-
-- An **episode** starts when the room asks for heat at least the *tolerance*
-  of its thermostat below the target, so the cycles that only keep the
-  temperature are learned too. The tolerance is the *cold tolerance* of
-  Generic Thermostat, the *hysteresis* for relays and on / off control, and the
-  *Thermostat tolerance* room setting for other thermostats (default 0).
-  The episode ends when the target is reached or the heating stops; it is used
-  when the heat demand lasted at least 10 minutes and the temperature rose,
-  however little: a slow rise is learned too (it may show a problem, but it is
-  real).
-- Episodes during which a **window or door sensor** of the room (or a linked
-  one from another room) was open are not used. Rooms without window sensors
-  use every episode.
-- Each episode keeps the **degrees** it rose, the **minutes** it took and the
-  average **outdoor temperature**. The last 25 small episodes (less than
-  1 °C) and the last 25 large ones (1 °C or more) are kept apart, so the many
-  small cycles of a thermostat never push the few large rises out.
-- The three numbers are the **least squares** fit of the kept episodes
-  (worked out again after every episode). A term is used only when the
-  episodes can tell it: the fixed part needs episodes at least 1 °C apart in
-  size, the outdoor term episodes at least 1 °C apart outdoors (with an
-  outdoor temperature). An impossible result (a negative fixed part or
-  negative minutes) is set to zero and the rest is fitted again; minutes per
-  degree never go below zero far from the learned range. When the outdoor
-  temperature is unknown, the mean of the episodes is used.
-- With at least 8 episodes, an episode far from the others (more than 3.5
-  times their usual difference from the fit: a door left open, cooking, a
-  sensor that jumped) is left out of the fit; it stays kept and comes back
-  when it fits again (`episodes_left_out` on the *Heating rate* sensor).
-- Until the first episode: 60 minutes per degree, no fixed part.
-- The learning of versions before 2.0 kept only a rate per episode; it cannot
-  be converted, so the heating is learned again after the update (the cooling
-  is kept).
+- **Heating** (`heating_per_hour`): °C per hour the heating adds at full heat.
+- **Heat loss** (`loss_per_hour`): the part of the inside / outside difference
+  lost per hour (colder outside, faster).
+- **Inertia** (`inertia_minutes`): q, the part of the heating that reaches the
+  room, follows the heating on / off with this delay: the boiler, the water,
+  the radiators or the floor warm up first after a start and keep giving heat
+  after a stop. It is learned, not set: ten candidates (0 – 240 minutes) are
+  learned together and the one that predicts the room best is used.
+- Every **30 minutes** of measurements is one equation; heating and loss are
+  its **least squares** fit. Older stretches count less (half after 7 days),
+  so the model follows a room that changes; a stretch far from what the model
+  expects (more than 2.5 times the usual difference: a door left open,
+  cooking) counts less.
+- Not used: stretches with a **window or door sensor** of the room (or a
+  linked one) open, with the state of the heat source unknown, during the
+  valve exercise, with the outdoor temperature unknown in a house that has
+  one, or outside the **cold season** (mode Off or Summer, outside the heating
+  season).
+- The model is used after **4 hours with heating and 4 without** (usually
+  within the first day); until then 60 minutes per degree, no inertia.
+- Without an outdoor temperature in the house the loss is learned as a constant
+  (°C per hour).
+- All predictions (optimal start, time to target, optimal stop, the expected
+  temperature at the change) are a minute by minute simulation of the model,
+  from the room temperature and the heat reaching the room now.
+- The learning of versions before 2.6 (episodes) does not fit the model and is
+  discarded: every room learns again after the update.
 - **Heating only while the heat source runs.** The learning (heating and
   cooling) and the heating time count a room as heating only while its heat
   source runs: Generic Thermostat heating (`hvac_action`), the relay or the
   on / off thermostat on, and, when a *Heat source* is set in the options
   (the boiler that TRVs and zone valves wait for), only while it runs too. A
   room that asks for heat while the heat source waits for other rooms cools,
-  and is learned as cooling. While the state of the heat source is unknown,
-  episodes are not used. With TRVs and no heat source set the demand of the
+  and is learned as heat loss. While the state of the heat source is unknown,
+  nothing is learned. With TRVs and no heat source set the demand of the
   TRV is used; that is right for a boiler that runs all season or by outdoor
   compensation. **With TRVs and a boiler started by a thermostat that is not in
   Home Assistant the learning is not reliable: optimal start and stop are not
   recommended.**
-- The heating and the cooling are learned in the **cold season** only: not in
-  mode Off or Summer, nor outside the heating season (an episode in progress
-  is dropped).
 - The **heat demand** comes from `hvac_action` (heating). Thermostats that do
   not report it count as heating from the *hysteresis* below their set
   temperature until the hysteresis above it, like a relay (the optimal stop
@@ -292,34 +277,22 @@ The *Heating time* sensors count the same way: a room while its heat
 source runs for it, the house while the heat source runs (without one, while
 at least one room heats). The chart of the card shows these periods.
 
-The *Heating rate* sensor shows the **minutes per degree** for the current
-outdoor temperature; its attributes show the fixed part (`fixed_minutes`),
-the minutes per degree at −10 / 0 / 10 / 20 °C, the change per degree outdoors,
-which terms are used, the number of episodes (and of large ones), how far
-below the target an episode starts and the last episodes. Optimal start uses
-the same learning. With *Rooms
+The *Heating rate* sensor shows the **minutes per degree** with the heating on,
+at the room and outdoor temperatures of now; its attributes show the model
+(`heating_per_hour`, `loss_per_hour`, `constant_loss`, `inertia_minutes`,
+`heat_reaching_now`, `error_per_hour`), the minutes per degree at
+−10 / 0 / 10 / 20 °C outdoors and the learning progress (`hours_heating`,
+`hours_idle`, `hours_needed`). Optimal start uses the same model. With *Rooms
 needed* higher than 1, a room in optimal start waits until enough rooms ask
 for heat, so it may reach its target later.
 
 While a room is below its target the card shows the **time to the target**
-(e.g. *~35 min*) under the target temperature, from the learned heating for
-the current outdoor temperature; until the first episode it shows *learning…* with
+(e.g. *~35 min*) under the target temperature, from the model and the current
+outdoor temperature; until the model is learned it shows *learning…* with
 the default used under it (*default 60 min/1°C*).
 The *Decision* sensor has it as the `time_to_target` attribute (minutes).
 
-## Cooling learning and optimal stop
-
-The cooling is learned the opposite way of the heating, per room (in the cold
-season only, see above):
-
-- An **episode** starts when the heat demand stops (no window or door sensor
-  open) and ends when the heat demand starts again. It is used when it lasted
-  at least 10 minutes and the temperature fell, however little. Episodes with
-  an open window sensor are not used.
-- A room cools in proportion to the **difference between inside and
-  outside**, so one coefficient per room is learned (the mean of the last 30
-  episodes). Walls, radiators and insulation are not modelled: whatever they
-  do is in the measured coefficient of that house.
+## Optimal stop
 
 **Optimal stop** needs an outdoor temperature (sensor or weather entity of the
 house; without one the option is not shown and no optimal stop is made, and
@@ -332,8 +305,10 @@ for the other thermostats (default 0).
 Example: home 22 °C until 22:00, tolerance 0.5 °C, 7 °C outside: if the room
 falls from 22 to 21.5 °C in 40 minutes, sleep starts at 21:20.
 
-- The *Maximum early stop* room setting is the limit; until the first cooling
-  episode the lower level starts that early.
+- The *Maximum early stop* room setting is the limit; until the model is
+  learned the lower level starts that early.
+- How long the room can go without heat is simulated with the learned heat
+  loss and inertia (warm radiators still give heat after the stop).
 - Once an optimal stop begins it continues until the scheduled time; the rules
   above the schedule can still override it. If the room falls below the
   comfort of the current level before that time (it cooled faster than
@@ -341,18 +316,19 @@ falls from 22 to 21.5 °C in 40 minutes, sleep starts at 21:20.
   scheduled time and the stop does not start again for that change. If this
   happens often, lower the *Maximum early stop*.
 - The card shows the expected temperature at the change (e.g. *~21.5° at
-  22:00*), from the learned cooling and the outdoor temperature expected until
+  22:00*), from the model and the outdoor temperature expected until
   then; the *Decision* sensor has it as the `stop_forecast` attribute.
-- The *Cooling rate* sensor shows how fast the room falls now without heating;
-  its attributes show the coefficient, the episodes and the tolerance.
+- The *Cooling rate* sensor shows how fast the room falls now without heating
+  (empty until learned); its attributes show the loss, the inertia and the
+  tolerance.
 
 ## Outdoor forecast for optimal start / stop
 
 With a weather entity that has an hourly forecast, the optimal start and the
 optimal stop use the **outdoor temperature expected while they run**, not the
 one of now. For a start at 05:00 for 07:00, the heating time is the one
-learned for the mean forecast between 05:00 and 07:00; for a stop, the cooling
-uses the mean forecast of the stop period. The period depends on that
+simulated with the mean forecast between 05:00 and 07:00; for a stop, the
+cooling uses the mean forecast of the stop period. The period depends on that
 temperature, so it is worked out again a few times (3 passes) from the period
 found before. Each forecast value holds for its hour; until the next forecast
 hour the measured outdoor temperature is used.
@@ -460,10 +436,9 @@ at once), and a *Lock* button for the child lock of the room.
 - **Details**, grouped: the alerts of the room and of the house (first, in the
   language of the card); *Temperatures* (room, target, thermostat preset,
   adjustments, level temperatures); *Schedule* (next optimal start / stop,
-  heating time); *Learning* (heating: episodes, fixed part and minutes per
-  degree now; cooling: episodes and how fast the room falls now; each with a
-  **Reset** button that asks to confirm with a second click; the last heating
-  episode at the end).
+  heating time); *Learning* (heating: minutes per degree now and the inertia,
+  or the learning progress; heat loss: how fast the room falls now; a
+  **Reset** button that asks to confirm with a second click).
 - **Manual change**: where it was made (card / service or on the device), until
   when, *applies after: …* while a higher rule keeps a change from the card off
   the devices, and *comes back after: …* while a higher rule interrupts it.

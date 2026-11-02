@@ -83,11 +83,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdvancedClimateConfigEnt
 
 
 def _remove_old_entities(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Remove entities of earlier versions (the profile select of the rooms, 2.2)."""
+    """Remove entities of earlier versions.
+
+    The profile select of the rooms (2.2), the two reset buttons of the
+    learning (2.6: one *Reset learning* button now).
+    """
     registry = er.async_get(hass)
     rooms = set(entry.subentries)
+    old = {("select", f"{rid}_{key}") for rid in rooms for key in ("profile",)} | {
+        ("button", f"{rid}_{key}")
+        for rid in rooms
+        for key in ("reset_heating_learning", "reset_cooling_learning")
+    }
     for item in er.async_entries_for_config_entry(registry, entry.entry_id):
-        if item.domain == "select" and any(item.unique_id == f"{rid}_profile" for rid in rooms):
+        if (item.domain, item.unique_id) in old:
             registry.async_remove(item.entity_id)
 
 

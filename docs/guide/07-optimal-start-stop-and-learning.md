@@ -3,7 +3,7 @@
 *[Română](07-anticipare-si-invatare.ro.md) · [Contents](README.md)*
 
 This chapter explains in plain words how every room learns and how it uses what
-it learned. The full calculations, with every case and the simulations, are in
+it learned. The full calculations, with examples and simulations, are in
 [How the integration learns](../learning.md).
 
 ## Why anticipation is needed
@@ -22,51 +22,44 @@ Both are turned on per room, in the *Schedule* step (see
 [chapter 3](03-rooms.md#step-7-schedule)). The optimal stop needs an outdoor
 temperature (sensor or weather entity).
 
-## How a room learns to warm up
+## How a room learns
 
-You do not have to describe the house (radiators, insulation, boiler). The room
-**measures its own** heatings, called **episodes**:
+You do not have to describe the house (radiators, insulation, boiler, floor
+heating). The room **watches itself** all the time, with and without heating,
+and learns three numbers:
 
-- an episode starts when the room asks for heat, is at least the *tolerance*
-  below the target and its heat source really runs;
-- it ends when the room reaches the target or the heating stops;
-- it is kept only if it lasted at least 10 minutes, the temperature rose, no
-  window was open and it is the cold season (not mode Off or Summer, not outside
-  the season);
-- a restart of Home Assistant does not end it: the episode in progress is saved
-  and goes on if the room still heats after the restart. If the room no longer
-  heats, it is dropped, because it is not known when the heating stopped.
+- **Heating**: how many °C per hour the heating adds when it gives its full
+  heat.
+- **Heat loss**: how fast the room cools, in proportion to how much warmer it
+  is than outside (colder outside, faster).
+- **Inertia**: how slowly the heating reacts. After a start the boiler, the
+  water and the radiators (or the floor) warm up first; after a stop they keep
+  giving heat for a while. Radiators: usually 10 – 30 minutes; floor heating:
+  hours. Nothing has to be set: it is learned.
 
-For every episode it notes how many degrees the room rose, in how many minutes,
-and the mean outdoor temperature.
+**Example** (values assumed for the example): heating 2 °C per hour, loss 0.05
+per hour per degree of difference, inertia 30 minutes. At 19 °C inside and 5 °C
+outside the room loses 0.05 × (19 − 5) = 0.7 °C per hour, so with the heating
+fully on it rises 2 − 0.7 = 1.3 °C per hour. From 18 to 21 °C, starting cold,
+at 5 °C outside it needs **186 minutes**, about 3 hours (calculated minute by
+minute, with the inertia).
 
-From the episodes it works out a simple formula:
+**How it learns.** Every 30 minutes the room notes how much it rose or fell,
+whether it heated and the difference to outside. The numbers are the ones that
+fit all these measurements best (the least squares method). Older measurements
+count less (half after a week), so the learning follows the room by itself
+when something changes. A measurement far from what the room usually does (a
+door left open, cooking) counts less. Not used: measurements with a window
+open, with the state of the heat source unknown, during the valve exercise, or
+outside the cold season (mode Off or Summer, outside the season).
 
-```
-minutes = fixed part + degrees × minutes per degree
-```
+**Until it is learned** (4 hours with heating and 4 hours without, usually
+within the first day) a safe value is used: 60 minutes per degree, no inertia.
+The card shows *learning… 2 of 4 h with heating, 1 of 4 h without* and below
+*default 60 min/1°C*.
 
-- **Fixed part**: the minutes until the room starts to rise (the boiler starts,
-  the water and the radiators warm up). The same for a small and for a large
-  rise.
-- **Minutes per degree**: how long every degree takes. They depend on the
-  outdoor temperature: colder outside, usually longer.
-
-**Example** (values assumed for the example): fixed part 25 minutes, and at
-5 °C outside the room needs 50 minutes per degree. To rise from 18 to 21 °C
-(3 degrees): 25 + 3 × 50 = **175 minutes**, so almost 3 hours.
-
-**What is kept.** The last 25 small episodes (below 1 °C) and the last 25 large
-ones (1 °C or more), separately, so the many small cycles of the thermostat
-never push the large morning rises out of memory. The numbers are worked out
-again after every episode, with the least squares method (picking the numbers
-that fit all episodes best).
-
-**Until the first episode** a safe value is used: 60 minutes per degree, no fixed
-part. The card shows *learning…* and below *default 60 min/1°C*.
-
-**How long learning takes.** A few days. The more mornings with large rises
-(e.g. after `sleep`), the sooner the fixed part is learned.
+**Without an outdoor temperature** in the house, the heat loss is learned as a
+constant number of degrees per hour.
 
 ## Optimal start, step by step
 
@@ -77,17 +70,18 @@ For the next change to a **warmer** level:
    forecast, the mean forecast between the start and the change; otherwise the
    outdoor temperature now. Since the start depends on the temperature and the
    other way round, the calculation is done 3 times.
-3. **How many minutes**: the formula above.
+3. **How many minutes**: the room is simulated minute by minute with the
+   heating on, from its temperature now and how warm its radiators already are
+   (the inertia).
 4. **The limit**: never earlier than *Maximum early start* (120 minutes by
    default).
 5. Once started, it continues until the change, even if the room is warm
    earlier. The rules above the schedule (window, presence…) can interrupt it.
 
-**Example** (chosen values, with a fixed part of 25 minutes and 50 minutes per
-degree at a forecast of 5 °C): the bedroom is at 19.5 °C, `home` 22 °C at 07:00.
-Degrees: 22 − 19.5 = 2.5. Minutes: 25 + 2.5 × 50 = 150. With the default limit
-of 120 minutes the start is at 07:00 − 120 = **05:00** (without the limit it
-would be 04:30).
+**Example** (the room of the example above, a forecast of 5 °C): the bedroom
+is at 18 °C, `home` 21 °C at 07:00. Minutes: 186. With the default limit of 120
+minutes the start is at 07:00 − 120 = **05:00** (without the limit it would be
+07:00 − 186 minutes = 03:54).
 
 The integration wakes up exactly at the calculated start, not only at the
 periodic check.
@@ -98,20 +92,6 @@ minimum off time, *Rooms needed to start the heat source* above 1, the reference
 room) is not part of the learning. With such waits, the optimal start may reach
 the target later.
 
-## How a room learns to cool down
-
-When the room no longer asks for heat, it cools down. The integration measures
-this too: a **cooling episode** lasts from the end of one heat demand to the
-next and is kept if it lasted at least 10 minutes, the temperature fell and no
-window was open.
-
-A room loses heat faster the warmer it is than outside. From every episode a
-**coefficient** is worked out, and the room keeps the mean of the last 30.
-
-**Example** (chosen values): coefficient 0.0345 per hour. At 21 °C in the room
-and 0 °C outside, the room loses 21 × 0.0345 = 0.72 °C per hour; at 10 °C
-outside, (21 − 10) × 0.0345 = 0.38 °C per hour.
-
 ## Optimal stop, step by step
 
 Before a change to a **colder** level:
@@ -121,8 +101,9 @@ Before a change to a **colder** level:
    relays and thermostats without `hvac_action`, and the *Optimal stop
    tolerance* for the other thermostats.
 2. **How long the room can go without heat** until it falls to the comfort,
-   from the learned coefficient and the expected outdoor temperature (the
-   forecast of the stop period, in 3 passes).
+   simulated with the learned heat loss, the inertia (warm radiators still give
+   heat) and the expected outdoor temperature (the forecast of the stop period,
+   in 3 passes).
 3. **The limit**: never earlier than *Maximum early stop* (30 minutes by
    default). Until the cooling is learned, the colder level starts exactly this
    early.
@@ -147,19 +128,20 @@ default limit of 30 minutes, it starts at **21:30**.
 - **The expected temperature at the change**, during an optimal stop, e.g.
   *~21.5° at 22:00* (the `stop_forecast` attribute).
 - In the chart, the next optimal start / stop is a shaded period.
-- **The learning**, in *Details*: the number of episodes, the fixed part and the
-  minutes per degree now (e.g. *12 episodes · 25 min + 49 min/°C now*), how fast
-  the room falls now, and the last episode.
-- The sensors **Heating rate** (minutes per degree now, with attributes) and
-  **Cooling rate** (how fast the room falls now without heating).
+- **The learning**, in *Details*: the minutes per degree now and the inertia
+  (e.g. *45 min/°C now · inertia 30 min*), or the progress while learning, and
+  how fast the room falls now without heating.
+- The sensors **Heating rate** (minutes per degree now, with the learned
+  numbers as attributes) and **Cooling rate** (how fast the room falls now
+  without heating).
 
 ## Resetting the learning
 
 If you changed something important (other radiators, another boiler curve, new
-insulation), the learning adapts by itself within a few weeks. To start from
-zero at once, press **Reset heating learning** or **Reset cooling learning**
-(the room buttons, or *Reset* in the card *Details*, with a second click to
-confirm).
+insulation), the learning adapts by itself within one or two weeks. To start from
+zero at once, press **Reset learning** (the room button, or *Reset* in the card
+*Details*, with a second click to confirm); the room learns again within about
+a day.
 
 ## When it is not recommended
 

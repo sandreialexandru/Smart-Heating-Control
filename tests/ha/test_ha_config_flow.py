@@ -268,7 +268,7 @@ async def test_room_subentry_flow(hass: HomeAssistant) -> None:
     assert result["step_id"] == "levels_nearby"
     result = await flow.async_configure(result["flow_id"], {"nearby_temp": 18})
     assert result["step_id"] == "sensors"
-    assert _keys(result) == {"temperature_sensors", "occupancy_sensors"}
+    assert _keys(result) == {"temperature_sensors", "occupancy_sensors", "humidity_sensor"}
     result = await flow.async_configure(result["flow_id"], {})
     assert result["errors"] == {"temperature_sensors": "sensor_required"}
     result = await flow.async_configure(result["flow_id"], {"temperature_sensors": ["sensor.room"]})
@@ -751,7 +751,7 @@ async def test_generic_thermostat_room_has_no_temperature_sensors(hass: HomeAssi
     result = await rooms.async_configure(result["flow_id"], {"climates": [climate]})
     result = await _until(hass, result, rooms, stop={"sensors_gt", "sensors"})
     assert result["step_id"] == "sensors_gt"
-    assert _keys(result) == {"occupancy_sensors"}
+    assert _keys(result) == {"occupancy_sensors", "humidity_sensor"}
     result = await rooms.async_configure(result["flow_id"], {"occupancy_sensors": []})
     result = await _until(hass, result, rooms, stop=set())
     assert result["type"] is FlowResultType.ABORT

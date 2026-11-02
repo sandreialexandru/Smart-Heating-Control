@@ -7,19 +7,38 @@ GitHub releases.
 
 ## Unreleased
 
-Alpha: the code split in smaller parts, and a more robust learning of the
-heating. Install it only to help test.
+Alpha: a physical model of every room for optimal start and stop, a mold risk
+alert, and the code split in smaller parts. Install it only to help test.
 
 ### Integration
 
-- **Heating learning: episodes far from the others are left out.** A door left
-  open, cooking or a sensor that jumped made one heating much longer (or
-  shorter) and pulled the learned time towards it. With at least 8 episodes, an
-  episode more than 3.5 times the usual difference from the others is left out
-  of the fit (it stays kept and comes back when it fits again). Checked in
-  simulations: about the same in steady houses, clearly closer after a change
-  of the house. The *Heating rate* sensor shows `episodes_left_out`. The
-  cooling learning is unchanged.
+- **New learning: a physical model of every room.** Instead of heating and
+  cooling episodes, each room learns, continuously and with or without
+  heating, how fast its heating warms it, how fast it loses heat to the
+  outdoors and its **thermal inertia** (how slowly the heating reacts: the
+  boiler, the radiators or a floor heating warm up first after a start and keep
+  giving heat after a stop). The inertia is learned, nothing has to be set.
+  Optimal start, optimal stop, the time to target and the expected temperature
+  at the change are a minute by minute simulation of that model. Older
+  measurements count less (half after 7 days), so the model follows a house
+  that changes; measurements far from the model (a door left open, cooking)
+  count less. See [How the integration learns](docs/learning.md).
+- **The learning starts again after the update.** The saved episodes do not
+  fit the model and are discarded. Until a room has seen 4 hours with heating
+  and 4 without (usually within the first day) the default is used: 60 minutes
+  per degree, no inertia, the longest optimal stop.
+- **One *Reset learning* button per room** replaces *Reset heating learning*
+  and *Reset cooling learning*; the old buttons are removed by themselves.
+- The *Heating rate* and *Cooling rate* sensors show the model (heating, heat
+  loss, inertia, the heat reaching the room now, the learning progress); the
+  episode attributes are gone. The card shows *45 min/°C now · inertia 30 min*,
+  or the learning progress.
+- **Mold risk alert** (a warning) for a room with the new optional *Humidity
+  sensor* (rooms step *Sensors*): the humidity at the coldest wall, from the
+  room temperature and humidity and the outdoor temperature (DIN 4108-2
+  method); 80 % or more for an hour raises it, below 75 % it ends. Without a
+  humidity sensor or without an outdoor temperature (sensor or weather entity)
+  no mold alert is sent. The *Decision* sensor shows `surface_humidity`.
 
 - The code of a room is split: what was sent to the devices and their limits
   (`device_echo.py`), open windows (`window.py`), alerts and notifications

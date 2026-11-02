@@ -164,6 +164,7 @@ roles stay the same: "Work" is still the `home` level.
 | **Temperature sensors** | Not shown with Generic Thermostat: GT keeps the temperature by the sensor of its own configuration, and the integration uses that one too (another sensor is changed in the GT settings). Sensors in the room, used instead of the thermostat sensor (more accurate when the thermostat sits next to the radiator). Empty = the thermostat sensor. **Required for relays**, which have no sensor (otherwise *Relays need a temperature sensor of the room*), and for the TRV boost (otherwise *The TRV boost needs a temperature sensor of the room*). The outdoor sensor of a house is refused. A sensor that reports no unit is read in the unit of the house. |
 | **TRV calibration** | Only for TRVs and only with a room sensor. *Offset*: corrects the TRV sensor. *External temperature input*: writes the room temperature into the TRV (if it has that input). *Off* otherwise. |
 | **Occupancy sensors** | Motion / presence sensors of the room: when the room is empty for a while it goes to `eco` even if someone is home. Empty for rooms that should only follow the schedule. |
+| **Humidity sensor** | Only for the **mold risk alert**: the humidity of the room, with the outdoor temperature of the house, gives the humidity at the coldest wall (see [chapter 9](09-windows-manual-safety.md#mold-risk)). Without it, or without an outdoor temperature (sensor or weather entity), no mold alert is sent. Also shown with Generic Thermostat. |
 
 The second form, **Sensors: details**, appears only when needed:
 

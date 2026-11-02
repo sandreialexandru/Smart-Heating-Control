@@ -2857,3 +2857,26 @@ async def test_no_mold_alert_without_humidity_sensor(
     assert hass.states.get("sensor.bedroom_decision").attributes["surface_humidity"] is None
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_old_reset_buttons_are_removed(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The two reset buttons of versions before 2.6 are removed from the registry."""
+    from homeassistant.helpers import entity_registry as er
+
+    entry = await _setup(hass, freezer)
+    room = next(iter(entry.runtime_data.rooms.values()))
+    registry = er.async_get(hass)
+    old = [
+        registry.async_get_or_create(
+            "button", DOMAIN, f"{room.id}_{key}", config_entry=entry
+        ).entity_id
+        for key in ("reset_heating_learning", "reset_cooling_learning")
+    ]
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert all(registry.async_get(entity_id) is None for entity_id in old)
+    assert hass.states.get("button.bedroom_reset_learning") is not None
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

@@ -97,7 +97,7 @@ Nicio țintă nu poate fi sub antiîngheț. La Generic Thermostat antiînghețul
 `min_temp` al lui; pentru mai puțin, se coboară acolo.
 
 **Pornirea anticipată pornește prea devreme sau prea târziu.**
-În primele zile camera învață (până atunci folosește 60 de minute pe grad). După o
+În prima zi camera învață (până atunci folosește 60 de minute pe grad). După o
 schimbare la încălzire, învățarea se poate reseta. Dacă sursa așteaptă alte
 camere, așteptarea nu se învață ([capitolul 7](07-anticipare-si-invatare.ro.md)).
 

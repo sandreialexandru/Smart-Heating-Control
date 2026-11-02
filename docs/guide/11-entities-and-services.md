@@ -31,15 +31,15 @@ the house or the room, e.g. `sensor.bedroom_decision`.
 | *Target temperature* (sensor) | The target, in the unit of the house. |
 | *Room temperature* (sensor) | The room temperature used by the integration. |
 | *Next change* (sensor) | The next schedule change; attributes: the next level, the profile. |
-| *Heating rate* (sensor) | Learned minutes per degree for the outdoor temperature now (see [chapter 7](07-optimal-start-stop-and-learning.md)). |
-| *Cooling rate* (sensor) | How fast the room falls now without heating. |
+| *Heating rate* (sensor) | Minutes per degree with the heating on, at the room and outdoor temperatures now; attributes: the learned heating (`heating_per_hour`), heat loss (`loss_per_hour`), inertia (`inertia_minutes`), the heat reaching the room now, the minutes per degree at −10 / 0 / 10 / 20 °C, the learning progress (`hours_heating`, `hours_idle`, `hours_needed`) (see [chapter 7](07-optimal-start-stop-and-learning.md) and [How the integration learns](../learning.md#11-where-to-see-it)). |
+| *Cooling rate* (sensor) | How fast the room falls now without heating (empty until learned). |
 | *Heating time* (sensor) | Total heating hours of the room. |
 | *Heat demand* (binary sensor) | Whether the room asks for heat; the `heating` attribute shows whether its source runs. |
 | *Window open* (binary sensor) | Whether a window counts as open now. |
 | *Manual change* (binary sensor) | Whether a manual change is active. |
 | *Child lock* (switch) | The child lock. |
 | *Clear manual change* (button) | Clears the room's manual change. |
-| *Reset heating learning*, *Reset cooling learning* (buttons) | Delete the room's learning. |
+| *Reset learning* (button) | Forgets the room's learning; the room learns again within about a day. |
 | *Level Home* … *Level Activity*, *Nearby temperature* (numbers) | The level temperatures, only for rooms without Generic Thermostat. A level with its own name appears as *Level "name"*. |
 
 ### States of the *Decision* sensor
@@ -77,6 +77,7 @@ the house or the room, e.g. `sensor.bedroom_decision`.
 | `time_to_target` | Minutes to the target |
 | `next_estimate` | The next optimal start / stop: `kind`, `at`, `preset`, `minutes`, `starts_at`, `started_at`, `outdoor`, `outdoor_source`, `learned`, `sent_as`, `temperature` |
 | `stop_forecast` | The expected temperature at the change, during an optimal stop |
+| `surface_humidity` | With a humidity sensor and an outdoor temperature: the humidity at the coldest wall (%), for the mold risk alert ([chapter 9](09-windows-manual-safety.md)) |
 | `optimal_stop_cancelled` | Whether the optimal stop was cancelled |
 | `no_heat_reason` | Why a room below its target does not heat |
 | `override`, `hold_until` | The active manual change and until when the current plan holds |
@@ -223,7 +224,6 @@ actions:
 ## Diagnostics
 
 On the integration page, **⋮ → Download diagnostics** gives the configuration,
-the learning (`learned_heating`, with every kept heating episode in
-`episode_list`, and the cooling episodes in `cooling_episode_list`) and the last
-100 decisions of every room. Useful
+the learning of every room (`thermal_model`: the learned numbers and the ten
+inertia candidates with their errors) and the last 100 decisions of every room. Useful
 when you report a problem.

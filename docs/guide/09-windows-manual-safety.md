@@ -39,7 +39,7 @@ or above.
 **Alert**: if a window stays open longer than *Alert when a window is open longer
 than* (30 minutes by default) while heating is needed, you get an alert.
 
-Learning episodes with an open window are not used.
+While a window or door sensor is open, nothing is learned.
 
 ## Manual changes
 
@@ -259,12 +259,42 @@ as the recipient of the important alerts and of the warnings.
 | Rooms needed to start the heat source is … | more rooms needed than the house has (rooms were removed): the heat source starts only for frost protection |
 | The room is …°, below the frost protection temperature | the room is 0.5° or more below it: the heating cannot keep it (its end is told when it is back) |
 | The heating has been paused for more than … h | the pause is on longer than *Remind when the pause lasts longer than* (12 h by default), then once a day |
+| Mold risk: the coldest wall is at about …% humidity | only for a room with a *Humidity sensor* and a house with an outdoor temperature: see *Mold risk* below |
+
+
+### Mold risk
+
+The air of a room holds its water vapour; the coldest place of an outer wall
+(a corner, the side of a window) is colder than the air, so the same vapour is
+a higher humidity there. Mold can grow where that humidity stays at **80 %**
+or more (the criterion of the DIN 4108-2 standard).
+
+The alert needs a **Humidity sensor** in the room (rooms step *Sensors*) and an
+**outdoor temperature** of the house (sensor or weather entity). Without either,
+no mold alert is sent.
+
+1. The coldest wall: outdoor + 0.70 × (room − outdoor). 0.70 is the least the
+   standard asks of a wall at a thermal bridge; an older house may be colder.
+2. The humidity there: the vapour of the room air (its humidity × the
+   saturation pressure at the room temperature) over the saturation pressure at
+   the wall temperature (Magnus formula).
+3. The alert is sent when it has stayed at 80 % or more for **60 minutes** (so a
+   shower or cooking does not raise it), and ends below **75 %**.
+
+**Example**: room 20 °C with 60 % humidity, outdoors 0 °C. Wall: 0 + 0.70 × 20 =
+14 °C. Saturation pressure: 23.3 hPa at 20 °C, 16.0 hPa at 14 °C; the vapour
+0.60 × 23.3 = 14.0 hPa is 14.0 ÷ 16.0 = **88 %** at the wall: the alert is sent
+after an hour. With 50 % in the room: about 73 %, no alert. The *Decision*
+sensor shows the value in `surface_humidity`.
+
+What helps: airing briefly and often, not drying laundry in the room, not
+letting the room get too cold, furniture a few centimetres from outer walls.
 
 ## Restart of Home Assistant
 
 Kept: manual changes, the vacation and the automatic vacation, the mode, the
-pause, the guests, the heating and cooling learning (also the heating episode in
-progress), the outdoor averages
+pause, the guests, the learning of every room (not the 30 minutes being
+measured), the outdoor averages
 (including the daily means for the season), the forecast cutoff, the times of
 the last switches of the boiler and relays, and whether the boiler was started
 for frost protection. After a restart the integration continues where it left

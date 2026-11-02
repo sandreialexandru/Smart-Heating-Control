@@ -162,10 +162,11 @@ Pe grupuri:
 - **Temperaturi**: camera, ținta, presetul termostatului, ajustările active,
   temperaturile nivelurilor;
 - **Program**: următoarea pornire / oprire anticipată, timpul de încălzire;
-- **Învățare**: încălzirea (episoade, partea fixă și minutele pe grad acum) și
-  răcirea (episoade și cât de repede scade camera acum), fiecare cu butonul
-  **Resetează** (cu un al doilea clic pentru confirmare), apoi ultimul episod de
-  încălzire.
+- **Învățare**: încălzirea (minutele pe grad acum și inerția, de exemplu
+  *45 min/°C acum · inerție 30 min*; în timpul învățării, orele văzute cu și
+  fără încălzire din cele 4 necesare, cu valoarea implicită dedesubt) cu
+  butonul **Resetează** (cu un al doilea clic pentru confirmare), și pierderea
+  de căldură (cât de repede scade camera acum, după ce se învață).
 
 La o modificare manuală, cardul arată unde a fost făcută (card / serviciu sau pe
 dispozitiv), până când, *se aplică după: …* sau *revine după: …*.

@@ -1137,14 +1137,42 @@ class Room:
     # Evaluation
     # ------------------------------------------------------------------
     async def async_evaluate(self, now: datetime) -> None:
-        """Decide and apply."""
-        house = self.house
+        """Decide and apply.
+
+        The steps, in order: read the room, follow the schedule (with the
+        optimal start / stop), decide, command the devices, learn, check the
+        alerts and plan the next look.
+        """
         self._update_temperature(now)
         self._update_window(now)
         self._account_runtime(now)
 
         state = self._schedule_lookup(now)
         self.schedule_state = state
+        preset, schedule_rule = self._schedule_preset(now, state)
+        inputs = self._inputs(now, state, preset, schedule_rule)
+        decision = decide(inputs)
+        self._note_decision(decision)
+        self._record(decision, now)
+        self.decision = decision
+        self.target_temperature = self._resolve_temperature(decision.target)
+
+        await self._async_apply(decision.target)
+        await self._async_calibrate(now)
+        self._update_demand()
+        self._learn(now)
+        self._check_alerts(now)
+        self.next_wakeup = self._next_wakeup(now, state)
+
+    def _schedule_preset(
+        self, now: datetime, state: ScheduleState | None
+    ) -> tuple[str | None, str]:
+        """The level the schedule (or the calendar) asks for now, and its rule.
+
+        The optimal start / stop may take the next level early; what they work
+        out is kept in ``next_estimate`` for the card and the next wakeup.
+        """
+        house = self.house
         preset = state.preset if state else None
         schedule_rule = "schedule"
         calendar_preset = self._calendar_preset()
@@ -1209,7 +1237,17 @@ class Room:
                     now if optimal and estimate["kind"] == schedule_rule else None
                 )
             self.next_estimate = estimate
+        return preset, schedule_rule
 
+    def _inputs(
+        self, now: datetime, state: ScheduleState | None, preset: str | None, schedule_rule: str
+    ) -> RoomInputs:
+        """What the decision needs: the house, the room and the schedule now.
+
+        Also notes what the decision depends on (``signature``): a manual change
+        lasts until it changes (see ``_check_override``).
+        """
+        house = self.house
         vacation = house.vacation_active(now)
         preheat = not vacation and house.vacation_preheating(now)
         signature = (
@@ -1228,7 +1266,7 @@ class Room:
         self._check_override(now, signature)
         valve = self._valve_exercise_due(now)
 
-        inputs = RoomInputs(
+        return RoomInputs(
             now=now,
             # Guests win over the vacation mode too: the rooms follow the schedule.
             mode=MODE_AUTO if house.mode == MODE_VACATION and house.guest else house.mode,
@@ -1262,7 +1300,9 @@ class Room:
             device_setpoint=self._device_setpoint(),
             on_off=self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC,
         )
-        decision = decide(inputs)
+
+    def _note_decision(self, decision: Decision) -> None:
+        """What a decision means for a manual change and the optimal stop."""
         if self.override is not None and decision.rule == RULE_OVERRIDE:
             self.override["applied"] = True
         if self.override is not None and decision.rule not in (RULE_OVERRIDE, RULE_PAUSE, RULE_MAX):
@@ -1273,15 +1313,11 @@ class Room:
         if self.stop_cancelled and decision.rule == RULE_SCHEDULE:
             decision.description += " (optimal stop cancelled: the room got colder than expected)"
             decision.params = {**decision.params, "stop_cancelled": True}
-        self._record(decision, now)
-        self.decision = decision
-        self.target_temperature = self._resolve_temperature(decision.target)
 
-        await self._async_apply(decision.target)
-        await self._async_calibrate(now)
-        self._update_demand()
-        # The heating and the cooling are learned in the cold season only (not in
-        # mode Off or Summer, nor outside the heating season).
+    def _learn(self, now: datetime) -> None:
+        """Learn how fast the room heats and cools (in the cold season only)."""
+        house = self.house
+        # Not in mode Off or Summer, nor outside the heating season.
         if house.season_active and house.mode not in (MODE_OFF, MODE_SUMMER):
             outdoor = house.outdoor_now
             # An episode is not used with a window open, when the outdoor
@@ -1306,9 +1342,9 @@ class Room:
         else:
             self.learner.cancel()
             self.cooling.cancel()
-        self._check_alerts(now)
 
-        # When should we look again?
+    def _next_wakeup(self, now: datetime, state: ScheduleState | None) -> datetime | None:
+        """When to look again: the next change of the schedule, an end, a start."""
         wakeups = []
         if state and state.next_change:
             wakeups.append(state.next_change)
@@ -1326,7 +1362,7 @@ class Room:
             begin = estimate["change"] - timedelta(minutes=float(estimate["minutes"]))
             if begin > now:
                 wakeups.append(begin)
-        self.next_wakeup = min(wakeups) if wakeups else None
+        return min(wakeups) if wakeups else None
 
     def _device_setpoint(self) -> float | None:
         """Highest temperature set on the thermostats (not for on / off control)."""

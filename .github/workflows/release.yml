@@ -123,23 +123,28 @@ jobs:
 
       # HACS reads only the first releases GitHub lists, and GitHub sorts the
       # pre-release names as text (a10 between a1 and a2), so a new alpha could
-      # be missing in HACS. The earlier alphas of the same version are removed
-      # (only their release pages: the tags and the code stay).
+      # be missing in HACS. Of the earlier alphas of the same version only the
+      # last 3 keep their release page, to go back to; the older pages are
+      # removed (their tags and the code stay).
       # Also when the release exists already (run by hand on refactor to tidy up).
-      - name: Remove the earlier alphas of this version
+      - name: Keep the last 3 earlier alphas of this version
         if: contains(steps.version.outputs.version, 'a')
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
           BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+          KEEP: 3
         run: |
           [[ "$BRANCH" == "refactor" ]] || exit 0
           gh release view "$TAG" >/dev/null 2>&1 || { echo "$TAG has no release yet."; exit 0; }
           base="${TAG%a*}"
+          current="${TAG##*a}"
           gh release list --limit 200 --json tagName,isPrerelease --jq '.[] | select(.isPrerelease) | .tagName' |
             while read -r old; do
-              if [[ "$old" != "$TAG" && "$old" =~ ^${base//./\\.}a[0-9]+$ ]]; then
-                echo "Removing the release page of $old (the tag stays)"
-                gh release delete "$old" --yes
+              if [[ "$old" =~ ^${base//./\\.}a([0-9]+)$ ]] && (( BASH_REMATCH[1] < current )); then
+                echo "${BASH_REMATCH[1]} $old"
               fi
+            done | sort -rn | tail -n +$((KEEP + 1)) | while read -r _ old; do
+              echo "Removing the release page of $old (the tag stays)"
+              gh release delete "$old" --yes
             done

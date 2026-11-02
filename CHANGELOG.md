@@ -7,8 +7,10 @@ GitHub releases.
 
 ## Unreleased
 
-Alpha: a physical model of every room for optimal start and stop, a mold risk
-alert, and the code split in smaller parts. Install it only to help test.
+Beta: a physical model of every room for optimal start and stop (heating,
+weather curve, heat loss and inertia, learned by itself), a mold risk alert, a
+chart with 7 days of history and the predicted temperature, and the code split
+in smaller parts. The learning starts again after the update (about a day).
 
 ### Integration
 

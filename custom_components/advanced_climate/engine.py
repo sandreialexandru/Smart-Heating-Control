@@ -183,7 +183,9 @@ def _off(inputs: RoomInputs) -> Target:
 def base_decision(inputs: RoomInputs) -> Decision:
     """Evaluate rules 2-9 (without adjustments and safety)."""
     if inputs.paused:
-        return Decision(RULE_PAUSE, Target(KIND_NONE), "Paused: only safety commands are sent", key="pause")
+        return Decision(
+            RULE_PAUSE, Target(KIND_NONE), "Paused: only safety commands are sent", key="pause"
+        )
     # The valves are exercised in every mode (above all in summer), but not
     # with a window open.
     if inputs.valve_exercise and not inputs.window_open:
@@ -209,7 +211,9 @@ def base_decision(inputs: RoomInputs) -> Decision:
         return Decision(RULE_SUMMER, _off(inputs), "Summer mode: heating off", key="summer")
     if not inputs.season_active:
         return Decision(
-            RULE_OUT_OF_SEASON, _off(inputs), "Outside the heating season: heating off",
+            RULE_OUT_OF_SEASON,
+            _off(inputs),
+            "Outside the heating season: heating off",
             key="out_of_season",
         )
     if inputs.window_open:
@@ -284,7 +288,9 @@ def base_decision(inputs: RoomInputs) -> Decision:
         else ""
     )
     if inputs.schedule_preset is None:
-        return Decision(RULE_SCHEDULE, Target(KIND_NONE), "No schedule available", key="no_schedule")
+        return Decision(
+            RULE_SCHEDULE, Target(KIND_NONE), "No schedule available", key="no_schedule"
+        )
     if inputs.schedule_preset == PRESET_FROST:
         return _no_profile(inputs)
     preset = inputs.schedule_preset
@@ -367,16 +373,20 @@ def decide(inputs: RoomInputs) -> Decision:
 
     # Frost protection for a day without an active profile is not adjusted,
     # like the other frost protections.
-    adjustable = decision.rule not in (
-        RULE_PAUSE,
-        RULE_MODE_OFF,
-        RULE_VALVE_EXERCISE,
-        RULE_WINDOW,
-        RULE_OVERRIDE,
-        # Heating off (frost protection on a device that cannot be turned off).
-        RULE_SUMMER,
-        RULE_OUT_OF_SEASON,
-    ) and decision.key != "no_profile"
+    adjustable = (
+        decision.rule
+        not in (
+            RULE_PAUSE,
+            RULE_MODE_OFF,
+            RULE_VALVE_EXERCISE,
+            RULE_WINDOW,
+            RULE_OVERRIDE,
+            # Heating off (frost protection on a device that cannot be turned off).
+            RULE_SUMMER,
+            RULE_OUT_OF_SEASON,
+        )
+        and decision.key != "no_profile"
+    )
     # Outdoor cutoff: heating is not needed when it is warm outside.
     if adjustable and inputs.cutoff_active and _heating(target):
         decision = Decision(

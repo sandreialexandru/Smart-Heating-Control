@@ -869,9 +869,7 @@ class Room:
             device = round(sum(device_values) / len(device_values), 2)
         self.current_temp = external if external is not None else device
         # Without any temperature a relay cannot be regulated.
-        needs_temp = (
-            self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost
-        )
+        needs_temp = self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost
         self.sensor_failed = self.current_temp is None and (bool(sensors) or needs_temp)
         # When a sensor stops or comes back, or the room falls back to the device
         # sensor, the value jumps: the quick drop (open window) starts again from

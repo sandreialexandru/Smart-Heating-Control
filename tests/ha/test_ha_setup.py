@@ -107,9 +107,9 @@ async def test_relay_room(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -
     )
     await hass.async_block_till_done()
     assert room.cooling.episodes == []
-    assert hass.states.get("sensor.bedroom_decision").attributes["entities"]["reset_heating_learning"] == (
-        "button.bedroom_reset_heating_learning"
-    )
+    assert hass.states.get("sensor.bedroom_decision").attributes["entities"][
+        "reset_heating_learning"
+    ] == ("button.bedroom_reset_heating_learning")
 
     # Warm room: the relay turns off.
     hass.states.async_set("sensor.room_temp", "21.5", {"unit_of_measurement": "°C"})
@@ -118,19 +118,25 @@ async def test_relay_room(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -
 
     # Summer mode.
     await hass.services.async_call(
-        "select", "select_option",
-        {"entity_id": "select.home_mode", "option": "summer"}, blocking=True,
+        "select",
+        "select_option",
+        {"entity_id": "select.home_mode", "option": "summer"},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert hass.states.get("sensor.bedroom_decision").state == "summer"
 
     # Service: manual temperature for one hour.
     await hass.services.async_call(
-        "select", "select_option",
-        {"entity_id": "select.home_mode", "option": "auto"}, blocking=True,
+        "select",
+        "select_option",
+        {"entity_id": "select.home_mode", "option": "auto"},
+        blocking=True,
     )
     await hass.services.async_call(
-        DOMAIN, "set_override", {"room": "Bedroom", "temperature": 23, "duration_hours": 1},
+        DOMAIN,
+        "set_override",
+        {"room": "Bedroom", "temperature": 23, "duration_hours": 1},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -152,7 +158,9 @@ async def test_relay_off_at_the_maximum_in_a_pause(
     entry = await _setup(hass, freezer)
     await _tick(hass, freezer, 15)
     assert hass.states.get("input_boolean.heater").state == "on"  # 18 °C, home 21 °C
-    await hass.services.async_call("switch", "turn_on", {"entity_id": "switch.home_pause"}, blocking=True)
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.home_pause"}, blocking=True
+    )
     await hass.async_block_till_done()
     assert hass.states.get("input_boolean.heater").state == "on"  # the pause sends nothing
     hass.states.async_set("sensor.room_temp", "30.0", {"unit_of_measurement": "°C"})
@@ -282,9 +290,11 @@ async def test_set_schedule_service(hass: HomeAssistant, freezer: FrozenDateTime
     seen: list[str] = []
     hass.bus.async_listen(
         "state_changed",
-        lambda event: seen.append(event.data["new_state"].state)
-        if event.data["entity_id"] == "sensor.bedroom_decision" and event.data["new_state"]
-        else None,
+        lambda event: (
+            seen.append(event.data["new_state"].state)
+            if event.data["entity_id"] == "sensor.bedroom_decision" and event.data["new_state"]
+            else None
+        ),
     )
     await hass.services.async_call(
         DOMAIN,
@@ -404,7 +414,11 @@ async def test_fahrenheit_house(hass: HomeAssistant, freezer: FrozenDateTimeFact
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
-        options={"persons": ["person.andrei"], "nearby_zones": [], "temperature_unit": "fahrenheit"},
+        options={
+            "persons": ["person.andrei"],
+            "nearby_zones": [],
+            "temperature_unit": "fahrenheit",
+        },
         subentries_data=[
             {
                 "data": {
@@ -441,7 +455,9 @@ async def test_fahrenheit_house(hass: HomeAssistant, freezer: FrozenDateTimeFact
 
     # A manual temperature is given in °F.
     await hass.services.async_call(
-        DOMAIN, "set_override", {"room": "Bedroom", "temperature": 72, "duration_hours": 1},
+        DOMAIN,
+        "set_override",
+        {"room": "Bedroom", "temperature": 72, "duration_hours": 1},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -449,7 +465,9 @@ async def test_fahrenheit_house(hass: HomeAssistant, freezer: FrozenDateTimeFact
 
     # Setting a level in °F stores it in °C.
     await hass.services.async_call(
-        "number", "set_value", {"entity_id": "number.bedroom_level_home", "value": 71.6},
+        "number",
+        "set_value",
+        {"entity_id": "number.bedroom_level_home", "value": 71.6},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -480,7 +498,11 @@ async def test_late_device_report_is_not_manual(
         options={"persons": ["person.andrei"], "nearby_zones": []},
         subentries_data=[
             {
-                "data": {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"},
+                "data": {
+                    "source": "climate",
+                    "climates": ["climate.trv"],
+                    "command_mode": "temperature",
+                },
                 "subentry_type": SUBENTRY_ROOM,
                 "title": "Office",
                 "unique_id": None,
@@ -605,7 +627,11 @@ async def test_heating_counts_only_while_the_heat_source_runs(
         },
         subentries_data=[
             {
-                "data": {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"},
+                "data": {
+                    "source": "climate",
+                    "climates": ["climate.trv"],
+                    "command_mode": "temperature",
+                },
                 "subentry_type": SUBENTRY_ROOM,
                 "title": "Office",
                 "unique_id": None,
@@ -626,7 +652,9 @@ async def test_heating_counts_only_while_the_heat_source_runs(
 
     # The heat source runs (paused, so the integration does not switch it off
     # for the missing second room): now the room heats and learns.
-    await hass.services.async_call("switch", "turn_on", {"entity_id": "switch.home_pause"}, blocking=True)
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.home_pause"}, blocking=True
+    )
     await hass.services.async_call(
         "input_boolean", "turn_on", {"entity_id": "input_boolean.boiler"}, blocking=True
     )
@@ -658,7 +686,11 @@ async def _trv_house(hass, freezer, **options):
         },
         subentries_data=[
             {
-                "data": {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"},
+                "data": {
+                    "source": "climate",
+                    "climates": ["climate.trv"],
+                    "command_mode": "temperature",
+                },
                 "subentry_type": SUBENTRY_ROOM,
                 "title": "Office",
                 "unique_id": None,
@@ -693,7 +725,9 @@ async def test_frost_protection_starts_the_heat_source(
     assert hass.states.get("input_boolean.boiler").state == "off"
 
     # Paused: no commands, except for frost protection.
-    await hass.services.async_call("switch", "turn_on", {"entity_id": "switch.home_pause"}, blocking=True)
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.home_pause"}, blocking=True
+    )
     hass.states.async_set("climate.trv", "heat", {**cold, "hvac_action": "heating"})
     await _tick(hass, freezer, 600)
     assert hass.states.get("input_boolean.boiler").state == "on"
@@ -745,7 +779,9 @@ async def test_frost_start_in_a_pause_survives_a_restart(
     cold = {"hvac_modes": ["heat", "off"], "current_temperature": 5.0, "temperature": 7.0}
     hass.states.async_set("climate.trv", "heat", {**cold, "hvac_action": "heating"})
     entry = await _trv_house(hass, freezer, boiler_min_on=5, boiler_min_off=5)
-    await hass.services.async_call("switch", "turn_on", {"entity_id": "switch.home_pause"}, blocking=True)
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.home_pause"}, blocking=True
+    )
     await _tick(hass, freezer, 15)
     assert hass.states.get("input_boolean.boiler").state == "on"
 
@@ -779,7 +815,9 @@ async def test_durations_across_the_dst_change(
     # 02:30 summer time on 25 October 2026; at 04:00 the clock goes back to 03:00.
     freezer.move_to("2026-10-24 23:30:00+00:00")
     await hass.services.async_call(
-        DOMAIN, "set_override", {"room": "Bedroom", "temperature": 23, "duration_hours": 2},
+        DOMAIN,
+        "set_override",
+        {"room": "Bedroom", "temperature": 23, "duration_hours": 2},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -815,8 +853,14 @@ async def test_heat_source_unavailable_alert(
 ) -> None:
     """An unavailable heat source is reported after the configured time."""
     hass.states.async_set(
-        "climate.trv", "heat", {"hvac_modes": ["heat", "off"], "current_temperature": 20.0,
-                                "temperature": 21.0, "hvac_action": "idle"}
+        "climate.trv",
+        "heat",
+        {
+            "hvac_modes": ["heat", "off"],
+            "current_temperature": 20.0,
+            "temperature": 21.0,
+            "hvac_action": "idle",
+        },
     )
     entry = await _trv_house(hass, freezer)
     await _tick(hass, freezer, 15)
@@ -834,8 +878,13 @@ async def test_rounded_down_to_the_step_at_the_maximum(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """A thermostat never gets more than the maximum because of its own step."""
-    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 18.0, "temperature": 17.0,
-           "target_temp_step": 0.5, "hvac_action": "idle"}
+    trv = {
+        "hvac_modes": ["heat", "off"],
+        "current_temperature": 18.0,
+        "temperature": 17.0,
+        "target_temp_step": 0.5,
+        "hvac_action": "idle",
+    }
     hass.states.async_set("climate.trv", "heat", trv)
     entry = await _trv_house(hass, freezer, max_temp=24.8, boiler_entity=None)
     calls = async_mock_service(hass, "climate", "set_temperature")
@@ -870,7 +919,9 @@ async def test_forecast_cancels_or_triggers_the_cutoff(
                     "forecast": [
                         {
                             "datetime": (start + timedelta(hours=h)).isoformat(),
-                            "temperature": 30.0 if start + timedelta(hours=h) == warm_hour else value,
+                            "temperature": 30.0
+                            if start + timedelta(hours=h) == warm_hour
+                            else value,
                         }
                         for h in range(48)
                     ]
@@ -1068,7 +1119,10 @@ async def test_optimal_stop_and_start_with_the_forecast(
     start = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
     forecast = [
         # 2 °C until 18:00 UTC, then -3 °C.
-        {"datetime": (start + timedelta(hours=h)).isoformat(), "temperature": 2.0 if h < 9 else -3.0}
+        {
+            "datetime": (start + timedelta(hours=h)).isoformat(),
+            "temperature": 2.0 if h < 9 else -3.0,
+        }
         for h in range(40)
     ]
     async_mock_service(
@@ -1123,12 +1177,18 @@ async def test_optimal_stop_and_start_with_the_forecast(
 
     # Summer mode: no optimal start / stop can happen, none is shown.
     await hass.services.async_call(
-        "select", "select_option", {"entity_id": "select.home_mode", "option": "summer"}, blocking=True
+        "select",
+        "select_option",
+        {"entity_id": "select.home_mode", "option": "summer"},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert hass.states.get("sensor.bedroom_decision").attributes["next_estimate"] is None
     await hass.services.async_call(
-        "select", "select_option", {"entity_id": "select.home_mode", "option": "auto"}, blocking=True
+        "select",
+        "select_option",
+        {"entity_id": "select.home_mode", "option": "auto"},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
@@ -1214,7 +1274,9 @@ async def test_card_manual_change_set_again_after_a_window(
     entry, calls, trv = await _window_trv_house(hass, freezer)
     assert calls[-1].data["temperature"] == 21.0
     await hass.services.async_call(
-        DOMAIN, "set_override", {"room": "Office", "temperature": 23, "duration_hours": 2},
+        DOMAIN,
+        "set_override",
+        {"room": "Office", "temperature": 23, "duration_hours": 2},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1241,7 +1303,9 @@ async def test_card_manual_change_is_verified(
     house = entry.runtime_data
     room = next(iter(house.rooms.values()))
     await hass.services.async_call(
-        DOMAIN, "set_override", {"room": "Office", "temperature": 23, "duration_hours": 2},
+        DOMAIN,
+        "set_override",
+        {"room": "Office", "temperature": 23, "duration_hours": 2},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1284,7 +1348,9 @@ async def test_device_manual_change_set_again_after_a_window(
     sent = len(calls)
     await _tick(hass, freezer, 300)
     assert len(calls) == sent
-    assert hass.states.get("binary_sensor.office_manual_change").attributes["description"] == "23.0 °C"
+    assert (
+        hass.states.get("binary_sensor.office_manual_change").attributes["description"] == "23.0 °C"
+    )
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -1297,7 +1363,9 @@ async def test_pause_sends_nothing_for_a_manual_relay(
     entry = await _setup(hass, freezer)
     await _tick(hass, freezer, 15)
     await hass.services.async_call(
-        DOMAIN, "set_override", {"room": "Bedroom", "temperature": 23, "duration_hours": 2},
+        DOMAIN,
+        "set_override",
+        {"room": "Bedroom", "temperature": 23, "duration_hours": 2},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1315,7 +1383,9 @@ async def test_pause_sends_nothing_for_a_manual_relay(
 
     # A manual change in a pause is kept, but sent only after the pause.
     await hass.services.async_call(
-        DOMAIN, "set_override", {"room": "Bedroom", "temperature": 22, "duration_hours": 2},
+        DOMAIN,
+        "set_override",
+        {"room": "Bedroom", "temperature": 22, "duration_hours": 2},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1371,7 +1441,9 @@ async def test_card_attributes_not_heating_alerts_cutoff(
     assert hass.states.get("sensor.bedroom_decision").attributes["alerts"] == []
 
     await hass.services.async_call(
-        DOMAIN, "set_override", {"room": "Bedroom", "temperature": 23, "duration_hours": 1},
+        DOMAIN,
+        "set_override",
+        {"room": "Bedroom", "temperature": 23, "duration_hours": 1},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1600,8 +1672,12 @@ async def test_frost_protection_from_the_room_sensor_opens_the_trv(
     """A TRV reading warmer than the room is boosted for frost protection."""
     assert await async_setup_component(hass, "input_boolean", {"input_boolean": {"boiler": {}}})
     # The room at 5 °C, the TRV next to the radiator at 8 °C: idle at 7 °C.
-    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 8.0, "temperature": 7.0,
-           "hvac_action": "idle"}
+    trv = {
+        "hvac_modes": ["heat", "off"],
+        "current_temperature": 8.0,
+        "temperature": 7.0,
+        "hvac_action": "idle",
+    }
     hass.states.async_set("climate.trv", "heat", trv)
     hass.states.async_set("sensor.office_temp", "5.0", {"unit_of_measurement": "°C"})
     calls = async_mock_service(hass, "climate", "set_temperature")
@@ -1632,8 +1708,12 @@ async def test_device_change_in_a_pause_is_kept(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """A change made on the thermostat in a pause applies after the pause."""
-    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 20.0, "temperature": 21.0,
-           "hvac_action": "idle"}
+    trv = {
+        "hvac_modes": ["heat", "off"],
+        "current_temperature": 20.0,
+        "temperature": 21.0,
+        "hvac_action": "idle",
+    }
     hass.states.async_set("climate.trv", "heat", trv)
     entry = await _trv_house(hass, freezer, boiler_entity=None)
     calls = async_mock_service(hass, "climate", "set_temperature")
@@ -1665,9 +1745,7 @@ async def test_clear_override_of_an_unknown_room(
     entry = await _setup(hass, freezer)
     await _tick(hass, freezer, 15)
     with pytest.raises(ServiceValidationError) as err:
-        await hass.services.async_call(
-            DOMAIN, "clear_override", {"room": "Nowhere"}, blocking=True
-        )
+        await hass.services.async_call(DOMAIN, "clear_override", {"room": "Nowhere"}, blocking=True)
     assert err.value.translation_key == "room_not_found"
     await hass.services.async_call(DOMAIN, "clear_override", {}, blocking=True)
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -1678,8 +1756,12 @@ async def test_calibration_entity_with_a_value_that_is_not_a_number(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """A calibration entity that is not a number is skipped; the room is still evaluated."""
-    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 20.0, "temperature": 21.0,
-           "hvac_action": "heating"}
+    trv = {
+        "hvac_modes": ["heat", "off"],
+        "current_temperature": 20.0,
+        "temperature": 21.0,
+        "hvac_action": "heating",
+    }
     hass.states.async_set("climate.trv", "heat", trv)
     hass.states.async_set("sensor.office_temp", "19.0", {"unit_of_measurement": "°C"})
     hass.states.async_set("number.trv_calibration", "abc", {"min": -5, "max": 5, "step": 0.1})
@@ -1855,15 +1937,21 @@ async def test_an_older_command_reported_late_is_not_manual(
 ) -> None:
     """21 °C is sent, then another value; the TRV reports the 21 only afterwards: no manual change."""
     calls = async_mock_service(hass, "climate", "set_temperature")
-    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 18.0, "temperature": 17.0,
-           "target_temp_step": 0.5}
+    trv = {
+        "hvac_modes": ["heat", "off"],
+        "current_temperature": 18.0,
+        "temperature": 17.0,
+        "target_temp_step": 0.5,
+    }
     entry = await _trv_room(hass, freezer, {"climate.trv": trv})
     await _tick(hass, freezer, 15)
     assert calls[-1].data["temperature"] == 21.0
 
     # A change from the card for two hours: 23 °C is sent.
     await hass.services.async_call(
-        DOMAIN, "set_override", {"room": "Office", "temperature": 23, "duration_hours": 2},
+        DOMAIN,
+        "set_override",
+        {"room": "Office", "temperature": 23, "duration_hours": 2},
         blocking=True,
     )
     await _tick(hass, freezer, 5)
@@ -1894,13 +1982,19 @@ async def test_older_values_forgotten_once_the_last_is_confirmed(
 ) -> None:
     """Once the TRV reports the last command, an older value set by hand is a manual change."""
     calls = async_mock_service(hass, "climate", "set_temperature")
-    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 18.0, "temperature": 17.0,
-           "target_temp_step": 0.5}
+    trv = {
+        "hvac_modes": ["heat", "off"],
+        "current_temperature": 18.0,
+        "temperature": 17.0,
+        "target_temp_step": 0.5,
+    }
     entry = await _trv_room(hass, freezer, {"climate.trv": trv})
     await _tick(hass, freezer, 15)
     assert calls[-1].data["temperature"] == 21.0
     await hass.services.async_call(
-        DOMAIN, "set_override", {"room": "Office", "temperature": 23, "duration_hours": 2},
+        DOMAIN,
+        "set_override",
+        {"room": "Office", "temperature": 23, "duration_hours": 2},
         blocking=True,
     )
     await _tick(hass, freezer, 5)
@@ -1927,22 +2021,30 @@ async def test_a_trv_that_bounces_back_once_is_not_manual(
 ) -> None:
     """A TRV shows the new value at once, then reports the old one once more (Tuya TS0601)."""
     calls = async_mock_service(hass, "climate", "set_temperature")
-    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 18.0, "temperature": 17.0,
-           "target_temp_step": 0.5}
+    trv = {
+        "hvac_modes": ["heat", "off"],
+        "current_temperature": 18.0,
+        "temperature": 17.0,
+        "target_temp_step": 0.5,
+    }
     entry = await _trv_room(hass, freezer, {"climate.trv": trv})
     await _tick(hass, freezer, 15)
     assert calls[-1].data["temperature"] == 21.0
     hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 21.0}, context=Context())
     await _tick(hass, freezer, 300)  # 21 confirmed long ago
     await hass.services.async_call(
-        DOMAIN, "set_override", {"room": "Office", "temperature": 12, "duration_hours": 2},
+        DOMAIN,
+        "set_override",
+        {"room": "Office", "temperature": 12, "duration_hours": 2},
         blocking=True,
     )
     await _tick(hass, freezer, 5)
     assert calls[-1].data["temperature"] == 12.0
     # 12 shown at once, then the old 21 once more, then 12 again.
     for value in (12.0, 21.0, 12.0):
-        hass.states.async_set("climate.trv", "heat", {**trv, "temperature": value}, context=Context())
+        hass.states.async_set(
+            "climate.trv", "heat", {**trv, "temperature": value}, context=Context()
+        )
         await _tick(hass, freezer, 10)
     override = hass.states.get("binary_sensor.office_manual_change").attributes
     assert override["origin"] == "card"
@@ -2006,7 +2108,9 @@ async def test_guests_suspend_every_vacation(
 
     async def guests(on: bool) -> None:
         await hass.services.async_call(
-            "switch", "turn_on" if on else "turn_off", {"entity_id": "switch.home_guest_mode"},
+            "switch",
+            "turn_on" if on else "turn_off",
+            {"entity_id": "switch.home_guest_mode"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -2024,7 +2128,9 @@ async def test_guests_suspend_every_vacation(
     # The same with the vacation mode.
     await hass.services.async_call(DOMAIN, "set_vacation", {}, blocking=True)
     await hass.services.async_call(
-        "select", "select_option", {"entity_id": "select.home_mode", "option": "vacation"},
+        "select",
+        "select_option",
+        {"entity_id": "select.home_mode", "option": "vacation"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -2052,7 +2158,9 @@ async def test_automatic_vacation_goes_on_after_the_guests(
 
     async def guests(on: bool) -> None:
         await hass.services.async_call(
-            "switch", "turn_on" if on else "turn_off", {"entity_id": "switch.home_guest_mode"},
+            "switch",
+            "turn_on" if on else "turn_off",
+            {"entity_id": "switch.home_guest_mode"},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -2089,8 +2197,13 @@ async def test_trv_limit_is_not_a_manual_change(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """The TRV applies its own maximum (25) to a boost of 28: a limit, not a manual change."""
-    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 23.0, "temperature": 21.0,
-           "max_temp": 35.0, "target_temp_step": 0.5}
+    trv = {
+        "hvac_modes": ["heat", "off"],
+        "current_temperature": 23.0,
+        "temperature": 21.0,
+        "max_temp": 35.0,
+        "target_temp_step": 0.5,
+    }
     hass.states.async_set("climate.trv", "heat", trv)
     hass.states.async_set("sensor.office_temp", "20.9", {"unit_of_measurement": "°C"})
     calls = async_mock_service(hass, "climate", "set_temperature")
@@ -2127,8 +2240,13 @@ async def test_lower_value_after_an_accepted_boost_is_a_manual_change(
     It accepted 28, so 23 is not its maximum: no limit is learned, no alert.
     Tried 30 seconds, 10 minutes and 1 hour after the TRV showed 28.
     """
-    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 23.0, "temperature": 21.0,
-           "max_temp": 35.0, "target_temp_step": 0.5}
+    trv = {
+        "hvac_modes": ["heat", "off"],
+        "current_temperature": 23.0,
+        "temperature": 21.0,
+        "max_temp": 35.0,
+        "target_temp_step": 0.5,
+    }
     hass.states.async_set("climate.trv", "heat", trv)
     hass.states.async_set("sensor.office_temp", "20.9", {"unit_of_measurement": "°C"})
     calls = async_mock_service(hass, "climate", "set_temperature")
@@ -2157,8 +2275,14 @@ async def test_higher_value_after_accepted_frost_is_a_manual_change(
     10 is below the lowest level (away, 12 by default), but the TRV accepted 7:
     a manual change, not its minimum.
     """
-    trv = {"hvac_modes": ["heat"], "current_temperature": 21.0, "temperature": 21.0,
-           "max_temp": 35.0, "min_temp": 5.0, "target_temp_step": 0.5}
+    trv = {
+        "hvac_modes": ["heat"],
+        "current_temperature": 21.0,
+        "temperature": 21.0,
+        "max_temp": 35.0,
+        "min_temp": 5.0,
+        "target_temp_step": 0.5,
+    }
     hass.states.async_set("climate.trv", "heat", trv)
     hass.states.async_set("sensor.office_temp", "21.5", {"unit_of_measurement": "°C"})
     calls = async_mock_service(hass, "climate", "set_temperature")
@@ -2166,7 +2290,9 @@ async def test_higher_value_after_accepted_frost_is_a_manual_change(
     room = next(iter(entry.runtime_data.rooms.values()))
     await _tick(hass, freezer, 15)
     await hass.services.async_call(
-        "select", "select_option", {"entity_id": "select.home_mode", "option": "off"},
+        "select",
+        "select_option",
+        {"entity_id": "select.home_mode", "option": "off"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -2190,8 +2316,13 @@ async def test_trv_already_at_its_limit_is_learned_without_a_report(
     The verification learns the limit instead of telling that it was not
     accepted, and 28 is no longer sent again and again.
     """
-    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 23.0, "temperature": 25.0,
-           "max_temp": 35.0, "target_temp_step": 0.5}
+    trv = {
+        "hvac_modes": ["heat", "off"],
+        "current_temperature": 23.0,
+        "temperature": 25.0,
+        "max_temp": 35.0,
+        "target_temp_step": 0.5,
+    }
     hass.states.async_set("climate.trv", "heat", trv)
     hass.states.async_set("sensor.office_temp", "20.8", {"unit_of_measurement": "°C"})
     calls = async_mock_service(hass, "climate", "set_temperature")
@@ -2261,23 +2392,46 @@ async def test_room_with_its_own_heat_does_not_start_the_heat_source(
     hass.states.async_set("person.andrei", "home")
     hass.states.async_set("sensor.bath_temp", "18.0", {"unit_of_measurement": "°C"})
     hass.states.async_set(
-        "climate.trv", "heat",
-        {"hvac_modes": ["heat", "off"], "current_temperature": 22.0, "temperature": 21.0,
-         "hvac_action": "idle"},
+        "climate.trv",
+        "heat",
+        {
+            "hvac_modes": ["heat", "off"],
+            "current_temperature": 22.0,
+            "temperature": 21.0,
+            "hvac_action": "idle",
+        },
     )
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
-        options={"persons": ["person.andrei"], "nearby_zones": [],
-                 "boiler_entity": "input_boolean.boiler"},
+        options={
+            "persons": ["person.andrei"],
+            "nearby_zones": [],
+            "boiler_entity": "input_boolean.boiler",
+        },
         subentries_data=[
-            {"data": {"source": "climate", "climates": ["climate.trv"],
-                      "command_mode": "temperature"},
-             "subentry_type": SUBENTRY_ROOM, "title": "Office", "unique_id": None},
-            {"data": {"source": "switch", "switches": ["input_boolean.bath_heater"],
-                      "climates": [], "temperature_sensors": ["sensor.bath_temp"],
-                      "use_house_source": False},
-             "subentry_type": SUBENTRY_ROOM, "title": "Bath", "unique_id": None},
+            {
+                "data": {
+                    "source": "climate",
+                    "climates": ["climate.trv"],
+                    "command_mode": "temperature",
+                },
+                "subentry_type": SUBENTRY_ROOM,
+                "title": "Office",
+                "unique_id": None,
+            },
+            {
+                "data": {
+                    "source": "switch",
+                    "switches": ["input_boolean.bath_heater"],
+                    "climates": [],
+                    "temperature_sensors": ["sensor.bath_temp"],
+                    "use_house_source": False,
+                },
+                "subentry_type": SUBENTRY_ROOM,
+                "title": "Bath",
+                "unique_id": None,
+            },
         ],
     )
     entry.add_to_hass(hass)
@@ -2317,7 +2471,13 @@ async def test_alerts_by_category(hass: HomeAssistant, freezer: FrozenDateTimeFa
         notify_warning=["notify.email"],
         notify_info=["notify.mobile_app_phone", "notify.email"],
     )
-    house.notify("dev", "x", code="device_unavailable", params={"entity": "climate.trv", "minutes": 15}, room=room.id)
+    house.notify(
+        "dev",
+        "x",
+        code="device_unavailable",
+        params={"entity": "climate.trv", "minutes": 15},
+        room=room.id,
+    )
     house.notify("win", "x", code="window_long", params={"minutes": 30}, room=room.id)
     house.inform("auto_vacation_on")
     await hass.async_block_till_done()
@@ -2340,10 +2500,19 @@ async def test_alerts_resolved(hass: HomeAssistant, freezer: FrozenDateTimeFacto
     """The end of an alert is told when worth it; a setting alert ends silently."""
     phone = async_mock_service(hass, "notify", "mobile_app_phone")
     entry, house, room = await _alert_house(
-        hass, freezer, notify_critical=["notify.mobile_app_phone"], notify_warning=["notify.mobile_app_phone"]
+        hass,
+        freezer,
+        notify_critical=["notify.mobile_app_phone"],
+        notify_warning=["notify.mobile_app_phone"],
     )
     house.notify("win", "x", code="window_long", params={"minutes": 30}, room=room.id)
-    house.notify("gap", "x", code="schedule_gap", params={"days": ["sat"], "free_days": True, "workdays": False}, room=room.id)
+    house.notify(
+        "gap",
+        "x",
+        code="schedule_gap",
+        params={"days": ["sat"], "free_days": True, "workdays": False},
+        room=room.id,
+    )
     house.clear_alert("win")
     house.clear_alert("gap")
     house.clear_alert("never_sent")
@@ -2382,9 +2551,13 @@ async def test_alerts_quiet_hours(hass: HomeAssistant, freezer: FrozenDateTimeFa
         quiet_end="13:00:00",
     )
     # 12:00 local: quiet.
-    house.notify("src", "x", code="source_unavailable", params={"entity": "switch.boiler", "minutes": 15})
+    house.notify(
+        "src", "x", code="source_unavailable", params={"entity": "switch.boiler", "minutes": 15}
+    )
     house.notify("win", "x", code="window_long", params={"minutes": 30}, room=room.id)
-    house.notify("bat", "x", code="battery_low", params={"device": "TRV", "level": 10}, room=room.id)
+    house.notify(
+        "bat", "x", code="battery_low", params={"device": "TRV", "level": 10}, room=room.id
+    )
     house.clear_alert("bat")  # ended before morning: never told, nor its end
     await hass.async_block_till_done()
     assert [c.data["message"] for c in phone] == [
@@ -2392,7 +2565,9 @@ async def test_alerts_quiet_hours(hass: HomeAssistant, freezer: FrozenDateTimeFa
     ]
     await _tick(hass, freezer, 3600 + 60)  # 13:01
     await hass.async_block_till_done()
-    assert [c.data["message"] for c in phone][1:] == ["Bedroom: A window has been open for more than 30 min."]
+    assert [c.data["message"] for c in phone][1:] == [
+        "Bedroom: A window has been open for more than 30 min."
+    ]
     assert not house._deferred
     assert await hass.config_entries.async_unload(entry.entry_id)
 
@@ -2413,7 +2588,9 @@ async def test_alerts_in_romanian_and_legacy_service(
     assert await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_alerts_without_recipients(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+async def test_alerts_without_recipients(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Without recipients the alerts are Home Assistant notifications, dismissed at their end."""
     entry, house, room = await _alert_house(hass, freezer)
     house.notify("win", "x", code="window_long", params={"minutes": 30}, room=room.id)
@@ -2423,7 +2600,10 @@ async def test_alerts_without_recipients(hass: HomeAssistant, freezer: FrozenDat
 
     shown = persistent_notification._async_get_or_create_notifications(hass)
     assert list(shown) == ["advanced_climate_win"]
-    assert shown["advanced_climate_win"]["message"] == "Bedroom: A window has been open for more than 30 min."
+    assert (
+        shown["advanced_climate_win"]["message"]
+        == "Bedroom: A window has been open for more than 30 min."
+    )
     house.clear_alert("win")
     await hass.async_block_till_done()
     assert not persistent_notification._async_get_or_create_notifications(hass)
@@ -2434,7 +2614,11 @@ async def test_auto_vacation_is_told(hass: HomeAssistant, freezer: FrozenDateTim
     """The start and the end of the automatic vacation are information."""
     phone = async_mock_service(hass, "notify", "mobile_app_phone")
     entry, house, room = await _alert_house(
-        hass, freezer, notify_info=["notify.mobile_app_phone"], auto_vacation_hours=2, departure_delay=0
+        hass,
+        freezer,
+        notify_info=["notify.mobile_app_phone"],
+        auto_vacation_hours=2,
+        departure_delay=0,
     )
     hass.states.async_set("person.andrei", "not_home")
     for _ in range(4):
@@ -2450,7 +2634,9 @@ async def test_auto_vacation_is_told(hass: HomeAssistant, freezer: FrozenDateTim
     assert await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_alerts_by_email_addresses(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+async def test_alerts_by_email_addresses(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Addresses written after a mail service go as its target (Google Mail needs them)."""
     sent = []
 
@@ -2475,10 +2661,14 @@ async def test_alerts_by_email_addresses(hass: HomeAssistant, freezer: FrozenDat
     assert await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_frost_protection_is_told(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+async def test_frost_protection_is_told(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """A room that falls below the frost protection temperature is a warning; its end is told."""
     phone = async_mock_service(hass, "notify", "mobile_app_phone")
-    entry, house, room = await _alert_house(hass, freezer, notify_warning=["notify.mobile_app_phone"])
+    entry, house, room = await _alert_house(
+        hass, freezer, notify_warning=["notify.mobile_app_phone"]
+    )
     await house.async_set_mode("off")
     hass.states.async_set("sensor.room_temp", "6.8", {"unit_of_measurement": "°C"})
     await _tick(hass, freezer, 60)
@@ -2529,7 +2719,10 @@ async def test_house_events_are_told(
     monkeypatch.setattr(House, "season_active", property(lambda self: season["on"]))
     phone = async_mock_service(hass, "notify", "mobile_app_phone")
     entry, house, room = await _alert_house(
-        hass, freezer, notify_info=["notify.mobile_app_phone"], guest_expire_hours=1,
+        hass,
+        freezer,
+        notify_info=["notify.mobile_app_phone"],
+        guest_expire_hours=1,
         vacation_preheat_hours=4,
     )
     season["on"] = False

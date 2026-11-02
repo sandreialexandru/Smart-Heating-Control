@@ -80,7 +80,11 @@ class RuleOrderTest(unittest.TestCase):
 
     def test_window_over_override(self) -> None:
         self.check(
-            const.RULE_WINDOW, "temperature", temperature=7.0, window_open=True, override_active=True
+            const.RULE_WINDOW,
+            "temperature",
+            temperature=7.0,
+            window_open=True,
+            override_active=True,
         )
         self.check(
             const.RULE_WINDOW,
@@ -97,12 +101,18 @@ class RuleOrderTest(unittest.TestCase):
 
     def test_off_not_supported(self) -> None:
         self.check(
-            const.RULE_SUMMER, "temperature", temperature=7.0, mode=const.MODE_SUMMER, supports_off=False
+            const.RULE_SUMMER,
+            "temperature",
+            temperature=7.0,
+            mode=const.MODE_SUMMER,
+            supports_off=False,
         )
 
     def test_unoccupied_and_fallback(self) -> None:
         self.check(const.RULE_UNOCCUPIED, "preset", "eco", room_unoccupied=True)
-        self.check(const.RULE_SCHEDULE, "preset", "away", room_unoccupied=True, schedule_preset="away")
+        self.check(
+            const.RULE_SCHEDULE, "preset", "away", room_unoccupied=True, schedule_preset="away"
+        )
         self.check(const.RULE_SENSOR_FALLBACK, "preset", "eco", sensor_failed=True)
 
 
@@ -155,7 +165,11 @@ class SafetyTest(unittest.TestCase):
 
 class HierarchyTest(unittest.TestCase):
     def test_valve_exercise_in_every_mode_but_not_with_window_or_pause(self) -> None:
-        for kwargs in ({"mode": const.MODE_SUMMER}, {"season_active": False}, {"mode": const.MODE_OFF}):
+        for kwargs in (
+            {"mode": const.MODE_SUMMER},
+            {"season_active": False},
+            {"mode": const.MODE_OFF},
+        ):
             d = engine.decide(inputs(valve_exercise=True, **kwargs))
             self.assertEqual(d.rule, const.RULE_VALVE_EXERCISE, kwargs)
         d = engine.decide(inputs(valve_exercise=True, window_open=True))
@@ -171,7 +185,9 @@ class HierarchyTest(unittest.TestCase):
         # A level above the maximum is sent as the maximum.
         levels = dict(LEVELS, comfort=27.0)
         d = engine.decide(inputs(schedule_preset="comfort", level_temp=levels.get, max_temp=25.0))
-        self.assertEqual((d.rule, d.target.kind, d.target.temperature), (const.RULE_MAX, "temperature", 25.0))
+        self.assertEqual(
+            (d.rule, d.target.kind, d.target.temperature), (const.RULE_MAX, "temperature", 25.0)
+        )
         # Below the maximum the manual change is respected.
         d = engine.decide(inputs(override_active=True, device_setpoint=24.0, max_temp=25.0))
         self.assertEqual(d.rule, const.RULE_OVERRIDE)
@@ -244,7 +260,9 @@ class NoProfileTest(unittest.TestCase):
         self.assertEqual(d.target.temperature, inputs().frost_temp)
         # Far away or on vacation on such a day: frost protection is above away.
         self.assertEqual(
-            engine.decide(inputs(schedule_preset=const.PRESET_FROST, presence=const.PRESENCE_FAR)).key,
+            engine.decide(
+                inputs(schedule_preset=const.PRESET_FROST, presence=const.PRESENCE_FAR)
+            ).key,
             "no_profile",
         )
         self.assertEqual(
@@ -253,9 +271,7 @@ class NoProfileTest(unittest.TestCase):
         )
         # Rules above the schedule still apply.
         self.assertEqual(
-            engine.decide(
-                inputs(schedule_preset=const.PRESET_FROST, window_open=True)
-            ).rule,
+            engine.decide(inputs(schedule_preset=const.PRESET_FROST, window_open=True)).rule,
             const.RULE_WINDOW,
         )
 
@@ -267,10 +283,14 @@ class NearbyLimitTest(unittest.TestCase):
         d = engine.decide(inputs(schedule_preset="sleep", nearby_temp=20.0, **near))
         self.assertEqual((d.key, d.target.temperature), ("nearby_temperature", 20.0))
         # Checked: the schedule (sleep) applies.
-        d = engine.decide(inputs(schedule_preset="sleep", nearby_temp=20.0, nearby_limit=True, **near))
+        d = engine.decide(
+            inputs(schedule_preset="sleep", nearby_temp=20.0, nearby_limit=True, **near)
+        )
         self.assertEqual((d.key, d.target.preset), ("nearby_schedule", "sleep"))
         # Checked, schedule higher (home): the nearby temperature stays.
-        d = engine.decide(inputs(schedule_preset="home", nearby_temp=17.0, nearby_limit=True, **near))
+        d = engine.decide(
+            inputs(schedule_preset="home", nearby_temp=17.0, nearby_limit=True, **near)
+        )
         self.assertEqual(d.key, "nearby_temperature")
         # Checked, a day without a profile: frost protection.
         d = engine.decide(
@@ -287,12 +307,15 @@ class MaxRoomTest(unittest.TestCase):
             self.assertEqual((hot.rule, hot.key), (const.RULE_MAX, "max_room"))
             self.assertEqual(hot.target.kind, engine.KIND_OFF)
             # At the maximum too; below it nothing is sent (it stays off).
-            self.assertEqual(engine.decide(inputs(on_off=True, current_temp=maximum, **extra)).key, "max_room")
+            self.assertEqual(
+                engine.decide(inputs(on_off=True, current_temp=maximum, **extra)).key, "max_room"
+            )
             below = engine.decide(inputs(on_off=True, current_temp=maximum - 0.1, **extra))
             self.assertEqual(below.target.kind, engine.KIND_NONE)
             # Thermostats with a set point are checked through it, not like this.
             self.assertNotEqual(
-                engine.decide(inputs(on_off=False, current_temp=maximum + 5, **extra)).key, "max_room"
+                engine.decide(inputs(on_off=False, current_temp=maximum + 5, **extra)).key,
+                "max_room",
             )
 
 
@@ -359,9 +382,7 @@ class OptimalTest(unittest.TestCase):
         self.assertEqual((preset, rule), ("home", const.RULE_OPTIMAL_START))
 
     def test_started_start_is_still_overridden(self) -> None:
-        d = engine.decide(
-            inputs(schedule_rule=const.RULE_OPTIMAL_START, window_open=True)
-        )
+        d = engine.decide(inputs(schedule_rule=const.RULE_OPTIMAL_START, window_open=True))
         self.assertEqual(d.rule, const.RULE_WINDOW)
 
     def test_stop_from_learned_cooling(self) -> None:
@@ -422,15 +443,26 @@ class ReasonKeyTest(unittest.TestCase):
         import itertools
 
         for paused, valve, mode, window, override, presence, cutoff, current in itertools.product(
-            [False, True], [False, True],
+            [False, True],
+            [False, True],
             [const.MODE_AUTO, const.MODE_VACATION, const.MODE_OFF, const.MODE_SUMMER],
-            [False, True], [False, True],
+            [False, True],
+            [False, True],
             [const.PRESENCE_HOME, const.PRESENCE_NEARBY, const.PRESENCE_FAR],
-            [False, True], [5.0, 20.0],
+            [False, True],
+            [5.0, 20.0],
         ):
-            d = engine.decide(replace(
-                inputs(), paused=paused, valve_exercise=valve, mode=mode, window_open=window,
-                override_active=override, presence=presence, cutoff_active=cutoff,
-                current_temp=current,
-            ))
+            d = engine.decide(
+                replace(
+                    inputs(),
+                    paused=paused,
+                    valve_exercise=valve,
+                    mode=mode,
+                    window_open=window,
+                    override_active=override,
+                    presence=presence,
+                    cutoff_active=cutoff,
+                    current_temp=current,
+                )
+            )
             self.assertTrue(d.key, d)

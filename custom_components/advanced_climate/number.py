@@ -33,9 +33,7 @@ async def async_setup_entry(
         for preset in (*PRESETS, "nearby"):
             if preset in wanted:
                 continue
-            entity_id = registry.async_get_entity_id(
-                "number", DOMAIN, f"{room.id}_level_{preset}"
-            )
+            entity_id = registry.async_get_entity_id("number", DOMAIN, f"{room.id}_level_{preset}")
             if entity_id:
                 registry.async_remove(entity_id)
         if wanted:

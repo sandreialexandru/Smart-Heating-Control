@@ -126,7 +126,9 @@ class OutdoorTest(unittest.TestCase):
         )
         self.assertTrue(restored.forecast_cutoff_active)
         # Data saved before 2.3.3 has no forecast state: off.
-        self.assertFalse(outdoor.OutdoorTracker.from_dict({"cutoff_active": True}).forecast_cutoff_active)
+        self.assertFalse(
+            outdoor.OutdoorTracker.from_dict({"cutoff_active": True}).forecast_cutoff_active
+        )
 
     def test_date_season(self) -> None:
         self.assertTrue(outdoor.in_date_season(date(2026, 12, 1), "10-15", "04-15"))
@@ -164,9 +166,7 @@ class LearningTest(unittest.TestCase):
     def _episode(self, learner, start, outdoor, rise=3.0, minutes=90, window=False):
         learner.observe(start, True, 19.0, 22.0, outdoor)
         learner.observe(start + timedelta(minutes=30), True, 20.0, 22.0, outdoor, window)
-        return learner.observe(
-            start + timedelta(minutes=minutes), True, 19.0 + rise, 22.0, outdoor
-        )
+        return learner.observe(start + timedelta(minutes=minutes), True, 19.0 + rise, 22.0, outdoor)
 
     def _feed(self, learner, day, outdoor, rise, minutes):
         """One episode that rises ``rise`` °C to the target in ``minutes``."""
@@ -199,7 +199,9 @@ class LearningTest(unittest.TestCase):
         self.assertIsNone(learner.observe(self.T0 + timedelta(minutes=9), False, 19.5, 22.0, 5.0))
         self.assertEqual(learner.episodes, [])
         learner.observe(self.T0, True, 19.0, 22.0, 5.0)
-        self.assertEqual(learner.observe(self.T0 + timedelta(minutes=10), False, 19.1, 22.0, 5.0), 10.0)
+        self.assertEqual(
+            learner.observe(self.T0 + timedelta(minutes=10), False, 19.1, 22.0, 5.0), 10.0
+        )
 
     def test_window_episode_ignored(self) -> None:
         learner = learning.HeatingRateLearner()
@@ -271,7 +273,9 @@ class LearningTest(unittest.TestCase):
         later = start + timedelta(minutes=20)
         self.assertAlmostEqual(learner.minutes(1.0, 5.0, later), 50.0, places=1)
         # After the whole fixed part: only the minutes per degree.
-        self.assertAlmostEqual(learner.minutes(1.0, 5.0, start + timedelta(hours=1)), 40.0, places=1)
+        self.assertAlmostEqual(
+            learner.minutes(1.0, 5.0, start + timedelta(hours=1)), 40.0, places=1
+        )
 
     def test_outdoor_term_with_a_negative_value_at_zero(self) -> None:
         # Learned only at 10 … 15 °C: the line may cross zero below the range; the
@@ -357,7 +361,10 @@ class LearningTest(unittest.TestCase):
             self.assertEqual(restored.minutes(1.0, 2.0), learning.DEFAULT_MINUTES_PER_DEGREE)
         # Broken entries are skipped.
         broken = learning.HeatingRateLearner.from_dict(
-            {"version": learning.DATA_VERSION, "episodes": [[5.0, 0.0, 30, ""], ["x"], [None, 1.0, 50, "a"]]}
+            {
+                "version": learning.DATA_VERSION,
+                "episodes": [[5.0, 0.0, 30, ""], ["x"], [None, 1.0, 50, "a"]],
+            }
         )
         self.assertEqual(broken.episodes, [[None, 1.0, 50.0, "a"]])
 
@@ -387,7 +394,11 @@ class LearningTest(unittest.TestCase):
         self.assertIsNone(again.episode_start)
         self.assertEqual(again.episodes, [])
         # Malformed saved data is ignored.
-        for bad in ({"start": "x", "temp": 20.0}, {"start": self.T0.isoformat(), "temp": "nan"}, "x"):
+        for bad in (
+            {"start": "x", "temp": 20.0},
+            {"start": self.T0.isoformat(), "temp": "nan"},
+            "x",
+        ):
             restored = learning.HeatingRateLearner.from_dict(
                 {"version": learning.DATA_VERSION, "episodes": [], "in_progress": bad}
             )
@@ -499,7 +510,9 @@ class ExpectedOutdoorTest(unittest.TestCase):
         # An old forecast is not used.
         old = [(self.NOW - timedelta(hours=3), -9.0), (self.NOW - timedelta(hours=2), -9.0)]
         self.assertEqual(
-            outdoor.expected_outdoor(self.NOW, self.NOW, self.NOW + timedelta(minutes=10), 1.5, old),
+            outdoor.expected_outdoor(
+                self.NOW, self.NOW, self.NOW + timedelta(minutes=10), 1.5, old
+            ),
             (1.5, "now"),
         )
 

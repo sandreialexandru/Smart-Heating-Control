@@ -91,7 +91,6 @@ class DebounceTest(unittest.TestCase):
         again = presence.PresenceDebouncer.from_dict(deb.as_dict())
         self.assertEqual((again.current, again.changed_at), ("far", t0))
 
-
     def test_pending_survives_restart(self) -> None:
         deb = presence.PresenceDebouncer()
         t0 = datetime(2026, 10, 12, 8, tzinfo=TZ)

@@ -103,9 +103,7 @@ class PresenceSensor(HouseEntity, SensorEntity):
             "temperature_unit": self.house.unit,
             "entry_id": self.house.entry.entry_id,
             "house_name": self.house.entry.title,
-            "house_entities": entity_map(
-                self.hass, self.house.entry.entry_id, HOUSE_ENTITY_KEYS
-            ),
+            "house_entities": entity_map(self.hass, self.house.entry.entry_id, HOUSE_ENTITY_KEYS),
         }
 
 
@@ -314,9 +312,7 @@ class DecisionSensor(RoomEntity, SensorEntity):
             "custom_levels": room.uses_custom_levels,
             "house_name": room.house.entry.title,
             "entities": entity_map(self.hass, room.id, ROOM_ENTITY_KEYS),
-            "house_entities": entity_map(
-                self.hass, room.house.entry.entry_id, HOUSE_ENTITY_KEYS
-            ),
+            "house_entities": entity_map(self.hass, room.house.entry.entry_id, HOUSE_ENTITY_KEYS),
         }
 
 
@@ -405,7 +401,9 @@ class HeatingRateSensor(RoomEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Minutes per degree at the current outdoor temperature."""
-        return _per_degree(self.room.learner.minutes_per_degree(self.house.outdoor_now), self.house.unit)
+        return _per_degree(
+            self.room.learner.minutes_per_degree(self.house.outdoor_now), self.house.unit
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -435,7 +433,12 @@ class HeatingRateSensor(RoomEntity, SensorEntity):
             "large_episodes": sum(1 for e in learner.episodes if e[1] >= LARGE_EPISODE),
             "learning_starts_below_target": _d(start_gap(self.room.learn_tolerance()), unit),
             "last_episodes": [
-                {"outdoor": _t(o, unit, 1), "rise": _d(g, unit, 2), "minutes": round(m), "at": at or None}
+                {
+                    "outdoor": _t(o, unit, 1),
+                    "rise": _d(g, unit, 2),
+                    "minutes": round(m),
+                    "at": at or None,
+                }
                 for o, g, m, at in learner.episodes[-5:]
             ],
         }
@@ -489,7 +492,10 @@ def _estimate(room: Room, unit: str) -> dict[str, Any] | None:
     # presence, window, mode, cutoff, pause...) would not let it happen.
     rule = room.decision.rule if room.decision else None
     if estimate is None or rule not in (
-        RULE_SCHEDULE, RULE_OPTIMAL_START, RULE_OPTIMAL_STOP, RULE_UNOCCUPIED
+        RULE_SCHEDULE,
+        RULE_OPTIMAL_START,
+        RULE_OPTIMAL_STOP,
+        RULE_UNOCCUPIED,
     ):
         return None
     change = estimate["change"]

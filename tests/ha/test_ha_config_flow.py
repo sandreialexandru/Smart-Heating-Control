@@ -116,7 +116,9 @@ async def test_options_follow_up_only_when_needed(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.MENU
     result = await flow.async_configure(result["flow_id"], {"next_step_id": "behavior"})
     assert "override_hours" not in _keys(result)
-    result = await flow.async_configure(result["flow_id"], {"override_mode": "until_next_reevaluation"})
+    result = await flow.async_configure(
+        result["flow_id"], {"override_mode": "until_next_reevaluation"}
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options["override_mode"] == "until_next_reevaluation"
     # Fixed duration asks for the hours.
@@ -144,12 +146,13 @@ async def test_weather_validation(hass: HomeAssistant) -> None:
     result = await flow.async_configure(result["flow_id"], {"next_step_id": "weather"})
     assert "season_start" not in _keys(result)
     result = await flow.async_configure(
-        result["flow_id"], {
+        result["flow_id"],
+        {
             "season_mode": "dates",
             "cutoff_enabled": False,
             "forecast_enabled": False,
             "compensation_enabled": False,
-        }
+        },
     )
     assert result["step_id"] == "weather_details"
     assert _keys(result) == {"season_start", "season_end"}
@@ -279,7 +282,9 @@ async def test_room_subentry_flow(hass: HomeAssistant) -> None:
         result["flow_id"], {"optimal_start": True, "optimal_stop": True}
     )
     assert result["step_id"] == "schedule_internal"
-    result = await flow.async_configure(result["flow_id"], {"schedule": "workday: 06:00 Day, 25:00 Night"})
+    result = await flow.async_configure(
+        result["flow_id"], {"schedule": "workday: 06:00 Day, 25:00 Night"}
+    )
     assert result["errors"] == {"schedule": "invalid_schedule"}
     result = await flow.async_configure(
         result["flow_id"], {"schedule": "workday: 00:00 Night, 06:00 Day, 22:00 Night"}
@@ -299,7 +304,9 @@ async def test_room_subentry_flow(hass: HomeAssistant) -> None:
 
     result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
     assert result["step_id"] == "basics"
-    result = await flow.async_configure(result["flow_id"], {"name": "Master bedroom", "source": "switch"})
+    result = await flow.async_configure(
+        result["flow_id"], {"name": "Master bedroom", "source": "switch"}
+    )
     result = await _until(hass, result, flow, stop=set())
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -414,7 +421,9 @@ async def test_reconfigure_unit(hass: HomeAssistant) -> None:
 
 async def test_optimal_stop_tolerance_only_with_hvac_action(hass: HomeAssistant) -> None:
     """Thermostats without hvac_action use the hysteresis as the comfort of the optimal stop."""
-    entry = MockConfigEntry(domain=DOMAIN, title="Home", options={"outdoor_sensor": "sensor.outdoor"})
+    entry = MockConfigEntry(
+        domain=DOMAIN, title="Home", options={"outdoor_sensor": "sensor.outdoor"}
+    )
     entry.add_to_hass(hass)
     flow = hass.config_entries.subentries
     for attributes, expected in (
@@ -422,8 +431,12 @@ async def test_optimal_stop_tolerance_only_with_hvac_action(hass: HomeAssistant)
         ({}, {"optimal_stop_minutes"}),
     ):
         hass.states.async_set("climate.trv", "heat", {"hvac_modes": ["heat", "off"], **attributes})
-        result = await flow.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
-        result = await flow.async_configure(result["flow_id"], {"name": "Office", "source": "climate"})
+        result = await flow.async_init(
+            (entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER}
+        )
+        result = await flow.async_configure(
+            result["flow_id"], {"name": "Office", "source": "climate"}
+        )
         result = await flow.async_configure(
             result["flow_id"], {"climates": ["climate.trv"], "command_mode": "temperature"}
         )
@@ -435,7 +448,9 @@ async def test_optimal_stop_tolerance_only_with_hvac_action(hass: HomeAssistant)
         flow.async_abort(result["flow_id"])
 
 
-def _house_with_rooms(hass: HomeAssistant, options: dict | None = None, rooms=()) -> MockConfigEntry:
+def _house_with_rooms(
+    hass: HomeAssistant, options: dict | None = None, rooms=()
+) -> MockConfigEntry:
     """A house with the given rooms: (title, data)."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -494,7 +509,9 @@ async def test_room_asks_for_the_house_heat_source_only_with_one(hass: HomeAssis
     flow = hass.config_entries.subentries
     for options, shown in (({}, False), ({"boiler_entity": "switch.boiler"}, True)):
         entry = _house_with_rooms(hass, options=options)
-        result = await flow.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
+        result = await flow.async_init(
+            (entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER}
+        )
         result = await flow.async_configure(result["flow_id"], {"name": "Bath", "source": "switch"})
         assert ("use_house_source" in _keys(result)) is shown
         if shown:
@@ -539,21 +556,31 @@ async def test_heat_source_and_generic_thermostat_relay(hass: HomeAssistant) -> 
         ("switch.boiler", "entity_is_source"),
         ("switch.gt_relay", "entity_is_gt_heater"),
     ):
-        result = await rooms.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
-        result = await rooms.async_configure(result["flow_id"], {"name": "Office", "source": "switch"})
+        result = await rooms.async_init(
+            (entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER}
+        )
+        result = await rooms.async_configure(
+            result["flow_id"], {"name": "Office", "source": "switch"}
+        )
         result = await rooms.async_configure(result["flow_id"], {"switches": [switch]})
         assert result["errors"] == {"switches": error}, switch
 
 
-def _house_with_zone(hass: HomeAssistant, zone: dict, options: dict | None = None) -> MockConfigEntry:
+def _house_with_zone(
+    hass: HomeAssistant, zone: dict, options: dict | None = None
+) -> MockConfigEntry:
     """A house whose whole-house zone has the given data."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
         options=options or {},
         subentries_data=[
-            {"data": zone, "subentry_type": SUBENTRY_ROOM, "title": "Whole house",
-             "unique_id": "whole_house"}
+            {
+                "data": zone,
+                "subentry_type": SUBENTRY_ROOM,
+                "title": "Whole house",
+                "unique_id": "whole_house",
+            }
         ],
     )
     entry.add_to_hass(hass)
@@ -625,7 +652,10 @@ async def test_options_that_need_rooms_or_people(hass: HomeAssistant) -> None:
     two = _house_with_rooms(
         hass,
         options={"persons": ["person.andrei"]},
-        rooms=[("Bedroom", RELAY_ROOM), ("Office", {**RELAY_ROOM, "switches": ["input_boolean.b"]})],
+        rooms=[
+            ("Bedroom", RELAY_ROOM),
+            ("Office", {**RELAY_ROOM, "switches": ["input_boolean.b"]}),
+        ],
     )
     result = await options.async_init(two.entry_id)
     result = await options.async_configure(result["flow_id"], {"next_step_id": "alerts"})
@@ -640,8 +670,12 @@ async def test_nearby_level_only_with_nearby_zones(hass: HomeAssistant) -> None:
     rooms = hass.config_entries.subentries
     for options, shown in (({}, False), ({"nearby_zones": ["zone.city"]}, True)):
         entry = _house_with_rooms(hass, options=options)
-        result = await rooms.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
-        result = await rooms.async_configure(result["flow_id"], {"name": "Bath", "source": "switch"})
+        result = await rooms.async_init(
+            (entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER}
+        )
+        result = await rooms.async_configure(
+            result["flow_id"], {"name": "Bath", "source": "switch"}
+        )
         result = await rooms.async_configure(result["flow_id"], {"switches": ["input_boolean.h"]})
         result = await rooms.async_configure(result["flow_id"], {})
         assert result["step_id"] == "levels"
@@ -649,7 +683,9 @@ async def test_nearby_level_only_with_nearby_zones(hass: HomeAssistant) -> None:
     # A Generic Thermostat room without nearby zones has nothing to ask on the levels page.
     climate = _gt_climate(hass, "switch.gt_relay2")
     entry = _house_with_rooms(hass)
-    result = await rooms.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
+    result = await rooms.async_init(
+        (entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER}
+    )
     result = await rooms.async_configure(
         result["flow_id"], {"name": "Living", "source": "generic_thermostat"}
     )
@@ -669,14 +705,20 @@ async def test_outdoor_sensor_is_not_a_room_sensor(hass: HomeAssistant) -> None:
     assert result["errors"] == {"outdoor_sensor": "outdoor_is_room_sensor"}
 
     rooms = hass.config_entries.subentries
-    result = await rooms.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
+    result = await rooms.async_init(
+        (entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER}
+    )
     result = await rooms.async_configure(result["flow_id"], {"name": "Office", "source": "switch"})
     result = await rooms.async_configure(result["flow_id"], {"switches": ["input_boolean.other"]})
     result = await _until(hass, result, rooms, stop={"sensors"})
     assert result["step_id"] == "sensors"
-    result = await rooms.async_configure(result["flow_id"], {"temperature_sensors": ["sensor.outdoor"]})
+    result = await rooms.async_configure(
+        result["flow_id"], {"temperature_sensors": ["sensor.outdoor"]}
+    )
     assert result["errors"] == {"temperature_sensors": "room_sensor_is_outdoor"}
-    result = await rooms.async_configure(result["flow_id"], {"temperature_sensors": ["sensor.office"]})
+    result = await rooms.async_configure(
+        result["flow_id"], {"temperature_sensors": ["sensor.office"]}
+    )
     assert result["step_id"] != "sensors"
 
 
@@ -688,8 +730,17 @@ async def test_generic_thermostat_room_has_no_temperature_sensors(hass: HomeAssi
     climate = _gt_climate(hass, "switch.gt_relay")
     entry = _house_with_rooms(
         hass,
-        rooms=[("Living", {"source": "generic_thermostat", "climates": [climate], "switches": [],
-                           "temperature_sensors": ["sensor.living"]})],
+        rooms=[
+            (
+                "Living",
+                {
+                    "source": "generic_thermostat",
+                    "climates": [climate],
+                    "switches": [],
+                    "temperature_sensors": ["sensor.living"],
+                },
+            )
+        ],
     )
     rooms = hass.config_entries.subentries
     subentry = next(iter(entry.subentries.values()))
@@ -712,7 +763,9 @@ async def test_trv_boost_in_the_room_form(hass: HomeAssistant) -> None:
     # An outdoor sensor: the optimal stop can be turned on.
     entry = _house_with_rooms(hass, options={"outdoor_sensor": "sensor.outdoor"})
     rooms = hass.config_entries.subentries
-    result = await rooms.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
+    result = await rooms.async_init(
+        (entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER}
+    )
     result = await rooms.async_configure(result["flow_id"], {"name": "Office", "source": "climate"})
     assert "trv_boost" in _keys(result)
     # Only with the temperature command.
@@ -735,7 +788,9 @@ async def test_trv_boost_in_the_room_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "sensors"
     result = await rooms.async_configure(result["flow_id"], {})
     assert result["errors"] == {"temperature_sensors": "boost_sensor_required"}
-    result = await rooms.async_configure(result["flow_id"], {"temperature_sensors": ["sensor.office"]})
+    result = await rooms.async_configure(
+        result["flow_id"], {"temperature_sensors": ["sensor.office"]}
+    )
     # The optimal stop tolerance is not asked either.
     for _ in range(15):
         if result["type"] is not FlowResultType.FORM:
@@ -757,7 +812,9 @@ async def test_frost_hysteresis_for_trvs_with_a_room_sensor(hass: HomeAssistant)
     )
     entry = _house_with_rooms(hass)
     rooms = hass.config_entries.subentries
-    result = await rooms.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
+    result = await rooms.async_init(
+        (entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER}
+    )
     result = await rooms.async_configure(result["flow_id"], {"name": "Office", "source": "climate"})
     result = await rooms.async_configure(
         result["flow_id"], {"climates": ["climate.trv"], "command_mode": "temperature"}
@@ -766,7 +823,9 @@ async def test_frost_hysteresis_for_trvs_with_a_room_sensor(hass: HomeAssistant)
     assert "hysteresis" not in _keys(result)
     result = await rooms.async_configure(result["flow_id"], {"learn_tolerance": 0.0})
     result = await _until(hass, result, rooms, stop={"sensors"})
-    result = await rooms.async_configure(result["flow_id"], {"temperature_sensors": ["sensor.office"]})
+    result = await rooms.async_configure(
+        result["flow_id"], {"temperature_sensors": ["sensor.office"]}
+    )
     assert result["step_id"] == "sensors_details"
     assert "hysteresis" in _keys(result)
     result = await rooms.async_configure(result["flow_id"], {"hysteresis": 0.5})
@@ -787,8 +846,14 @@ async def test_options_alerts_recipients(hass: HomeAssistant) -> None:
     result = await flow.async_init(entry.entry_id)
     result = await flow.async_configure(result["flow_id"], {"next_step_id": "alerts"})
     assert result["step_id"] == "alerts"
-    assert {"notify_critical", "notify_warning", "notify_info", "notify_resolved",
-            "quiet_start", "quiet_end"} <= _keys(result)
+    assert {
+        "notify_critical",
+        "notify_warning",
+        "notify_info",
+        "notify_resolved",
+        "quiet_start",
+        "quiet_end",
+    } <= _keys(result)
     suggested = {
         str(k): k.description.get("suggested_value")
         for k in result["data_schema"].schema
@@ -826,10 +891,13 @@ async def test_options_alerts_email_recipient(hass: HomeAssistant) -> None:
     assert result["errors"] == {"notify_warning": "invalid_recipient"}
     assert result["description_placeholders"]["recipient"] == "ana@example"
     result = await flow.async_configure(
-        result["flow_id"], {"notify_warning": ["notify.me_gmail_com: ana@example.com, ion@example.com"]}
+        result["flow_id"],
+        {"notify_warning": ["notify.me_gmail_com: ana@example.com, ion@example.com"]},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options["notify_warning"] == ["notify.me_gmail_com: ana@example.com, ion@example.com"]
+    assert entry.options["notify_warning"] == [
+        "notify.me_gmail_com: ana@example.com, ion@example.com"
+    ]
 
 
 async def test_options_alerts_recipient_capital_letter(hass: HomeAssistant) -> None:

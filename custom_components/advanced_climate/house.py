@@ -1172,11 +1172,7 @@ class House:
             demand = count >= needed if sourced else False
         # More rooms needed than the house has (rooms were removed): the heat
         # source would start only for frost protection.
-        if (
-            opts.get(CONF_BOILER_ENTITY)
-            and not reference
-            and needed > len(sourced)
-        ):
+        if opts.get(CONF_BOILER_ENTITY) and not reference and needed > len(sourced):
             self.notify(
                 "boiler_min_rooms",
                 f"Rooms needed to start the heat source is {needed}, but the house has "
@@ -1374,9 +1370,7 @@ class House:
                 params={"hours": f"{hours:g}"},
             )
         # The planned vacation (its dates), guests aside: they only suspend it.
-        planned = (
-            self.mode != MODE_VACATION and not self.auto_vacation and self._vacation_set(now)
-        )
+        planned = self.mode != MODE_VACATION and not self.auto_vacation and self._vacation_set(now)
         states = {
             "season": self.season_active,
             "vacation": planned,
@@ -1485,7 +1479,9 @@ class House:
         """Tell what the house did by itself (information, not an alert of the card)."""
         message = alert_texts.alert_text("en", code, params, code)
         _LOGGER.info("%s: %s", self.entry.title, message)
-        self._deliver(None, {"code": code, "params": params or {}, "room": None, "message": message})
+        self._deliver(
+            None, {"code": code, "params": params or {}, "room": None, "message": message}
+        )
 
     # -- delivery ---------------------------------------------------------
     def _targets(self, category: str) -> list[str]:

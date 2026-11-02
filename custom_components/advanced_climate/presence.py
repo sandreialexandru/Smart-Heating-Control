@@ -157,11 +157,7 @@ class PresenceDebouncer:
         if raw != self.pending:
             self.pending = raw
             self.pending_since = min(raw_since, now) if raw_since else now
-        delay = (
-            arrival_delay
-            if _RANK[raw] > _RANK[self.current]
-            else departure_delay
-        )
+        delay = arrival_delay if _RANK[raw] > _RANK[self.current] else departure_delay
         assert self.pending_since is not None
         due = self.pending_since + delay
         if now >= due:

@@ -665,9 +665,7 @@ def _devices_schema(d: dict[str, Any]) -> vol.Schema:
                 vol.Required(CONF_COMMAND_MODE, default=d[CONF_COMMAND_MODE]): _select(
                     [COMMAND_TEMPERATURE, COMMAND_PRESET, COMMAND_HVAC], "command_mode"
                 ),
-                vol.Required(
-                    CONF_TRV_BOOST, default=bool(d.get(CONF_TRV_BOOST, False))
-                ): _bool(),
+                vol.Required(CONF_TRV_BOOST, default=bool(d.get(CONF_TRV_BOOST, False))): _bool(),
             }
         )
     return vol.Schema(
@@ -834,9 +832,7 @@ def _boost_on(d: dict[str, Any]) -> bool:
     return _boost_possible(d) and bool(d.get(CONF_TRV_BOOST, False))
 
 
-def _boost_schema(
-    d: dict[str, Any], low: float, high: float, with_sensors: bool
-) -> vol.Schema:
+def _boost_schema(d: dict[str, Any], low: float, high: float, with_sensors: bool) -> vol.Schema:
     """The boost temperature (empty = maximum of the house), the hysteresis and the sensors.
 
     ``d`` holds the values as the form shows them; ``low`` / ``high`` (°C) are the
@@ -1103,7 +1099,16 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Menu."""
-        menu = ["heating", "presence", "calendar", "weather", "energy", "boiler", "behavior", "alerts"]
+        menu = [
+            "heating",
+            "presence",
+            "calendar",
+            "weather",
+            "energy",
+            "boiler",
+            "behavior",
+            "alerts",
+        ]
         if self._whole_house_starts_source():
             menu.remove("boiler")  # the whole house starts the boiler itself
         return self.async_show_menu(step_id="init", menu_options=menu)

@@ -127,7 +127,6 @@ from .const import (
     SOURCE_CLIMATE,
     SOURCE_GT,
     SOURCE_SWITCH,
-    TEMP_DROP_HOLD_MINUTES,
     VALVE_EXERCISE_SECONDS,
     VERIFY_DELAY,
     WEEKDAYS,
@@ -173,6 +172,7 @@ from .util import (
     to_celsius,
     valid,
 )
+from .window import TemperatureDrop, WindowState
 
 if TYPE_CHECKING:
     from .house import House
@@ -298,18 +298,10 @@ class Room:
         self.heating = False
         self.source_unknown = False
         self.next_wakeup: datetime | None = None
-        self.window_open = False
-        self._window_raw_since: datetime | None = None
-        self._window_closed_since: datetime | None = None
-        self._window_opened_at: datetime | None = None
+        # The window state after the delays, and a quick drop of the temperature.
+        self.window = WindowState()
+        self.temp_drop = TemperatureDrop()
         self._window_timer: Callable[[], None] | None = None
-        # Room temperature readings as runs of the same value: [first seen, last seen, value].
-        # Kept by time (the drop window plus 15 minutes), not by count, so a busy
-        # house that reads the temperature often does not shorten the window.
-        self._temp_samples: list[list] = []
-        # Which sensors gave the room temperature (a change of them is not a drop).
-        self._temp_sources: tuple | None = None
-        self._drop_until: datetime | None = None
         self._last_occupied: datetime | None = None
         self._started_at = dt_util.utcnow()
         self._exercise_until: datetime | None = None
@@ -429,6 +421,15 @@ class Room:
     # ------------------------------------------------------------------
     # Properties used by entities
     # ------------------------------------------------------------------
+    @property
+    def window_open(self) -> bool:
+        """The window counts as open (after the delays)."""
+        return self.window.open
+
+    @window_open.setter
+    def window_open(self, value: bool) -> None:
+        self.window.open = value
+
     @property
     def is_whole_house(self) -> bool:
         """True for the zone created with the house."""
@@ -785,23 +786,17 @@ class Room:
         # Without any temperature a relay cannot be regulated.
         needs_temp = self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost
         self.sensor_failed = self.current_temp is None and (bool(sensors) or needs_temp)
-        # When a sensor stops or comes back, or the room falls back to the device
-        # sensor, the value jumps: the quick drop (open window) starts again from
-        # the new value instead of taking the jump for an open window.
+        # A quick drop of the temperature counts as an open window (a change of
+        # the sensors that give it is not a drop).
         sources = tuple(reporting) if external is not None else ("device", *device_reporting)
-        if sources != self._temp_sources:
-            self._temp_sources = sources
-            self._temp_samples.clear()
-        if self.current_temp is not None:
-            samples = self._temp_samples
-            if samples and samples[-1][2] == self.current_temp:
-                samples[-1][1] = now  # the same value read again
-            else:
-                samples.append([now, now, self.current_temp])
-            keep = timedelta(minutes=float(self.config[CONF_WINDOW_DROP_MINUTES]) + 15)
-            while len(samples) > 1 and now - samples[0][1] > keep:
-                samples.pop(0)
-            self._check_temp_drop(now)
+        self.temp_drop.update(
+            now,
+            sources,
+            self.current_temp,
+            enabled=bool(self.config[CONF_WINDOW_DROP_DETECT]),
+            minutes=float(self.config[CONF_WINDOW_DROP_MINUTES]),
+            degrees=float(self.config[CONF_WINDOW_DROP_DEGREES]),
+        )
 
     def external_temperature(self) -> float | None:
         """Aggregated external sensors only."""
@@ -811,26 +806,6 @@ class Room:
             if (v := temp_state(self.hass, entity_id, self.house.unit)) is not None
         ]
         return aggregate(values, self.config[CONF_TEMP_AGGREGATION])
-
-    def _check_temp_drop(self, now: datetime) -> None:
-        """Count a quick temperature drop as an open window."""
-        if not self.config[CONF_WINDOW_DROP_DETECT] or self.current_temp is None:
-            return
-        if self._drop_until is not None and now < self._drop_until:
-            return  # already holding
-        window = timedelta(minutes=float(self.config[CONF_WINDOW_DROP_MINUTES]))
-        # Every value read inside the window (a run that lasted into it counts:
-        # it was the value at the start of the window).
-        recent = [v for _first, last, v in self._temp_samples if now - last <= window]
-        # The value valid just before the window, if it was read at most 15 minutes
-        # before it (sensors report on change; an older value may be stale).
-        before = [(last, v) for _first, last, v in self._temp_samples if now - last > window]
-        if before and now - before[-1][0] <= window + timedelta(minutes=15):
-            recent.append(before[-1][1])
-        if recent and max(recent) - self.current_temp >= float(
-            self.config[CONF_WINDOW_DROP_DEGREES]
-        ):
-            self._drop_until = now + timedelta(minutes=TEMP_DROP_HOLD_MINUTES)
 
     def learn_tolerance(self) -> float:
         """How far below the target the thermostat lets the room fall before heating."""
@@ -1010,38 +985,22 @@ class Room:
             for eid in sensors
         ):
             return True
-        return self._drop_until is not None and now < self._drop_until
+        return self.temp_drop.active(now)
 
     def _update_window(self, now: datetime) -> None:
         """Debounce the window state with the open / close delays."""
         raw = self._window_raw(now)
-        open_delay = timedelta(seconds=float(self.config[CONF_WINDOW_OPEN_DELAY]))
-        close_delay = timedelta(seconds=float(self.config[CONF_WINDOW_CLOSE_DELAY]))
-        due: datetime | None = None
-        if raw:
-            self._window_closed_since = None
-            if not self.window_open:
-                if self._window_raw_since is None:
-                    self._window_raw_since = now
-                if now - self._window_raw_since >= open_delay:
-                    self.window_open = True
-                    self._window_opened_at = now
-                else:
-                    due = self._window_raw_since + open_delay
-        else:
-            self._window_raw_since = None
-            if self.window_open:
-                if self._window_closed_since is None:
-                    self._window_closed_since = now
-                if now - self._window_closed_since >= close_delay:
-                    self.window_open = False
-                    self._window_opened_at = None
-                    self._window_closed_since = None
-                    self.house.clear_alert(f"window_{self.id}")
-                else:
-                    due = self._window_closed_since + close_delay
-        if self._drop_until is not None and now < self._drop_until:
-            due = min(due, self._drop_until) if due else self._drop_until
+        due, closed = self.window.update(
+            now,
+            raw,
+            timedelta(seconds=float(self.config[CONF_WINDOW_OPEN_DELAY])),
+            timedelta(seconds=float(self.config[CONF_WINDOW_CLOSE_DELAY])),
+        )
+        if closed:
+            self.house.clear_alert(f"window_{self.id}")
+        until = self.temp_drop.until
+        if until is not None and now < until:
+            due = min(due, until) if due else until
         if self._window_timer:
             self._window_timer()
             self._window_timer = None
@@ -2216,10 +2175,10 @@ class Room:
         """Alerts for long open windows, unavailable devices, failed sensors and schedule errors."""
         house = self.house
         # Window open for too long while heating matters.
-        if self.window_open and self._window_opened_at is not None:
+        if self.window_open and self.window.opened_at is not None:
             minutes = float(house.options[CONF_ALERT_WINDOW_MINUTES])
             heating_relevant = house.mode not in (MODE_OFF, MODE_SUMMER) and house.season_active
-            if heating_relevant and now - self._window_opened_at >= timedelta(minutes=minutes):
+            if heating_relevant and now - self.window.opened_at >= timedelta(minutes=minutes):
                 house.notify(
                     f"window_{self.id}",
                     f"{self.name}: a window has been open for more than {minutes:.0f} minutes.",

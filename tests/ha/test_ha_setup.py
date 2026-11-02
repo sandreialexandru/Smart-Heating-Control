@@ -1803,7 +1803,7 @@ async def test_a_sensor_that_stops_is_not_an_open_window(
     hass.states.async_set("sensor.room_temp_2", "unavailable")
     await _tick(hass, freezer, 30)
     assert room.current_temp == 18.0
-    assert room._drop_until is None
+    assert room.temp_drop.until is None
 
     # It comes back, then the room really cools by 1.5° within 3 minutes: an open window.
     hass.states.async_set("sensor.room_temp_2", "22.0", {"unit_of_measurement": "°C"})
@@ -1812,7 +1812,7 @@ async def test_a_sensor_that_stops_is_not_an_open_window(
     hass.states.async_set("sensor.room_temp_2", "20.5", {"unit_of_measurement": "°C"})
     await _tick(hass, freezer, 60)
     assert room.current_temp == 18.5  # mean of 16.5 and 20.5, 1.5° below 20
-    assert room._drop_until is not None
+    assert room.temp_drop.until is not None
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -1843,9 +1843,9 @@ async def test_long_drop_window_with_many_readings(
     # 301 readings in 25 minutes (more than the 120 kept before by count).
     await _read_falling(hass, freezer, room, 25)
     assert room.current_temp == 19.0
-    assert room._drop_until is not None
+    assert room.temp_drop.until is not None
     # Only the readings of the window (plus 15 minutes) are kept, as runs of one value.
-    assert len(room._temp_samples) <= 13
+    assert len(room.temp_drop.samples) <= 13
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -1863,7 +1863,7 @@ async def test_slow_drop_is_not_an_open_window(
     await _tick(hass, freezer, 15)
     await _read_falling(hass, freezer, room, 40)
     assert room.current_temp == 19.0
-    assert room._drop_until is None
+    assert room.temp_drop.until is None
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -1926,7 +1926,7 @@ async def test_a_trv_that_stops_is_not_an_open_window(
     hass.states.async_set("climate.trv_1", "unavailable")
     await _tick(hass, freezer, 30)
     assert room.current_temp == 19.0
-    assert room._drop_until is None
+    assert room.temp_drop.until is None
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

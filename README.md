@@ -258,6 +258,10 @@ degree follow the outdoor temperature (a straight line).
   negative minutes) is set to zero and the rest is fitted again; minutes per
   degree never go below zero far from the learned range. When the outdoor
   temperature is unknown, the mean of the episodes is used.
+- With at least 8 episodes, an episode far from the others (more than 3.5
+  times their usual difference from the fit: a door left open, cooking, a
+  sensor that jumped) is left out of the fit; it stays kept and comes back
+  when it fits again (`episodes_left_out` on the *Heating rate* sensor).
 - Until the first episode: 60 minutes per degree, no fixed part.
 - The learning of versions before 2.0 kept only a rate per episode; it cannot
   be converted, so the heating is learned again after the update (the cooling

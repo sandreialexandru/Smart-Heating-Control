@@ -430,6 +430,7 @@ class HeatingRateSensor(RoomEntity, SensorEntity):
             "uses_fixed": model.uses_fixed,
             "uses_outdoor": model.uses_outdoor,
             "episodes": len(learner.episodes),
+            "episodes_left_out": model.left_out,
             "large_episodes": sum(1 for e in learner.episodes if e[1] >= LARGE_EPISODE),
             "learning_starts_below_target": _d(start_gap(self.room.learn_tolerance()), unit),
             "last_episodes": [

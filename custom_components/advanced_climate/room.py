@@ -2508,6 +2508,7 @@ class Room:
                 "uses_fixed": self.learner.model.uses_fixed,
                 "uses_outdoor": self.learner.model.uses_outdoor,
                 "episodes": len(self.learner.episodes),
+                "episodes_left_out": self.learner.model.left_out,
                 # Every kept episode (°C, as stored), to check the fit.
                 "episode_list": [
                     {"outdoor": o, "rise": g, "minutes": m, "at": at or None}

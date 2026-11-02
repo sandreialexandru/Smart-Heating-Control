@@ -28,6 +28,15 @@ of a thermostat never push the few large ones out.
 
 Episodes during which a window or door sensor of the room was open are not
 used.
+
+Episodes far from the others are left out of the fit (they are kept, and come
+back when they fit again): a door left open, cooking, a sensor that jumped.
+"Far" is measured from the episodes themselves, so nothing is set for a
+particular house: the minutes of each episode are compared with what the fit
+of all of them says, and an episode more than 3.5 times the usual difference
+away (the median absolute difference, scaled to a standard deviation) is left
+out and the rest is fitted again. Only with at least 8 episodes, and at most
+until 5 are left.
 """
 
 from __future__ import annotations
@@ -56,6 +65,11 @@ MAX_LARGE_EPISODES = 25
 MIN_SIZE_SPREAD = 1.0  # °C
 # The outdoor term needs episodes whose outdoor temperatures differ this much.
 MIN_FIT_SPREAD = 1.0  # °C
+# Episodes far from the others are left out of the fit: from this many episodes,
+# beyond this many times their usual difference (at least a minute).
+ROBUST_MIN_EPISODES = 8
+ROBUST_LIMIT = 3.5
+ROBUST_KEEP = 5
 COOLING_MAX_EPISODES = 30
 
 
@@ -100,6 +114,8 @@ class HeatingModel:
     outdoor_mean: float | None = None
     uses_fixed: bool = False
     uses_outdoor: bool = False
+    # Episodes left out of the fit, far from the others.
+    left_out: int = 0
 
     def minutes_per_degree(self, outdoor: float | None) -> float:
         """Minutes per °C at the outdoor temperature (never negative)."""
@@ -179,6 +195,26 @@ def fit_model(episodes: list[list]) -> HeatingModel:
         )
 
 
+def fit_robust(episodes: list[list]) -> HeatingModel:
+    """The fit without the episodes far from the others (see the module docstring)."""
+    model = fit_model(episodes)
+    if len(episodes) < ROBUST_MIN_EPISODES:
+        return model
+    differences = [
+        float(e[2]) - model.minutes(float(e[1]), None if e[0] is None else float(e[0]))
+        for e in episodes
+    ]
+    middle = sorted(differences)[len(differences) // 2]
+    spread = sorted(abs(d - middle) for d in differences)[len(differences) // 2] * 1.4826
+    limit = max(ROBUST_LIMIT * spread, 1.0)
+    kept = [e for e, d in zip(episodes, differences, strict=True) if abs(d - middle) <= limit]
+    if len(kept) == len(episodes) or len(kept) < ROBUST_KEEP:
+        return model
+    robust = fit_model(kept)
+    robust.left_out = len(episodes) - len(kept)
+    return robust
+
+
 @dataclass(slots=True)
 class HeatingRateLearner:
     """Learn how long a room takes to heat up (see the module docstring)."""
@@ -201,7 +237,7 @@ class HeatingRateLearner:
     def model(self) -> HeatingModel:
         """The fitted model (refitted when the episodes change)."""
         if self._model is None:
-            self._model = fit_model(self.episodes)
+            self._model = fit_robust(self.episodes)
         return self._model
 
     def minutes(self, gap: float, outdoor: float | None, now: datetime | None = None) -> float:

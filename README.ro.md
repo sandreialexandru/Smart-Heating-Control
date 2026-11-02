@@ -275,6 +275,11 @@ temperatura de afară (o linie dreaptă).
   sau minute negative) se pune pe zero și restul se recalculează; departe de
   temperaturile învățate minutele pe grad nu scad niciodată sub zero. Când
   temperatura de afară nu se cunoaște, se folosește media episoadelor.
+- Cu cel puțin 8 episoade, un episod departe de celelalte (la peste 3,5 ori
+  diferența lor obișnuită față de calcul: o ușă lăsată deschisă, gătitul, un
+  senzor care a sărit) e lăsat deoparte din calcul; rămâne păstrat și revine
+  când se potrivește din nou (`episodes_left_out` la senzorul *Viteză de
+  încălzire*).
 - Până la primul episod: 60 de minute pe grad, fără parte fixă.
 - Versiunile dinainte de 2.0 păstrau doar o viteză pe episod; nu se poate
   converti, așa că după actualizare încălzirea se învață din nou (răcirea se

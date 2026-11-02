@@ -7,11 +7,19 @@ GitHub releases.
 
 ## Unreleased
 
-Alpha: the same integration as 2.5.0, with the code split in smaller parts.
-Nothing changes in how it heats, in the options or in the card. Install it
-only to help test; report anything that behaves differently from 2.5.0.
+Alpha: the code split in smaller parts, and a more robust learning of the
+heating. Install it only to help test.
 
 ### Integration
+
+- **Heating learning: episodes far from the others are left out.** A door left
+  open, cooking or a sensor that jumped made one heating much longer (or
+  shorter) and pulled the learned time towards it. With at least 8 episodes, an
+  episode more than 3.5 times the usual difference from the others is left out
+  of the fit (it stays kept and comes back when it fits again). Checked in
+  simulations: about the same in steady houses, clearly closer after a change
+  of the house. The *Heating rate* sensor shows `episodes_left_out`. The
+  cooling learning is unchanged.
 
 - The code of a room is split: what was sent to the devices and their limits
   (`device_echo.py`), open windows (`window.py`), alerts and notifications

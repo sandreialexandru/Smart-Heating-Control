@@ -260,6 +260,34 @@ the learning follows within a few weeks. To start again at once, each room has
 the buttons **Reset heating learning** and **Reset cooling learning** (also in
 the card *Details*, next to each learning, with a second click to confirm).
 
+### Episodes far from the others
+
+A door left open during a heating, cooking, a sensor that jumped: such an
+episode takes much longer (or shorter) than the others and would pull the fit
+towards it. With at least 8 episodes, every episode is compared with what the
+fit of all of them says (its minutes minus the minutes of the fit). The usual
+difference is the median absolute difference from the median, scaled to a
+standard deviation (× 1.4826). An episode more than **3.5 times** the usual
+difference away (at least 1 minute) is left out and the rest is fitted again,
+once. At least 5 episodes must remain, otherwise all are used.
+
+Nothing is set for a particular house: "far" is measured from the room's own
+episodes. The episode left out is still kept: when the room really changed
+(new radiators), the new episodes soon outnumber the old ones and the fit
+follows them. The *Heating rate* sensor shows how many are left out
+(`episodes_left_out`).
+
+**Example.** Ten episodes of 20 minutes + 30 minutes per degree (2 °C in 80
+minutes) and one of 2 °C in 300 minutes (a window open without a sensor). Fitted
+together, 2 °C come out at about 104 minutes; without the far episode at 80.
+
+**Checked in simulations** of houses (two months of winter each, sensors with
+noise and gaps, cooking, windows opened without sensors): about the same error
+as before in steady houses, and clearly closer after a change of the house
+(radiators 50 % stronger): in the 3 weeks after the change the mean error of
+the time to heat fell from 33 to 28 minutes, and later 90 % of the predictions
+were within 28 minutes instead of 37.
+
 ---
 
 ## 7. Using the heating model

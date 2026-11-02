@@ -265,6 +265,35 @@ de la zero, fiecare cameră are butoanele **Reset heating learning** și **Reset
 cooling learning** (și în *Detaliile* cardului, lângă fiecare învățare, cu un
 al doilea clic pentru confirmare).
 
+### Episoade departe de celelalte
+
+O ușă lăsată deschisă în timpul unei încălziri, gătitul, un senzor care a sărit:
+un astfel de episod durează mult mai mult (sau mai puțin) decât celelalte și ar
+trage calculul spre el. Cu cel puțin 8 episoade, fiecare episod e comparat cu
+ce spune calculul din toate (minutele lui minus minutele calculate). Diferența
+obișnuită este mediana abaterilor absolute față de mediană, scalată la o
+abatere standard (× 1,4826). Un episod aflat la peste **3,5 ori** diferența
+obișnuită (cel puțin 1 minut) e lăsat deoparte și restul se recalculează, o
+singură dată. Trebuie să rămână cel puțin 5 episoade, altfel se folosesc toate.
+
+Nimic nu e potrivit pe o anumită casă: „departe” se măsoară din episoadele
+camerei. Episodul lăsat deoparte rămâne păstrat: când camera chiar s-a schimbat
+(calorifere noi), episoadele noi devin repede mai multe decât cele vechi și
+calculul le urmează. Senzorul *Viteză de încălzire* arată câte sunt lăsate
+deoparte (`episodes_left_out`).
+
+**Exemplu.** Zece episoade de 20 de minute + 30 de minute pe grad (2 °C în 80
+de minute) și unul de 2 °C în 300 de minute (o fereastră deschisă fără senzor).
+Calculate împreună, 2 °C ies în aproximativ 104 minute; fără episodul
+depărtat, în 80.
+
+**Verificat în simulări** de case (câte două luni de iarnă, senzori cu zgomot
+și goluri, gătit, ferestre deschise fără senzori): cam aceeași eroare ca înainte
+în casele stabile și clar mai aproape după o schimbare a casei (calorifere cu
+50 % mai puternice): în cele 3 săptămâni de după schimbare, eroarea medie a
+timpului de încălzire a scăzut de la 33 la 28 de minute, iar mai târziu 90 % din
+estimări au fost în 28 de minute, în loc de 37.
+
 ---
 
 ## 7. Folosirea modelului încălzirii

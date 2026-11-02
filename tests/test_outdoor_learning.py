@@ -530,3 +530,45 @@ class ExpectedOutdoorTest(unittest.TestCase):
         )
         self.assertEqual(source, "forecast")
         self.assertAlmostEqual(value, (0.0 * 40 - 2.0 * 10) / 50, places=2)
+
+
+class RobustFitTest(unittest.TestCase):
+    """Episodes far from the others are left out of the fit."""
+
+    def _episodes(self, extra):
+        # 10 episodes of 20 minutes + 30 minutes per degree, outdoor 5 °C.
+        base = [
+            [5.0, g, 20 + 30 * g, ""] for g in (0.5, 0.8, 1.0, 1.2, 1.5, 1.8, 2.0, 2.2, 2.5, 3.0)
+        ]
+        return base + extra
+
+    def test_far_episode_left_out(self) -> None:
+        # A door left open: 2 °C took 300 minutes instead of 80.
+        episodes = self._episodes([[5.0, 2.0, 300.0, ""]])
+        plain = learning.fit_model(episodes)
+        robust = learning.fit_robust(episodes)
+        self.assertEqual(robust.left_out, 1)
+        self.assertAlmostEqual(robust.minutes(2.0, 5.0), 80.0, delta=1.0)
+        self.assertGreater(abs(plain.minutes(2.0, 5.0) - 80.0), 5.0)
+
+    def test_usual_spread_kept(self) -> None:
+        # Ordinary day to day differences: nothing is left out.
+        episodes = [
+            [5.0, g, 20 + 30 * g + d, ""]
+            for g, d in zip(
+                (0.5, 0.8, 1.0, 1.2, 1.5, 1.8, 2.0, 2.2, 2.5, 3.0),
+                (3, -4, 2, -3, 5, -2, 4, -5, 1, -1),
+            )
+        ]
+        self.assertEqual(learning.fit_robust(episodes).left_out, 0)
+
+    def test_few_episodes_unchanged(self) -> None:
+        episodes = [[5.0, 1.0, 50.0, ""], [5.0, 2.0, 80.0, ""], [5.0, 2.0, 300.0, ""]]
+        self.assertEqual(learning.fit_robust(episodes), learning.fit_model(episodes))
+
+    def test_learner_uses_it(self) -> None:
+        learner = learning.HeatingRateLearner()
+        learner.episodes = self._episodes([[5.0, 2.0, 300.0, ""]])
+        self.assertEqual(learner.model.left_out, 1)
+        # The episode is still kept (it comes back when it fits again).
+        self.assertEqual(len(learner.episodes), 11)

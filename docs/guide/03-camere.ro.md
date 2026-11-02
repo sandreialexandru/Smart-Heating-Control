@@ -179,7 +179,7 @@ Al doilea formular, **Senzori: detalii**, apare doar când e nevoie:
 | Mai mulți senzori | Medie | cu mai mulți senzori de temperatură | *Medie*, *Minim* (cel mai rece) sau *Mediană*. |
 | Entități de calibrare | – | cu calibrare | Entitățile număr ale TRV-urilor (offset sau temperatură externă). Integrarea găsește singură TRV-ul fiecărei entități (același dispozitiv). |
 | Eco după lipsă de ocupare de | 30 min (1 – 720) | cu senzori de ocupare | Cât trebuie să fie goală camera până trece pe `eco`. |
-| Revenire din eco după prezență de | 0 min (0 – 120) | cu senzori de ocupare | Cât trebuie să fie cineva prezent fără întrerupere până când o cameră aflată pe `eco` din lipsă de ocupare revine la program. 0 = imediat. O vizită mai scurtă lasă camera pe `eco`, iar numărătoarea reîncepe la următoarea prezență. |
+| Revenire din eco după prezență de | 0 min (0 – 60) | cu senzori de ocupare | Cât trebuie să fie cineva prezent fără întrerupere până când o cameră aflată pe `eco` din lipsă de ocupare revine la program. 0 = imediat. O vizită mai scurtă lasă camera pe `eco`, iar numărătoarea reîncepe la următoarea prezență. |
 
 **Exemplu de calibrare** (valori alese). TRV-ul spune 22 °C (e lângă
 calorifer), senzorul de pe perete spune 20,5 °C, iar offsetul TRV-ului e acum 0.

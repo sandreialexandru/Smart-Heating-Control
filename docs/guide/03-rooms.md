@@ -175,7 +175,7 @@ The second form, **Sensors: details**, appears only when needed:
 | Several sensors | Average | with several temperature sensors | *Average*, *Minimum* (the coldest) or *Median*. |
 | Calibration entities | – | with calibration | The TRV number entities (offset or external temperature). The integration finds the TRV of every entity by itself (same device). |
 | Eco after no occupancy for | 30 min (1 – 720) | with occupancy sensors | How long the room must be empty before `eco`. |
-| Back from eco after presence of | 0 min (0 – 120) | with occupancy sensors | How long someone must be present without a break before a room in `eco` for no occupancy follows the schedule again. 0 = at once. A shorter visit keeps the room in `eco` and the count starts again at the next presence. |
+| Back from eco after presence of | 0 min (0 – 60) | with occupancy sensors | How long someone must be present without a break before a room in `eco` for no occupancy follows the schedule again. 0 = at once. A shorter visit keeps the room in `eco` and the count starts again at the next presence. |
 
 **Calibration example** (chosen values). The TRV says 22 °C (it sits next to the
 radiator), the wall sensor says 20.5 °C, and the TRV offset is 0 now. With

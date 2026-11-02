@@ -110,7 +110,7 @@ noaptea, cu `sleep` mai rece decât `eco`, camera rămâne pe `sleep`.
 iese din cameră. La 12:30 biroul trece pe `eco`; la următoarea intrare revine
 imediat pe program.
 
-**Revenire din eco după prezență de** (implicit 0 minute) lasă camera pe `eco`
+**Revenire din eco după prezență de** (implicit 0 minute, cel mult 60) lasă camera pe `eco`
 până când cineva a fost prezent fără întrerupere atât timp, deci o vizită
 scurtă nu pornește încălzirea. **Exemplu** cu 10 minute: la 14:00 cineva intră
 să ia o carte și iese la 14:02: biroul rămâne pe `eco`. La 14:30 cineva intră

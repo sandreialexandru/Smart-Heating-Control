@@ -293,6 +293,7 @@ CONF_OCCUPANCY_MINUTES: Final = "occupancy_minutes"
 # Minutes of continuous presence before a room in eco for no occupancy follows
 # its schedule again (0 = at once).
 CONF_OCCUPANCY_RETURN_MINUTES: Final = "occupancy_return_minutes"
+OCCUPANCY_RETURN_MAX: Final = 60  # minutes
 CONF_WINDOW_SENSORS: Final = "window_sensors"
 CONF_LINKED_WINDOW_SENSORS: Final = "linked_window_sensors"
 CONF_WINDOW_OPEN_DELAY: Final = "window_open_delay"

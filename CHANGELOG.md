@@ -42,7 +42,7 @@ alert, and the code split in smaller parts. Install it only to help test.
   the new learning has no episodes. The *Thermostat* page now appears only for
   a thermostat that does not report `hvac_action`, to ask for its hysteresis.
 - **Back from eco after presence of** (new room option, with occupancy
-  sensors; 0 minutes by default, as before): a room in eco for no occupancy
+  sensors; 0 minutes by default, as before, at most 60): a room in eco for no occupancy
   follows its schedule again only after someone has been present without a
   break for that long, so a short visit does not start the heating
   ([#4](https://github.com/sandreialexandru/Smart-Heating-Control/issues/4)).

@@ -154,6 +154,7 @@ from .const import (
     HOUSE_DEFAULTS,
     NEARBY_PRESET,
     NEARBY_TEMPERATURE,
+    OCCUPANCY_RETURN_MAX,
     OVERRIDE_FIXED,
     OVERRIDE_HOURS_MAX,
     OVERRIDE_HOURS_MIN,
@@ -1826,8 +1827,10 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
             )
         if as_list(d.get(CONF_OCCUPANCY_SENSORS)):
             fields[_req(CONF_OCCUPANCY_MINUTES, d, ROOM_DEFAULTS)] = _number(1, 720, 1, "min")
-            fields[_req(CONF_OCCUPANCY_RETURN_MINUTES, d, ROOM_DEFAULTS)] = _number(
-                0, 120, 1, "min"
+            # A value saved with the older maximum (120) is shown as the new one.
+            back = min(float(d.get(CONF_OCCUPANCY_RETURN_MINUTES, 0) or 0), OCCUPANCY_RETURN_MAX)
+            fields[vol.Required(CONF_OCCUPANCY_RETURN_MINUTES, default=back)] = _number(
+                0, OCCUPANCY_RETURN_MAX, 1, "min"
             )
         # TRVs with a room sensor are boosted for frost protection until frost
         # protection + hysteresis; asked here when no earlier step asked for it.

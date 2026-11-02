@@ -107,6 +107,7 @@ from .const import (
     MODE_OFF,
     MODE_SUMMER,
     MODE_VACATION,
+    OCCUPANCY_RETURN_MAX,
     OVERRIDE_FIXED,
     OVERRIDE_NEXT,
     PRESET_FROST,
@@ -1063,7 +1064,12 @@ class Room:
                     minutes=float(self.config[CONF_OCCUPANCY_MINUTES])
                 )
             return empty
-        back = timedelta(minutes=float(self.config.get(CONF_OCCUPANCY_RETURN_MINUTES, 0)))
+        back = timedelta(
+            minutes=min(
+                float(self.config.get(CONF_OCCUPANCY_RETURN_MINUTES, 0) or 0),
+                OCCUPANCY_RETURN_MAX,
+            )
+        )
         if empty and back > timedelta(0):
             self._present_since = self._present_since or now
             if now - self._present_since < back:

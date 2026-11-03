@@ -1852,7 +1852,6 @@ async def test_external_temperature_is_sent_on_a_step_and_again_unchanged(
     attrs = {"min": -10, "max": 50, "step": 0.1, "unit_of_measurement": "°C"}
     hass.states.async_set("number.trv_external", "19.6", attrs)
     async_mock_service(hass, "climate", "set_temperature")
-    calls = async_mock_service(hass, "number", "set_value")
     entry = await _boost_house(
         hass,
         freezer,
@@ -1862,7 +1861,10 @@ async def test_external_temperature_is_sent_on_a_step_and_again_unchanged(
             "calibration_entities": ["number.trv_external"],
         },
     )
-    await _tick(hass, freezer, 15)
+    # After the setup: the number platform of the integration has its own service.
+    calls = async_mock_service(hass, "number", "set_value")
+    # Past the 5 minutes between writes (one may have gone during the setup).
+    await _tick(hass, freezer, 6 * 60)
     values = [c.data["value"] for c in calls if c.data["entity_id"] == "number.trv_external"]
     assert values and values[-1] == 19.7
     # The TRV took it; the room stays at 19.7: nothing more for a while.

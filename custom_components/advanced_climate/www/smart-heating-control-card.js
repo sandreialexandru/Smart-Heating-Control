@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.1b1";
+const CARD_VERSION = "2.6.1b2";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -2195,11 +2195,17 @@ class SmartHeatingControlCard extends HTMLElement {
    * The room temperature the learned model expects until the end of the chart,
    * following the planned target: a minute by minute simulation of
    * rise per hour = (h − c × outdoor) × q − k × (room − outdoor) + s × sun, as
-   * in the integration, with the heating on while the room is below the target
-   * and q following it with the inertia. The outdoor temperature is the hourly
-   * forecast (the measured value until its first hour); the sun signal is the
-   * one expected every 15 minutes (``sun_forecast``, 0 after it ends). Empty
-   * until learned.
+   * in the integration, with q following the heating with the inertia. The
+   * heating is switched as the device does it (``model.band``, °C below and
+   * above the target): Generic Thermostat by its tolerances, relays, on / off
+   * control and the TRV boost by the hysteresis (and, with ``inertia_control``,
+   * stopped and started early by the learned inertia, as the integration does),
+   * thermostats without hvac_action by the hysteresis. Thermostats and TRVs
+   * that regulate by themselves (no band) hold the target: their heating is
+   * drawn as one period instead of many short ones. The outdoor temperature is
+   * the hourly forecast (the measured value until its first hour); the sun
+   * signal is the one expected every 15 minutes (``sun_forecast``, 0 after it
+   * ends). Empty until learned.
    */
   _prediction(a, segs, forecast, outdoorNow, now, t1, sun = []) {
     const s = this._state(a.entities?.heating_rate);
@@ -2217,6 +2223,8 @@ class SmartHeatingControlCard extends HTMLElement {
     const sunGain = num(m.s) ?? 0;
     const constant = !!m.constant_loss;
     const mean = num(m.outdoor_mean);
+    const band = Array.isArray(m.band) ? [Math.max(0, num(m.band[0]) ?? 0), Math.max(0, num(m.band[1]) ?? 0)] : null;
+    const byInertia = !!(band && m.inertia_control);
     const future = segs.filter((sg) => sg.future && sg.e > now);
     const steps = forecast.filter(([t]) => t > now);
     const outdoorAt = (t) => {
@@ -2228,18 +2236,48 @@ class SmartHeatingControlCard extends HTMLElement {
       return out ?? mean;
     };
     // The sun signal between two points of the 15 minute grid, in proportion.
-    let sunIdx = 0;
     const sunAt = (t) => {
-      if (!sunGain || !sun.length) return 0;
-      while (sunIdx + 1 < sun.length && sun[sunIdx + 1][0] <= t) sunIdx++;
-      const [ta, va] = sun[sunIdx];
-      if (t < ta) return 0;
-      const next = sun[sunIdx + 1];
+      if (!sunGain || !sun.length || t < sun[0][0]) return 0;
+      let lo = 0;
+      let hi = sun.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (sun[mid][0] <= t) lo = mid;
+        else hi = mid - 1;
+      }
+      const [ta, va] = sun[lo];
+      const next = sun[lo + 1];
       if (!next) return t - ta <= 15 * 60000 ? va : 0;
       return va + ((next[1] - va) * (t - ta)) / (next[0] - ta);
     };
+    // One minute of the room: [temperature, q] after it, with input u (0 or 1).
+    const step = (temp, q, u, t) => {
+      let qMean = u;
+      let qEnd = u;
+      if (tau > 0) {
+        const decay = Math.exp(-1 / tau);
+        qMean = u + (q - u) * tau * (1 - decay);
+        qEnd = u + (q - u) * decay;
+      }
+      const out = constant ? null : outdoorAt(t);
+      const heating = constant || out === null ? h : Math.max(0, h - c * out);
+      const loss = constant ? k : out === null ? 0 : k * (temp - out);
+      return [temp + (heating * qMean - loss + sunGain * sunAt(t - 30000)) / 60, qEnd];
+    };
+    // As the integration: the highest temperature ahead without heating, or the
+    // lowest one with heating (at most 8 hours, until the room turned by 0.05 °C).
+    const extreme = (temp, q, heating, t) => {
+      let best = temp;
+      for (let j = 1; j <= 480; j++) {
+        [temp, q] = step(temp, q, heating ? 1 : 0, t + j * 60000);
+        if (heating ? temp < best : temp > best) best = temp;
+        if (heating ? temp > best + 0.05 : temp < best - 0.05) break;
+      }
+      return best;
+    };
     let temp = toC(current);
     let q = Math.min(1, Math.max(0, num(m.q) ?? 0));
+    let on = !!a.heating;
     const pts = [[now, current]];
     // The periods the simulation heats: [start, end].
     const heat = [];
@@ -2250,22 +2288,17 @@ class SmartHeatingControlCard extends HTMLElement {
       while (seg < future.length && future[seg].e <= t) seg++;
       const sg = future[seg] && future[seg].s <= t ? future[seg] : null;
       const target = sg ? toC(sg.v) : null;
-      const u = target !== null && temp < target ? 1 : 0;
-      if (u && (!heat.length || heat.at(-1)[1] < t - 60000)) heat.push([t - 60000, t]);
-      else if (u) heat.at(-1)[1] = t;
-      // The heat reaching the room over the minute (its mean), then at its end.
-      let qMean = u;
-      if (tau > 0) {
-        const decay = Math.exp(-1 / tau);
-        qMean = u + (q - u) * tau * (1 - decay);
-        q = u + (q - u) * decay;
-      } else {
-        q = u;
-      }
-      const out = constant ? null : outdoorAt(t);
-      const heating = constant || out === null ? h : Math.max(0, h - c * out);
-      const loss = constant ? k : out === null ? 0 : k * (temp - out);
-      temp += (heating * qMean - loss + sunGain * sunAt(t - 30000)) / 60;
+      if (target === null) on = false;
+      else if (!band) on = temp < target;
+      else if (temp <= target - band[0]) on = true;
+      else if (temp >= target + band[1]) on = false;
+      else if (byInertia && on) on = extreme(temp, q, false, t) < target + band[1];
+      else if (byInertia) on = extreme(temp, q, true, t) <= target - band[0];
+      // A device that regulates by itself: its short simulated pulses are one period.
+      const gap = band ? 60000 : 30 * 60000;
+      if (on && (!heat.length || heat.at(-1)[1] < t - gap)) heat.push([t - 60000, t]);
+      else if (on) heat.at(-1)[1] = t;
+      [temp, q] = step(temp, q, on ? 1 : 0, t);
       if (i % 5 === 0 || i === minutes) pts.push([t, +fromC(temp).toFixed(2)]);
     }
     return { pts, heat };

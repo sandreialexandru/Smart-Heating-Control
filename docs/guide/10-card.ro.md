@@ -129,7 +129,15 @@ următoarele 12 ore și se deschide pe ultimele 24 de ore și următoarele 12:
 - temperatura camerei;
 - **temperatura prezisă** (punctat), după ce camera a învățat: modelul
   învățat al camerei (încălzire, curbă de temperatură, pierdere de căldură,
-  inerție) simulat minut cu minut după ținta planificată, cu prognoza orară;
+  soare, inerție) simulat minut cu minut după ținta planificată, cu prognoza
+  orară. Încălzirea pornește și se oprește cum o face dispozitivul: Generic
+  Thermostat după *cold* și *hot tolerance*, releele, controlul pornit / oprit
+  și forțarea TRV după histerezis (și după inerția învățată, când e pornită),
+  termostatele fără `hvac_action` după histerezis. Linia urcă și coboară în
+  jurul țintei, cum face camera în realitate. Termostatele și TRV-urile
+  comandate prin temperatură sau preset care raportează `hvac_action` se
+  reglează singure: pentru ele linia ține ținta, iar încălzirea prevăzută e o
+  singură perioadă mai deschisă („încălzește cât îi trebuie”);
 - ținta, ca linie în trepte, colorată după nivel;
 - nivelurile planificate;
 - perioadele în care camera a încălzit, pe o bandă separată, iar înainte, mai

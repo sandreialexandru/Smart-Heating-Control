@@ -3201,3 +3201,44 @@ async def test_relay_stops_by_the_learned_inertia(
     model = await _cast_iron_afternoon(hass, freezer, inertia=True)
     assert model["stopped_at"] is not None and model["stopped_at"] <= 21.1
     assert model["peak"] <= 21.4
+
+
+async def test_prediction_band_of_a_relay(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The card predicts a relay room by its hysteresis and the learned inertia."""
+    entry = await _setup(hass, freezer)
+    room = next(iter(entry.runtime_data.rooms.values()))
+    room.learner = _learned_cast_iron()
+    await hass.services.async_call(DOMAIN, "reevaluate", {}, blocking=True)
+    await _tick(hass, freezer, 15)
+    model = hass.states.get("sensor.bedroom_heating_rate").attributes["model"]
+    assert model["band"] == [0.3, 0.3]
+    assert model["inertia_control"] is True
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_prediction_band_of_a_trv_that_regulates_itself(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A TRV commanded by temperature, with hvac_action: no band, the card holds the target."""
+    trv = {
+        "hvac_modes": ["heat", "off"],
+        "current_temperature": 20.0,
+        "temperature": 21.0,
+        "hvac_action": "heating",
+    }
+    hass.states.async_set("climate.trv", "heat", trv)
+    hass.states.async_set("sensor.office_temp", "20.0", {"unit_of_measurement": "°C"})
+    async_mock_service(hass, "climate", "set_temperature")
+    entry = await _boost_house(hass, freezer, {"trv_boost": False})
+    room = next(iter(entry.runtime_data.rooms.values()))
+    room.learner = _learned_cast_iron()
+    await hass.services.async_call(DOMAIN, "reevaluate", {}, blocking=True)
+    await _tick(hass, freezer, 15)
+    model = hass.states.get("sensor.office_heating_rate").attributes["model"]
+    assert model["band"] is None
+    assert model["inertia_control"] is False
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

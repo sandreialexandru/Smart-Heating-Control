@@ -8,7 +8,8 @@ GitHub releases.
 ## Unreleased
 
 Beta: relays, on / off thermostats and TRVs with the boost start and stop by
-the inertia the room has learned, so slow heating no longer overshoots.
+the inertia the room has learned, so slow heating no longer overshoots; the
+predicted temperature of the chart follows how each device switches.
 
 ### Integration and card
 
@@ -26,6 +27,14 @@ the inertia the room has learned, so slow heating no longer overshoots.
   above target + 0.5 °C from 5 – 7 % to almost 0). The card says *stopped
   early: the heat already given still takes the room to ~21.3°* while it
   waits (`no_heat_reason` `inertia`). See [the guide](docs/guide/07-optimal-start-stop-and-learning.md#starting-and-stopping-by-the-inertia).
+- 📈 **The predicted temperature follows the device.** The chart switches the
+  heating ahead as the device does: Generic Thermostat by its cold and hot
+  tolerance, relays, on / off control and the TRV boost by the hysteresis (and
+  the learned inertia), thermostats without `hvac_action` by the hysteresis.
+  The line now goes up and down around the target as the room does, instead
+  of staying flat with many short heating periods. Thermostats and TRVs that
+  regulate by themselves still hold the target; their heating ahead is one
+  period. The *Heating rate* sensor has the `band` in its `model`.
 - 🏠 Clearer words for the presence of the house: *the house state is Home*
   instead of *the house is home* (*starea casei e „acasă”* in Romanian), in
   the setup forms and in the guest mode banner of the card, so it is not

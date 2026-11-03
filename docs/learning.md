@@ -564,7 +564,7 @@ Attributes:
 | `error_per_hour` | the usual prediction error of a stretch (°C per hour) |
 | `minutes_per_degree` | minutes per degree at −10 / 0 / 10 / 20 °C (14 / 32 / 50 / 68 °F) outdoors |
 | `hours_heating`, `hours_idle`, `hours_needed` | learning progress (section 6) |
-| `model` | the model in °C (h, c, k, s, τ, q, constant loss, mean outdoor temperature) for the prediction of the card; empty until learned |
+| `model` | the model in °C (h, c, k, s, τ, q, constant loss, mean outdoor temperature, `band` and `inertia_control`: how the device switches the heating) for the prediction of the card; empty until learned |
 
 **`sensor.<house>_outdoor_average`** – attribute `sun_forecast`: the expected
 sun signal every 15 minutes for the next 12 hours (with a weather entity).
@@ -591,8 +591,14 @@ loss learned* (*falls 0.70 °C/h now*).
 
 **Card, chart** – once learned, the predicted temperature for the next 12
 hours (dotted): the model of section 2 simulated minute by minute along the
-planned target (heating while the room is below it), with the hourly forecast
-and the expected sun.
+planned target, with the hourly forecast and the expected sun. The heating is
+switched as the device does it (the `band` of the `model` attribute, °C below
+and above the target): the *cold* / *hot tolerance* of Generic Thermostat
+(0.3 °C each when it does not say), the hysteresis for relays, on / off
+control, the TRV boost and thermostats without `hvac_action`, with the
+starting and stopping by the inertia of section 7 when `inertia_control` is
+on. Thermostats and TRVs that regulate by themselves have no band: the
+prediction holds the target and draws their heating as one period.
 
 **Diagnostics** – `thermal_model` with all the numbers of the model and the
 ten inertia candidates (each with its h, c, k, s, error, `outdoor_spread`, the

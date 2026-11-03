@@ -287,6 +287,8 @@ CONF_STOP_TOLERANCE: Final = "stop_tolerance"  # comfort kept by optimal stop (o
 CONF_MIN_ON: Final = "min_on_minutes"
 # Relays and on / off thermostats: start and stop by the learned inertia (inside the hysteresis).
 CONF_INERTIA_CONTROL: Final = "inertia_control"
+# The cold / hot tolerance of Generic Thermostat when it does not say (its own default, °C).
+GT_DEFAULT_TOLERANCE: Final = 0.3
 CONF_MIN_OFF: Final = "min_off_minutes"
 CONF_OCCUPANCY_SENSORS: Final = "occupancy_sensors"
 # Room humidity sensor: only for the mold risk alert.

@@ -436,6 +436,7 @@ class HeatingRateSensor(RoomEntity, SensorEntity):
         # Estimates at round outdoor temperatures of the unit of the house.
         points = (14, 32, 50, 68) if unit == "°F" else (-10, 0, 10, 20)
         hours = WINDOW_MINUTES / 60
+        band = self.room.prediction_band()
         return {
             "learned": model.learned,
             "heating_per_hour": _d(model.h, unit, 2),
@@ -470,6 +471,11 @@ class HeatingRateSensor(RoomEntity, SensorEntity):
                 "q": round(learner.q, 4),
                 "constant_loss": model.constant_loss,
                 "outdoor_mean": model.outdoor_mean,
+                # How the heating is switched around the target (°C below and
+                # above it, with the learned inertia or not); None: the device
+                # regulates by itself and holds the target.
+                "band": None if band is None else [round(band[0], 3), round(band[1], 3)],
+                "inertia_control": band is not None and band[2],
             }
             if model.learned
             else None,

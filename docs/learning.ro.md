@@ -571,7 +571,7 @@ complet pornită, la temperatura camerei și cea de afară de acum (`min/°C` sa
 | `error_per_hour` | eroarea obișnuită de predicție a unui interval (°C pe oră) |
 | `minutes_per_degree` | minute pe grad la −10 / 0 / 10 / 20 °C (14 / 32 / 50 / 68 °F) afară |
 | `hours_heating`, `hours_idle`, `hours_needed` | progresul învățării (secțiunea 6) |
-| `model` | modelul în °C (h, c, k, s, τ, q, pierdere constantă, temperatura medie de afară) pentru predicția cardului; gol până se învață |
+| `model` | modelul în °C (h, c, k, s, τ, q, pierdere constantă, temperatura medie de afară, `band` și `inertia_control`: cum pornește și oprește dispozitivul încălzirea) pentru predicția cardului; gol până se învață |
 
 **`sensor.<casă>_outdoor_average`** – atributul `sun_forecast`: semnalul solar
 așteptat la fiecare 15 minute pentru următoarele 12 ore (cu entitate meteo).
@@ -599,8 +599,14 @@ acum*).
 
 **Card, grafic** – după ce s-a învățat, temperatura prezisă pentru următoarele
 12 ore (punctat): modelul din secțiunea 2 simulat minut cu minut după ținta
-planificată (încălzire cât camera e sub ea), cu prognoza orară și soarele
-așteptat.
+planificată, cu prognoza orară și soarele așteptat. Încălzirea pornește și se
+oprește cum o face dispozitivul (`band` din atributul `model`, °C sub și peste
+țintă): *cold* / *hot tolerance* ale Generic Thermostat (câte 0,3 °C când nu
+le spune), histerezisul pentru relee, control pornit / oprit, forțarea TRV și
+termostatele fără `hvac_action`, cu pornirea și oprirea după inerție din
+secțiunea 7 când `inertia_control` e pornit. Termostatele și TRV-urile care se
+reglează singure nu au bandă: predicția ține ținta și desenează încălzirea lor
+ca o singură perioadă.
 
 **Diagnostic** – `thermal_model` cu toate numerele modelului și cei zece
 candidați de inerție (fiecare cu h, c, k, s, eroarea, `outdoor_spread`,

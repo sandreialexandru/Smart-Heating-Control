@@ -128,9 +128,16 @@ and opens on the last 24 hours and the next 12:
 
 - the room temperature;
 - the **predicted temperature** ahead (dotted), once the room has learned: the
-  learned model of the room (heating, weather curve, heat loss, inertia)
+  learned model of the room (heating, weather curve, heat loss, sun, inertia)
   simulated minute by minute along the planned target, with the hourly
-  forecast;
+  forecast. The heating is switched as the device does it: Generic Thermostat
+  by its *cold* and *hot tolerance*, relays, on / off control and the TRV
+  boost by the hysteresis (and the learned inertia when it is on), thermostats
+  without `hvac_action` by the hysteresis. So the line goes up and down around
+  the target as the room really does. Thermostats and TRVs commanded by
+  temperature or preset that report `hvac_action` regulate by themselves: for
+  them the line holds the target and the heating ahead is one lighter period
+  ("it heats as much as it needs");
 - the target, as a step line, coloured by level;
 - the planned levels;
 - the periods the room heated, in a lane of their own, and ahead, lighter, the

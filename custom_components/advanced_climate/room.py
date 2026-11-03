@@ -102,6 +102,7 @@ from .const import (
     DEVICE_LIMIT_HOURS,
     DOMAIN,
     EVENT_DECISION_CHANGED,
+    GT_DEFAULT_TOLERANCE,
     GT_DOMAIN,
     GT_PRESET_KEYS,
     MAX_DECISION_LOG,
@@ -823,15 +824,43 @@ class Room:
 
     def _gt_cold_tolerance(self) -> float:
         """The cold tolerance of the Generic Thermostat of the room (°C)."""
-        value = self._gt_options().get("cold_tolerance")
+        return self._gt_tolerance("cold_tolerance", 0.0)
+
+    def _gt_tolerance(self, key: str, default: float) -> float:
+        """A tolerance of the Generic Thermostat of the room (°C), ``default`` when unknown."""
+        value = self._gt_options().get(key)
         try:
             return (
                 float(delta_to_celsius(float(value), system_unit(self.hass)))
                 if value is not None
-                else 0.0
+                else default
             )
         except (TypeError, ValueError):
-            return 0.0
+            return default
+
+    def prediction_band(self) -> tuple[float, float, bool] | None:
+        """How the heating of the room is switched around the target, for the prediction.
+
+        (°C below the target where it starts, °C above where it stops, whether
+        the learned inertia starts and stops it inside). Generic Thermostat:
+        its cold and hot tolerance (0.3 °C, its default, when unknown); relays,
+        on / off control and the TRV boost: the hysteresis, with the learned
+        inertia when on; thermostats without hvac_action: the hysteresis. None
+        for the other thermostats and TRVs: they regulate by themselves, with a
+        band nobody knows, and hold the target.
+        """
+        if self.source == SOURCE_GT:
+            return (
+                self._gt_tolerance("cold_tolerance", GT_DEFAULT_TOLERANCE),
+                self._gt_tolerance("hot_tolerance", GT_DEFAULT_TOLERANCE),
+                False,
+            )
+        hysteresis = float(self.config[CONF_HYSTERESIS])
+        if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost:
+            return hysteresis, hysteresis, bool(self.config.get(CONF_INERTIA_CONTROL, True))
+        if self.lacks_hvac_action():
+            return hysteresis, hysteresis, False
+        return None
 
     def stop_tolerance(self) -> float:
         """How far below a level the room may fall during an optimal stop (its comfort)."""

@@ -1,0 +1,143 @@
+name: Mutation testing
+
+# Do the tests notice a small mistake in the code? Every mutant is one small
+# change (tests/mutation/mutate.py); the report lists the ones no test notices.
+#
+# - Every week, in the night from Saturday to Sunday (00:23 in Bucharest in
+#   winter, 01:23 in summer: cron is in UTC), on the code of dev. A schedule
+#   runs from the copy of this file on main, so it starts once it is on main.
+# - By hand: Actions → Mutation testing → Run workflow (on the branch chosen
+#   there), optionally only some modules or fewer mutants.
+# - A short try (2 jobs, 3 mutants each) when the mutation tools change on dev.
+#
+# The report is in the summary of the run and in the artifact mutation-report.
+
+on:
+  schedule:
+    - cron: "23 22 * * 6"
+  workflow_dispatch:
+    inputs:
+      files:
+        description: "Modules to mutate, separated by spaces, e.g. engine.py learning.py (empty: all)"
+        default: ""
+      shards:
+        description: "Jobs in parallel (1 to 20)"
+        default: "20"
+      limit:
+        description: "At most this many mutants per job (0: all)"
+        default: "0"
+  push:
+    branches: [dev]
+    paths:
+      - tests/mutation/**
+      - .github/workflows/mutation.yml
+
+concurrency:
+  group: mutation
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Plan
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      shards: ${{ steps.plan.outputs.shards }}
+      limit: ${{ steps.plan.outputs.limit }}
+      files: ${{ steps.plan.outputs.files }}
+      ref: ${{ steps.plan.outputs.ref }}
+    steps:
+      - id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          FILES: ${{ inputs.files }}
+          SHARDS: ${{ inputs.shards }}
+          LIMIT: ${{ inputs.limit }}
+          REF: ${{ github.ref_name }}
+        run: |
+          case "$EVENT" in
+            schedule) shards=20; limit=0; files=""; ref=dev ;;
+            push) shards=2; limit=3; files=""; ref="$REF" ;;
+            *) shards="${SHARDS:-20}"; limit="${LIMIT:-0}"; files="$FILES"; ref="$REF" ;;
+          esac
+          if ! [[ "$shards" =~ ^[0-9]+$ ]] || (( shards < 1 || shards > 20 )); then shards=20; fi
+          if ! [[ "$limit" =~ ^[0-9]+$ ]]; then limit=0; fi
+          matrix=$(python3 -c "import json; print(json.dumps(list(range($shards))))")
+          {
+            echo "matrix=$matrix"
+            echo "shards=$shards"
+            echo "limit=$limit"
+            echo "files=$files"
+            echo "ref=$ref"
+          } >> "$GITHUB_OUTPUT"
+          echo "Mutation testing of ${files:-every module} on $ref: $shards jobs, limit $limit per job (0 = all)."
+
+  mutate:
+    name: Mutants ${{ matrix.shard }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: pip install -r requirements_test.txt
+      - run: python -c "import pytest_cov" || pip install pytest-cov
+      - name: Mutants
+        env:
+          SHARD: ${{ matrix.shard }}
+          SHARDS: ${{ needs.plan.outputs.shards }}
+          LIMIT: ${{ needs.plan.outputs.limit }}
+          FILES: ${{ needs.plan.outputs.files }}
+        run: |
+          mkdir -p results
+          args=(--shard "$SHARD" --shards "$SHARDS" --limit "$LIMIT" --max-minutes 320
+                --out "results/shard-$SHARD.json")
+          if [ -n "$FILES" ]; then
+            read -ra modules <<< "$FILES"
+            args+=(--files "${modules[@]}")
+          fi
+          python tests/mutation/mutate.py "${args[@]}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-shard-${{ matrix.shard }}
+          path: results/shard-${{ matrix.shard }}.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+  report:
+    name: Report
+    needs: [plan, mutate]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: mutation-shard-*
+          path: results
+          merge-multiple: true
+      - name: Report
+        run: |
+          python3 tests/mutation/report.py results/*.json --markdown mutation-report.md --json mutation-all.json
+          cat mutation-report.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: |
+            mutation-report.md
+            mutation-all.json
+          retention-days: 90

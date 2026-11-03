@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.0b1";
+const CARD_VERSION = "2.6.0a15";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -276,6 +276,8 @@ const TEXT = {
     learn_curve: "Weather curve",
     learn_curve_value: "{value} {u}/h for each {u} colder outdoors",
     learn_curve_none: "none (the heating gives the same at any outdoor temperature)",
+    learn_sun: "Sun",
+    learn_sun_value: "+{value} {u}/h with the sun overhead in a clear sky · now +{now} {u}/h",
     humidity: "Humidity",
     humidity_value: "air {air}% · coldest wall {wall}%",
     humidity_air: "air {air}%",
@@ -525,6 +527,8 @@ const TEXT = {
     learn_curve: "Curba de temperatură",
     learn_curve_value: "{value} {u}/h pentru fiecare {u} mai frig afară",
     learn_curve_none: "fără (încălzirea dă la fel la orice temperatură de afară)",
+    learn_sun: "Soare",
+    learn_sun_value: "+{value} {u}/h cu soarele la zenit pe cer senin · acum +{now} {u}/h",
     humidity: "Umiditate",
     humidity_value: "aer {air}% · peretele cel mai rece {wall}%",
     humidity_air: "aer {air}%",
@@ -2177,19 +2181,25 @@ class SmartHeatingControlCard extends HTMLElement {
       ohi = olo + 4;
     }
     const cutoffAt = outdoorState?.attributes?.cutoff_enabled ? num(outdoorState.attributes.cutoff_temperature) : null;
-    const { pts: pred, heat: predHeat } = this._prediction(a, segs, forecast, latest, now, t1);
+    const sun = (outdoorState?.attributes?.sun_forecast || [])
+      .map(([at, v]) => [Date.parse(at), num(v)])
+      .filter(([t, v]) => Number.isFinite(t) && v !== null)
+      .sort((p, q) => p[0] - q[0]);
+    const { pts: pred, heat: predHeat } = this._prediction(a, segs, forecast, latest, now, t1, sun);
     return { t0, t1, now, segs, temp, heat, predHeat, lo, hi, outdoor, forecast, olo, ohi, cutoffAt, pred, loading: !hist };
   }
 
   /**
    * The room temperature the learned model expects until the end of the chart,
    * following the planned target: a minute by minute simulation of
-   * rise per hour = (h − c × outdoor) × q − k × (room − outdoor), as in the
-   * integration, with the heating on while the room is below the target and q
-   * following it with the inertia. The outdoor temperature is the hourly
-   * forecast (the measured value until its first hour). Empty until learned.
+   * rise per hour = (h − c × outdoor) × q − k × (room − outdoor) + s × sun, as
+   * in the integration, with the heating on while the room is below the target
+   * and q following it with the inertia. The outdoor temperature is the hourly
+   * forecast (the measured value until its first hour); the sun signal is the
+   * one expected every 15 minutes (``sun_forecast``, 0 after it ends). Empty
+   * until learned.
    */
-  _prediction(a, segs, forecast, outdoorNow, now, t1) {
+  _prediction(a, segs, forecast, outdoorNow, now, t1, sun = []) {
     const s = this._state(a.entities?.heating_rate);
     const m = s?.attributes?.model;
     const current = num(a.current_temperature);
@@ -2202,6 +2212,7 @@ class SmartHeatingControlCard extends HTMLElement {
     const c = num(m.c) ?? 0;
     const k = num(m.k) ?? 0;
     const tau = num(m.tau) ?? 0;
+    const sunGain = num(m.s) ?? 0;
     const constant = !!m.constant_loss;
     const mean = num(m.outdoor_mean);
     const future = segs.filter((sg) => sg.future && sg.e > now);
@@ -2213,6 +2224,17 @@ class SmartHeatingControlCard extends HTMLElement {
         else break;
       }
       return out ?? mean;
+    };
+    // The sun signal between two points of the 15 minute grid, in proportion.
+    let sunIdx = 0;
+    const sunAt = (t) => {
+      if (!sunGain || !sun.length) return 0;
+      while (sunIdx + 1 < sun.length && sun[sunIdx + 1][0] <= t) sunIdx++;
+      const [ta, va] = sun[sunIdx];
+      if (t < ta) return 0;
+      const next = sun[sunIdx + 1];
+      if (!next) return t - ta <= 15 * 60000 ? va : 0;
+      return va + ((next[1] - va) * (t - ta)) / (next[0] - ta);
     };
     let temp = toC(current);
     let q = Math.min(1, Math.max(0, num(m.q) ?? 0));
@@ -2241,7 +2263,7 @@ class SmartHeatingControlCard extends HTMLElement {
       const out = constant ? null : outdoorAt(t);
       const heating = constant || out === null ? h : Math.max(0, h - c * out);
       const loss = constant ? k : out === null ? 0 : k * (temp - out);
-      temp += (heating * qMean - loss) / 60;
+      temp += (heating * qMean - loss + sunGain * sunAt(t - 30000)) / 60;
       if (i % 5 === 0 || i === minutes) pts.push([t, +fromC(temp).toFixed(2)]);
     }
     return { pts, heat };
@@ -2814,7 +2836,7 @@ class SmartHeatingControlCard extends HTMLElement {
           : ""
       }`;
     const program = estimate || runtimeHtml ? `<dl class="details">${estimate}${runtimeHtml}</dl>` : "";
-    const learning = this._learnHtml(e);
+    const learning = this._learnHtml(e, a);
     const html = `${this._alertsHtml(a)}
       ${group(this._t("grp_temps"), temps)}
       ${group(this._t("grp_program"), program)}
@@ -2842,7 +2864,7 @@ class SmartHeatingControlCard extends HTMLElement {
    * the learning (with the reset), the heating and its inertia, the weather
    * curve and the heat loss.
    */
-  _learnHtml(e) {
+  _learnHtml(e, a = {}) {
     const heat = this._state(e.heating_rate);
     const cool = this._state(e.cooling_rate);
     const learned = !!(heat && heat.attributes.learned);
@@ -2893,6 +2915,17 @@ class SmartHeatingControlCard extends HTMLElement {
                 .split("{u}")
                 .join(deg);
         html += row(heat, e.heating_rate, this._t("learn_curve"), curve, "", "");
+        // The sun gain, only once it is seen: per unit of the sun signal and now.
+        const sunGain = num(heat.attributes.sun_gain) ?? 0;
+        if (sunGain > 0) {
+          const signal = num(this._state(a.house_entities?.outdoor_average)?.attributes?.sun_forecast?.[0]?.[1]) ?? 0;
+          const text = this._t("learn_sun_value")
+            .replace("{value}", sunGain.toFixed(2))
+            .replace("{now}", (sunGain * signal).toFixed(2))
+            .split("{u}")
+            .join(deg);
+          html += row(heat, e.heating_rate, this._t("learn_sun"), text, "", "");
+        }
       }
     }
     if (cool && learned) {

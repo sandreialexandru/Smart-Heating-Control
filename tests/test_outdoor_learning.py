@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta, timezone
 import math
 import unittest
 
-from tests.pure import const, learning, outdoor
+from tests.pure import const, learning, outdoor, sun
 
 TZ = timezone.utc
 
@@ -173,11 +173,17 @@ def _room(
     spike_every=None,
     configured=True,
     curve=0.0,
+    sun_gain=0.0,
+    see_sun=True,
+    cooking=0.0,
 ):
     """Simulate a room with a thermostat (21 °C by day, 18 °C at night) and feed the learner.
 
     Returns the room temperature at the end. ``spike_every``: every so many
-    minutes the sensor reads 1 °C too high once (a disturbance).
+    minutes the sensor reads 1 °C too high once (a disturbance). ``sun_gain``:
+    °C per hour the sun adds at a sun signal of 1 (at 45° N, the days in turn
+    clear, half covered and overcast); ``see_sun``: the learner gets the sun
+    signal. ``cooking``: °C per hour added every day from 12:00 to 13:00.
     """
     t0 = datetime(2026, 11, 1, tzinfo=TZ)
     temp, q, heat = start, 0.0, False
@@ -191,12 +197,17 @@ def _room(
             heat = False
         u = 1.0 if heat else 0.0
         q = u + (q - u) * math.exp(-1 / tau) if tau > 0 else u
-        temp += ((h - curve * out) * q - k * (temp - out)) / 60
+        cover = (0.1, 0.5, 0.95)[(i // 1440) % 3]
+        signal = sun.signal(now, 45.0, 0.0, cover) or 0.0
+        extra = sun_gain * signal + (cooking if 12 <= (i // 60) % 24 < 13 else 0.0)
+        temp += ((h - curve * out) * q - k * (temp - out) + extra) / 60
         if i % step == 0:
             reading = round(temp, 1)
             if spike_every and i % spike_every == 0:
                 reading += 1.0
-            learner.observe(now, heat, reading, round(out, 1), False, configured)
+            learner.observe(
+                now, heat, reading, round(out, 1), False, configured, signal if see_sun else 0.0
+            )
     return temp
 
 
@@ -412,6 +423,87 @@ class ThermalModelTest(unittest.TestCase):
         t0 = datetime(2026, 11, 1, tzinfo=TZ)
         learner.observe(t0, True, 20.0, 5.0)
         self.assertFalse(learner.observe(t0 - timedelta(minutes=5), True, 20.5, 5.0))
+
+
+class SunTest(unittest.TestCase):
+    """The sun signal and the learned sun gain."""
+
+    def test_elevation(self) -> None:
+        # Solar noon at the equator on an equinox: the sun is (almost) overhead.
+        noon = datetime(2026, 3, 20, 12, 7, tzinfo=timezone.utc)
+        self.assertGreater(sun.sin_elevation(noon, 0.0, 0.0), 0.999)
+        # 45° N at the winter solstice, noon: 90 − 45 − 23.44 = 21.6°.
+        winter = datetime(2026, 12, 21, 12, 2, tzinfo=timezone.utc)
+        degrees = math.degrees(math.asin(sun.sin_elevation(winter, 45.0, 0.0)))
+        self.assertAlmostEqual(degrees, 21.6, delta=0.3)
+        # Bucharest (26.1° E): noon is about 1 h 44 min earlier in UTC; at
+        # midnight UTC the sun is down.
+        self.assertLess(
+            sun.sin_elevation(datetime(2026, 11, 3, tzinfo=timezone.utc), 44.4, 26.1), 0
+        )
+
+    def test_signal_and_clouds(self) -> None:
+        noon = datetime(2026, 11, 3, 10, 20, tzinfo=timezone.utc)
+        clear = sun.signal(noon, 44.4, 26.1, 0.0)
+        self.assertAlmostEqual(sun.signal(noon, 44.4, 26.1, 1.0), clear * 0.25)
+        # Unknown clouds: unknown in daylight, 0 at night.
+        self.assertIsNone(sun.signal(noon, 44.4, 26.1, None))
+        night = datetime(2026, 11, 3, 22, 0, tzinfo=timezone.utc)
+        self.assertEqual(sun.signal(night, 44.4, 26.1, None), 0.0)
+        # The cloud coverage in % first, then the condition, else unknown.
+        self.assertEqual(sun.cover_of(40, "sunny"), 0.4)
+        self.assertEqual(sun.cover_of(None, "cloudy"), 0.9)
+        self.assertEqual(sun.cover_of("unknown", "partlycloudy"), 0.5)
+        self.assertIsNone(sun.cover_of(None, "nothing"))
+        self.assertEqual(sun.cover_of(150, None), 1.0)
+
+    def test_sun_gain_is_learned(self) -> None:
+        learner = learning.ThermalLearner()
+        _room(learner, h=1.5, k=0.04, tau=30.0, days=9, sun_gain=2.0)
+        model = learner.model
+        self.assertAlmostEqual(model.s, 2.0, delta=0.2)
+        self.assertAlmostEqual(model.h, 1.5, delta=0.1)
+        self.assertAlmostEqual(model.k, 0.04, delta=0.006)
+        # The prediction with the sun is the one of the true room.
+        true = learning.ThermalModel(h=1.5, k=0.04, s=2.0, tau=30.0, learned=True)
+        bright = lambda _minute: 0.4  # noqa: E731
+        self.assertAlmostEqual(
+            model.simulate(20.0, 5.0, 0.0, False, 120, bright),
+            true.simulate(20.0, 5.0, 0.0, False, 120, bright),
+            delta=0.1,
+        )
+        # A weak sun (0.2 °C/h against a loss of 0.04 × 16 = 0.64) slows the
+        # cooling down; a strong one (0.8 °C/h) stops it.
+        weak = lambda _minute: 0.1  # noqa: E731
+        self.assertGreater(
+            true.minutes_to_fall(21.0, 20.5, 5.0, 0.0, weak), true.minutes_to_fall(21.0, 20.5, 5.0)
+        )
+        self.assertIsNone(true.minutes_to_fall(21.0, 20.5, 5.0, 0.0, bright))
+
+    def test_no_sun_gain_without_sun(self) -> None:
+        for kwargs in ({}, {"cooking": 1.0}, {"sun_gain": 2.0, "see_sun": False}):
+            learner = learning.ThermalLearner()
+            _room(learner, h=1.5, k=0.04, tau=30.0, days=9, **kwargs)
+            self.assertEqual(learner.model.s, 0.0, kwargs)
+
+    def test_unknown_sun_is_not_learned(self) -> None:
+        learner = learning.ThermalLearner()
+        t0 = datetime(2026, 11, 1, tzinfo=TZ)
+        for i in range(0, 600, 5):
+            learner.observe(t0 + timedelta(minutes=i), True, 20.0 + i / 600, 5.0, sun=None)
+        self.assertEqual(learner.heat_windows, 0.0)
+
+    def test_learning_of_version_6_is_kept(self) -> None:
+        learner = learning.ThermalLearner()
+        _room(learner, days=2)
+        data = learner.as_dict()
+        old = {**data, "version": 6, "fits": [item[:14] + item[-1:] for item in data["fits"]]}
+        again = learning.ThermalLearner.from_dict(old)
+        self.assertTrue(again.model.learned)
+        self.assertAlmostEqual(again.model.h, learner.model.h, places=3)
+        self.assertEqual(again.model.s, 0.0)
+        bad = {**data, "version": 6}  # sun sums in a version 6: not kept
+        self.assertFalse(learning.ThermalLearner.from_dict(bad).model.learned)
 
 
 class ExpectedOutdoorTest(unittest.TestCase):

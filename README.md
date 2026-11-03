@@ -225,7 +225,7 @@ Thermostat, the level temperatures (numbers).
 Each room learns a small physical model of itself, continuously, with and
 without heating:
 
-**rise per hour = (heating − curve × outdoor) × q − loss × (room − outdoor)**
+**rise per hour = (heating − curve × outdoor) × q − loss × (room − outdoor) + sun gain × sun**
 
 - **Heating** (`heating_per_hour`): °C per hour the heating adds at full heat,
   at 0 °C outdoors.
@@ -237,13 +237,19 @@ without heating:
   0 until then and in a house without an outdoor temperature.
 - **Heat loss** (`loss_per_hour`): the part of the inside / outside difference
   lost per hour (colder outside, faster).
+- **Sun gain** (`sun_gain`): °C per hour the sun adds at a sun signal of 1.
+  The signal is sin(sun elevation) × (1 − 0.75 × cloud cover^3.4), from the
+  time, the location of Home Assistant and the clouds of the weather entity
+  (0 at night, 1 with the sun overhead in a clear sky). Learned only with a
+  weather entity and only when clearly seen (at least 5 standard errors from
+  0); 0 otherwise. No orientation to set.
 - **Inertia** (`inertia_minutes`): q, the part of the heating that reaches the
   room, follows the heating on / off with this delay: the boiler, the water,
   the radiators or the floor warm up first after a start and keep giving heat
   after a stop. It is learned, not set: ten candidates (0 – 240 minutes) are
   learned together and the one that predicts the room best is used.
-- Every **30 minutes** of measurements is one equation; heating, curve and
-  loss are its **least squares** fit. Older stretches count less (half after 7 days),
+- Every **30 minutes** of measurements is one equation; heating, curve, loss
+  and sun gain are its **least squares** fit. Older stretches count less (half after 7 days),
   so the model follows a room that changes; a stretch far from what the model
   expects (more than 2.5 times the usual difference: a door left open,
   cooking) counts less.
@@ -446,8 +452,8 @@ at once), and a *Lock* button for the child lock of the room.
   adjustments, level temperatures); *Schedule* (next optimal start / stop,
   heating time); *Learning* (its state or progress, with a **Reset** button
   that asks to confirm with a second click; once learned the heating: minutes
-  per degree now and the inertia; the weather curve; the heat loss: how fast
-  the room falls now).
+  per degree now and the inertia; the weather curve; the sun, once seen: its
+  gain and what it adds now; the heat loss: how fast the room falls now).
 - **Manual change**: where it was made (card / service or on the device), until
   when, *applies after: …* while a higher rule keeps a change from the card off
   the devices, and *comes back after: …* while a higher rule interrupts it.

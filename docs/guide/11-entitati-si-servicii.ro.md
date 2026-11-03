@@ -17,7 +17,7 @@ Numele entităților sunt date ca în interfața în română. ID-urile încep c
 | *Sezon de încălzire* (senzor binar) | Dacă e sezonul de încălzire. |
 | *Cald afară* (senzor binar) | Dacă încălzirea e oprită pentru că e cald. |
 | *Cerere de căldură* (senzor binar) | Dacă se cere acum căldură. |
-| *Medie afară* (senzor) | Media de afară pe *Medie pe* ore; atribute: ultima valoare, motivul opririi (`cutoff_reason`: `measured`, `forecast_warm`, `forecast_cold`), media prognozei (`forecast_mean`), pragurile, prognoza. |
+| *Medie afară* (senzor) | Media de afară pe *Medie pe* ore; atribute: ultima valoare, motivul opririi (`cutoff_reason`: `measured`, `forecast_warm`, `forecast_cold`), media prognozei (`forecast_mean`), pragurile, prognoza, semnalul solar așteptat la fiecare 15 minute (`sun_forecast`, cu entitate meteo). |
 | *Timp de încălzire* (senzor) | Ore totale de încălzire ale casei. |
 | *Anulează modificările manuale* (buton) | Anulează modificările manuale din toate camerele. |
 | *Șterge vacanța* (buton) | Anulează vacanța. |
@@ -31,7 +31,7 @@ Numele entităților sunt date ca în interfața în română. ID-urile încep c
 | *Temperatură țintă* (senzor) | Ținta, în unitatea casei. |
 | *Temperatura camerei* (senzor) | Temperatura camerei folosită de integrare. |
 | *Următoarea schimbare* (senzor) | Următoarea schimbare din program; atribute: nivelul următor, profilul. |
-| *Viteză de încălzire* (senzor) | Minute pe grad cu încălzirea pornită, la temperatura camerei și cea de afară de acum; atribute: încălzirea învățată (`heating_per_hour`), curba de temperatură (`weather_curve`), pierderea de căldură (`loss_per_hour`), inerția (`inertia_minutes`), căldura care ajunge acum în cameră, minutele pe grad la −10 / 0 / 10 / 20 °C, progresul învățării (`hours_heating`, `hours_idle`, `hours_needed`) ([capitolul 7](07-anticipare-si-invatare.ro.md) și [Cum învață integrarea](../learning.ro.md#11-unde-se-vede)). |
+| *Viteză de încălzire* (senzor) | Minute pe grad cu încălzirea pornită, la temperatura camerei și cea de afară de acum; atribute: încălzirea învățată (`heating_per_hour`), curba de temperatură (`weather_curve`), câștigul solar învățat (`sun_gain`), pierderea de căldură (`loss_per_hour`), inerția (`inertia_minutes`), căldura care ajunge acum în cameră, minutele pe grad la −10 / 0 / 10 / 20 °C, progresul învățării (`hours_heating`, `hours_idle`, `hours_needed`) ([capitolul 7](07-anticipare-si-invatare.ro.md) și [Cum învață integrarea](../learning.ro.md#12-unde-se-vede)). |
 | *Viteză de răcire* (senzor) | Cât de repede scade camera acum fără încălzire (gol până se învață). |
 | *Timp de încălzire* (senzor) | Ore totale de încălzire ale camerei. |
 | *Cerere de căldură* (senzor binar) | Dacă camera cere căldură; atributul `heating` arată dacă sursa ei merge. |

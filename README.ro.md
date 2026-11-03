@@ -241,7 +241,7 @@ fără Generic Thermostat, temperaturile nivelurilor (numere).
 
 Fiecare cameră își învață un mic model fizic, continuu, cu și fără încălzire:
 
-**creștere pe oră = (încălzire − curbă × afară) × q − pierdere × (cameră − afară)**
+**creștere pe oră = (încălzire − curbă × afară) × q − pierdere × (cameră − afară) + câștig solar × soare**
 
 - **Încălzirea** (`heating_per_hour`): °C pe oră adăugate de încălzire la toată
   căldura, la 0 °C afară.
@@ -254,14 +254,20 @@ Fiecare cameră își învață un mic model fizic, continuu, cu și fără înc
   este 0.
 - **Pierderea de căldură** (`loss_per_hour`): partea din diferența interior /
   exterior pierdută pe oră (cu cât e mai frig afară, cu atât mai repede).
+- **Câștigul solar** (`sun_gain`): °C pe oră adăugate de soare la un semnal
+  solar de 1. Semnalul este sin(înălțimea soarelui) × (1 − 0,75 × acoperirea
+  cu nori^3,4), din oră, locația din Home Assistant și norii entității meteo
+  (0 noaptea, 1 cu soarele la zenit pe cer senin). Se învață doar cu o
+  entitate meteo și doar când se vede clar (la cel puțin 5 erori standard de
+  0); altfel e 0. Nu se setează nicio orientare.
 - **Inerția** (`inertia_minutes`): q, partea din încălzire care ajunge în
   cameră, urmează pornirea / oprirea încălzirii cu această întârziere:
   centrala, apa, caloriferele sau pardoseala se încălzesc întâi după pornire
   și mai dau căldură după oprire. Se învață, nu se setează: zece candidați
   (0 – 240 de minute) se învață împreună și se folosește cel care prezice cel
   mai bine camera.
-- Fiecare **30 de minute** de măsurători sunt o ecuație; încălzirea, curba și
-  pierderea sunt soluția ei prin **metoda celor mai mici pătrate**. Intervalele
+- Fiecare **30 de minute** de măsurători sunt o ecuație; încălzirea, curba,
+  pierderea și câștigul solar sunt soluția ei prin **metoda celor mai mici pătrate**. Intervalele
   mai vechi contează mai puțin (pe jumătate după 7 zile), deci modelul urmează
   o cameră care se schimbă; un interval departe de ce așteaptă modelul (peste
   de 2,5 ori diferența obișnuită: o ușă lăsată deschisă, gătitul) contează mai
@@ -473,7 +479,8 @@ multe deodată) și un buton *Blocare* pentru blocarea modificărilor în camer�
   anticipată, timpul de încălzire); *Învățare* (starea sau progresul, cu un
   buton **Resetează** care cere confirmare printr-un al doilea clic; după ce s-a
   învățat, încălzirea: minutele pe grad acum și inerția; curba de temperatură;
-  pierderea de căldură: cât de repede scade camera acum).
+  soarele, după ce s-a văzut: câștigul lui și cât adaugă acum; pierderea de
+  căldură: cât de repede scade camera acum).
 - **Modificare manuală**: unde a fost făcută (card / serviciu sau pe dispozitiv),
   până când, *se aplică după: …* cât timp o regulă de mai sus ține o schimbare
   din card departe de dispozitive și *revine după: …* cât timp o regulă de mai

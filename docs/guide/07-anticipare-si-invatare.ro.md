@@ -26,7 +26,7 @@ de o temperatură de afară (senzor sau entitate meteo).
 
 Nu trebuie introdus nimic despre casă (calorifere, izolație, centrală,
 încălzire în pardoseală). Camera **se urmărește singură** tot timpul, cu și fără
-încălzire, și învață patru numere:
+încălzire, și învață cinci numere:
 
 - **Încălzirea**: câte °C pe oră adaugă încălzirea când dă toată căldura.
 - **Curba de temperatură**: cu cât dă încălzirea mai mult (sau mai puțin) când
@@ -35,6 +35,10 @@ Nu trebuie introdus nimic despre casă (calorifere, izolație, centrală,
   apei sau un radiator electric dă la fel, iar curba se învață 0.
 - **Pierderea de căldură**: cât de repede se răcește camera, proporțional cu
   cât e mai caldă decât afară (cu cât e mai frig afară, cu atât mai repede).
+- **Soarele**: câte °C pe oră adaugă soarele. Se învață doar cu o entitate meteo
+  (de la ea se știu norii) și doar când se vede clar; altfel e 0. Înălțimea
+  soarelui se calculează din oră și din locația din Home Assistant, deci
+  orientarea ferestrelor nu trebuie dată.
 - **Inerția**: cât de încet reacționează încălzirea. După pornire se încălzesc
   întâi centrala, apa și caloriferele (sau pardoseala); după oprire, ele mai dau
   căldură o vreme. Calorifere: de obicei 10 – 30 de minute; încălzire în
@@ -66,6 +70,15 @@ folosește o valoare sigură: 60 de minute pe grad, fără inerție. În card ap
 
 **Fără temperatură de afară** în casă, pierderea de căldură se învață ca un
 număr constant de grade pe oră, iar curba de temperatură nu se învață.
+
+**Soarele în predicții.** După ce s-a învățat, pornirea și oprirea anticipată,
+timpul până la țintă și temperatura prezisă din card socotesc soarele: înălțimea
+lui la acea oră și norii din prognoza orară (altfel norii de acum). Exemplu
+(camera de mai sus, soare învățat 1,5 °C/h, un semnal solar de 0,3, adică
+1,5 × 0,3 = 0,45 °C/h, afară 0 °C): de la 18 la 21 °C are nevoie de 161 de
+minute în loc de 231. Setarea *Câștig solar* a camerei e separată și rămâne:
+ea coboară ținta cât e soare. Detalii în
+[Cum învață integrarea](../learning.ro.md#10-soarele).
 
 ## Pornirea anticipată, pas cu pas
 
@@ -135,8 +148,9 @@ implicită de 30 de minute, începe la **21:30**.
   exemplu *~21.5° la 22:00* (atributul `stop_forecast`).
 - În grafic, următoarea pornire / oprire anticipată e o perioadă umbrită.
 - **Învățarea**, în *Detalii*: minutele pe grad acum și inerția (de exemplu
-  *45 min/°C acum · inerție 30 min*) sau progresul în timpul învățării, și cât
-  de repede scade camera acum fără încălzire.
+  *45 min/°C acum · inerție 30 min*) sau progresul în timpul învățării, soarele
+  învățat (doar dacă s-a văzut) și cât de repede scade camera acum fără
+  încălzire.
 - Senzorii **Viteză de încălzire** (minute pe grad acum, cu numerele învățate
   ca atribute) și **Viteză de răcire** (cât de repede scade camera acum fără
   încălzire).

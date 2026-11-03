@@ -594,7 +594,7 @@
             "valve_exercise": "Mișcarea robinetelor"
           },
           "data_description": {
-            "solar_offset": "Valoare negativă (de ex. -1) coboară ținta cât e soare, pentru camerele încălzite de soare. Folosește entitatea meteo a casei (apare doar dacă e setată). 0 = oprit.",
+            "solar_offset": "Valoare negativă (de ex. -1) coboară ținta cât e soare, pentru camerele încălzite de soare. Folosește entitatea meteo a casei (apare doar dacă e setată). 0 = oprit. Separat de această setare, cât încălzește soarele camera se învață singur, pentru pornirea și oprirea anticipată.",
             "valve_exercise": "Deschide TRV-urile complet 5 minute o dată pe săptămână, contra calcarului, în orice mod (și vara). O pauză, o modificare manuală sau o fereastră deschisă o amână pentru mai târziu în aceeași zi; nu cere căldură."
           }
         },

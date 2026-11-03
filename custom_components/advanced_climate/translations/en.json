@@ -594,7 +594,7 @@
             "valve_exercise": "Valve exercise"
           },
           "data_description": {
-            "solar_offset": "Negative value (e.g. -1) lowers the target while the sun shines, for rooms that get warm from the sun. Uses the weather entity of the house (shown only when one is set). 0 = off.",
+            "solar_offset": "Negative value (e.g. -1) lowers the target while the sun shines, for rooms that get warm from the sun. Uses the weather entity of the house (shown only when one is set). 0 = off. Independent of it, how much the sun warms the room is learned by itself for the optimal start and stop.",
             "valve_exercise": "Opens the TRVs fully 5 minutes once a week, against limescale, in every mode (also in summer). A pause, a manual change or an open window postpones it to later the same day; it does not ask for heat."
           }
         },

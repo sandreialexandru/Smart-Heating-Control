@@ -138,6 +138,11 @@ sufragerie cu ferestre mari spre sud).
 **Exemplu.** Sufrageria are câștigul solar −1 °C și `home` 21 °C. La prânz,
 cu cer senin, ținta e 21 − 1 = 20 °C.
 
+Separat, fiecare cameră dintr-o casă cu entitate meteo învață singură cât o
+încălzește soarele, pentru pornirea și oprirea anticipată și temperatura
+prezisă (vezi [capitolul 7](07-anticipare-si-invatare.ro.md#cum-învață-o-cameră)).
+Această învățare nu schimbă niciodată ținta; setarea de aici, da.
+
 ## Ignorarea ferestrelor când e cald
 
 *Ignoră ferestrele peste* (gol implicit): când temperatura de afară e la această

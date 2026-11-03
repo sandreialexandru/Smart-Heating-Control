@@ -4,7 +4,8 @@
 
 Documentul explică cum învață fiecare cameră cum se încălzește, cum se
 schimbă încălzirea cu temperatura de afară (curba de temperatură), cum pierde
-căldură și cât de încet reacționează încălzirea ei (inerția termică), cum se
+căldură, cât o încălzește soarele și cât de încet reacționează încălzirea ei
+(inerția termică), cum se
 calculează numerele și cum sunt folosite pentru **pornirea anticipată**,
 **oprirea anticipată** și **timpul până la țintă** afișat pe card. Fiecare
 număr din exemple este fie calculat în text, fie precizat ca ipoteză a
@@ -22,8 +23,9 @@ afișarea (1 °C = 1,8 °F).
 - [7. Folosirea modelului](#7-folosirea-modelului)
 - [8. O casă fără temperatură de afară](#8-o-casă-fără-temperatură-de-afară)
 - [9. Simulări fictive](#9-simulări-fictive)
-- [10. Limite](#10-limite)
-- [11. Unde se vede](#11-unde-se-vede)
+- [10. Soarele](#10-soarele)
+- [11. Limite](#11-limite)
+- [12. Unde se vede](#12-unde-se-vede)
 
 ---
 
@@ -34,8 +36,8 @@ devreme. Cât de devreme depinde de cameră: sursa de căldură, caloriferele sa
 încălzirea în pardoseală, izolația, temperatura de afară. În loc să ceară
 aceste valori, fiecare cameră își măsoară propriul comportament și învață din
 el. Nu trebuie setat nimic: și inerția (o pardoseală lentă sau calorifere
-rapide) și curba de temperatură a centralei se învață, nu se aleg în
-configurare.
+rapide), curba de temperatură a centralei și căldura soarelui se învață, nu se
+aleg în configurare.
 
 ---
 
@@ -46,7 +48,7 @@ Camera este tratată ca o singură masă termică ce primește căldură de la
 decât afară:
 
 ```
-creștere pe oră = (h − c × afară) × q − k × (cameră − afară)
+creștere pe oră = (h − c × afară) × q − k × (cameră − afară) + s × soare
 ```
 
 | Număr | Nume în atribute | Semnificație |
@@ -54,6 +56,8 @@ creștere pe oră = (h − c × afară) × q − k × (cameră − afară)
 | h | `heating_per_hour` | câte °C pe oră adaugă încălzirea când dă toată căldura, la 0 °C afară |
 | c | `weather_curve` | câte °C pe oră în plus adaugă încălzirea pentru fiecare °C mai frig afară (*Curba de temperatură* mai jos) |
 | k | `loss_per_hour` | ce parte din diferența interior / exterior se pierde pe oră |
+| s | `sun_gain` | câte °C pe oră adaugă soarele la un semnal solar de 1 (secțiunea 10) |
+| soare | | semnalul solar de acum, de la 0 (noapte, nori groși) la 1 (soarele la zenit pe cer senin) |
 | q | `heat_reaching_now` | cât din încălzire ajunge acum în cameră, de la 0 (nimic) la 1 (tot) |
 | τ | `inertia_minutes` | cât de încet urmează q încălzirea (inerția termică) |
 
@@ -110,7 +114,8 @@ Camera este urmărită tot timpul, cu sau fără încălzire. Fiecare **interval
 - cât a crescut sau a scăzut camera, pe oră;
 - media lui q pe interval (pentru fiecare τ candidat, secțiunea 5);
 - media diferenței (cameră − afară) pe interval;
-- media lui q × afară pe interval (pentru curba de temperatură).
+- media lui q × afară pe interval (pentru curba de temperatură);
+- media semnalului solar pe interval (secțiunea 10).
 
 De ce 30 de minute: destul de lung încât pasul senzorului (de obicei 0,1 °C)
 să fie mic față de schimbare, destul de scurt încât să se vadă un ciclu de
@@ -124,6 +129,8 @@ să fie mic față de schimbare, destul de scurt încât să se vadă un ciclu d
 - rula **exercițiul robinetelor**;
 - casa are temperatură de afară (senzor sau entitate meteo), dar aceasta a fost
   **necunoscută**;
+- casa are entitate meteo, dar norii ei au fost **necunoscuți ziua** (semnalul
+  solar e necunoscut; noaptea e oricum 0);
 - citirile au fost la mai mult de **20 de minute** distanță (intervalul începe
   din nou);
 - nu este **sezonul rece** (modul Oprit sau Vară, ori în afara sezonului de
@@ -138,7 +145,7 @@ setată).
 q de la 0,5 la 0,82 (cu τ = 30: 1 − 0,5 × e⁻¹ = 0,82; media 0,68), camera la
 circa 19 °C, afară 5 °C. Creștere: 2 × 0,68 − 0,05 × 14 = 1,36 − 0,7 =
 0,66 °C/h, deci 0,33 °C în cele 30 de minute. Integrarea vede cele 0,33 °C,
-pe 0,68 și pe 14; trebuie să găsească h, c și k.
+pe 0,68 și pe 14; trebuie să găsească h, c și k (și s, din semnalul solar).
 
 Nu se păstrează nimic pe interval: doar sumele metodei celor mai mici pătrate
 (secțiunea 4), deci memoria nu crește, iar o repornire păstrează tot ce s-a
@@ -151,22 +158,23 @@ Nu se păstrează nimic pe interval: doar sumele metodei celor mai mici pătrate
 Fiecare interval este o ecuație:
 
 ```
-creșterea măsurată pe oră = h × (q mediu) − c × (q × afară, medie) − k × (cameră − afară, medie)
+creșterea măsurată pe oră = h × (q mediu) − c × (q × afară, medie) − k × (cameră − afară, medie) + s × (soare, medie)
 ```
 
-h, c și k sunt numerele pentru care ecuațiile tuturor intervalelor sunt **cât
-mai aproape** de ce s-a măsurat: suma diferențelor la pătrat este cea mai mică
-(**metoda celor mai mici pătrate**). Trei necunoscute dau trei ecuații
+h, c, k și s sunt numerele pentru care ecuațiile tuturor intervalelor sunt
+**cât mai aproape** de ce s-a măsurat: suma diferențelor la pătrat este cea mai
+mică (**metoda celor mai mici pătrate**). Patru necunoscute dau patru ecuații
 (ecuațiile normale), rezolvate după fiecare interval prin eliminare Gauss:
 
 ```
-h × Σ q²   − c × Σ q·p   − k × Σ q·d   = Σ q·r
-h × Σ q·p  − c × Σ p²    − k × Σ p·d   = Σ p·r
-h × Σ q·d  − c × Σ p·d   − k × Σ d²    = Σ d·r
+h × Σ q²   − c × Σ q·p   − k × Σ q·d   + s × Σ q·S   = Σ q·r
+h × Σ q·p  − c × Σ p²    − k × Σ p·d   + s × Σ p·S   = Σ p·r
+h × Σ q·d  − c × Σ p·d   − k × Σ d²    + s × Σ d·S   = Σ d·r
+h × Σ q·S  − c × Σ p·S   − k × Σ d·S   + s × Σ S²    = Σ S·r
 ```
 
-(q: q mediu, p: media q × afară, d: media cameră − afară, r: creșterea pe oră a
-fiecărui interval.)
+(q: q mediu, p: media q × afară, d: media cameră − afară, S: media semnalului
+solar, r: creșterea pe oră a fiecărui interval.)
 
 **Intervalele mai vechi contează mai puțin.** Un interval își păstrează
 ponderea o săptămână, apoi contează pe jumătate, după două săptămâni un sfert
@@ -175,7 +183,7 @@ schimbă (o nouă curbă de temperatură, calorifere noi, anotimpul) fără să
 trebuiască resetat.
 
 **Intervalele departe de celelalte contează mai puțin.** O ușă lăsată deschisă
-fără senzor, gătitul, soarele puternic: camera face altceva decât așteaptă
+fără senzor, gătitul, un soare pe care entitatea meteo nu l-a văzut: camera face altceva decât așteaptă
 modelul. După 10 intervale, fiecare interval nou se compară cu ce spunea
 modelul înainte de a învăța din el. Diferența obișnuită este media ponderată a
 acestor diferențe; un interval aflat la mai mult de **2,5 ori** diferența
@@ -184,7 +192,7 @@ obișnuită: pe jumătate). Un astfel de interval contează totuși puțin, deci
 când camera s-a schimbat cu adevărat modelul o urmează.
 
 **O tragere foarte mică spre valoarea implicită** (1 °C/h, fără curbă, fără
-pierdere), cât
+pierdere, fără soare), cât
 circa 1 % dintr-un interval, împiedică primele intervale să dea numere
 aberante; după o zi nu mai contează.
 
@@ -195,6 +203,9 @@ aberante; după o zi nu mai contează.
 - o **curbă de temperatură care n-ar mai lăsa încălzire** (h − c × afară zero
   sau mai puțin) la −20 °C sau la 20 °C afară, intervalul unui sezon de
   încălzire: curba devine 0 și restul se potrivește din nou;
+- un **câștig solar negativ** (soarele ar răci camera): soarele devine 0 și
+  restul se potrivește din nou; soarele e lăsat deoparte și cât timp nu se
+  vede clar (secțiunea 10);
 - o **încălzire de zero sau mai puțin**: acel candidat nu se folosește.
 
 **Când se învață curba.** Curba se poate deosebi de încălzire doar dacă
@@ -221,7 +232,7 @@ de afară variază mult mai mult de atât.
 0, 10, 20, 30, 45, 60, 90, 120, 180, 240 de minute
 ```
 
-Pentru fiecare candidat q se urmărește cu τ-ul lui, iar h, c și k se potrivesc
+Pentru fiecare candidat q se urmărește cu τ-ul lui, iar h, c, k și s se potrivesc
 ca în secțiunea 4. Înainte de a învăța dintr-un interval, fiecare candidat îl
 **prezice**; se folosește candidatul cu cea mai mică eroare pătratică medie de
 predicție (uitată la fel ca intervalele). Diagnosticul îi arată pe toți zece,
@@ -260,7 +271,11 @@ locuită cele 4 + 4 ore se adună de obicei în prima zi.
 ## 7. Folosirea modelului
 
 Toate predicțiile sunt o **simulare minut cu minut** cu modelul învățat,
-pornind de la temperatura camerei și q de acum, pentru cel mult 24 de ore.
+pornind de la temperatura camerei și q de acum, pentru cel mult 24 de ore. După
+ce s-a învățat un câștig solar, se socotește soarele fiecărui minut: înălțimea
+soarelui la acea oră din zi și norii din prognoza orară pentru acea oră
+(altfel norii de acum). O pornire sau o oprire anticipată socotește soarele
+perioadei în care rulează (secțiunea 10).
 
 ### Pornirea anticipată
 
@@ -372,7 +387,116 @@ c adevărat 0,03 × putere):
 
 ---
 
-## 10. Limite
+## 10. Soarele
+
+**Semnalul solar.** Cât soare poate ajunge acum în cameră, de la 0 la 1:
+
+```
+soare = max(0, sin(înălțimea soarelui)) × (1 − 0,75 × acoperire^3,4)
+```
+
+- **înălțimea soarelui** se calculează din oră și din locația din Home
+  Assistant (formulele NOAA, cu o eroare de o fracțiune de grad). Nu se setează
+  nimic pentru ea;
+- **acoperirea** este acoperirea cu nori de la 0 (senin) la 1 (înnorat):
+  `cloud_coverage` al entității meteo (și al fiecărei ore din prognoza ei),
+  altfel presupusă din starea vremii: *sunny* / *clear-night* 0,1,
+  *partlycloudy* și *windy* 0,5, *windy-variant* 0,7, *cloudy* 0,9, ploaie,
+  zăpadă, grindină, ceață, furtună 1;
+- `1 − 0,75 × acoperire^3,4` este partea din lumina soarelui care trece prin
+  nori (Kasten și Czeplak, 1980): 1 pe cer senin, 0,93 la jumătate acoperit,
+  0,48 la o acoperire de 0,9, 0,25 înnorat.
+
+**Exemplu** (București, 44,4° N, 12 octombrie la prânz): soarele e la 36,7°,
+sin 36,7° = 0,60. Cer senin: semnal 0,60; jumătate acoperit: 0,60 × 0,93 =
+0,56; înnorat: 0,60 × 0,25 = 0,15. Noaptea semnalul e 0. Pe 15 noiembrie la
+prânz soarele e la 27,2° (semnal 0,46 pe cer senin), pe 21 decembrie la 22,2°
+(0,38).
+
+s este câte °C pe oră adaugă un semnal de 1: o cameră cu s = 1,5 câștigă
+1,5 × 0,30 = **0,45 °C/h** la un semnal de 0,30. Orientarea ferestrelor nu
+trebuie dată: s este media pe orele de soare pe care le primește camera. O
+cameră cu soare doar dimineața sau doar după-amiaza are un s mai mic; o cameră
+fără soare, s = 0.
+
+**Când se învață soarele.** Doar într-o casă cu entitate meteo (fără ea norii
+nu se cunosc: s rămâne 0). Și doar când **se vede clar**:
+
+- intervalele au avut destul soare: suma pătratelor semnalului solar mediu al
+  intervalelor, uitată la fel ca intervalele, cel puțin **1** (de exemplu 12
+  intervale la un semnal de 0,3: 12 × 0,3² = 1,08);
+- s este la cel puțin **5 erori standard** de 0. Eroarea standard vine din
+  eroarea pătratică obișnuită de predicție a intervalelor și din ecuațiile
+  normale din secțiunea 4 (eroarea unui coeficient al metodei celor mai mici
+  pătrate). Sub această limită, căldura intervalelor cu soare poate fi la fel
+  de bine întâmplare, oameni sau gătit, iar s este 0.
+
+De ce 5: într-o primă simulare fără această limită, o cameră spre nord în care
+se gătește la prânz a învățat un soare de 0,24 – 0,40 °C/h la fiecare rulare,
+iar predicțiile ei de zi s-au înrăutățit (eroare medie 0,07 – 0,09 °C înainte,
+0,18 – 0,22 °C după). Cu 5, un soare de 2 °C/h se învață totuși în 9 zile (3
+dintre ele senine) în testele integrării.
+
+**Ce schimbă soarele.** **Pornirea anticipată** are nevoie de mai puțin într-o
+dimineață însorită, **oprirea anticipată** poate începe mai devreme într-o
+după-amiază însorită, iar **timpul până la țintă** și **temperatura prezisă**
+din card urmează soarele. Exemplu (camera din secțiunea 2 cu s = 1,5, un
+semnal constant de 0,3, afară 0 °C): de la 18 la 21 °C, pornind la rece,
+**161 de minute** în loc de 231; de la 21 °C, tocmai încălzită (q = 1), până la
+confortul de 20,5 °C, **149 de minute** în loc de 82.
+
+**Setarea *Câștig solar* a camerei** este separată și rămâne: coboară ținta cât
+e soare. Soarele învățat schimbă doar predicțiile, niciodată ținta.
+
+**Simulări** (camere fictive, aceleași ipoteze ca în secțiunea 9, la 45° N la
+jumătatea lui noiembrie; numerele sunt alese să fie plauzibile, nu sunt
+măsurători):
+
+- fiecare cameră: h = 2,5 °C/h, k = 0,06 pe oră, τ = 30 de minute;
+- soarele printr-o fereastră: până la 2,2 °C/h pe cer senin cu soarele drept
+  pe fereastră, proporțional cu cât de drept cade pe ea, plus 15 % din asta ca
+  lumină difuză, slăbit de nori;
+- fiecare zi senină (30 %), schimbătoare (40 %) sau înnorată (30 %); norii
+  entității meteo diferă cu ±0,15 (abatere standard) de cei reali, cei din
+  prognoză cu ±0,25;
+- din ziua 15 până în ziua 40, la 09:00, 11:00, 13:00 și 15:00 (zi) și la 22:00
+  (noapte), se prezice temperatura peste 3 ore fără încălzire și se compară cu
+  cea reală; trei rulări cu vreme diferită.
+
+Eroarea medie a predicției (°C), zi / noapte:
+
+| Cameră | fără soare | cu soarele învățat | s învățat (°C/h) |
+|---|---|---|---|
+| Fereastră spre sud | 1,09 – 1,22 / 0,93 – 0,99 | 0,17 – 0,21 / 0,06 – 0,08 | 2,51 – 2,56 |
+| Fereastră spre est | 0,36 – 0,38 / 0,22 – 0,23 | 0,26 – 0,30 / 0,04 | 0,74 – 0,80 |
+| Fereastră spre vest | 0,49 – 0,55 / 0,34 – 0,37 | 0,36 – 0,41 / 0,19 – 0,23 | 0,92 – 0,98 |
+| Nord, fără soare | 0,03 – 0,04 / 0,03 – 0,04 | la fel | 0 |
+| Nord, gătit 12:00 – 13:30 (1 °C/h) | 0,45 – 0,46 / 0,10 – 0,13 | la fel | 0 în 2 rulări, 0,31 în 1 |
+
+Fără termen solar modelul nu doar ratează soarele: pune căldura lui pe seama
+încălzirii și a unei pierderi mai mici, deci și nopțile ies greșit. s iese
+peste 2,2 la camera spre sud din cauza luminii difuze.
+
+**O casă întreagă** (două zone ca camera de mai sus, un singur termostat,
+senzorul în una dintre ele; zonele se egalizează cu 0,5 din diferența lor pe
+oră cu ușile deschise, cu 0,15 cu ele mai mult închise):
+
+| Casă | fără soare | cu soarele învățat | s învățat (°C/h) |
+|---|---|---|---|
+| Senzor în zona de sud, uși deschise | 0,70 – 0,76 / 0,44 – 0,49 | 0,21 – 0,23 / 0,03 – 0,04 | 1,44 – 1,48 |
+| Senzor în zona de nord, uși deschise | 0,51 – 0,58 / 0,43 – 0,47 | 0,14 – 0,16 / 0,15 – 0,20 | 1,06 – 1,16 |
+| Senzor în zona de nord, uși mai mult închise | 0,36 – 0,41 / 0,31 – 0,36 | 0,19 – 0,23 / 0,20 – 0,25 | 0,72 – 0,74 |
+| Senzor într-o zonă spre est, cealaltă spre vest | 0,35 – 0,37 / 0,24 – 0,25 | 0,20 – 0,21 / 0,07 – 0,09 | 0,60 – 0,63 |
+
+Un senzor fără soare propriu învață soarele care ajunge la el din cealaltă
+zonă. S-a încercat și un model cu câte un termen solar pe fiecare latură a
+casei (est, sud, vest): mai bun doar pentru ferestre spre est și vest, iar
+într-o cameră spre nord a învățat un soare de est care nu exista în 2 din 3
+rulări. De aceea există un singur termen.
+
+---
+
+## 11. Limite
 
 - **Curba de temperatură este o linie dreaptă.** O centrală a cărei curbă se
   îndoaie sau care ajunge la temperatura maximă a apei la ger se învață ca
@@ -385,9 +509,13 @@ c adevărat 0,03 × putere):
   cel mult 5 %, iar cu senzorul de 0,5 °C dar zile cu temperaturi diferite tot
   cu cel mult 5 %. Se corectează singur când apar zile cu alte temperaturi;
   *Pornirea anticipată maximă* a camerei limitează în continuare pornirea.
-- **Diferențele de la o zi la alta nu se învață.** Soarele, oamenii, gătitul
-  sau pereții mai reci după o absență lungă schimbă camera; metoda celor mai
-  mici pătrate le face media.
+- **Diferențele de la o zi la alta nu se învață.** Oamenii, gătitul sau pereții
+  mai reci după o absență lungă schimbă camera; metoda celor mai mici pătrate
+  le face media. Soarele se învață ca medie pe orele în care ajunge în cameră:
+  jaluzelele trase, zăpada de afară sau un copac cu sau fără frunze îl schimbă
+  până când ultimele săptămâni îl urmează.
+- **Norii sunt cei ai entității meteo.** O prognoză greșită a norilor înseamnă
+  un soare greșit în predicție; învățarea folosește norii de acum.
 - **Robinete termostatice cu o centrală pornită de un termostat care nu este în
   Home Assistant**: integrarea nu poate ști când merge centrala; învățarea nu
   este de încredere, iar pornirea / oprirea anticipată nu sunt recomandate.
@@ -396,11 +524,12 @@ c adevărat 0,03 × putere):
   referință) nu sunt încălzire: pornirea poate întârzia cu acea așteptare.
 - **Învățarea salvată înainte de 2.6** (episoade de încălzire și răcire) nu se
   potrivește noului model și se renunță la ea: după actualizare fiecare cameră
-  învață din nou, în circa o zi.
+  învață din nou, în circa o zi. Învățarea din versiunile beta 2.6.0 se
+  păstrează; soarele ei pornește de la 0.
 
 ---
 
-## 11. Unde se vede
+## 12. Unde se vede
 
 **`sensor.<cameră>_heating_rate`** – stare: minute pe grad cu încălzirea
 complet pornită, la temperatura camerei și cea de afară de acum (`min/°C` sau
@@ -411,6 +540,7 @@ complet pornită, la temperatura camerei și cea de afară de acum (`min/°C` sa
 | `learned` | se folosește modelul învățat (secțiunea 6) |
 | `heating_per_hour` | h (la 0 °C afară) |
 | `weather_curve` | c (°C pe oră în plus pentru fiecare °C mai frig afară) |
+| `sun_gain` | s (°C pe oră la un semnal solar de 1; 0 cât timp nu se vede clar) |
 | `loss_per_hour` | k (pe oră sau, cu `constant_loss`, °C pe oră) |
 | `constant_loss` | pierderea este constantă (secțiunea 8) |
 | `inertia_minutes` | τ |
@@ -418,7 +548,10 @@ complet pornită, la temperatura camerei și cea de afară de acum (`min/°C` sa
 | `error_per_hour` | eroarea obișnuită de predicție a unui interval (°C pe oră) |
 | `minutes_per_degree` | minute pe grad la −10 / 0 / 10 / 20 °C (14 / 32 / 50 / 68 °F) afară |
 | `hours_heating`, `hours_idle`, `hours_needed` | progresul învățării (secțiunea 6) |
-| `model` | modelul în °C (h, c, k, τ, q, pierdere constantă, temperatura medie de afară) pentru predicția cardului; gol până se învață |
+| `model` | modelul în °C (h, c, k, s, τ, q, pierdere constantă, temperatura medie de afară) pentru predicția cardului; gol până se învață |
+
+**`sensor.<casă>_outdoor_average`** – atributul `sun_forecast`: semnalul solar
+așteptat la fiecare 15 minute pentru următoarele 12 ore (cu entitate meteo).
 
 **`sensor.<cameră>_cooling_rate`** – stare: cât de repede scade acum camera
 fără încălzire (°C/h, gol până se învață); atribute: `learned`,
@@ -436,13 +569,17 @@ card, cu un al doilea clic pentru confirmare).
 4 h fără*, cu valoarea implicită dedesubt) cu butonul **Resetează**; după ce
 s-a învățat, *Încălzire învățată* (minute pe grad acum și inerția, de ex.
 *45 min/°C acum · inerție 30 min*), *Curba de temperatură* (*+0.050 °C/h
-pentru fiecare °C mai frig afară* sau *fără*) și *Pierdere de căldură
-învățată* (*scade 0,70 °C/h acum*).
+pentru fiecare °C mai frig afară* sau *fără*), *Soare* după ce s-a învățat
+(*+1.50 °C/h cu soarele la zenit pe cer senin · acum +0.60 °C/h*: s și s ×
+semnalul solar de acum) și *Pierdere de căldură învățată* (*scade 0,70 °C/h
+acum*).
 
 **Card, grafic** – după ce s-a învățat, temperatura prezisă pentru următoarele
 12 ore (punctat): modelul din secțiunea 2 simulat minut cu minut după ținta
-planificată (încălzire cât camera e sub ea), cu prognoza orară.
+planificată (încălzire cât camera e sub ea), cu prognoza orară și soarele
+așteptat.
 
 **Diagnostic** – `thermal_model` cu toate numerele modelului și cei zece
-candidați de inerție (fiecare cu h, c, k, eroarea și `outdoor_spread`, abaterea
-temperaturilor de afară ale încălzirii lui, secțiunea 4).
+candidați de inerție (fiecare cu h, c, k, s, eroarea, `outdoor_spread`,
+abaterea temperaturilor de afară ale încălzirii lui, secțiunea 4, și
+`sun_seen`, suma pătratelor semnalului solar, secțiunea 10).

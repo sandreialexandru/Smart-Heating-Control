@@ -3,8 +3,9 @@
 *[Română](learning.ro.md)*
 
 This document explains how each room learns how it heats up, how its heating
-changes with the outdoor temperature (the weather curve), how it loses heat
-and how slow its heating is to react (the thermal inertia), how the
+changes with the outdoor temperature (the weather curve), how it loses heat,
+how much the sun warms it and how slow its heating is to react (the thermal
+inertia), how the
 numbers are calculated, and how they are used for **optimal start**,
 **optimal stop** and the **time to target** shown on the card. Every number in
 the examples is either calculated in the text or stated as an assumption of
@@ -22,8 +23,9 @@ display is converted (1 °C = 1.8 °F).
 - [7. Using the model](#7-using-the-model)
 - [8. A house without an outdoor temperature](#8-a-house-without-an-outdoor-temperature)
 - [9. Fictional simulations](#9-fictional-simulations)
-- [10. Limits](#10-limits)
-- [11. Where to see it](#11-where-to-see-it)
+- [10. The sun](#10-the-sun)
+- [11. Limits](#11-limits)
+- [12. Where to see it](#12-where-to-see-it)
 
 ---
 
@@ -33,8 +35,9 @@ To have a room at 21 °C at 07:00, the heating has to start earlier. How much
 earlier depends on the room: the heat source, the radiators or the floor
 heating, the insulation, the outdoor temperature. Instead of asking for these
 values, every room measures its own behaviour and learns from it. Nothing has
-to be set: also the inertia (slow floor heating or fast radiators) and the
-weather curve of the boiler are learned, not chosen in the configuration.
+to be set: also the inertia (slow floor heating or fast radiators), the
+weather curve of the boiler and the warmth of the sun are learned, not chosen
+in the configuration.
 
 ---
 
@@ -45,7 +48,7 @@ loses heat to the outdoors, in proportion to how much warmer it is than
 outside:
 
 ```
-rise per hour = (h − c × outdoor) × q − k × (room − outdoor)
+rise per hour = (h − c × outdoor) × q − k × (room − outdoor) + s × sun
 ```
 
 | Number | Name in the attributes | Meaning |
@@ -53,6 +56,8 @@ rise per hour = (h − c × outdoor) × q − k × (room − outdoor)
 | h | `heating_per_hour` | how many °C per hour the heating adds when it gives its full heat, at 0 °C outdoors |
 | c | `weather_curve` | how many °C per hour more the heating adds for each °C colder outdoors (*The weather curve* below) |
 | k | `loss_per_hour` | which part of the inside / outside difference is lost per hour |
+| s | `sun_gain` | how many °C per hour the sun adds at a sun signal of 1 (section 10) |
+| sun | | the sun signal of now, from 0 (night, thick clouds) to 1 (the sun overhead in a clear sky) |
 | q | `heat_reaching_now` | how much of the heating reaches the room now, from 0 (none) to 1 (all) |
 | τ | `inertia_minutes` | how slowly q follows the heating (the thermal inertia) |
 
@@ -108,7 +113,8 @@ The room is watched all the time, with or without heating. Every **stretch of
 - how much the room rose or fell, per hour;
 - the mean of q over the stretch (for each candidate τ, section 5);
 - the mean of (room − outdoor) over the stretch;
-- the mean of q × outdoor over the stretch (for the weather curve).
+- the mean of q × outdoor over the stretch (for the weather curve);
+- the mean sun signal over the stretch (section 10).
 
 Why 30 minutes: long enough that the sensor step (usually 0.1 °C) is small
 against the change, short enough to see a heating cycle.
@@ -120,6 +126,8 @@ against the change, short enough to see a heating cycle.
 - the **valve exercise** was running;
 - the house has an outdoor temperature (sensor or weather entity) but it was
   **unknown**;
+- the house has a weather entity but its clouds were **unknown in daylight**
+  (the sun signal is unknown; at night it is 0 anyway);
 - the readings were more than **20 minutes** apart (the stretch starts again);
 - it is not the **cold season** (mode Off or Summer, or outside the heating
   season).
@@ -132,7 +140,7 @@ thermostat on, the *Heat source* of the house if one is set).
 from 0.5 to 0.82 (with τ = 30: 1 − 0.5 × e⁻¹ = 0.82; mean 0.68), the room at
 about 19 °C, outdoors 5 °C. Rise: 2 × 0.68 − 0.05 × 14 = 1.36 − 0.7 =
 0.66 °C/h, so 0.33 °C in the 30 minutes. The integration sees the 0.33 °C, the
-0.68 and the 14; it has to find h, c and k.
+0.68 and the 14; it has to find h, c and k (and s, from the sun signal).
 
 Nothing is kept per stretch: only the sums of the least squares (section 4),
 so the memory does not grow and a restart keeps everything learned (the
@@ -145,22 +153,24 @@ stretch in progress is dropped).
 Every stretch is one equation:
 
 ```
-measured rise per hour = h × (mean q) − c × (mean q × outdoor) − k × (mean room − outdoor)
+measured rise per hour = h × (mean q) − c × (mean q × outdoor) − k × (mean room − outdoor) + s × (mean sun)
 ```
 
-h, c and k are the numbers for which the equations of all stretches are **as
-close as possible** to what was measured: the sum of the squared differences
-is the smallest (**least squares**). Three unknowns give three equations
-(the normal equations), solved after every stretch by Gaussian elimination:
+h, c, k and s are the numbers for which the equations of all stretches are
+**as close as possible** to what was measured: the sum of the squared
+differences is the smallest (**least squares**). Four unknowns give four
+equations (the normal equations), solved after every stretch by Gaussian
+elimination:
 
 ```
-h × Σ q²   − c × Σ q·p   − k × Σ q·d   = Σ q·r
-h × Σ q·p  − c × Σ p²    − k × Σ p·d   = Σ p·r
-h × Σ q·d  − c × Σ p·d   − k × Σ d²    = Σ d·r
+h × Σ q²   − c × Σ q·p   − k × Σ q·d   + s × Σ q·S   = Σ q·r
+h × Σ q·p  − c × Σ p²    − k × Σ p·d   + s × Σ p·S   = Σ p·r
+h × Σ q·d  − c × Σ p·d   − k × Σ d²    + s × Σ d·S   = Σ d·r
+h × Σ q·S  − c × Σ p·S   − k × Σ d·S   + s × Σ S²    = Σ S·r
 ```
 
-(q: mean q, p: mean q × outdoor, d: mean room − outdoor, r: rise per hour of
-each stretch.)
+(q: mean q, p: mean q × outdoor, d: mean room − outdoor, S: mean sun signal,
+r: rise per hour of each stretch.)
 
 **Older stretches weigh less.** Every stretch keeps its weight for a week, then
 weighs half, after two weeks a quarter (half life **7 days**). So the model
@@ -168,7 +178,7 @@ follows a room that changes (a new weather curve, new radiators, the season)
 without having to be reset.
 
 **Stretches far from the others weigh less.** A door left open without a
-sensor, cooking, strong sun: the room does what the model does not expect.
+sensor, cooking, a sun the weather entity did not see: the room does what the model does not expect.
 After 10 stretches, each new stretch is compared with what the model said
 before learning from it. The usual difference is the weighted mean of these
 differences; a stretch more than **2.5 times** the usual difference away
@@ -176,7 +186,7 @@ counts with a weight in proportion (at 5 times the usual difference: half).
 Such a stretch still counts a little, so when the room really changed the
 model follows it.
 
-**A tiny pull towards the default** (1 °C/h, no curve, no loss), worth about
+**A tiny pull towards the default** (1 °C/h, no curve, no loss, no sun), worth about
 1 % of one stretch, keeps the first stretches from giving wild numbers; after a day it
 no longer matters.
 
@@ -187,6 +197,9 @@ no longer matters.
 - a **weather curve that would leave no heating** (h − c × outdoor zero or
   less) at −20 °C or at 20 °C outdoors, the range of a heating season: the
   curve is set to 0 and the rest is fitted again;
+- a **negative sun gain** (the sun would cool the room): the sun is set to 0
+  and the rest is fitted again; the sun is also left out while it is not
+  clearly seen (section 10);
 - a **heating of zero or less**: that candidate is not used.
 
 **When the curve is learned.** The curve can be told apart from the heating
@@ -213,7 +226,7 @@ integration learns **ten candidates at the same time**, each with its own τ:
 0, 10, 20, 30, 45, 60, 90, 120, 180, 240 minutes
 ```
 
-For each candidate q is followed with its τ, and h, c and k are fitted as in
+For each candidate q is followed with its τ, and h, c, k and s are fitted as in
 section 4. Before learning from a stretch, each candidate **predicts** it; the
 candidate with the smallest mean squared prediction error (forgotten like the
 stretches) is the one used. The diagnostics show all ten with their errors.
@@ -251,7 +264,11 @@ within the first day.
 ## 7. Using the model
 
 All predictions are a **simulation minute by minute** with the learned model,
-from the room temperature and the q of now, for at most 24 hours.
+from the room temperature and the q of now, for at most 24 hours. Once a sun
+gain is learned, the sun of each minute is counted: the sun height of that
+time of day and the clouds of the hourly forecast for that hour (else the
+clouds of now). An optimal start or stop counts the sun of the period it runs
+in (section 10).
 
 ### Optimal start
 
@@ -364,7 +381,116 @@ together, for the reason above.)
 
 ---
 
-## 10. Limits
+## 10. The sun
+
+**The sun signal.** How much sun can reach the room now, from 0 to 1:
+
+```
+sun = max(0, sin(sun elevation)) × (1 − 0.75 × cover^3.4)
+```
+
+- the **sun elevation** is calculated from the time and the location of Home
+  Assistant (the NOAA formulas, a fraction of a degree off). Nothing is set
+  for it;
+- the **cover** is the cloud cover from 0 (clear) to 1 (overcast): the
+  `cloud_coverage` of the weather entity (and of each hour of its forecast),
+  else assumed from its condition: *sunny* / *clear-night* 0.1,
+  *partlycloudy* and *windy* 0.5, *windy-variant* 0.7, *cloudy* 0.9, rain,
+  snow, hail, fog, storms 1;
+- `1 − 0.75 × cover^3.4` is the share of the sunlight that comes through the
+  clouds (Kasten and Czeplak, 1980): 1 in a clear sky, 0.93 half covered,
+  0.48 at a cover of 0.9, 0.25 overcast.
+
+**Example** (Bucharest, 44.4° N, 12 October at noon): the sun is 36.7° high,
+sin 36.7° = 0.60. Clear sky: signal 0.60; half covered: 0.60 × 0.93 = 0.56;
+overcast: 0.60 × 0.25 = 0.15. At night the signal is 0. At noon on 15
+November the sun is 27.2° high (signal 0.46 in a clear sky), on 21 December
+22.2° (0.38).
+
+s is how many °C per hour a signal of 1 adds: a room with s = 1.5 gains
+1.5 × 0.30 = **0.45 °C/h** at a signal of 0.30. The orientation of the
+windows is not needed: s is the average over the hours of sun the room gets. A
+room with sun only in the morning or only in the afternoon gets a smaller s; a
+room without sun, s = 0.
+
+**When the sun is learned.** Only in a house with a weather entity (without
+it the clouds are not known: s stays 0). And only when it is **clearly seen**:
+
+- the stretches had enough sun: the sum of their squared mean sun signals,
+  forgotten like the stretches, at least **1** (for example 12 stretches at a
+  signal of 0.3: 12 × 0.3² = 1.08);
+- s is at least **5 standard errors** from 0. The standard error comes from
+  the usual squared prediction error of the stretches and the normal
+  equations of section 4 (the error of a least squares coefficient). Below
+  that, the warmth of the stretches with sun could just as well be chance,
+  people or cooking, and s is 0.
+
+Why 5: in a first simulation without this limit, a north room with cooking at
+noon learned a sun of 0.24 – 0.40 °C/h in every run, and its day predictions
+got worse (mean error 0.07 – 0.09 °C before, 0.18 – 0.22 °C after). With 5, a
+sun of 2 °C/h is still learned within 9 days (3 of them clear) in the tests of
+the integration.
+
+**What the sun changes.** The **optimal start** needs less on a sunny morning,
+the **optimal stop** can begin earlier on a sunny afternoon, the **time to
+target** and the **predicted temperature** of the card follow the sun.
+Example (the room of section 2 with s = 1.5, a constant signal of 0.3,
+outdoors 0 °C): from 18 to 21 °C, starting cold, **161 minutes** instead of
+231; from 21 °C just heated (q = 1) down to the comfort of 20.5 °C,
+**149 minutes** instead of 82.
+
+**The setting *Solar gain* of the room** is separate and stays: it lowers the
+target while the sun shines. The learned sun only changes the predictions,
+never the target.
+
+**Simulations** (fictional rooms, the same assumptions as section 9, at 45° N
+in mid November; the numbers are chosen to be plausible, they are not
+measurements):
+
+- every room: h = 2.5 °C/h, k = 0.06 per hour, τ = 30 minutes;
+- the sun through a window: up to 2.2 °C/h in a clear sky with the sun
+  straight on the window, in proportion to how straight it falls on it, plus
+  15 % of that as diffuse light, weakened by the clouds;
+- each day clear (30 %), mixed (40 %) or overcast (30 %); the clouds of the
+  weather entity off by ±0.15 (standard deviation) from the real ones, those
+  of the forecast by ±0.25;
+- from day 15 to day 40, at 09:00, 11:00, 13:00 and 15:00 (day) and at 22:00
+  (night), the temperature 3 hours ahead without heating is predicted and
+  compared with the real one; three runs with different weather.
+
+Mean error of the prediction (°C), day / night:
+
+| Room | without sun | with the sun learned | s learned (°C/h) |
+|---|---|---|---|
+| South window | 1.09 – 1.22 / 0.93 – 0.99 | 0.17 – 0.21 / 0.06 – 0.08 | 2.51 – 2.56 |
+| East window | 0.36 – 0.38 / 0.22 – 0.23 | 0.26 – 0.30 / 0.04 | 0.74 – 0.80 |
+| West window | 0.49 – 0.55 / 0.34 – 0.37 | 0.36 – 0.41 / 0.19 – 0.23 | 0.92 – 0.98 |
+| North, no sun | 0.03 – 0.04 / 0.03 – 0.04 | the same | 0 |
+| North, cooking 12:00 – 13:30 (1 °C/h) | 0.45 – 0.46 / 0.10 – 0.13 | the same | 0 in 2 runs, 0.31 in 1 |
+
+Without a sun term the model does not only miss the sun: it puts its warmth on
+the heating and on a smaller loss, so also the nights come out wrong. s comes
+out above 2.2 for the south room because of the diffuse light.
+
+**A whole house** (two zones of the room above, one thermostat, the sensor in
+one of them; the zones even out by 0.5 of their difference per hour with the
+doors open, 0.15 with them mostly shut):
+
+| House | without sun | with the sun learned | s learned (°C/h) |
+|---|---|---|---|
+| Sensor in the south zone, doors open | 0.70 – 0.76 / 0.44 – 0.49 | 0.21 – 0.23 / 0.03 – 0.04 | 1.44 – 1.48 |
+| Sensor in the north zone, doors open | 0.51 – 0.58 / 0.43 – 0.47 | 0.14 – 0.16 / 0.15 – 0.20 | 1.06 – 1.16 |
+| Sensor in the north zone, doors mostly shut | 0.36 – 0.41 / 0.31 – 0.36 | 0.19 – 0.23 / 0.20 – 0.25 | 0.72 – 0.74 |
+| Sensor in an east zone, the other one west | 0.35 – 0.37 / 0.24 – 0.25 | 0.20 – 0.21 / 0.07 – 0.09 | 0.60 – 0.63 |
+
+A sensor without sun of its own learns the sun that reaches it from the other
+zone. A model with a sun term per side of the house (east, south, west) was
+also tried: better only for east and west windows, and in a north room it
+learned an east sun that was not there in 2 of 3 runs. So there is one term.
+
+---
+
+## 11. Limits
 
 - **The weather curve is a straight line.** A boiler whose curve bends, or that
   reaches its highest water temperature in hard frost, is learned as the
@@ -377,9 +503,13 @@ together, for the reason above.)
   with the 0.5 °C sensor but days of different temperatures also at most 5 %.
   It corrects itself once days of other temperatures are seen; the *Maximum
   early start* of the room still limits the start.
-- **Day to day differences are not learned.** The sun, people, cooking or
-  walls colder after a long absence change the room; the least squares
-  average them.
+- **Day to day differences are not learned.** People, cooking or walls
+  colder after a long absence change the room; the least squares average
+  them. The sun is learned as an average over the hours it reaches the room:
+  closed blinds, snow on the ground or a tree with or without leaves change it
+  until the recent weeks have followed.
+- **The clouds are those of the weather entity.** A wrong cloud forecast is a
+  wrong sun in the prediction; the learning uses the clouds of now.
 - **TRVs with a boiler started by a thermostat that is not in Home
   Assistant**: the integration cannot tell when the boiler really runs; the
   learning is not reliable and optimal start / stop are not recommended.
@@ -388,11 +518,11 @@ together, for the reason above.)
   heating: the start can be late by that wait.
 - **Learning saved before 2.6** (heating and cooling episodes) does not fit the
   new model and is discarded: every room learns again after the update, within
-  about a day.
+  about a day. The learning of the 2.6.0 betas is kept; its sun starts from 0.
 
 ---
 
-## 11. Where to see it
+## 12. Where to see it
 
 **`sensor.<room>_heating_rate`** – state: minutes per degree with the heating
 fully on, at the room and outdoor temperatures of now (`min/°C` or `min/°F`).
@@ -403,6 +533,7 @@ Attributes:
 | `learned` | the learned model is used (section 6) |
 | `heating_per_hour` | h (at 0 °C outdoors) |
 | `weather_curve` | c (°C per hour more for each °C colder outdoors) |
+| `sun_gain` | s (°C per hour at a sun signal of 1; 0 while not clearly seen) |
 | `loss_per_hour` | k (per hour, or °C per hour with `constant_loss`) |
 | `constant_loss` | the loss is a constant (section 8) |
 | `inertia_minutes` | τ |
@@ -410,7 +541,10 @@ Attributes:
 | `error_per_hour` | the usual prediction error of a stretch (°C per hour) |
 | `minutes_per_degree` | minutes per degree at −10 / 0 / 10 / 20 °C (14 / 32 / 50 / 68 °F) outdoors |
 | `hours_heating`, `hours_idle`, `hours_needed` | learning progress (section 6) |
-| `model` | the model in °C (h, c, k, τ, q, constant loss, mean outdoor temperature) for the prediction of the card; empty until learned |
+| `model` | the model in °C (h, c, k, s, τ, q, constant loss, mean outdoor temperature) for the prediction of the card; empty until learned |
+
+**`sensor.<house>_outdoor_average`** – attribute `sun_forecast`: the expected
+sun signal every 15 minutes for the next 12 hours (with a weather entity).
 
 **`sensor.<room>_cooling_rate`** – state: how fast the room falls now without
 heating (°C/h, empty until learned); attributes: `learned`, `loss_per_hour`,
@@ -428,12 +562,16 @@ card *Details*, with a second click to confirm).
 without*, with the default under it) with the **Reset** button; once learned
 *Heating learned* (minutes per degree now and the inertia, e.g. *45 min/°C now
 · inertia 30 min*), *Weather curve* (*+0.050 °C/h for each °C colder
-outdoors*, or *none*) and *Heat loss learned* (*falls 0.70 °C/h now*).
+outdoors*, or *none*), *Sun* once learned (*+1.50 °C/h with the sun overhead
+in a clear sky · now +0.60 °C/h*: s and s × the sun signal of now) and *Heat
+loss learned* (*falls 0.70 °C/h now*).
 
 **Card, chart** – once learned, the predicted temperature for the next 12
 hours (dotted): the model of section 2 simulated minute by minute along the
-planned target (heating while the room is below it), with the hourly forecast.
+planned target (heating while the room is below it), with the hourly forecast
+and the expected sun.
 
 **Diagnostics** – `thermal_model` with all the numbers of the model and the
-ten inertia candidates (each with its h, c, k, error and `outdoor_spread`, the
-deviation of the outdoor temperatures of its heating, section 4).
+ten inertia candidates (each with its h, c, k, s, error, `outdoor_spread`, the
+deviation of the outdoor temperatures of its heating, section 4, and
+`sun_seen`, the sum of the squared sun signals, section 10).

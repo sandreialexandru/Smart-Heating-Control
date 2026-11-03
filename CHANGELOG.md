@@ -8,7 +8,7 @@ GitHub releases.
 ## Unreleased
 
 Beta: a physical model of every room for optimal start and stop (heating,
-weather curve, heat loss and inertia, learned by itself), a mold risk alert, a
+weather curve, heat loss, sun and inertia, learned by itself), a mold risk alert, a
 chart with 7 days of history and the predicted temperature, and the code split
 in smaller parts. The learning starts again after the update (about a day).
 
@@ -29,6 +29,19 @@ in smaller parts. The learning starts again after the update (about a day).
   count less. In simulations of houses with a weather curve the mean error of
   the optimal start fell from 16 – 42 to 4 – 8 minutes. See
   [How the integration learns](docs/learning.md).
+- **The sun is learned too** (in a house with a weather entity): how many °C
+  per hour the sun adds to each room, from the sun height (calculated from the
+  time and the location of Home Assistant) and the clouds of the weather
+  entity (`cloud_coverage`, else its condition). It is used only once clearly
+  seen (at least 5 standard errors from 0); a room without sun keeps 0. No new
+  setting, no orientation to give. The predictions count the sun of each
+  minute with the clouds of the hourly forecast: a sunny morning needs a
+  shorter optimal start, a sunny afternoon allows a longer optimal stop. In
+  simulations of a room with a south window the mean error of a 3 hour
+  prediction fell from 1.1 – 1.2 °C to 0.2 °C by day and from 0.9 – 1.0 °C to
+  under 0.1 °C at night. The *Solar gain* room setting is unchanged. The *Heating
+  rate* sensor shows `sun_gain`; the *Outdoor average* sensor `sun_forecast`.
+  The learning of the earlier 2.6.0 betas is kept (its sun starts from 0).
 - **The learning starts again after the update.** The saved episodes do not
   fit the model and are discarded. Until a room has seen 4 hours with heating
   and 4 without (usually within the first day) the default is used: 60 minutes
@@ -79,13 +92,15 @@ in smaller parts. The learning starts again after the update (about a day).
   on it) or a sideways scroll. The values under the pointer are in an opaque
   box. After the first load only what is new is fetched.
 - **Predicted temperature** in the chart (dotted), once the room has learned:
-  the learned model simulated along the planned target, with the forecast; the
+  the learned model simulated along the planned target, with the forecast and
+  the expected sun; the
   periods it heats are shown lighter in the heating lane.
 - A fine line at every midnight in the chart, between the days.
 - **A drop icon** (*Mold risk*) on the room, folded or open and in compact
   mode, while its mold risk alert is active.
 - **Details**: the state of the learning (with its usual error), the weather
-  curve, and with a humidity sensor the humidity of the air and at the coldest
+  curve, the learned sun once seen (*+1.50 °C/h with the sun overhead in a clear
+  sky · now +0.60 °C/h*), and with a humidity sensor the humidity of the air and at the coldest
   wall (marked *mold risk* from 80 %).
 
 ### Development

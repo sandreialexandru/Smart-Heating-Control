@@ -139,6 +139,11 @@ weather entity says `sunny`, `clear` or `partlycloudy`.
 **Example.** The living room has a solar gain of −1 °C and `home` 21 °C. At
 noon, with a clear sky, the target is 21 − 1 = 20 °C.
 
+Separately, every room with a weather entity in the house learns by itself how
+much the sun warms it, for the optimal start and stop and the predicted
+temperature (see [chapter 7](07-optimal-start-stop-and-learning.md#how-a-room-learns)).
+That learning never changes the target; this setting does.
+
 ## Ignoring windows when warm
 
 *Ignore windows above* (empty by default): when the outdoor temperature is at

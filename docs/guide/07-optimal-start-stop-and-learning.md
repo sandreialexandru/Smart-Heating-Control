@@ -26,7 +26,7 @@ temperature (sensor or weather entity).
 
 You do not have to describe the house (radiators, insulation, boiler, floor
 heating). The room **watches itself** all the time, with and without heating,
-and learns four numbers:
+and learns five numbers:
 
 - **Heating**: how many °C per hour the heating adds when it gives its full
   heat.
@@ -36,6 +36,10 @@ and learns four numbers:
   electric heater gives the same, and the curve is learned as 0.
 - **Heat loss**: how fast the room cools, in proportion to how much warmer it
   is than outside (colder outside, faster).
+- **Sun**: how many °C per hour the sun adds. It is learned only with a
+  weather entity (it tells the clouds) and only when it is clearly seen;
+  otherwise it is 0. The sun height is calculated from the time and the
+  location of Home Assistant, so the orientation of the windows is not needed.
 - **Inertia**: how slowly the heating reacts. After a start the boiler, the
   water and the radiators (or the floor) warm up first; after a stop they keep
   giving heat for a while. Radiators: usually 10 – 30 minutes; floor heating:
@@ -65,6 +69,15 @@ The card shows *learning… 2 of 4 h with heating, 1 of 4 h without* and below
 
 **Without an outdoor temperature** in the house, the heat loss is learned as a
 constant number of degrees per hour, and no weather curve is learned.
+
+**The sun in the predictions.** Once learned, the optimal start and stop, the
+time to target and the predicted temperature of the card count the sun: its
+height at that time and the clouds of the hourly forecast (else the clouds of
+now). Example (the room above, a learned sun of 1.5 °C/h, a sun signal of 0.3,
+so 1.5 × 0.3 = 0.45 °C/h, 0 °C outdoors): from 18 to 21 °C it needs 161
+minutes instead of 231. The room setting *Solar gain* is separate and stays:
+it lowers the target while the sun shines. Details in
+[How the integration learns](../learning.md#10-the-sun).
 
 ## Optimal start, step by step
 
@@ -134,8 +147,9 @@ default limit of 30 minutes, it starts at **21:30**.
   *~21.5° at 22:00* (the `stop_forecast` attribute).
 - In the chart, the next optimal start / stop is a shaded period.
 - **The learning**, in *Details*: the minutes per degree now and the inertia
-  (e.g. *45 min/°C now · inertia 30 min*), or the progress while learning, and
-  how fast the room falls now without heating.
+  (e.g. *45 min/°C now · inertia 30 min*), or the progress while learning, the
+  learned sun (only once seen), and how fast the room falls now without
+  heating.
 - The sensors **Heating rate** (minutes per degree now, with the learned
   numbers as attributes) and **Cooling rate** (how fast the room falls now
   without heating).

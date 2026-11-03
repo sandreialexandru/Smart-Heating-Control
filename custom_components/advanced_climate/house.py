@@ -34,6 +34,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
+from . import sun as sun_signal
 from .const import (
     CONF_ALERT_UNAVAILABLE_MINUTES,
     CONF_ARRIVAL_DELAY,
@@ -184,6 +185,8 @@ class House:
         self.calendar_end: datetime | None = None
         # Hourly forecast (UTC moment, °C), for the optimal start / stop.
         self.hourly_forecast: list[tuple[datetime, float]] = []
+        # Hourly cloud cover forecast (UTC moment, 0 … 1), for the sun gain.
+        self.hourly_cover: list[tuple[datetime, float]] = []
         self.calendar_message: str | None = None
         # Events of the next days (start, end, summary): profiles of the coming days.
         self.calendar_events: list[tuple[datetime, datetime, str]] = []
@@ -1036,6 +1039,7 @@ class House:
         weather = self.options.get(CONF_WEATHER)
         if not weather or not self._forecast_needed():
             self.hourly_forecast = []
+            self.hourly_cover = []
             return
         try:
             response = await self.hass.services.async_call(
@@ -1049,14 +1053,21 @@ class House:
         except (HomeAssistantError, ValueError) as err:
             _LOGGER.debug("Forecast not available: %s", err)
             self.hourly_forecast = []
+            self.hourly_cover = []
             return
         forecast = ((response or {}).get(weather) or {}).get("forecast") or []
         unit = self._weather_unit(self.hass.states.get(weather))
         hourly: list[tuple[datetime, float]] = []
+        cover: list[tuple[datetime, float]] = []
         for item in forecast:
             moment = from_iso(item.get("datetime"))
+            if moment is None:
+                continue
+            sky = sun_signal.cover_of(item.get("cloud_coverage"), item.get("condition"))
+            if sky is not None:
+                cover.append((dt_util.as_utc(moment), sky))
             temp = item.get("temperature")
-            if moment is None or temp is None:
+            if temp is None:
                 continue
             try:
                 value = float(to_celsius(float(temp), unit))
@@ -1064,6 +1075,75 @@ class House:
                 continue
             hourly.append((dt_util.as_utc(moment), value))
         self.hourly_forecast = sorted(hourly)
+        self.hourly_cover = sorted(cover)
+
+    @property
+    def cloud_cover_now(self) -> float | None:
+        """Cloud cover of now (0 … 1) from the weather entity; None without one."""
+        weather = self.options.get(CONF_WEATHER)
+        state = self.hass.states.get(weather) if weather else None
+        if not valid(state):
+            return None
+        assert state is not None
+        return sun_signal.cover_of(state.attributes.get("cloud_coverage"), state.state)
+
+    @property
+    def sun_now(self) -> float | None:
+        """The sun signal of now, for the learning (``sun.py``).
+
+        0 without a weather entity (the sun gain is not learned: the clouds
+        are not known); None in daylight while the clouds are unknown.
+        """
+        if not self.options.get(CONF_WEATHER):
+            return 0.0
+        return sun_signal.signal(
+            dt_util.utcnow(),
+            self.hass.config.latitude,
+            self.hass.config.longitude,
+            self.cloud_cover_now,
+        )
+
+    def sun_ahead(self, start: datetime) -> Callable[[float], float] | None:
+        """The sun signal ``minute`` minutes after ``start``, for the predictions.
+
+        The cloud cover is the one of the hourly forecast for that hour, else
+        the one of now; with neither, no sun is counted. None without a
+        weather entity.
+        """
+        if not self.options.get(CONF_WEATHER):
+            return None
+        start = dt_util.as_utc(start)
+        now_cover = self.cloud_cover_now
+        hourly = list(self.hourly_cover)
+        latitude, longitude = self.hass.config.latitude, self.hass.config.longitude
+        cache: dict[int, float] = {}
+
+        def at(minute: float) -> float:
+            # Every 5 minutes is close enough (the sun moves 1.25° in that time).
+            slot = int(minute // 5)
+            if slot not in cache:
+                moment = start + timedelta(minutes=slot * 5 + 2.5)
+                cover = now_cover
+                for hour, value in hourly:
+                    if hour <= moment < hour + timedelta(hours=1):
+                        cover = value
+                        break
+                value = sun_signal.signal(moment, latitude, longitude, cover)
+                cache[slot] = value if value is not None else 0.0
+            return cache[slot]
+
+        return at
+
+    def sun_forecast(self, hours: float = 12) -> list[tuple[datetime, float]]:
+        """The expected sun signal every 15 minutes for the next hours (for the card)."""
+        now = dt_util.utcnow().replace(second=0, microsecond=0)
+        at = self.sun_ahead(now)
+        if at is None:
+            return []
+        return [
+            (now + timedelta(minutes=minute), round(at(minute), 3))
+            for minute in range(0, int(hours * 60) + 1, 15)
+        ]
 
     def forecast_ahead(self, hours: float = 12) -> list[tuple[datetime, float]]:
         """Hourly forecast for the next hours (the hour that holds now included)."""

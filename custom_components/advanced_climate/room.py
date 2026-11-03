@@ -147,7 +147,7 @@ from .engine import (
     optimal_schedule,
     optimal_stop_state,
 )
-from .learning import MAX_MINUTES, ThermalLearner
+from .learning import MAX_MINUTES, SunAhead, ThermalLearner
 from .mold import MOLD_CLEAR_RH, MOLD_MINUTES, MOLD_SURFACE_RH, surface_humidity
 from .schedule import (
     Schedule,
@@ -865,7 +865,13 @@ class Room:
         floor = self.comfort_floor(preset)
         if floor is None or self.current_temp is None:
             return None
-        return self.learner.model.minutes_to_fall(self.current_temp, floor, outdoor, self.learner.q)
+        return self.learner.model.minutes_to_fall(
+            self.current_temp,
+            floor,
+            outdoor,
+            self.learner.q,
+            self.house.sun_ahead(dt_util.utcnow()),
+        )
 
     def optimal_estimate(
         self, now: datetime, state: ScheduleState, outdoor_known: bool, stop_allowed: bool
@@ -899,22 +905,27 @@ class Room:
             return None
         gap = next_temp - self.current_temp
         floor = self.comfort_floor(state.preset)
+        # The period starts now at first, then as long before the change as
+        # found before: the sun of that time of day is counted.
+        begins = [now]
 
         def minutes_for(outdoor: float | None) -> float | None:
             model, q = self.learner.model, self.learner.q
+            sun = house.sun_ahead(begins[0])
             if kind == RULE_OPTIMAL_START:
                 if gap <= 0:
                     return 0.0
-                return self._minutes_to_heat(next_temp, outdoor)
+                return self._minutes_to_heat(next_temp, outdoor, sun)
             if floor is None:
                 return None
-            return model.minutes_to_fall(self.current_temp, floor, outdoor, q)
+            return model.minutes_to_fall(self.current_temp, floor, outdoor, q, sun)
+
+        def outdoor_for(length: float) -> tuple[float | None, str]:
+            begins[0] = max(now, change - timedelta(minutes=length))
+            return house.outdoor_between(change - timedelta(minutes=length), change)
 
         minutes, outdoor, source = optimal_period(
-            limit,
-            minutes_for,
-            lambda length: house.outdoor_between(change - timedelta(minutes=length), change),
-            house.outdoor_now,
+            limit, minutes_for, outdoor_for, house.outdoor_now
         )
         needed = minutes_for(outdoor)
         return {
@@ -944,7 +955,9 @@ class Room:
         model = self.learner.model
         if not model.learned:
             return None
-        value = model.simulate(self.current_temp, outdoor, self.learner.q, False, minutes)
+        value = model.simulate(
+            self.current_temp, outdoor, self.learner.q, False, minutes, self.house.sun_ahead(now)
+        )
         return {"at": state.next_change.isoformat(), "temperature": value}
 
     def _start_needed(
@@ -956,9 +969,11 @@ class Room:
         level = self.level_temp(preset)
         if level is None or level <= self.current_temp:
             return None
-        return self._minutes_to_heat(level, outdoor)
+        return self._minutes_to_heat(level, outdoor, self.house.sun_ahead(now))
 
-    def _minutes_to_heat(self, target: float, outdoor: float | None) -> float:
+    def _minutes_to_heat(
+        self, target: float, outdoor: float | None, sun: SunAhead | None = None
+    ) -> float:
         """Minutes to heat up to ``target``; a whole day when the model never gets there.
 
         The heating may be too weak for that target at that outdoor
@@ -967,7 +982,7 @@ class Room:
         if self.current_temp is None:
             return float(MAX_MINUTES)
         minutes = self.learner.model.minutes_to_heat(
-            self.current_temp, target, outdoor, self.learner.q
+            self.current_temp, target, outdoor, self.learner.q, sun
         )
         return float(MAX_MINUTES) if minutes is None else minutes
 
@@ -981,7 +996,11 @@ class Room:
         if gap <= 0:
             return None
         minutes = self.learner.model.minutes_to_heat(
-            self.current_temp, self.target_temperature, outdoor, self.learner.q
+            self.current_temp,
+            self.target_temperature,
+            outdoor,
+            self.learner.q,
+            self.house.sun_ahead(dt_util.utcnow()),
         )
         return None if minutes is None else max(1, round(minutes))
 
@@ -1386,6 +1405,7 @@ class Room:
                 outdoor,
                 disturbed,
                 house.outdoor_configured,
+                house.sun_now,
             )
         else:
             self.learner.cancel()
@@ -2611,6 +2631,7 @@ class Room:
             "learned": model.learned,
             "heating_per_hour": model.h,
             "weather_curve": model.c,
+            "sun_gain": model.s,
             "loss": model.k,
             "constant_loss": model.constant_loss,
             "inertia_minutes": model.tau,
@@ -2625,6 +2646,8 @@ class Room:
                     "heating_per_hour": None if (sol := fit.solve()) is None else round(sol[0], 4),
                     "loss": None if sol is None else round(sol[1], 5),
                     "weather_curve": None if sol is None else round(sol[2], 5),
+                    "sun_gain": None if sol is None else round(sol[3], 4),
+                    "sun_seen": round(fit.a44, 3),
                     "outdoor_spread": round(fit.spread(), 2),
                     "error": round(fit.error / fit.weight, 5) if fit.weight > 0 else None,
                 }

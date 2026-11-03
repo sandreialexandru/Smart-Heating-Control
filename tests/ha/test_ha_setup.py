@@ -1110,6 +1110,54 @@ async def test_climate_heat_source_without_heat_mode(
     await hass.async_block_till_done()
 
 
+async def test_sun_signal_from_the_weather(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The sun signal: clouds of now for the learning, of the forecast for what is ahead."""
+    hass.config.latitude, hass.config.longitude = 44.43, 26.1  # Bucharest
+    freezer.move_to("2026-10-12 09:00:00+00:00")
+    hass.states.async_set(
+        "weather.home",
+        "sunny",
+        {"temperature": 12.0, "temperature_unit": "°C", "cloud_coverage": 0},
+    )
+    start = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
+    forecast = [
+        {
+            "datetime": (start + timedelta(hours=h)).isoformat(),
+            "temperature": 12.0,
+            "cloud_coverage": 100,
+        }
+        for h in range(24)
+    ]
+    async_mock_service(
+        hass,
+        "weather",
+        "get_forecasts",
+        response={"weather.home": {"forecast": forecast}},
+        supports_response=SupportsResponse.ONLY,
+    )
+    entry = await _setup(
+        hass, freezer, house_options={"weather": "weather.home"}, optimal_start=True
+    )
+    house = entry.runtime_data
+    # 12:00 in Bucharest on 12 October: the sun is about 37° high (sin 0.6), clear sky.
+    assert 0.55 < house.sun_now < 0.65
+    sun_forecast = hass.states.get("sensor.home_outdoor_average").attributes["sun_forecast"]
+    # Every 15 minutes for 12 hours; the forecast covers the sky: a quarter of the light.
+    assert len(sun_forecast) == 49
+    assert 0.12 < sun_forecast[1][1] < 0.17
+    # After sunset (about 15:40 UTC) no sun.
+    assert sun_forecast[-1][1] == 0.0
+    # The clouds unknown in daylight: the sun of now is unknown (not learned from).
+    hass.states.async_set("weather.home", "unavailable")
+    assert house.sun_now is None
+    # Without the weather entity the sun is never learned: 0.
+    house.options = {**house.options, "weather": None}
+    assert house.sun_now == 0.0
+    assert house.sun_ahead(dt_util.utcnow()) is None
+
+
 async def test_optimal_stop_and_start_with_the_forecast(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:

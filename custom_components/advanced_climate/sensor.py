@@ -160,7 +160,7 @@ class OutdoorAverageSensor(HouseEntity, _HouseUnitTemperature):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_suggested_display_precision = 1
-    _unrecorded_attributes = frozenset({"forecast"})
+    _unrecorded_attributes = frozenset({"forecast", "sun_forecast"})
 
     def __init__(self, house: House) -> None:
         """Initialize."""
@@ -194,6 +194,8 @@ class OutdoorAverageSensor(HouseEntity, _HouseUnitTemperature):
             ),
             "forecast_enabled": bool(opts[CONF_FORECAST_ENABLED]),
             "forecast": [[iso(t), _t(v, unit, 1)] for t, v in self.house.forecast_ahead()],
+            # The expected sun signal (0 … 1) every 15 minutes, for the card.
+            "sun_forecast": [[iso(t), v] for t, v in self.house.sun_forecast()],
         }
 
 
@@ -438,6 +440,7 @@ class HeatingRateSensor(RoomEntity, SensorEntity):
             "learned": model.learned,
             "heating_per_hour": _d(model.h, unit, 2),
             "weather_curve": round(model.c, 3),
+            "sun_gain": _d(model.s, unit, 2),
             "loss_per_hour": model.k if not model.constant_loss else _d(model.k, unit, 3),
             "constant_loss": model.constant_loss,
             "inertia_minutes": round(model.tau),
@@ -462,6 +465,7 @@ class HeatingRateSensor(RoomEntity, SensorEntity):
                 "h": model.h,
                 "c": model.c,
                 "k": model.k,
+                "s": model.s,
                 "tau": model.tau,
                 "q": round(learner.q, 4),
                 "constant_loss": model.constant_loss,

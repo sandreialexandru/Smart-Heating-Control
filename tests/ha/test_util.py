@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, time, timezone
+from datetime import UTC, date, datetime, time
 
 from homeassistant.core import HomeAssistant, State
 
@@ -70,7 +70,7 @@ def test_clock_and_lists() -> None:
 
 async def test_dates(hass: HomeAssistant) -> None:
     await hass.config.async_set_time_zone("Europe/Bucharest")
-    moment = datetime(2026, 10, 12, 9, 0, tzinfo=timezone.utc)
+    moment = datetime(2026, 10, 12, 9, 0, tzinfo=UTC)
     assert util.from_iso(None) is None
     assert util.from_iso(moment) is moment
     assert util.from_iso("not a date") is None
@@ -78,7 +78,7 @@ async def test_dates(hass: HomeAssistant) -> None:
     assert util.from_iso("2026-10-12T12:00:00").utcoffset().total_seconds() == 3 * 3600
     assert util.calendar_moment(None) is None
     assert util.calendar_moment(moment) == moment
-    naive = util.calendar_moment(datetime(2026, 10, 12, 12, 0))
+    naive = util.calendar_moment(datetime(2026, 10, 12, 12, 0))  # noqa: DTZ001 - on purpose
     assert naive.utcoffset().total_seconds() == 3 * 3600
     assert util.calendar_moment("2026-10-12T12:00:00").hour == 12
     # A whole-day event starts at local midnight.

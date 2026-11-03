@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
-from datetime import datetime, timedelta, timezone
 import unittest
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta
 
 from tests.pure import const, engine
 
-TZ = timezone.utc
+TZ = UTC
 NOW = datetime(2026, 10, 12, 12, 0, tzinfo=TZ)
 LEVELS = {"home": 22.0, "sleep": 19.0, "eco": 17.0, "away": 10.0, "comfort": 23.0, "activity": 20.0}
 

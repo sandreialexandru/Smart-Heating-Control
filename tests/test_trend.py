@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 import unittest
+from datetime import UTC, datetime, timedelta
 
 from tests.pure import trend
 
-T0 = datetime(2026, 11, 3, 18, 0, tzinfo=timezone.utc)
+T0 = datetime(2026, 11, 3, 18, 0, tzinfo=UTC)
 
 
 def _at(minutes: float) -> datetime:

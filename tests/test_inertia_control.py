@@ -9,10 +9,10 @@ the hysteresis alone.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 import math
 import random
 import unittest
+from datetime import UTC, datetime, timedelta
 
 from tests.pure import engine, learning
 
@@ -50,7 +50,7 @@ def _simulate(
         )
 
     learner = learning.ThermalLearner()
-    t0 = datetime(2026, 11, 1, tzinfo=timezone.utc)
+    t0 = datetime(2026, 11, 1, tzinfo=UTC)
     temp, q, on = 19.0, 0.0, False
     asked: list[bool] = []
     reading_before = None
@@ -125,7 +125,7 @@ class InertiaDecisionTest(unittest.TestCase):
     """The decision itself."""
 
     def test_the_band_always_decides_at_its_edges(self) -> None:
-        never = lambda heating: 99.0 if not heating else -99.0  # noqa: E731
+        never = lambda heating: 99.0 if not heating else -99.0
         self.assertEqual(engine.on_off_wanted(False, 20.7, 21.0, H, never), (True, False))
         self.assertEqual(engine.on_off_wanted(True, 21.3, 21.0, H, never), (False, False))
 

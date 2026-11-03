@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import logging
 
+import pytest
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -12,7 +13,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-import pytest
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -715,7 +715,7 @@ async def test_tariff_and_solar_adjust_the_target(
         price_low=0.1,
         pv_sensor="sensor.pv",
     )
-    target = lambda: hass.states.get("sensor.bedroom_target_temperature").state  # noqa: E731
+    target = lambda: hass.states.get("sensor.bedroom_target_temperature").state
     assert target() == "21.0"
     # 21 − 1 at a high price.
     hass.states.async_set("sensor.price", "0.70")

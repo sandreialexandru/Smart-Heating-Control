@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
 import unittest
+from datetime import UTC, date, datetime, timedelta, timezone
 
 from tests.pure import const, schedule
 
@@ -294,7 +294,7 @@ class ClockChangeTest(unittest.TestCase):
         # 25 October 2026: 04:00 summer time (01:00 UTC) becomes 03:00 again.
         # 03:30 happens first at 00:30 UTC; at 03:10 the second time (01:10
         # UTC) home stays and the next change is not in the past.
-        utc = timezone.utc
+        utc = UTC
         before = self.lookup(datetime(2026, 10, 25, 0, 10, tzinfo=utc))
         self.assertEqual(before.preset, "sleep")
         self.assertEqual(before.next_change, datetime(2026, 10, 25, 0, 30, tzinfo=utc))
@@ -306,21 +306,21 @@ class ClockChangeTest(unittest.TestCase):
     def test_skipped_spring_hour_starts_when_it_ends(self) -> None:
         # 28 March 2027: 03:00 (01:00 UTC) becomes 04:00; 03:30 does not exist,
         # so home starts at 04:00 and is predicted for then.
-        utc = timezone.utc
+        utc = UTC
         before = self.lookup(datetime(2027, 3, 28, 0, 50, tzinfo=utc))
         self.assertEqual(before.preset, "sleep")
         self.assertEqual(before.next_change, datetime(2027, 3, 28, 1, 0, tzinfo=utc))
         self.assertEqual(self.lookup(datetime(2027, 3, 28, 1, 0, tzinfo=utc)).preset, "home")
 
     def test_plan_across_the_change(self) -> None:
-        start = datetime(2026, 10, 24, 18, 0, tzinfo=timezone.utc).astimezone(self.zone)
+        start = datetime(2026, 10, 24, 18, 0, tzinfo=UTC).astimezone(self.zone)
         changes = self.sched.upcoming(start, lambda _day: (True, None), timedelta(hours=36))
         self.assertEqual(
-            [(t.astimezone(timezone.utc), p) for t, p in changes],
+            [(t.astimezone(UTC), p) for t, p in changes],
             [
-                (datetime(2026, 10, 24, 19, 0, tzinfo=timezone.utc), "sleep"),
-                (datetime(2026, 10, 25, 0, 30, tzinfo=timezone.utc), "home"),
-                (datetime(2026, 10, 25, 20, 0, tzinfo=timezone.utc), "sleep"),
-                (datetime(2026, 10, 26, 1, 30, tzinfo=timezone.utc), "home"),
+                (datetime(2026, 10, 24, 19, 0, tzinfo=UTC), "sleep"),
+                (datetime(2026, 10, 25, 0, 30, tzinfo=UTC), "home"),
+                (datetime(2026, 10, 25, 20, 0, tzinfo=UTC), "sleep"),
+                (datetime(2026, 10, 26, 1, 30, tzinfo=UTC), "home"),
             ],
         )

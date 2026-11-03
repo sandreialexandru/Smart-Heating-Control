@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 import unittest
+from datetime import UTC, datetime, timedelta
 
 from tests.pure import presence
 
-TZ = timezone.utc
+TZ = UTC
 BUCHAREST = presence.ZoneInfo("zone.bucharest", "Bucharest", 44.4198, 26.0369, 23829)
 OFFICE = presence.ZoneInfo("zone.office", "Office", 44.4377, 26.0997, 100)
 BRASOV = presence.ZoneInfo("zone.parents", "Parents", 45.6427, 25.5887, 200)

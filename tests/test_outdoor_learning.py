@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
 import math
 import unittest
+from datetime import UTC, date, datetime, timedelta
 
 from tests.pure import const, learning, outdoor, sun
 
-TZ = timezone.utc
+TZ = UTC
 
 
 class OutdoorTest(unittest.TestCase):
@@ -248,9 +248,9 @@ class ThermalModelTest(unittest.TestCase):
         learner = learning.ThermalLearner()
         _room(learner, h=1.5, k=0.04, tau=90.0, days=4)
         true = learning.ThermalModel(h=1.5, k=0.04, tau=90.0, learned=True)
-        for outdoor in (10.0, 0.0, -10.0):
-            learned = learner.model.minutes_to_heat(18.0, 21.0, outdoor)
-            expected = true.minutes_to_heat(18.0, 21.0, outdoor)
+        for out in (10.0, 0.0, -10.0):
+            learned = learner.model.minutes_to_heat(18.0, 21.0, out)
+            expected = true.minutes_to_heat(18.0, 21.0, out)
             # At −10 °C the room barely gains (1.5 − 0.04 × 29.5 = 0.32 °C/h): a
             # small error of the numbers is a larger one in minutes, so 10 %.
             self.assertAlmostEqual(learned, expected, delta=0.1 * expected)
@@ -267,10 +267,10 @@ class ThermalModelTest(unittest.TestCase):
         self.assertAlmostEqual(model.c, 0.05, delta=0.01)
         self.assertAlmostEqual(model.h, 1.5, delta=0.05)
         true = learning.ThermalModel(h=1.5, k=0.04, c=0.05, tau=30.0, learned=True)
-        for outdoor in (10.0, 0.0, -10.0):
-            expected = true.minutes_to_heat(18.0, 21.0, outdoor)
+        for out in (10.0, 0.0, -10.0):
+            expected = true.minutes_to_heat(18.0, 21.0, out)
             self.assertAlmostEqual(
-                model.minutes_to_heat(18.0, 21.0, outdoor), expected, delta=0.1 * expected
+                model.minutes_to_heat(18.0, 21.0, out), expected, delta=0.1 * expected
             )
 
     def test_no_curve_without_outdoor_spread(self) -> None:
@@ -430,25 +430,23 @@ class SunTest(unittest.TestCase):
 
     def test_elevation(self) -> None:
         # Solar noon at the equator on an equinox: the sun is (almost) overhead.
-        noon = datetime(2026, 3, 20, 12, 7, tzinfo=timezone.utc)
+        noon = datetime(2026, 3, 20, 12, 7, tzinfo=UTC)
         self.assertGreater(sun.sin_elevation(noon, 0.0, 0.0), 0.999)
         # 45° N at the winter solstice, noon: 90 − 45 − 23.44 = 21.6°.
-        winter = datetime(2026, 12, 21, 12, 2, tzinfo=timezone.utc)
+        winter = datetime(2026, 12, 21, 12, 2, tzinfo=UTC)
         degrees = math.degrees(math.asin(sun.sin_elevation(winter, 45.0, 0.0)))
         self.assertAlmostEqual(degrees, 21.6, delta=0.3)
         # Bucharest (26.1° E): noon is about 1 h 44 min earlier in UTC; at
         # midnight UTC the sun is down.
-        self.assertLess(
-            sun.sin_elevation(datetime(2026, 11, 3, tzinfo=timezone.utc), 44.4, 26.1), 0
-        )
+        self.assertLess(sun.sin_elevation(datetime(2026, 11, 3, tzinfo=UTC), 44.4, 26.1), 0)
 
     def test_signal_and_clouds(self) -> None:
-        noon = datetime(2026, 11, 3, 10, 20, tzinfo=timezone.utc)
+        noon = datetime(2026, 11, 3, 10, 20, tzinfo=UTC)
         clear = sun.signal(noon, 44.4, 26.1, 0.0)
         self.assertAlmostEqual(sun.signal(noon, 44.4, 26.1, 1.0), clear * 0.25)
         # Unknown clouds: unknown in daylight, 0 at night.
         self.assertIsNone(sun.signal(noon, 44.4, 26.1, None))
-        night = datetime(2026, 11, 3, 22, 0, tzinfo=timezone.utc)
+        night = datetime(2026, 11, 3, 22, 0, tzinfo=UTC)
         self.assertEqual(sun.signal(night, 44.4, 26.1, None), 0.0)
         # The cloud coverage in % first, then the condition, else unknown.
         self.assertEqual(sun.cover_of(40, "sunny"), 0.4)
@@ -466,7 +464,7 @@ class SunTest(unittest.TestCase):
         self.assertAlmostEqual(model.k, 0.04, delta=0.006)
         # The prediction with the sun is the one of the true room.
         true = learning.ThermalModel(h=1.5, k=0.04, s=2.0, tau=30.0, learned=True)
-        bright = lambda _minute: 0.4  # noqa: E731
+        bright = lambda _minute: 0.4
         self.assertAlmostEqual(
             model.simulate(20.0, 5.0, 0.0, False, 120, bright),
             true.simulate(20.0, 5.0, 0.0, False, 120, bright),
@@ -474,7 +472,7 @@ class SunTest(unittest.TestCase):
         )
         # A weak sun (0.2 °C/h against a loss of 0.04 × 16 = 0.64) slows the
         # cooling down; a strong one (0.8 °C/h) stops it.
-        weak = lambda _minute: 0.1  # noqa: E731
+        weak = lambda _minute: 0.1
         self.assertGreater(
             true.minutes_to_fall(21.0, 20.5, 5.0, 0.0, weak), true.minutes_to_fall(21.0, 20.5, 5.0)
         )
@@ -509,19 +507,19 @@ class SunTest(unittest.TestCase):
 class ExpectedOutdoorTest(unittest.TestCase):
     """The outdoor temperature expected during an optimal start / stop."""
 
-    NOW = datetime(2026, 1, 10, 4, 20, tzinfo=timezone.utc)
+    NOW = datetime(2026, 1, 10, 4, 20, tzinfo=UTC)
 
     def hourly(self, *values: float) -> list:
         # Forecast hours from 04:00 on.
-        base = datetime(2026, 1, 10, 4, 0, tzinfo=timezone.utc)
+        base = datetime(2026, 1, 10, 4, 0, tzinfo=UTC)
         return [(base + timedelta(hours=i), v) for i, v in enumerate(values)]
 
     def test_time_weighted_mean(self) -> None:
         # 05:30-07:00: half an hour at -2 (05:00), an hour at -6 (06:00).
         value, source = outdoor.expected_outdoor(
             self.NOW,
-            datetime(2026, 1, 10, 5, 30, tzinfo=timezone.utc),
-            datetime(2026, 1, 10, 7, 0, tzinfo=timezone.utc),
+            datetime(2026, 1, 10, 5, 30, tzinfo=UTC),
+            datetime(2026, 1, 10, 7, 0, tzinfo=UTC),
             1.0,
             self.hourly(0.0, -2.0, -6.0, -3.0),
         )
@@ -550,7 +548,7 @@ class ExpectedOutdoorTest(unittest.TestCase):
         self.assertAlmostEqual(value, (1.0 * 40 - 2.0 * 10) / 50, places=2)
 
     def test_without_a_covering_forecast_the_value_of_now(self) -> None:
-        end = datetime(2026, 1, 10, 9, 0, tzinfo=timezone.utc)
+        end = datetime(2026, 1, 10, 9, 0, tzinfo=UTC)
         self.assertEqual(
             outdoor.expected_outdoor(self.NOW, self.NOW, end, 1.5, self.hourly(0.0, -2.0)),
             (1.5, "now"),

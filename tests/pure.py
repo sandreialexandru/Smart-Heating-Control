@@ -8,9 +8,9 @@ with nothing but the standard library.
 from __future__ import annotations
 
 import importlib
-from pathlib import Path
 import sys
 import types
+from pathlib import Path
 
 _PKG = "advanced_climate_pure"
 _PATH = Path(__file__).resolve().parent.parent / "custom_components" / "advanced_climate"

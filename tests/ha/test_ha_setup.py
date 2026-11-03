@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+import pytest
 from freezegun.api import FrozenDateTimeFactory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant, SupportsResponse
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.core import Context, SupportsResponse
-from homeassistant.exceptions import ServiceValidationError
-import pytest
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -896,7 +895,7 @@ async def test_rounded_down_to_the_step_at_the_maximum(
     assert calls[-1].data["temperature"] == 24.5  # 24.8 would become 25.0 on the TRV
     # The valve exercise is meant to go above the maximum: sent as it is.
     state = hass.states.get("climate.trv")
-    assert room._device_value(state, 30.0) == 30.0  # noqa: SLF001
+    assert room._device_value(state, 30.0) == 30.0
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -1066,7 +1065,7 @@ async def test_calendar_profile_of_tomorrow(
     entry = await _setup(hass, freezer, house_options={"calendar": "calendar.home"})
     house = entry.runtime_data
     room = next(iter(house.rooms.values()))
-    name = sorted(room.schedule.profiles)[0]
+    name = min(room.schedule.profiles)
     # An all-day event (dates only), read again when the calendar is refreshed.
     events.append(
         {
@@ -1075,10 +1074,10 @@ async def test_calendar_profile_of_tomorrow(
             "summary": name.upper(),
         }
     )
-    await house._async_refresh_calendar()  # noqa: SLF001
-    assert room._day_info(tomorrow)[1] == name  # noqa: SLF001
+    await house._async_refresh_calendar()
+    assert room._day_info(tomorrow)[1] == name
     today = tomorrow - timedelta(days=1)
-    assert room._day_info(today)[1] is None  # noqa: SLF001
+    assert room._day_info(today)[1] is None
     # An event of today that already ended (09:00-10:00, now 12:00) selects the
     # profile for the whole day, as a coming day would use it.
     events.append(
@@ -1088,8 +1087,8 @@ async def test_calendar_profile_of_tomorrow(
             "summary": name,
         }
     )
-    await house._async_refresh_calendar()  # noqa: SLF001
-    assert room._day_info(today)[1] == name  # noqa: SLF001
+    await house._async_refresh_calendar()
+    assert room._day_info(today)[1] == name
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -1321,7 +1320,7 @@ async def test_card_manual_change_set_again_after_a_window(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """A temperature set by the card comes back on the thermostat after a window."""
-    entry, calls, trv = await _window_trv_house(hass, freezer)
+    entry, calls, _trv = await _window_trv_house(hass, freezer)
     assert calls[-1].data["temperature"] == 21.0
     await hass.services.async_call(
         DOMAIN,
@@ -2702,7 +2701,7 @@ async def test_alerts_without_recipients(
 async def test_auto_vacation_is_told(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """The start and the end of the automatic vacation are information."""
     phone = async_mock_service(hass, "notify", "mobile_app_phone")
-    entry, house, room = await _alert_house(
+    entry, house, _room = await _alert_house(
         hass,
         freezer,
         notify_info=["notify.mobile_app_phone"],
@@ -2755,7 +2754,7 @@ async def test_frost_protection_is_told(
 ) -> None:
     """A room that falls below the frost protection temperature is a warning; its end is told."""
     phone = async_mock_service(hass, "notify", "mobile_app_phone")
-    entry, house, room = await _alert_house(
+    entry, house, _room = await _alert_house(
         hass, freezer, notify_warning=["notify.mobile_app_phone"]
     )
     await house.async_set_mode("off")
@@ -2778,7 +2777,7 @@ async def test_frost_protection_is_told(
 async def test_long_pause_is_reminded(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """A pause left on is a warning after the hours set, then once a day; resuming ends it quietly."""
     phone = async_mock_service(hass, "notify", "mobile_app_phone")
-    entry, house, room = await _alert_house(
+    entry, house, _room = await _alert_house(
         hass, freezer, notify_warning=["notify.mobile_app_phone"], pause_remind_hours=12
     )
     await house.async_set_pause(True)
@@ -2807,7 +2806,7 @@ async def test_house_events_are_told(
     season = {"on": True}
     monkeypatch.setattr(House, "season_active", property(lambda self: season["on"]))
     phone = async_mock_service(hass, "notify", "mobile_app_phone")
-    entry, house, room = await _alert_house(
+    entry, house, _room = await _alert_house(
         hass,
         freezer,
         notify_info=["notify.mobile_app_phone"],

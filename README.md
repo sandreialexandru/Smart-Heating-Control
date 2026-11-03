@@ -15,11 +15,9 @@ Warm when you get home, cool when nobody is there, never wasting heat on an
 open window, and no rules to write. It works with what you already have:
 Generic Thermostat, TRVs, smart thermostats or a plain relay.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-demo.gif" alt="The card in use: the house, a room opened, the chart with the history and the predicted temperature" width="440">
-  <br>
-  <sub>▶️ <a href="https://github.com/sandreialexandru/Smart-Heating-Control/raw/main/docs/images/card-demo.mp4">The whole video (40 s, MP4)</a> · the pictures use invented data</sub>
-</p>
+https://github.com/user-attachments/assets/c6d79bb1-91e2-493c-a0cc-5914a0a445a5
+
+<p align="center"><sub>The card in use · the pictures use invented data</sub></p>
 
 ## ✨ What it does
 

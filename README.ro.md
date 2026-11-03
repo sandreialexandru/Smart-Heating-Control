@@ -15,11 +15,9 @@ Cald la venirea acasă, mai rece când nu e nimeni, fără căldură irosită pe
 fereastră deschisă și fără reguli de scris. Funcționează cu ce există deja:
 Generic Thermostat, TRV-uri, termostate inteligente sau un simplu releu.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-demo.gif" alt="Cardul în folosire: casa, o cameră deschisă, graficul cu istoricul și temperatura prezisă" width="440">
-  <br>
-  <sub>▶️ <a href="https://github.com/sandreialexandru/Smart-Heating-Control/raw/main/docs/images/card-demo.mp4">Tot videoclipul (40 s, MP4)</a> · imaginile folosesc date inventate</sub>
-</p>
+https://github.com/user-attachments/assets/c6d79bb1-91e2-493c-a0cc-5914a0a445a5
+
+<p align="center"><sub>Cardul în folosire · imaginile folosesc date inventate</sub></p>
 
 ## ✨ Ce face
 

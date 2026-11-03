@@ -10,7 +10,7 @@ GitHub releases.
 ### Documentation
 
 - 📖 A new README that shows what the integration does, with a video of the
-  card (a short GIF and the whole 40 s as MP4) and new pictures. The technical
+  card (40 s, played in the page) and new pictures. The technical
   details that were in it are in the new [Reference](docs/reference.md).
   The same pictures, the GIF and the video are in the card chapter of the
   [guide](docs/guide/10-card.md).

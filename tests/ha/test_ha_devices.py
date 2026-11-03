@@ -7,7 +7,7 @@ import logging
 
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import Context, HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -379,8 +379,9 @@ async def test_a_failing_relay_command_is_logged(
     async def offline(_call: ServiceCall) -> None:
         raise HomeAssistantError("the device does not answer")
 
-    hass.services.async_register("switch", "turn_on", offline)
-    hass.states.async_set("switch.heater", "off")
+    # A domain of its own, so no real integration answers instead.
+    hass.services.async_register("relay_test", "turn_on", offline)
+    hass.states.async_set("relay_test.heater", "off")
     hass.states.async_set("sensor.room_temp", "18.0", {"unit_of_measurement": "°C"})
     with caplog.at_level(logging.WARNING):
         entry = await _house(
@@ -391,15 +392,15 @@ async def test_a_failing_relay_command_is_logged(
                     "Bedroom",
                     {
                         "source": "switch",
-                        "switches": ["switch.heater"],
+                        "switches": ["relay_test.heater"],
                         "temperature_sensors": ["sensor.room_temp"],
                     },
                 )
             ],
         )
-    assert "Bedroom: switch.turn_on failed: the device does not answer" in caplog.text
+    assert "Bedroom: relay_test.turn_on failed: the device does not answer" in caplog.text
     assert hass.states.get("sensor.bedroom_decision").state == "schedule"
-    assert hass.states.get("switch.heater").state == "off"
+    assert hass.states.get("relay_test.heater").state == "off"
     await _unload(hass, entry)
 
 
@@ -752,10 +753,11 @@ async def test_calendar_event_names_the_level(
     )
     await _reevaluate(hass)
     assert hass.states.get("sensor.office_decision").attributes["preset"] == "eco"
-    assert calls[-1].data["temperature"] == 17.0
+    assert hass.states.get("sensor.office_target_temperature").state == "17.0"
     hass.states.async_set("calendar.heating", "off", {})
     await _reevaluate(hass)
     assert hass.states.get("sensor.office_decision").attributes["preset"] == "home"
+    assert calls[-1].data["temperature"] == 21.0
     await _unload(hass, entry)
 
 
@@ -789,4 +791,207 @@ async def test_alerts_to_a_notify_entity_and_a_failing_service(
         "message": "Office: climate.trv has been unavailable for more than 15 min.",
     }
     assert "Notification via notify.missing failed" in caplog.text
+    await _unload(hass, entry)
+
+
+async def test_buttons_of_the_house_and_the_room(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Clear the manual changes (house or room), the vacation, and evaluate again."""
+    entry, _calls = await _trv_house(hass, freezer, {"Office": "climate.trv"})
+    room = _room(entry, "Office")
+    house_buttons = hass.states.get("sensor.home_presence").attributes["house_entities"]
+    room_buttons = hass.states.get("sensor.office_decision").attributes["entities"]
+
+    async def press(entity_id: str) -> None:
+        await hass.services.async_call("button", "press", {"entity_id": entity_id}, blocking=True)
+        await hass.async_block_till_done()
+
+    for clear in (room_buttons["clear_override"], house_buttons["clear_overrides"]):
+        await hass.services.async_call(
+            DOMAIN, "set_override", {"room": "Office", "temperature": 23}, blocking=True
+        )
+        await hass.async_block_till_done()
+        assert room.override is not None
+        await press(clear)
+        assert room.override is None
+    await hass.services.async_call(
+        DOMAIN,
+        "set_vacation",
+        {"start": "2026-10-20T08:00:00+03:00", "end": "2026-10-25T18:00:00+03:00"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert entry.runtime_data.vacation_end is not None
+    await press(house_buttons["clear_vacation"])
+    assert entry.runtime_data.vacation_end is None
+    await press(house_buttons["reevaluate"])
+    assert hass.states.get("sensor.office_decision").state == "schedule"
+    await _unload(hass, entry)
+
+
+async def test_an_invalid_schedule_uses_the_default_and_is_told(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A schedule that cannot be read: the default one, an alert and the error shown."""
+    hass.states.async_set("climate.trv", "heat", TRV)
+    async_mock_service(hass, "climate", "set_temperature")
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {
+                    "source": "climate",
+                    "climates": ["climate.trv"],
+                    "command_mode": "temperature",
+                    "schedule": "workday: 25:00 home",
+                },
+            )
+        ],
+    )
+    room = _room(entry, "Office")
+    assert room.schedule_error
+    assert f"schedule_{room.id}" in entry.runtime_data.active_alerts
+    # The default schedule: home at noon on a workday.
+    assert hass.states.get("sensor.office_decision").attributes["preset"] == "home"
+    await _unload(hass, entry)
+
+
+async def test_schedule_service_refuses_what_it_cannot_use(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Both forms at once, a room with a Schedule helper, a bad text, an unknown level."""
+    hass.states.async_set("climate.trv", "heat", TRV)
+    hass.states.async_set("climate.trv2", "heat", TRV)
+    hass.states.async_set("schedule.heating", "on", {})
+    async_mock_service(hass, "climate", "set_temperature")
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"},
+            ),
+            (
+                "Kitchen",
+                {
+                    "source": "climate",
+                    "climates": ["climate.trv2"],
+                    "command_mode": "temperature",
+                    "schedule_source": "helper",
+                    "schedule_helper": "schedule.heating",
+                },
+            ),
+        ],
+    )
+    for data, key in (
+        (
+            {"room": "Office", "schedule": "workday: 00:00 home", "profiles": {}},
+            "schedule_or_profiles",
+        ),
+        ({"room": "Kitchen", "schedule": "workday: 00:00 home"}, "schedule_external"),
+        ({"room": "Office", "schedule": "workday: later home"}, "invalid_schedule"),
+    ):
+        with pytest.raises(ServiceValidationError) as err:
+            await hass.services.async_call(DOMAIN, "set_schedule", data, blocking=True)
+        assert err.value.translation_key == key, data
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN, "set_override", {"room": "Office", "preset": "party"}, blocking=True
+        )
+    assert err.value.translation_key == "unknown_preset"
+    await _unload(hass, entry)
+
+
+async def test_services_with_two_houses(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """With two houses a house service needs the house; an unknown one is refused."""
+    hass.states.async_set("climate.trv", "heat", TRV)
+    async_mock_service(hass, "climate", "set_temperature")
+    first = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"},
+            )
+        ],
+    )
+    second = MockConfigEntry(
+        domain=DOMAIN,
+        title="Cabin",
+        options={"persons": ["person.andrei"], "nearby_zones": []},
+    )
+    second.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(second.entry_id)
+    await hass.async_block_till_done()
+    vacation = {"start": "2026-10-20T08:00:00+03:00", "end": "2026-10-25T18:00:00+03:00"}
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(DOMAIN, "set_vacation", vacation, blocking=True)
+    assert err.value.translation_key == "house_ambiguous"
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN, "set_vacation", {**vacation, "config_entry_id": "nope"}, blocking=True
+        )
+    assert err.value.translation_key == "house_not_found"
+    await hass.services.async_call(
+        DOMAIN, "set_vacation", {**vacation, "config_entry_id": second.entry_id}, blocking=True
+    )
+    await hass.async_block_till_done()
+    assert second.runtime_data.vacation_end is not None
+    assert first.runtime_data.vacation_end is None
+    await _unload(hass, second)
+    await _unload(hass, first)
+
+
+async def test_calibration_offset_from_the_trv_on_the_same_device(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Offset calibration: the difference between the room sensor and the TRV of that device."""
+    zigbee = MockConfigEntry(domain="zha")
+    zigbee.add_to_hass(hass)
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=zigbee.entry_id, identifiers={("zha", "trv1")}, name="Office TRV"
+    )
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        "climate", "zha", "trv1", device_id=device.id, suggested_object_id="trv"
+    )
+    registry.async_get_or_create(
+        "number", "zha", "trv1_offset", device_id=device.id, suggested_object_id="trv_offset"
+    )
+    # The TRV next to the radiator reads 22 °C, the room 20 °C.
+    hass.states.async_set(
+        "climate.trv", "heat", {**TRV, "current_temperature": 22.0, "hvac_action": "idle"}
+    )
+    hass.states.async_set("sensor.office_temp", "20.0", {"unit_of_measurement": "°C"})
+    hass.states.async_set("number.trv_offset", "0.0", {"min": -5, "max": 5, "step": 0.1})
+    async_mock_service(hass, "climate", "set_temperature")
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {
+                    "source": "climate",
+                    "climates": ["climate.trv"],
+                    "command_mode": "temperature",
+                    "temperature_sensors": ["sensor.office_temp"],
+                    "calibration_mode": "offset",
+                    "calibration_entities": ["number.trv_offset"],
+                },
+            )
+        ],
+    )
+    # Mocked after the setup: the integration's own number platform registers the service.
+    numbers = async_mock_service(hass, "number", "set_value")
+    await _tick(hass, freezer, 601)  # written at most every 10 minutes
+    # 0 + (20 − 22) = −2.0.
+    assert numbers[-1].data == {"entity_id": "number.trv_offset", "value": -2.0}
     await _unload(hass, entry)

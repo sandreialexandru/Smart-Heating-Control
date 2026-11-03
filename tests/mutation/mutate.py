@@ -25,14 +25,13 @@ from __future__ import annotations
 
 import argparse
 import ast
-import copy
 import json
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = ROOT / "custom_components" / "advanced_climate"
@@ -125,7 +124,7 @@ class Mutator(ast.NodeTransformer):
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> ast.AST:
         return self._function(node)
 
-    def _function(self, node):  # noqa: ANN001, ANN202
+    def _function(self, node):
         # The docstring and the annotations are left alone; the defaults and the body are not.
         body = node.body
         if body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant):
@@ -145,7 +144,7 @@ class Mutator(ast.NodeTransformer):
         return node
 
     # -- one place ----------------------------------------------------------
-    def _place(self, node: ast.AST, what: str, apply) -> ast.AST:  # noqa: ANN001
+    def _place(self, node: ast.AST, what: str, apply) -> ast.AST:
         if self._quiet(node):
             return node
         index = self.count
@@ -167,7 +166,7 @@ class Mutator(ast.NodeTransformer):
             if new is None:
                 continue
 
-            def apply(i=i, new=new):  # noqa: ANN001, ANN202
+            def apply(i=i, new=new, node=node):
                 node.ops[i] = new()
                 return node
 
@@ -181,7 +180,7 @@ class Mutator(ast.NodeTransformer):
             return node
         old = type(node.op)
 
-        def apply():  # noqa: ANN202
+        def apply():
             node.op = new()
             return node
 
@@ -194,7 +193,7 @@ class Mutator(ast.NodeTransformer):
             return node
         old = type(node.op)
 
-        def apply():  # noqa: ANN202
+        def apply():
             node.op = new()
             return node
 
@@ -205,7 +204,7 @@ class Mutator(ast.NodeTransformer):
         old = type(node.op)
         new = ast.Or if old is ast.And else ast.And
 
-        def apply():  # noqa: ANN202
+        def apply():
             node.op = new()
             return node
 
@@ -278,7 +277,7 @@ def same_source(path: Path) -> str:
 # ---------------------------------------------------------------------------
 def has_pytest() -> bool:
     try:
-        import pytest_homeassistant_custom_component  # noqa: F401, PLC0415
+        import pytest_homeassistant_custom_component  # noqa: F401
     except ImportError:
         return False
     return True

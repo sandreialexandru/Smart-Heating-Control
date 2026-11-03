@@ -75,6 +75,7 @@ Numele entităților sunt date ca în interfața în română. ID-urile încep c
 | `offsets` | Ajustările active |
 | `profile`, `next_change`, `next_preset`, `plan` | Profilul de azi, următoarea schimbare, planul următoarelor ore |
 | `time_to_target` | Minutele până la țintă |
+| `temperature_trend` | 1 cât camera se încălzește, −1 cât se răcește, 0 cât e stabilă sau nu se știe încă: cel puțin 0,2 °C pe oră în ultimele 30 de minute |
 | `next_estimate` | Următoarea pornire / oprire anticipată: `kind`, `at`, `preset`, `minutes`, `starts_at`, `started_at`, `outdoor`, `outdoor_source`, `learned`, `sent_as`, `temperature` |
 | `stop_forecast` | Temperatura estimată la schimbare, în timpul unei opriri anticipate |
 | `humidity` | Cu senzor de umiditate: umiditatea camerei (%) |

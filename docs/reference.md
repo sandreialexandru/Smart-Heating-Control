@@ -381,22 +381,22 @@ type: custom:smart-heating-control-card
 | `rooms` | all | List of room *Decision* sensors to show |
 | `show_house` | `true` | Presence and people (round badges in the colour of where they are), tiles for the outdoor average (over the *Average over* hours), season, heat demand and heating time, mode (Auto / Vacation / Off / Summer), and a row of buttons: Pause and Guests (on / off; guest mode shows a band at the top), Vacation (opens the dates), Reevaluate, Automatic (clears all manual changes) |
 | `show_rooms` | `true` | The rooms |
-| `show_timeline` | `true` | A **Chart** button in every room that opens, in a window over the dashboard, the chart: 7 days of history and the next 12 hours, opened on the last 24 hours and the next 12: room temperature, the temperature the learned model predicts ahead (the heating switched as the device does: the GT tolerances, the hysteresis, the learned inertia; the target held for thermostats that regulate by themselves), target (colored by level), planned levels and the periods when the room heated. Hover, touch or drag on the chart to read the values (in an opaque box). Zoom with the buttons (1h, 6h, −, +), double-click, pinch or Ctrl + wheel, from 20 minutes up to the 7 days (⤢ goes back); move through the history by dragging the window in the navigation bar under the chart (shown while the mouse is over the chart or a finger is on it) or by scrolling sideways |
+| `show_timeline` | `true` | A **Chart** button in every room that opens, in a window over the dashboard, the chart: 7 days of history and the next 12 hours, opened on the last 24 hours and the next 12: room temperature, the temperature the learned model predicts ahead (the heating switched as the device does: the GT tolerances, the hysteresis, the learned inertia; the target held for thermostats that regulate by themselves), target (colored by level), planned levels and the periods when the room heated. Hover, touch or drag on the chart to read the values (in an opaque box). Zoom with the buttons (1h, 6h, −, +), double-click, pinch or Ctrl + wheel, from 20 minutes up to the 7 days (⤢ goes back); move through the history by dragging the window in the navigation bar under the chart (shown while the mouse is over the chart or a finger is on it) or by scrolling sideways. Under the chart, every legend item hides or shows its series (kept in the browser). Once the room has learned that the sun warms it, the expected sun (`sun_forecast`, 0 to 1) is a faint yellow area in the outdoor band |
 | `show_quick_override` | `true` | Set a level or a temperature for a number of hours (empty = the configured rule) |
 | `show_levels` | `true` | Level temperatures (rooms without Generic Thermostat, fixed *nearby* temperature) |
-| `show_details` | `true` | Room and target temperature, learned heating, heating time, active adjustments, level temperatures |
+| `show_details` | `true` | Room and target temperature, the learning (two progress bars while learning; then one tile each for heating, inertia, weather curve, sun and heat loss), heating time, active adjustments, level temperatures |
 | `show_schedule_editor` | `true` | Schedule profiles with an editor: drag the start times on the day bar (5-minute steps), copy a profile over another one |
 | `collapsed` | `false` | Rooms start folded (a row with a small arc, the name, the time to target, state icons, the level and the target); tap it to open the room |
-| `compact` | `false` | One tile per room (the name, the status icons, arc with the temperature, level, target) and one row for the house; tap to open |
+| `compact` | `false` | One tile per room (the name, the status icons, arc with the temperature, level, target; under the name the time to target while heating, else the next change) and one row for the house; tap to open |
 | `runtime_period` | `day` | Heating time shown for `day`, `week` or `month` (calendar periods, from the long-term statistics; tap the value in the card to change it). The *Heating time* sensors stay cumulative totals |
 
 Every room also shows its decision, a flame (outlined while it asks for heat, full and flickering
 while it heats; also on the house and on folded rooms) / window / manual change badges, an arc with the room temperature (empty at the frost protection, full at
-the maximum; it only shows the value) and the target, the reason, the time to
+the maximum; it only shows the value), an arrow ↑ / ↓ in its opening while the room warms or cools (`temperature_trend`: at least 0.2 °C/h over the last 30 minutes) and the target, the reason, the time to
 target, the TRV boost when it is on, what the device itself measures, today's
-profile as a bar, and an *Automatic* button (back to automatic) in the row of buttons while there is a manual change. Buttons under the arc open *Set for
-a while*, *Schedule* (each profile with its days and an on / off switch; its
-days are chosen in the editor), *Chart*, *Levels* and *Details*, each on its own (several
+profile as a bar, and an *Automatic* button (back to automatic) in the row of buttons while there is a manual change. Buttons under the arc open *For a while* (set for
+a while; a manual change with an end shows the time it has left), *Schedule* (each profile with its days and an on / off switch; its
+days are chosen in the editor), *Chart*, *Levels* (level temperatures) and *Details*, each on its own (several
 at once), and a *Lock* button for the child lock of the room.
 
 - **Not heating**: below its target, a room says why it does not heat (within

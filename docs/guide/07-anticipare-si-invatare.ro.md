@@ -65,8 +65,8 @@ sezonului).
 
 **Până se învață** (4 ore cu încălzire și 4 ore fără, de obicei în prima zi) se
 folosește o valoare sigură: 60 de minute pe grad, fără inerție. În card apare
-*se învață… 2 din 4 h cu încălzire, 1 din 4 h fără* și dedesubt *implicit
-60 min/1°C*.
+*se învață…* cu două bare, *cu încălzire 2 din 4 h* și *fără încălzire 1 din
+4 h*, iar dedesubt *implicit 60 min/1°C*.
 
 **Fără temperatură de afară** în casă, pierderea de căldură se învață ca un
 număr constant de grade pe oră, iar curba de temperatură nu se învață.

@@ -48,6 +48,7 @@ jobs:
           custom_components/advanced_climate/notifier.py
           custom_components/advanced_climate/schedule.py
           custom_components/advanced_climate/sun.py
+          custom_components/advanced_climate/trend.py
           custom_components/advanced_climate/util.py
           custom_components/advanced_climate/window.py
 

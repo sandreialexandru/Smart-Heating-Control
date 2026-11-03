@@ -581,13 +581,13 @@ default) and `time_to_target`.
 card *Details*, with a second click to confirm).
 
 **Card, Details** – group *Learning*: *Learning* (*learned · usual error
-±0.12 °C/h*, or while learning *learning… 2 of 4 h with heating, 1 of 4 h
-without*, with the default under it) with the **Reset** button; once learned
-*Heating learned* (minutes per degree now and the inertia, e.g. *45 min/°C now
-· inertia 30 min*), *Weather curve* (*+0.050 °C/h for each °C colder
-outdoors*, or *none*), *Sun* once learned (*+1.50 °C/h with the sun overhead
-in a clear sky · now +0.60 °C/h*: s and s × the sun signal of now) and *Heat
-loss learned* (*falls 0.70 °C/h now*).
+±0.12 °C/h*, or while learning *learning…* with two bars, *with heating 2 of
+4 h* and *without heating 1 of 4 h*, and the default under them) with the
+**Reset** button; once learned one tile each: *Heating* (minutes per degree
+now, e.g. *45 min/°C*), *Inertia* (*30 min*), *Weather curve* (*+0.050 °C/h*
+*for each °C colder outdoors*, or *none*), *Sun* once learned (*+1.50 °C/h*,
+*sun overhead, clear sky · now +0.60 °C/h*: s and s × the sun signal of now)
+and *Heat loss* (*0.70 °C/h*, *falls now*).
 
 **Card, chart** – once learned, the predicted temperature for the next 12
 hours (dotted): the model of section 2 simulated minute by minute along the

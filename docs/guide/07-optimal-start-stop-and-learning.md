@@ -64,8 +64,8 @@ outside the cold season (mode Off or Summer, outside the season).
 
 **Until it is learned** (4 hours with heating and 4 hours without, usually
 within the first day) a safe value is used: 60 minutes per degree, no inertia.
-The card shows *learning… 2 of 4 h with heating, 1 of 4 h without* and below
-*default 60 min/1°C*.
+The card shows *learning…* with two bars, *with heating 2 of 4 h* and
+*without heating 1 of 4 h*, and below them *default 60 min/1°C*.
 
 **Without an outdoor temperature** in the house, the heat loss is learned as a
 constant number of degrees per hour, and no weather curve is learned.

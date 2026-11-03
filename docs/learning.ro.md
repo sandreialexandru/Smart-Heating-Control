@@ -588,14 +588,14 @@ sau implicită) și `time_to_target`.
 card, cu un al doilea clic pentru confirmare).
 
 **Card, Detalii** – grupul *Învățare*: *Învățare* (*învățat · eroare obișnuită
-±0,12 °C/h* sau, în timpul învățării, *se învață… 2 din 4 h cu încălzire, 1 din
-4 h fără*, cu valoarea implicită dedesubt) cu butonul **Resetează**; după ce
-s-a învățat, *Încălzire învățată* (minute pe grad acum și inerția, de ex.
-*45 min/°C acum · inerție 30 min*), *Curba de temperatură* (*+0.050 °C/h
-pentru fiecare °C mai frig afară* sau *fără*), *Soare* după ce s-a învățat
-(*+1.50 °C/h cu soarele la zenit pe cer senin · acum +0.60 °C/h*: s și s ×
-semnalul solar de acum) și *Pierdere de căldură învățată* (*scade 0,70 °C/h
-acum*).
+±0,12 °C/h* sau, în timpul învățării, *se învață…* cu două bare, *cu încălzire
+2 din 4 h* și *fără încălzire 1 din 4 h*, cu valoarea implicită dedesubt) cu
+butonul **Resetează**; după ce s-a învățat, câte o placă: *Încălzire* (minute
+pe grad acum, de ex. *45 min/°C*), *Inerție* (*30 min*), *Curba de
+temperatură* (*+0.050 °C/h*, *pentru fiecare °C mai frig afară*, sau *fără*),
+*Soare* după ce s-a învățat (*+1.50 °C/h*, *soare la zenit, cer senin · acum
++0.60 °C/h*: s și s × semnalul solar de acum) și *Pierdere de căldură*
+(*0,70 °C/h*, *scade acum*).
 
 **Card, grafic** – după ce s-a învățat, temperatura prezisă pentru următoarele
 12 ore (punctat): modelul din secțiunea 2 simulat minut cu minut după ținta

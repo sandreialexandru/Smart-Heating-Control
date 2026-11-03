@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.1b3";
+const CARD_VERSION = "2.6.1b4";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -111,6 +111,8 @@ const TEXT = {
     title: "Heating",
     now_tag: "Now",
     target_tag: "Target",
+    trend_up: "warming",
+    trend_down: "cooling",
     arriving: "On the way home",
     vacation_none: "not planned",
     vacation_hint: "During the vacation every room uses away. A few hours before the end the schedule applies again, so the house is warm when you return. Without a start date the vacation starts now.",
@@ -162,12 +164,14 @@ const TEXT = {
     chart: "Chart",
     next: "Next",
     quick: "Set for a while",
+    btn_quick: "For a while",
     for_hours: "for",
     hours: "h",
     apply: "Set",
     clear_override: "Back to automatic",
     override: "Manual change",
     until: "until",
+    time_left: "{d} left",
     until_change: "until the next change",
     until_reeval: "until the next reevaluation",
     at_latest: "at the latest",
@@ -176,6 +180,7 @@ const TEXT = {
     heating: "Heating",
     details: "Details",
     levels: "Level temperatures",
+    btn_levels: "Levels",
     schedule: "Schedule",
     edit: "Edit schedule",
     save: "Save schedule",
@@ -262,23 +267,33 @@ const TEXT = {
     nh_source_unknown: "the state of the heat source is unknown",
     nh_device_off: "the thermostat is off",
     legend_outdoor: "Outdoor",
+    legend_sun: "Sun",
+    series_hide: "Hide from the chart",
+    series_show: "Show on the chart",
     legend_forecast: "forecast",
     est_mark_start: "start ~{time}",
     est_mark_stop: "stop ~{time}",
     paused_banner: "Pause: only frost protection, the maximum temperature and taking a TRV boost back to the target are sent",
-    learn_heat: "Heating learned",
-    learn_cool: "Heat loss learned",
-    learn_progress: "learning… {heat} of {need} h with heating, {idle} of {need} h without",
-    learn_heat_value: "{rate} now · inertia {tau} min",
-    learn_cool_value: "falls {rate} now",
+    learn_heat: "Heating",
+    learn_heat_sub: "now",
+    learn_inertia: "Inertia",
+    learn_inertia_sub: "the heat comes this late",
+    learn_cool: "Heat loss",
+    learn_cool_sub: "falls now",
+    learn_progress: "learning…",
+    learn_bar_heat: "with heating {v} of {need} h",
+    learn_bar_idle: "without heating {v} of {need} h",
     learn_state: "Learning",
     learn_state_done: "learned · usual error ±{err}/h",
     learn_state_done_short: "learned",
     learn_curve: "Weather curve",
-    learn_curve_value: "{value} {u}/h for each {u} colder outdoors",
-    learn_curve_none: "none (the heating gives the same at any outdoor temperature)",
+    learn_curve_value: "{value} {u}/h",
+    learn_curve_sub: "for each {u} colder outdoors",
+    learn_curve_none: "none",
+    learn_curve_none_sub: "the same at any outdoor temperature",
     learn_sun: "Sun",
-    learn_sun_value: "+{value} {u}/h with the sun overhead in a clear sky · now +{now} {u}/h",
+    learn_sun_value: "+{value} {u}/h",
+    learn_sun_sub: "sun overhead, clear sky · now +{now} {u}/h",
     humidity: "Humidity",
     humidity_value: "air {air}% · coldest wall {wall}%",
     humidity_air: "air {air}%",
@@ -363,6 +378,8 @@ const TEXT = {
     title: "Încălzire",
     now_tag: "Acum",
     target_tag: "Țintă",
+    trend_up: "se încălzește",
+    trend_down: "se răcește",
     arriving: "Pe drum spre casă",
     vacation_none: "neplanificată",
     vacation_hint: "În vacanță toate camerele folosesc away. Cu câteva ore înainte de sfârșit se aplică iar programul, ca să găsești casa caldă. Fără dată de început, vacanța începe acum.",
@@ -414,12 +431,14 @@ const TEXT = {
     chart: "Grafic",
     next: "Următor",
     quick: "Setează temporar",
+    btn_quick: "Temporar",
     for_hours: "pentru",
     hours: "h",
     apply: "Setează",
     clear_override: "Înapoi la automat",
     override: "Modificare manuală",
     until: "până la",
+    time_left: "încă {d}",
     until_change: "până la următoarea schimbare",
     until_reeval: "până la următoarea reevaluare",
     at_latest: "cel târziu",
@@ -428,6 +447,7 @@ const TEXT = {
     heating: "Încălzește",
     details: "Detalii",
     levels: "Temperaturile nivelurilor",
+    btn_levels: "Niveluri",
     schedule: "Program",
     edit: "Editează programul",
     save: "Salvează programul",
@@ -514,23 +534,33 @@ const TEXT = {
     nh_source_unknown: "starea sursei de căldură e necunoscută",
     nh_device_off: "termostatul e oprit",
     legend_outdoor: "Afară",
+    legend_sun: "Soare",
+    series_hide: "Ascunde din grafic",
+    series_show: "Arată în grafic",
     legend_forecast: "prognoză",
     est_mark_start: "pornire ~{time}",
     est_mark_stop: "oprire ~{time}",
     paused_banner: "Pauză: se trimit doar antiînghețul, temperatura maximă și readucerea forțării TRV la țintă",
-    learn_heat: "Încălzire învățată",
-    learn_cool: "Pierdere de căldură învățată",
-    learn_progress: "se învață… {heat} din {need} h cu încălzire, {idle} din {need} h fără",
-    learn_heat_value: "{rate} acum · inerție {tau} min",
-    learn_cool_value: "scade {rate} acum",
+    learn_heat: "Încălzire",
+    learn_heat_sub: "acum",
+    learn_inertia: "Inerție",
+    learn_inertia_sub: "atât de târziu vine căldura",
+    learn_cool: "Pierdere de căldură",
+    learn_cool_sub: "scade acum",
+    learn_progress: "se învață…",
+    learn_bar_heat: "cu încălzire {v} din {need} h",
+    learn_bar_idle: "fără încălzire {v} din {need} h",
     learn_state: "Învățare",
     learn_state_done: "învățat · eroare obișnuită ±{err}/h",
     learn_state_done_short: "învățat",
     learn_curve: "Curba de temperatură",
-    learn_curve_value: "{value} {u}/h pentru fiecare {u} mai frig afară",
-    learn_curve_none: "fără (încălzirea dă la fel la orice temperatură de afară)",
+    learn_curve_value: "{value} {u}/h",
+    learn_curve_sub: "pentru fiecare {u} mai frig afară",
+    learn_curve_none: "fără",
+    learn_curve_none_sub: "la fel la orice temperatură de afară",
     learn_sun: "Soare",
-    learn_sun_value: "+{value} {u}/h cu soarele la zenit pe cer senin · acum +{now} {u}/h",
+    learn_sun_value: "+{value} {u}/h",
+    learn_sun_sub: "soare la zenit, cer senin · acum +{now} {u}/h",
     humidity: "Umiditate",
     humidity_value: "aer {air}% · peretele cel mai rece {wall}%",
     humidity_air: "aer {air}%",
@@ -722,12 +752,17 @@ class SmartHeatingControlCard extends HTMLElement {
     if (this._editing || this._pan) return;
     const active = this.shadowRoot.activeElement;
     if (active && ["INPUT", "SELECT"].includes(active.tagName)) return;
-    const key = this._watched()
+    let timed = false;
+    let key = this._watched()
       .map((id) => {
         const s = hass.states[id];
+        if (s?.attributes?.override?.until) timed = true;
         return s ? `${id}:${s.state}:${s.last_updated}` : id;
       })
       .join("|");
+    // A manual change shows the time it has left: drawn again every minute while there is one.
+    const minute = timed ? `|${Math.floor(Date.now() / 60000)}` : "";
+    key += minute;
     if (key !== this._lastKey) {
       this._lastKey = key;
       this._render(true);
@@ -1216,13 +1251,17 @@ class SmartHeatingControlCard extends HTMLElement {
     if (current === null || target === null || target - current <= 0) return "";
     if (a.time_to_target === null || a.time_to_target === undefined) return "";
     if (!a.rate_learned) return this._t("eta_learning");
-    const m = Math.round(a.time_to_target);
-    if (m < 60) return `~${m} min`;
-    // Above an hour in 5-minute steps; 1 h 58 min is ~2 h (not "1 h 60 min").
+    return `~${this._duration(a.time_to_target)}`;
+  }
+
+  /** "35 min", "1 h 30 min", "2 h": above an hour in 5-minute steps (1 h 58 min is 2 h, not "1 h 60 min"). */
+  _duration(minutes) {
+    const m = Math.round(minutes);
+    if (m < 60) return `${m} min`;
     const total = Math.round(m / 5) * 5;
     const h = Math.floor(total / 60);
     const r = total % 60;
-    return r ? `~${h} h ${r} min` : `~${h} h`;
+    return r ? `${h} h ${r} min` : `${h} h`;
   }
 
   /** "default 60 min/1°C": the heating used until the model is learned (empty once learned). */
@@ -1301,14 +1340,24 @@ class SmartHeatingControlCard extends HTMLElement {
       const [x2, y2] = p(r + sw / 2 + out).split(" ");
       mark = `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="gmark" stroke-width="${size >= 120 ? 1.5 : 1}"></line>`;
     }
-    const label = `${this._t("room_temp")} ${this._temp(cur)}, ${this._t("target_tag")} ${this._temp(tgt)}`;
+    // Warming or cooling over the last 30 minutes (the decision sensor; 0 = steady or not known).
+    const trend = cur === null ? 0 : Number(a.temperature_trend) || 0;
+    const trendWord = trend > 0 ? this._t("trend_up") : trend < 0 ? this._t("trend_down") : "";
+    const arrow = trend
+      ? `<span class="gtrend ${trend > 0 ? "up" : "down"}" title="${esc(trendWord)}">${this._icon(
+          trend > 0 ? "arrow-up-thin" : "arrow-down-thin"
+        )}</span>`
+      : "";
+    const label = `${this._t("room_temp")} ${this._temp(cur)}${trendWord ? `, ${trendWord}` : ""}, ${this._t(
+      "target_tag"
+    )} ${this._temp(tgt)}`;
     const link = e && e.room_temperature ? this._more(e.room_temperature) : "";
     return `<span class="gauge ${link ? "link" : ""}" style="width:${size}px;height:${size}px;--gs:${size}px" ${link}
         ${link ? "" : 'role="img"'} aria-label="${esc(label)}">
         <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
           ${ring("gtrack", arc)}${cur !== null ? ring("gvalue", Math.max(0.1, arc * f - sw / 2)) : ""}${mark}
         </svg>
-        <span class="gcenter"><span class="gnum">${this._temp(cur)}</span>${
+        ${arrow}<span class="gcenter"><span class="gnum">${this._temp(cur)}</span>${
           withTarget
             ? `<span class="gsub ${e && e.target_temperature ? "link" : ""}" ${
                 e && e.target_temperature ? this._more(e.target_temperature) : ""
@@ -1432,12 +1481,12 @@ class SmartHeatingControlCard extends HTMLElement {
     const cfg = this._config;
     const id = a.room_id;
     const defs = [];
-    if (cfg.show_quick_override) defs.push([`quick-${id}`, "quick", "timer-edit-outline", () => this._quickHtml(a, e)]);
+    if (cfg.show_quick_override) defs.push([`quick-${id}`, "btn_quick", "timer-edit-outline", () => this._quickHtml(a, e)]);
     if (cfg.show_schedule_editor) defs.push([`sched-${id}`, "schedule", "calendar-edit", () => this._scheduleHtml(a, stateObj)]);
     // The chart opens on its own button (its history is loaded only then).
     if (cfg.show_timeline) defs.push([`chart-${id}`, "chart", "chart-line", () => this._timelineHtml(a)]);
     if (cfg.show_levels && Object.entries(e).some(([k, id]) => k.startsWith("level_") && this._state(id))) {
-      defs.push([`levels-${id}`, "levels", "tune-variant", () => this._levelsHtml(a, e)]);
+      defs.push([`levels-${id}`, "btn_levels", "tune-variant", () => this._levelsHtml(a, e)]);
     }
     if (cfg.show_details) defs.push([`details-${id}`, "details", "information-outline", () => this._detailsHtml(a, e)]);
     const lock = e.child_lock ? this._state(e.child_lock) : null;
@@ -1630,7 +1679,7 @@ class SmartHeatingControlCard extends HTMLElement {
               }</div>`
             : ""
         }
-        <div class="stats">
+        <div class="stats ${runtime ? "" : "three"}">
           ${stat("weather-partly-cloudy", this._outdoorLabel(outdoor), this._temp(outdoor?.state), "", e.outdoor_average)}
           ${stat("calendar-range", this._t("season"), onOff(season), "", e.heating_season)}
           ${stat("fire", this._t("demand"), onOff(demand), demand?.state === "on" ? "hot" : "", e.heat_demand)}
@@ -1834,11 +1883,9 @@ class SmartHeatingControlCard extends HTMLElement {
       this._guestOn(a) ? `<span class="tstat teal" title="${esc(this._t("guests_banner"))}">${this._icon("account-group-outline")}</span>` : "",
     ].join("");
     const eta = this._eta(a);
-    const line = a.override
-      ? `${this._t("override")} ${this._overrideUntil(a)}`
-      : a.window_open
-        ? this._t("window")
-        : eta || (a.next_change ? `${this._presetName(a, a.next_preset)} · ${this._fmtTime(a.next_change)}` : "");
+    // While heating the time to the target, else the next change (the icons above say the rest).
+    const next = a.next_change ? `${this._presetName(a, a.next_preset)} · ${this._fmtTime(a.next_change)}` : "";
+    const line = (heating && eta) || next || eta;
     return `<button class="tile" data-action="fold" data-key="room-${esc(a.room_id)}" aria-expanded="false" style="--c:${color}"
         aria-label="${esc(`${a.room_name}, ${this._temp(a.current_temperature)}, ${this._label(stateObj)}`)}">
         <span class="tile-head"><span class="tname"><span class="cname">${esc(a.room_name)}</span></span>${
@@ -1906,7 +1953,12 @@ class SmartHeatingControlCard extends HTMLElement {
   /** When a manual change ends, in words. */
   _overrideUntil(a) {
     if (!a.override) return "";
-    if (a.override.until) return `${this._t("until")} ${this._fmtTime(a.override.until)}`;
+    if (a.override.until) {
+      // And the time it has left (at least 1 min until it ends).
+      const left = (new Date(a.override.until).getTime() - Date.now()) / 60000;
+      const rest = Number.isFinite(left) && left > 0 ? ` · ${this._t("time_left").replace("{d}", this._duration(Math.max(1, left)))}` : "";
+      return `${this._t("until")} ${this._fmtTime(a.override.until)}${rest}`;
+    }
     const latest = a.next_change
       ? ` (${this._t("at_latest")} ${this._fmtTime(a.next_change)}${
           a.next_preset ? `, ${this._presetName(a, a.next_preset)}` : ""
@@ -2188,7 +2240,14 @@ class SmartHeatingControlCard extends HTMLElement {
       .filter(([t, v]) => Number.isFinite(t) && v !== null)
       .sort((p, q) => p[0] - q[0]);
     const { pts: pred, heat: predHeat } = this._prediction(a, segs, forecast, latest, now, t1, sun);
-    return { t0, t1, now, segs, temp, heat, predHeat, lo, hi, outdoor, forecast, olo, ohi, cutoffAt, pred, loading: !hist };
+    // The learned sun gain (°C/h for the full sun), in the unit of the chart: 0 until seen.
+    const rateState = this._state(a.entities?.heating_rate);
+    const gainC = num(rateState?.attributes?.model?.s) ?? 0;
+    const sunGain = String(rateState?.attributes?.unit_of_measurement || "").endsWith("°F") ? gainC * 1.8 : gainC;
+    return {
+      t0, t1, now, segs, temp, heat, predHeat, lo, hi, outdoor, forecast, olo, ohi, cutoffAt, pred,
+      sun: sunGain > 0 ? sun.filter(([t]) => t < t1) : [], sunGain, loading: !hist,
+    };
   }
 
   /**
@@ -2345,6 +2404,32 @@ class SmartHeatingControlCard extends HTMLElement {
     this._setView(room, c - (c - v0) * factor, c + (v1 - c) * factor);
   }
 
+  /** The series hidden from the charts by a tap on the legend (kept in this browser). */
+  _hidden() {
+    if (!this._hiddenSeries) {
+      let saved = [];
+      try {
+        saved = JSON.parse(localStorage.getItem("shc-hidden-series") || "[]");
+      } catch (err) {
+        saved = [];
+      }
+      this._hiddenSeries = new Set(Array.isArray(saved) ? saved : []);
+    }
+    return this._hiddenSeries;
+  }
+
+  /** Hide or show one series of the charts. */
+  _toggleSeries(key) {
+    const hidden = this._hidden();
+    if (hidden.has(key)) hidden.delete(key);
+    else hidden.add(key);
+    try {
+      localStorage.setItem("shc-hidden-series", JSON.stringify([...hidden]));
+    } catch (err) {
+      // Not kept (private window): hidden until the page is loaded again.
+    }
+  }
+
   /** Redraw only the chart of a room (zoom and pan), not the whole card. */
   _redrawChart(room) {
     const card = this.shadowRoot.querySelector(`[data-chartcard="${CSS.escape(room)}"]`);
@@ -2357,6 +2442,8 @@ class SmartHeatingControlCard extends HTMLElement {
   _timelineHtml(a, innerOnly = false) {
     const d = this._chartData(a);
     if (!d.segs.length && !d.temp.length) return "";
+    const hidden = this._hidden();
+    const shows = (k) => !hidden.has(k);
     this._charts = this._charts || {};
     this._charts[a.room_id] = d;
     const view = this._viewOf(a.room_id, d);
@@ -2415,13 +2502,13 @@ class SmartHeatingControlCard extends HTMLElement {
     const grid = gridValues
       .map((v) => `<line x1="0" x2="${W}" y1="${y(v)}" y2="${y(v)}" class="grid"></line>`)
       .join("");
-    const heat = `<rect x="0" y="${H - LANE}" width="${W}" height="${LANE}" class="heatlane"></rect>${d.heat
+    const heat = `<rect x="0" y="${H - LANE}" width="${W}" height="${LANE}" class="heatlane"></rect>${(shows("heat") ? d.heat : [])
       .filter(([s, e]) => e >= view.v0 && s <= view.v1)
       .map(
         ([s, e]) =>
           `<rect x="${x(s)}" y="${H - LANE}" width="${Math.max(2, x(e) - x(s))}" height="${LANE}" class="heatbar"></rect>`
       )
-      .join("")}${(d.predHeat || [])
+      .join("")}${(shows("heat") ? d.predHeat || [] : [])
       .filter(([s, e]) => e >= view.v0 && s <= view.v1)
       .map(
         ([s, e]) =>
@@ -2435,7 +2522,7 @@ class SmartHeatingControlCard extends HTMLElement {
       const p = this._parts(t);
       if (p.h === 0 && p.mi === 0 && t > view.v0) days.push(`<line x1="${x(t)}" x2="${x(t)}" y1="0" y2="${H}" class="daysep"></line>`);
     }
-    const segs = d.segs
+    const segs = (shows("target") ? d.segs : [])
       .map((sg) => {
         const c = PRESET_COLORS[sg.preset] || TEMP_COLOR;
         const x0 = x(sg.s);
@@ -2444,7 +2531,7 @@ class SmartHeatingControlCard extends HTMLElement {
         return `<line x1="${x0}" x2="${x1}" y1="${yy}" y2="${yy}" stroke="${c}" class="tline ${sg.future ? "future" : ""}"></line>`;
       })
       .join("");
-    const steps = d.segs
+    const steps = (shows("target") ? d.segs : [])
       .slice(1)
       .map((sg, i) => {
         const prev = d.segs[i];
@@ -2457,7 +2544,7 @@ class SmartHeatingControlCard extends HTMLElement {
     const first = d.temp.findIndex(([t]) => t >= view.v0);
     const lastIn = d.temp.findLastIndex(([t]) => t <= view.v1);
     const shown = first < 0 ? [] : d.temp.slice(Math.max(0, first - 1), Math.min(d.temp.length, lastIn + 2));
-    if (shown.length > 1) {
+    if (shown.length > 1 && shows("temp")) {
       const pts = shown.map(([t, v]) => `${x(Math.max(t, d.t0)).toFixed(1)} ${y(v).toFixed(1)}`);
       tempPath = `M${pts.join(" L")}`;
       tempArea = `${tempPath} L${x(shown[shown.length - 1][0]).toFixed(1)} ${BOTTOM} L${x(
@@ -2466,7 +2553,7 @@ class SmartHeatingControlCard extends HTMLElement {
     }
     // The temperature the learned model expects ahead (dashed).
     const predPath =
-      d.pred.length > 1 && d.pred.at(-1)[0] >= view.v0 && d.pred[0][0] <= view.v1
+      shows("pred") && d.pred.length > 1 && d.pred.at(-1)[0] >= view.v0 && d.pred[0][0] <= view.v1
         ? `M${d.pred.map(([t, v]) => `${x(t).toFixed(1)} ${y(v).toFixed(1)}`).join(" L")}`
         : "";
     const last = d.temp.length ? d.temp[d.temp.length - 1] : null;
@@ -2492,10 +2579,22 @@ class SmartHeatingControlCard extends HTMLElement {
         d.cutoffAt !== null && d.cutoffAt >= d.olo && d.cutoffAt <= d.ohi
           ? `<line x1="0" x2="${W}" y1="${oy(d.cutoffAt)}" y2="${oy(d.cutoffAt)}" class="ocut"></line>`
           : "";
-      outdoorSvg = `<rect x="0" y="${OTOP}" width="${W}" height="${OBOT - OTOP}" class="oband"></rect>${cutoff}
+      // The sun expected ahead (0 to the full sun), as a faint area from the bottom of the band.
+      let sunArea = "";
+      const sunPts = d.sun.filter(([t]) => t >= view.v0 - 900000 && t <= view.v1 + 900000);
+      if (shows("sun") && sunPts.some(([, v]) => v > 0)) {
+        const sy = (v) => OBOT - Math.min(1, Math.max(0, v)) * (OBOT - OTOP);
+        const line = sunPts.map(([t, v]) => `${x(t).toFixed(1)} ${sy(v).toFixed(1)}`).join(" L");
+        sunArea = `<path d="M${x(sunPts[0][0]).toFixed(1)} ${OBOT} L${line} L${x(sunPts.at(-1)[0]).toFixed(1)} ${OBOT} Z" class="sunarea"></path>`;
+      }
+      outdoorSvg = `<rect x="0" y="${OTOP}" width="${W}" height="${OBOT - OTOP}" class="oband"></rect>${sunArea}${
+        shows("out")
+          ? `${cutoff}
         ${measured ? `<path d="${measured}" class="oline"></path>` : ""}
-        ${steps.length > 1 ? `<path d="${path(steps.filter(([t]) => t >= d.now - 1))}" class="oline future"></path>` : ""}`;
-      outLabels = [d.olo, d.ohi]
+        ${steps.length > 1 ? `<path d="${path(steps.filter(([t]) => t >= d.now - 1))}" class="oline future"></path>` : ""}`
+          : ""
+      }`;
+      outLabels = (shows("out") ? [d.olo, d.ohi] : [])
         .map((v) => `<span class="olab" style="top:${(oy(v) / H) * 100}%">${v}°</span>`)
         .join("");
       d.oy = oy;
@@ -2530,7 +2629,7 @@ class SmartHeatingControlCard extends HTMLElement {
     const visible = (sg) => [Math.max(0, x(sg.s)), Math.min(W, x(sg.e))];
     // A label for each level wide enough, not over another label.
     const placed = [];
-    const labels = d.segs
+    const labels = (shows("target") ? d.segs : [])
       .filter((sg, i) => {
         // The rest of the same level after an optimal start / stop has no second label.
         const before = d.segs[i - 1];
@@ -2607,6 +2706,12 @@ class SmartHeatingControlCard extends HTMLElement {
         )}</span>`
       : "";
     const nowIn = d.now >= view.v0 && d.now <= view.v1;
+    // Each legend item hides or shows its series.
+    const legend = (k, label) =>
+      `<button class="lg ${shows(k) ? "" : "off"}" data-action="series" data-series="${k}" data-room="${esc(a.room_id)}"
+        aria-pressed="${shows(k)}" title="${esc(this._t(shows(k) ? "series_hide" : "series_show"))}"><i class="lg-${k}"></i>${esc(
+        this._t(label)
+      )}</button>`;
     const inner = `
         ${zoombar}
         <div class="hchart ${view.zoomed ? "zoomed" : ""} ${hasOut ? "with-out" : ""}" data-chart="${esc(a.room_id)}">
@@ -2628,7 +2733,7 @@ class SmartHeatingControlCard extends HTMLElement {
             ${optimalLabel}
             ${nowIn ? `<span class="nowlabel" style="left:${pct(d.now)}%">${this._t("now_tag")}</span>` : ""}
             ${
-              last && last[0] >= view.v0 && last[0] <= view.v1
+              shows("temp") && last && last[0] >= view.v0 && last[0] <= view.v1
                 ? `<span class="nowdot" style="left:${pct(last[0])}%;top:${(y(last[1]) / H) * 100}%"></span>`
                 : ""
             }
@@ -2639,11 +2744,10 @@ class SmartHeatingControlCard extends HTMLElement {
         <div class="ticks">${ticks.join("")}</div>
         ${this._navHtml(a.room_id, d, view)}
         <div class="readout">
-          <span class="lg"><i class="lg-temp"></i>${this._t("legend_temp")}</span>
-          <span class="lg"><i class="lg-target"></i>${this._t("legend_target")}</span>
-          <span class="lg"><i class="lg-heat"></i>${this._t("legend_heat")}</span>
-          ${d.pred.length ? `<span class="lg"><i class="lg-pred"></i>${this._t("legend_pred")}</span>` : ""}
-          ${hasOut ? `<span class="lg"><i class="lg-out"></i>${this._t("legend_outdoor")}</span>` : ""}
+          ${legend("temp", "legend_temp")}${legend("target", "legend_target")}${legend("heat", "legend_heat")}
+          ${d.pred.length ? legend("pred", "legend_pred") : ""}
+          ${hasOut ? legend("out", "legend_outdoor") : ""}
+          ${hasOut && d.sun.some(([, v]) => v > 0) ? legend("sun", "legend_sun") : ""}
           ${d.loading ? `<span class="muted">${this._t("loading")}</span>` : ""}
         </div>
         <div class="meta"><span>${this._t("today")}: <b>${esc(a.profile || (a.profile_days && a.schedule ? this._t("frost_level") : "–"))}</b></span>${next}</div>`;
@@ -2712,8 +2816,11 @@ class SmartHeatingControlCard extends HTMLElement {
     }
     const time = this._fmt(t, { weekday: "short", hour: "2-digit", minute: "2-digit" });
     const rows = [`<b>${esc(time)}</b>`];
+    const hidden = this._hidden();
+    if (hidden.has("temp")) temp = null;
+    if (hidden.has("out")) out = null;
     if (t <= d.now && temp !== null) rows.push(`<span><i class="lg-temp"></i>${temp.toFixed(1)}°</span>`);
-    if (t > d.now && d.pred?.length) {
+    if (t > d.now && d.pred?.length && !hidden.has("pred")) {
       let pred = null;
       for (const [pt, v] of d.pred) {
         if (pt <= t) pred = v;
@@ -2721,18 +2828,18 @@ class SmartHeatingControlCard extends HTMLElement {
       }
       if (pred !== null) rows.push(`<span><i class="lg-pred"></i>${esc(this._t("tip_pred"))} ${pred.toFixed(1)}°</span>`);
     }
-    if (seg && seg.opt) {
+    if (seg && seg.opt && !hidden.has("target")) {
       rows.push(`<span class="optword">${esc(this._t(seg.opt === "optimal_start" ? "tip_early_start" : "tip_early_stop"))}</span>`);
     }
-    if (seg) {
+    if (seg && !hidden.has("target")) {
       rows.push(
         `<span><i style="background:${PRESET_COLORS[seg.preset] || TEMP_COLOR}"></i>${
           seg.future ? this._t("planned") : this._t("target_tag")
         } ${seg.v}° · ${esc(this._presetName(a, seg.preset) || "")}</span>`
       );
     }
-    if (heating) rows.push(`<span class="hotword"><i class="lg-heat"></i>${this._t("heating")}</span>`);
-    if (predHeating) {
+    if (heating && !hidden.has("heat")) rows.push(`<span class="hotword"><i class="lg-heat"></i>${this._t("heating")}</span>`);
+    if (predHeating && !hidden.has("heat")) {
       rows.push(`<span class="hotword"><i class="lg-heat future"></i>${this._t("heating")} · ${esc(this._t("tip_pred"))}</span>`);
     }
     if (out !== null) {
@@ -2741,6 +2848,17 @@ class SmartHeatingControlCard extends HTMLElement {
           outForecast ? ` · ${esc(this._t("legend_forecast"))}` : ""
         }</span>`
       );
+    }
+    // The warming the sun is expected to give then (the learned gain × the sun signal).
+    if (t > d.now && d.sun?.length && !hidden.has("sun")) {
+      let sun = null;
+      for (const [pt, v] of d.sun) {
+        if (pt <= t) sun = v;
+        else break;
+      }
+      if (sun !== null && sun > 0) {
+        rows.push(`<span><i class="lg-sun"></i>${esc(this._t("legend_sun"))} +${(d.sunGain * sun).toFixed(2)}°/h</span>`);
+      }
     }
     cross.hidden = false;
     cross.style.left = `${f * 100}%`;
@@ -2896,17 +3014,18 @@ class SmartHeatingControlCard extends HTMLElement {
 
   /**
    * The learned thermal model, each value linked to its sensor: the state of
-   * the learning (with the reset), the heating and its inertia, the weather
-   * curve and the heat loss.
+   * the learning (with the reset; two bars while learning), then one tile for
+   * the heating, its inertia, the weather curve, the sun and the heat loss.
    */
   _learnHtml(e, a = {}) {
     const heat = this._state(e.heating_rate);
     const cool = this._state(e.cooling_rate);
     const learned = !!(heat && heat.attributes.learned);
-    const row = (s, entityId, label, text, sub, reset) =>
-      `<div class="wide learn"><div class="link" ${this._more(entityId)}><dt>${esc(label)}</dt><dd>${esc(text)}${
+    const fill = (u, n) => (u ? String(n).split("{u}").join(u) : n);
+    const tile = (entityId, label, text, sub) =>
+      `<div class="link ltile" ${this._more(entityId)}><dt>${esc(label)}</dt><dd>${esc(text)}${
         sub ? `<small class="sub">${esc(sub)}</small>` : ""
-      }</dd></div>${reset}</div>`;
+      }</dd></div>`;
     let html = "";
     if (heat) {
       const unit = heat.attributes.unit_of_measurement || "min/°C";
@@ -2915,16 +3034,6 @@ class SmartHeatingControlCard extends HTMLElement {
       const tau = num(heat.attributes.inertia_minutes) ?? 0;
       const need = num(heat.attributes.hours_needed) ?? 4;
       const err = num(heat.attributes.error_per_hour);
-      const state = learned
-        ? err === null
-          ? this._t("learn_state_done_short")
-          : this._t("learn_state_done").replace("{err}", `${err.toFixed(2)} ${deg}`)
-        : this._t("learn_progress")
-            .replace("{heat}", String(Math.min(need, num(heat.attributes.hours_heating) ?? 0)))
-            .replace("{idle}", String(Math.min(need, num(heat.attributes.hours_idle) ?? 0)))
-            .split("{need}")
-            .join(String(need));
-      const sub = learned ? "" : this._heatDefault(e);
       const resetId = e.reset_learning;
       const confirming = this._confirmReset === resetId;
       const reset =
@@ -2934,40 +3043,60 @@ class SmartHeatingControlCard extends HTMLElement {
               kind: confirming ? "soft-warn" : "",
             })
           : "";
-      html += row(heat, e.heating_rate, this._t("learn_state"), state, sub, reset);
+      let body;
       if (learned) {
-        const text = this._t("learn_heat_value")
-          .replace("{rate}", value === null ? "–" : `${Math.round(value)} ${unit}`)
-          .replace("{tau}", String(Math.round(tau)));
-        html += row(heat, e.heating_rate, this._t("learn_heat"), text, "", "");
+        body = esc(
+          err === null ? this._t("learn_state_done_short") : this._t("learn_state_done").replace("{err}", `${err.toFixed(2)} ${deg}`)
+        );
+      } else {
+        // The hours seen so far, of the hours needed with and without heating.
+        const bar = (key, hours) => {
+          const v = Math.min(need, num(hours) ?? 0);
+          const pct = need > 0 ? Math.round((100 * v) / need) : 0;
+          const text = this._t(key).replace("{v}", String(v)).replace("{need}", String(need));
+          return `<span class="lbar"><span class="lbar-text">${esc(text)}</span><span class="lbar-track" role="progressbar"
+            aria-valuemin="0" aria-valuemax="${need}" aria-valuenow="${v}" aria-label="${esc(text)}"><span style="width:${pct}%"></span></span></span>`;
+        };
+        const sub = this._heatDefault(e);
+        body = `${esc(this._t("learn_progress"))}${bar("learn_bar_heat", heat.attributes.hours_heating)}${bar(
+          "learn_bar_idle",
+          heat.attributes.hours_idle
+        )}${sub ? `<small class="sub">${esc(sub)}</small>` : ""}`;
+      }
+      html += `<div class="wide learn"><div class="link" ${this._more(e.heating_rate)}><dt>${esc(
+        this._t("learn_state")
+      )}</dt><dd>${body}</dd></div>${reset}</div>`;
+      if (learned) {
+        html += tile(e.heating_rate, this._t("learn_heat"), value === null ? "–" : `${Math.round(value)} ${unit}`, this._t("learn_heat_sub"));
+        html += tile(e.heating_rate, this._t("learn_inertia"), `${Math.round(tau)} min`, this._t("learn_inertia_sub"));
         // The curve is °C/h per °C, the same number in °F/h per °F.
         const c = num(heat.attributes.weather_curve) ?? 0;
-        const curve =
+        html +=
           Math.abs(c) < 0.0005
-            ? this._t("learn_curve_none")
-            : this._t("learn_curve_value")
-                .replace("{value}", `${c > 0 ? "+" : "−"}${Math.abs(c).toFixed(3)}`)
-                .split("{u}")
-                .join(deg);
-        html += row(heat, e.heating_rate, this._t("learn_curve"), curve, "", "");
+            ? tile(e.heating_rate, this._t("learn_curve"), this._t("learn_curve_none"), this._t("learn_curve_none_sub"))
+            : tile(
+                e.heating_rate,
+                this._t("learn_curve"),
+                fill(deg, this._t("learn_curve_value").replace("{value}", `${c > 0 ? "+" : "−"}${Math.abs(c).toFixed(3)}`)),
+                fill(deg, this._t("learn_curve_sub"))
+              );
         // The sun gain, only once it is seen: per unit of the sun signal and now.
         const sunGain = num(heat.attributes.sun_gain) ?? 0;
         if (sunGain > 0) {
           const signal = num(this._state(a.house_entities?.outdoor_average)?.attributes?.sun_forecast?.[0]?.[1]) ?? 0;
-          const text = this._t("learn_sun_value")
-            .replace("{value}", sunGain.toFixed(2))
-            .replace("{now}", (sunGain * signal).toFixed(2))
-            .split("{u}")
-            .join(deg);
-          html += row(heat, e.heating_rate, this._t("learn_sun"), text, "", "");
+          html += tile(
+            e.heating_rate,
+            this._t("learn_sun"),
+            fill(deg, this._t("learn_sun_value").replace("{value}", sunGain.toFixed(2))),
+            fill(deg, this._t("learn_sun_sub").replace("{now}", (sunGain * signal).toFixed(2)))
+          );
         }
       }
     }
     if (cool && learned) {
       const value = num(cool.state);
       const unit = cool.attributes.unit_of_measurement || "°C/h";
-      const text = this._t("learn_cool_value").replace("{rate}", value === null ? "–" : `${value.toFixed(2)} ${unit}`);
-      html += row(cool, e.cooling_rate, this._t("learn_cool"), text, "", "");
+      html += tile(e.cooling_rate, this._t("learn_cool"), value === null ? "–" : `${value.toFixed(2)} ${unit}`, this._t("learn_cool_sub"));
     }
     return html;
   }
@@ -3765,6 +3894,10 @@ class SmartHeatingControlCard extends HTMLElement {
       case "clear":
         await this._call("advanced_climate", "clear_override", { room });
         return;
+      case "series":
+        this._toggleSeries(el.dataset.series);
+        this._redrawChart(room);
+        return;
       case "quick-preset": {
         const { data } = this._quickValues(room);
         await this._call("advanced_climate", "set_override", { room, preset: el.dataset.preset, ...data });
@@ -3908,6 +4041,7 @@ const STYLE = `
     --ac-accent: var(--primary-color);
     --ac-fixed: color-mix(in srgb, var(--primary-text-color) 65%, transparent);
     --ac-out: #7d8ea8;
+    --ac-sun: #ffc61a;
     --ac-hot: #d9480f;
     --ac-warn: #c98a12;
     color: var(--primary-text-color);
@@ -4076,6 +4210,7 @@ const STYLE = `
   .hchart .grid { stroke: var(--ac-line); stroke-width: 1; vector-effect: non-scaling-stroke; }
   .hchart .futurebg { fill: var(--primary-text-color); opacity: 0.03; }
   .hchart .oband { fill: var(--primary-text-color); opacity: 0.03; }
+  .hchart .sunarea { fill: var(--ac-sun); opacity: 0.3; }
   .hchart .oline { fill: none; stroke: var(--ac-out); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
   .hchart .oline.future { stroke-dasharray: 4 4; opacity: 0.8; }
   .hchart .ocut { stroke: var(--ac-hot); stroke-width: 1; stroke-dasharray: 2 3; opacity: 0.6; vector-effect: non-scaling-stroke; }
@@ -4141,7 +4276,11 @@ const STYLE = `
   .tip i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; }
   .tip .hotword { color: var(--ac-hot); font-weight: 600; }
   .tip .optword { font-weight: 600; }
-  .lg { display: inline-flex; align-items: center; gap: 6px; }
+  .lg { display: inline-flex; align-items: center; gap: 6px; font: inherit; color: inherit; background: none; border: none;
+    padding: 2px 4px; margin: -2px -4px; border-radius: 6px; cursor: pointer; }
+  .lg:hover, .lg:focus-visible { background: var(--ac-surface-2); }
+  .lg.off { opacity: 0.45; text-decoration: line-through; }
+  .lg-sun { background: color-mix(in srgb, var(--ac-sun) 55%, transparent); height: 8px !important; }
   .lg i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; }
   .lg-temp { background: var(--ac-accent); }
   .lg-target { background: linear-gradient(90deg, #f08c00, #5f6fd1); }
@@ -4172,6 +4311,12 @@ const STYLE = `
   .details div.learn { display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 0; background: none; }
   .details div.learn > div.link { flex: 1; min-width: 0; }
   .details div.learn .btn { flex: none; min-width: 7.5em; justify-content: center; }
+  .details div.ltile dd { font-size: 1.05em; }
+  .lbar { display: block; margin-top: 6px; font-weight: 400; font-size: 0.85em; }
+  .lbar-text { display: block; color: var(--ac-muted); }
+  .lbar-track { display: block; height: 6px; margin-top: 3px; border-radius: 3px; background: var(--ac-line); overflow: hidden; }
+  .lbar-track span { display: block; height: 100%; border-radius: 3px; background: var(--ac-accent); }
+  .lbar + small.sub, .lbar ~ small.sub { margin-top: 6px; }
   .sublabel { font-size: 0.75em; color: var(--ac-muted); margin: 6px 0 -2px; }
   .details dt { font-size: 0.75em; color: var(--ac-muted); }
   .details dd { margin: 2px 0 0; font-variant-numeric: tabular-nums; font-weight: 500; }
@@ -4275,7 +4420,13 @@ const STYLE = `
   .pill.presence-state.nearby ha-icon { color: #2f9e8f; }
   .hname { font-weight: 600; }
   .house-head .segmented { flex: 0 1 280px; min-width: 220px; }
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 8px; }
+  .block.house { container-type: inline-size; }
+  /* Two by two on a narrow card, all in one row on a wide one. */
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .stats.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @container (min-width: 440px) {
+    .stats, .stats.three { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+  }
   .stat, button.stat.period { display: flex; flex-direction: column; gap: 3px; background: var(--ac-surface-2); border-radius: 10px;
     padding: 8px 10px; text-align: left; min-width: 0; }
   .stat .k { display: flex; align-items: center; gap: 5px; font-size: 0.72em; color: var(--ac-muted); min-width: 0; }
@@ -4335,6 +4486,11 @@ const STYLE = `
   .gauge .gvalue { fill: none; stroke: var(--c); stroke-linecap: round; }
   .gauge .gmark { stroke: var(--primary-text-color); stroke-linecap: round; filter: drop-shadow(0 0 1.5px var(--card-background-color)); }
   .gcenter { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  /* In the opening of the arc, under the number. */
+  .gtrend { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: inline-flex; line-height: 0; }
+  .gtrend ha-icon { --mdc-icon-size: max(14px, calc(var(--gs) * 0.2)); }
+  .gtrend.up { color: var(--ac-hot); }
+  .gtrend.down { color: var(--state-climate-cool-color, #2b9af9); }
   .gnum { font-size: max(13px, calc(var(--gs) * 0.24)); font-weight: 300; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
   .gsub { font-size: 0.8em; color: var(--ac-muted); margin-top: 5px; }
   .chips { display: flex; flex-direction: column; gap: 9px; min-width: 0; }

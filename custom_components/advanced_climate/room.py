@@ -160,6 +160,7 @@ from .schedule import (
     parse_schedule,
     uncovered_days,
 )
+from .trend import TemperatureTrend
 from .util import (
     aggregate,
     as_list,
@@ -308,6 +309,8 @@ class Room:
         # The window state after the delays, and a quick drop of the temperature.
         self.window = WindowState()
         self.temp_drop = TemperatureDrop()
+        # Warming or cooling now (the arrow of the card).
+        self.trend = TemperatureTrend()
         self._window_timer: Callable[[], None] | None = None
         self._last_occupied: datetime | None = None
         # Since when someone is present in a room that is in eco for no occupancy.
@@ -811,6 +814,7 @@ class Room:
             minutes=float(self.config[CONF_WINDOW_DROP_MINUTES]),
             degrees=float(self.config[CONF_WINDOW_DROP_DEGREES]),
         )
+        self.trend.update(now, sources, self.current_temp)
 
     def external_temperature(self) -> float | None:
         """Aggregated external sensors only."""

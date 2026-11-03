@@ -301,6 +301,8 @@ class DecisionSensor(RoomEntity, SensorEntity):
             "trv_boost": _boost(room, unit),
             "device_level": room.level_of_device_preset(room.device_preset()),
             "time_to_target": room.time_to_target(room.house.outdoor_now),
+            # Warming (1), cooling (−1) or steady (0) over the last 30 minutes.
+            "temperature_trend": room.trend.direction(dt_util.utcnow()),
             "stop_forecast": _forecast(room, unit),
             "next_estimate": _estimate(room, unit),
             "no_heat_reason": room.no_heat_reason(),

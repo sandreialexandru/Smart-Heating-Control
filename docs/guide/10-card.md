@@ -63,7 +63,9 @@ collapsed: true
 - **Presence**, with every person as a round badge (the photo or the initial)
   in the colour of where they are: orange home, green nearby, grey far.
 - Tiles for **the outdoor average** (over the *Average over* hours), the
-  **season**, the **heat demand** and the **heating time**.
+  **season**, the **heat demand** and the **heating time**: two by two on a
+  narrow card (three in a row without the heating time), all in one row on a
+  wide one.
 - The **mode** (Auto / Vacation / Off / Summer).
 - A row of buttons: **Pause** and **Guests** (on / off), **Vacation** (opens
   the vacation dates), **Reevaluate** and **Automatic** (clears all manual
@@ -92,13 +94,19 @@ appear when it is touched or hovered.
 A folded room (row or compact tile) shows only the **level** (e.g. *Eco*) and
 small icons: heating (flame), window open, mold risk (a drop, while its alert
 is active), manual change and guest mode while it is on; the decision appears when the room is open, with the level next to
-the arc. Below the
+the arc. Under the name, the compact tile shows the time to the target while
+the room heats, else the next change (e.g. *Sleep · 22:00*). Below the
 header:
 
 - an **arc** with the room temperature and the target under it; the arc is
   empty at the frost protection and full at the maximum temperature of the room
   (it only shows the temperature, it does not change anything); a short mark
   across the arc shows the target on the same scale (also on the small arcs);
+  an **arrow** in the opening of the arc (also on the small arcs) shows that
+  the room is warming (↑) or cooling (↓): a change of at least 0.2 °C per hour
+  over the last 30 minutes, one step of a usual sensor (0.1 °C) in 30 minutes;
+  no arrow while it is steady or not known yet (the `temperature_trend`
+  attribute of the *Decision* sensor);
 - next to it the **reason** (in the card language), the **time to target**
   (e.g. *~35 min*) or, during an optimal stop, the **expected temperature at
   the change** (*~21.5° at 22:00*), guest mode while it is on, the **TRV boost** when it is on for the
@@ -111,8 +119,8 @@ see [chapter 8](08-heat-source-and-energy.md#when-a-room-below-its-target-does-n
 While there is a manual change, an **Automatic** button first in the row of
 buttons under the arc clears it (back to automatic).
 
-Under the arc, buttons open the sections **Set for a while**, **Schedule**,
-**Chart**, **Levels** and **Details**, each on its own (several can be open at once); an
+Under the arc, buttons open the sections **For a while** (*Set for a while*),
+**Schedule**, **Chart**, **Levels** (*Level temperatures*) and **Details**, each on its own (several can be open at once); an
 open section's button stays coloured. A **Lock** button next to them turns the
 child lock of the room on or off (coloured while on). The chart and the
 sections:
@@ -146,7 +154,14 @@ and opens on the last 24 hours and the next 12:
 - a fine line at every midnight, between the days;
 - the outdoor temperature in its own band (measured, then the hourly forecast
   dashed) and the cutoff as a dotted line;
+- the **sun** expected ahead, as a faint yellow area at the bottom of the
+  outdoor band (from nothing to the full sun: overhead in a clear sky), once
+  the room has learned that the sun warms it;
 - the next optimal start / stop, as a shaded period.
+
+Every item of the legend under the chart hides or shows its series when
+tapped (crossed out while hidden); the choice is kept in this browser for all
+the charts.
 
 Values are read with the mouse, by tapping or by dragging on the chart, in an
 opaque box (also with themes whose cards are transparent). Zoom with the
@@ -168,7 +183,9 @@ outside* appear as they are now, for the whole period.
 <p align="center"><img src="../images/card-light.png" alt="A manual change with Set for a while open, light theme" width="380"></p>
 
 Set a level or a temperature for a number of hours: *[Set] [21] °C for [2] h*.
-Empty hours = the configured rule for manual changes.
+Empty hours = the configured rule for manual changes. A manual change with an
+end shows the time it has left, e.g. *until 15:10 · 1 h 30 min left* (in
+5-minute steps above an hour).
 
 ### Levels
 
@@ -197,12 +214,14 @@ In groups:
   **humidity** (with a humidity sensor: of the air and at the coldest wall,
   marked *mold risk* from 80 %), the active adjustments, the level temperatures;
 - **Schedule**: the next optimal start / stop, the heating time;
-- **Learning**: its state (*learned* with the usual error of the model, or the
-  hours seen with and without heating out of the 4 needed, with the default
-  under it) with a **Reset** button (with a second click to confirm); once
-  learned, the heating (minutes per degree now and the inertia, e.g. *45 min/°C
-  now · inertia 30 min*), the **weather curve** (e.g. *+0.050 °C/h for each °C
-  colder outdoors*, or *none*) and the heat loss (how fast the room falls now).
+- **Learning**: its state (*learned* with the usual error of the model, or,
+  while learning, two bars with the hours seen with and without heating out of
+  the 4 needed, with the default under them) with a **Reset** button (with a
+  second click to confirm); once learned, one tile each for the **heating**
+  (minutes per degree now, e.g. *45 min/°C*), the **inertia** (e.g. *30 min*),
+  the **weather curve** (e.g. *+0.050 °C/h for each °C colder outdoors*, or
+  *none*), the **sun** (once learned) and the **heat loss** (how fast the room
+  falls now).
 
 With a manual change, the card shows where it was made (card / service or on the
 device), until when, *applies after: …* or *returns after: …*.

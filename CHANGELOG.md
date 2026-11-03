@@ -9,7 +9,30 @@ GitHub releases.
 
 Beta: relays, on / off thermostats and TRVs with the boost start and stop by
 the inertia the room has learned, so slow heating no longer overshoots; the
-predicted temperature of the chart follows how each device switches.
+predicted temperature of the chart follows how each device switches. The
+card is easier to read: an arrow shows whether a room warms or cools, the
+learning shows as tiles and the chart legend hides or shows each line.
+
+### Card
+
+- ↕️ **Warming or cooling**: an arrow in the opening of the arc (also on the
+  folded rows and compact tiles) while the room warms (↑) or cools (↓) by at
+  least 0.2 °C per hour over the last 30 minutes, that is one step of a usual
+  sensor (0.1 °C) in 30 minutes. New `temperature_trend` attribute of the
+  *Decision* sensor (1, −1, 0).
+- 🧠 **Learning in Details**: while learning, two bars (*with heating 2 of
+  4 h*, *without heating 1 of 4 h*); once learned, one tile each for the
+  heating, the inertia, the weather curve, the sun and the heat loss.
+- 📈 **Chart**: tapping a legend item hides or shows its series (kept in the
+  browser); the expected sun is a faint yellow area in the outdoor band, once
+  the room has learned that the sun warms it.
+- ⏳ A manual change with an end shows the time it has left (*until 15:10 ·
+  1 h 30 min left*).
+- 🏠 The house tiles are two by two on a narrow card and in one row on a wide
+  one; the room buttons have short labels (*For a while*, *Levels*).
+- 🔲 The line of a compact tile: the time to the target while the room heats,
+  else the next change (the manual change and the open window are shown by
+  their icons).
 
 ### Integration and card
 

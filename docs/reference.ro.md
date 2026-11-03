@@ -403,22 +403,22 @@ type: custom:smart-heating-control-card
 | `rooms` | toate | Lista senzorilor *Decizie* ai camerelor de arătat |
 | `show_house` | `true` | Prezența și persoanele (cercuri în culoarea locului unde sunt), plăci pentru media temperaturii de afară (pe orele din *Medie pe*), sezon, cererea de căldură și timpul de încălzire, modul (Auto / Vacanță / Oprit / Vară) și un rând de butoane: Pauză și Oaspeți (pornit / oprit; modul oaspeți arată o bandă sus), Vacanță (deschide datele), Reevaluează, Automat (anulează toate modificările manuale) |
 | `show_rooms` | `true` | Camerele |
-| `show_timeline` | `true` | Un buton **Grafic** în fiecare cameră care deschide, într-o fereastră peste dashboard, graficul: 7 zile de istoric și următoarele 12 ore, deschis pe ultimele 24 de ore și următoarele 12: temperatura camerei, temperatura prezisă de modelul învățat (încălzirea pornită și oprită ca de dispozitiv: toleranțele GT, histerezisul, inerția învățată; ținta ținută la termostatele care se reglează singure), ținta (colorată după nivel), nivelurile planificate și perioadele în care camera s-a încălzit. Valorile se citesc cu mouse-ul, la atingere sau trăgând pe grafic (într-o căsuță opacă). Zoom cu butoanele (1h, 6h, −, +), dublu clic, ciupire sau Ctrl + rotiță, de la 20 de minute până la cele 7 zile (⤢ revine); deplasarea prin istoric se face trăgând fereastra din bara de navigare de sub grafic (vizibilă cât timp mouse-ul sau un deget e pe grafic) sau derulând lateral |
+| `show_timeline` | `true` | Un buton **Grafic** în fiecare cameră care deschide, într-o fereastră peste dashboard, graficul: 7 zile de istoric și următoarele 12 ore, deschis pe ultimele 24 de ore și următoarele 12: temperatura camerei, temperatura prezisă de modelul învățat (încălzirea pornită și oprită ca de dispozitiv: toleranțele GT, histerezisul, inerția învățată; ținta ținută la termostatele care se reglează singure), ținta (colorată după nivel), nivelurile planificate și perioadele în care camera s-a încălzit. Valorile se citesc cu mouse-ul, la atingere sau trăgând pe grafic (într-o căsuță opacă). Zoom cu butoanele (1h, 6h, −, +), dublu clic, ciupire sau Ctrl + rotiță, de la 20 de minute până la cele 7 zile (⤢ revine); deplasarea prin istoric se face trăgând fereastra din bara de navigare de sub grafic (vizibilă cât timp mouse-ul sau un deget e pe grafic) sau derulând lateral. Sub grafic, fiecare element din legendă ascunde sau arată seria lui (se păstrează în browser). După ce camera a învățat că soarele o încălzește, soarele așteptat (`sun_forecast`, de la 0 la 1) e o zonă galbenă discretă pe banda temperaturii de afară |
 | `show_quick_override` | `true` | Setează un nivel sau o temperatură pentru un număr de ore (gol = regula configurată) |
 | `show_levels` | `true` | Temperaturile nivelurilor (camere fără Generic Thermostat, temperatura fixă pentru *aproape*) |
-| `show_details` | `true` | Temperatura camerei și ținta, încălzirea învățată, timpul de încălzire, ajustările active, temperaturile nivelurilor |
+| `show_details` | `true` | Temperatura camerei și ținta, învățarea (două bare de progres în timpul învățării; apoi câte o placă pentru încălzire, inerție, curba de temperatură, soare și pierderea de căldură), timpul de încălzire, ajustările active, temperaturile nivelurilor |
 | `show_schedule_editor` | `true` | Profilurile programului cu editor: orele de început se trag pe bara zilei (pași de 5 minute), un profil se copiază peste altul |
 | `collapsed` | `false` | Camerele încep pliate (un rând cu un arc mic, numele, timpul până la țintă, iconițe de stare, nivelul și ținta); camera se deschide atingând rândul |
-| `compact` | `false` | O placă pe cameră (numele, iconițele de stare, arc cu temperatura, nivel, țintă) și un rând pentru casă; se deschide la atingere |
+| `compact` | `false` | O placă pe cameră (numele, iconițele de stare, arc cu temperatura, nivel, țintă; sub nume timpul până la țintă cât încălzește, altfel următoarea schimbare) și un rând pentru casă; se deschide la atingere |
 | `runtime_period` | `day` | Timpul de încălzire arătat pentru `day`, `week` sau `month` (perioade calendaristice, din statisticile pe termen lung; se schimbă și atingând valoarea în card). Senzorii *Timp de încălzire* rămân totaluri cumulate |
 
 Fiecare cameră arată și decizia, o flacără (conturată cât cere căldură, plină și pâlpâind cât
 încălzește; și la casă și la camerele pliate) / insignele pentru fereastră / modificare manuală, un arc cu temperatura camerei (gol la
-antiîngheț, plin la maxim; doar arată valoarea) și ținta, motivul, timpul până
+antiîngheț, plin la maxim; doar arată valoarea), o săgeată ↑ / ↓ în deschiderea lui cât camera se încălzește sau se răcește (`temperature_trend`: cel puțin 0,2 °C/h în ultimele 30 de minute) și ținta, motivul, timpul până
 la țintă, forțarea TRV când e pornită, ce măsoară dispozitivul însuși, profilul
-zilei ca bară și un buton *Automat* (înapoi la automat) în rândul de butoane cât există o modificare manuală. Butoanele de sub arc deschid *Setează
-temporar*, *Program* (fiecare profil cu zilele lui și un comutator pornit /
-oprit; zilele se aleg în editor), *Grafic*, *Niveluri* și *Detalii*, fiecare separat (mai
+zilei ca bară și un buton *Automat* (înapoi la automat) în rândul de butoane cât există o modificare manuală. Butoanele de sub arc deschid *Temporar* (setează
+temporar; o modificare manuală cu sfârșit arată cât mai are), *Program* (fiecare profil cu zilele lui și un comutator pornit /
+oprit; zilele se aleg în editor), *Grafic*, *Niveluri* (temperaturile nivelurilor) și *Detalii*, fiecare separat (mai
 multe deodată) și un buton *Blocare* pentru blocarea modificărilor în cameră.
 
 - **Nu încălzește**: sub țintă, camera spune de ce nu încălzește (în toleranța

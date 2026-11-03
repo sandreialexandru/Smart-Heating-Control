@@ -62,8 +62,8 @@ jobs:
           # The newest tested version (requirements_test.txt).
           - name: newest
             requirements: -r requirements_test.txt
-            # Coverage measured once, on the newest version (report only, no minimum).
-            coverage: "--cov --cov-report=term-missing:skip-covered"
+            # Coverage measured once, on the newest version: at least 93 % (the level reached).
+            coverage: "--cov --cov-report=term-missing:skip-covered --cov-fail-under=93"
           # The minimum in hacs.json (Home Assistant 2026.6.0).
           - name: minimum (2026.6.0)
             requirements: pytest-homeassistant-custom-component==0.13.336

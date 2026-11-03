@@ -36,6 +36,11 @@ learning shows as tiles and the chart legend hides or shows each line.
 
 ### Integration and card
 
+- 🐛 A level that the thermostat has no preset for and whose temperature is
+  unknown (e.g. a Generic Thermostat without that preset) was taken as already
+  reached: nothing was sent and the *preset missing* alert never came. Now the
+  alert comes.
+
 - 🔥 **Use the learned inertia** (new option of the *On / off control* and
   *TRV boost* steps, on by default): for a relay, a thermostat commanded
   *On / off* or TRVs with the boost, once the room has learned its model, the
@@ -69,7 +74,14 @@ learning shows as tiles and the chart legend hides or shows each line.
 - 🧪 The tests of the card are in the repository (`tests/card`, 55 checks in
   Chromium with a fake Home Assistant) and run in CI on every push.
 - 📊 CI measures the test coverage (on the newest Home Assistant) and shows it
-  in the summary of the run; no minimum yet.
+  in the summary of the run; it must stay at least 93 %.
+- 🧪 New tests of the rooms as they are used: Generic Thermostat, thermostats
+  with their own presets or on / off, TRVs in summer, a relay turned on by
+  hand around an open window, the child lock, manual changes for the whole
+  house or until the next reevaluation, the valve exercise, a Schedule helper,
+  a calendar event, a thermostat as the heat source, tariff and solar
+  adjustments, unavailable devices, low batteries, offset calibration, the
+  buttons and the services (coverage from 89 % to 93 % or more).
 - 🧩 The room controller is split by job into `room.py` (state, schedule,
   decision) and `room_devices.py`, `room_override.py`, `room_optimal.py`,
   `room_alerts.py`, `room_status.py`. Nothing changes in what it does.

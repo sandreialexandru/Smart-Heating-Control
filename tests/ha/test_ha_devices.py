@@ -6,7 +6,8 @@ from __future__ import annotations
 import logging
 
 from freezegun.api import FrozenDateTimeFactory
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -279,10 +280,10 @@ async def test_on_off_thermostat_waits_for_its_minimum_on_time(
     await _unload(hass, entry)
 
 
-async def test_mode_off_turns_off_or_lowers_each_trv(
+async def test_summer_turns_off_or_lowers_each_trv(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Mode Off: a TRV with an off mode is turned off, one without gets its minimum."""
+    """Summer: a TRV with an off mode is turned off, one without gets its minimum."""
     modes = async_mock_service(hass, "climate", "set_hvac_mode")
     temperatures = async_mock_service(hass, "climate", "set_temperature")
     hass.states.async_set("climate.trv_a", "heat", TRV)
@@ -302,7 +303,10 @@ async def test_mode_off_turns_off_or_lowers_each_trv(
         ],
     )
     await hass.services.async_call(
-        "select", "select_option", {"entity_id": "select.home_mode", "option": "off"}, blocking=True
+        "select",
+        "select_option",
+        {"entity_id": "select.home_mode", "option": "summer"},
+        blocking=True,
     )
     await _tick(hass, freezer, 5)
     assert {"entity_id": "climate.trv_a", "hvac_mode": "off"} in [c.data for c in modes]
@@ -370,7 +374,12 @@ async def test_relay_turned_on_by_hand_comes_back_after_a_window(
 async def test_a_failing_relay_command_is_logged(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """A switch whose service is missing: a warning, and the room goes on deciding."""
+    """A switch that does not answer: a warning, and the room goes on deciding."""
+
+    async def offline(_call: ServiceCall) -> None:
+        raise HomeAssistantError("the device does not answer")
+
+    hass.services.async_register("switch", "turn_on", offline)
     hass.states.async_set("switch.heater", "off")
     hass.states.async_set("sensor.room_temp", "18.0", {"unit_of_measurement": "°C"})
     with caplog.at_level(logging.WARNING):
@@ -388,7 +397,7 @@ async def test_a_failing_relay_command_is_logged(
                 )
             ],
         )
-    assert "switch.turn_on failed" in caplog.text
+    assert "Bedroom: switch.turn_on failed: the device does not answer" in caplog.text
     assert hass.states.get("sensor.bedroom_decision").state == "schedule"
     assert hass.states.get("switch.heater").state == "off"
     await _unload(hass, entry)
@@ -445,8 +454,12 @@ async def test_manual_change_for_the_whole_house(
     office = hass.states.get("sensor.office_decision")
     kitchen = hass.states.get("sensor.kitchen_decision")
     assert office.state == kitchen.state == "manual_override"
-    assert office.attributes["override"]["description"] == "23.0 °C"
+    # Both say where it was made.
+    assert office.attributes["override"]["description"] == "23.0 °C (Office)"
     assert kitchen.attributes["override"]["description"] == "23.0 °C (Office)"
+    # Only the room of the TRV keeps its value to set again after an interruption.
+    assert office.attributes["override"]["devices"] == ["climate.trv"]
+    assert kitchen.attributes["override"]["devices"] == []
     await _unload(hass, entry)
 
 
@@ -618,4 +631,162 @@ async def test_low_battery_alert(hass: HomeAssistant, freezer: FrozenDateTimeFac
     hass.states.async_set(battery, "85", {"unit_of_measurement": "%"})
     room.check_batteries()
     assert f"battery_{battery}" not in house.active_alerts
+    await _unload(hass, entry)
+
+
+# ---------------------------------------------------------------------------
+# The house: a thermostat as the heat source, tariff and solar, calendar, alerts
+# ---------------------------------------------------------------------------
+async def _reevaluate(hass: HomeAssistant) -> None:
+    await hass.services.async_call(DOMAIN, "reevaluate", {}, blocking=True)
+    await hass.async_block_till_done()
+
+
+async def test_thermostat_as_the_heat_source(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A boiler thermostat as the heat source: only its mode is switched, never its target.
+
+    A TRV room heats only while the thermostat really heats (its hvac_action).
+    """
+    modes = async_mock_service(hass, "climate", "set_hvac_mode")
+    temperatures = async_mock_service(hass, "climate", "set_temperature")
+    hive = {"hvac_modes": ["heat", "off"], "current_temperature": 21.0, "temperature": 25.0}
+    hass.states.async_set("climate.hive", "off", {**hive, "hvac_action": "off"})
+    cold = {**TRV, "current_temperature": 18.0, "temperature": 21.0, "hvac_action": "heating"}
+    hass.states.async_set("climate.trv", "heat", cold)
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"},
+            )
+        ],
+        boiler_entity="climate.hive",
+    )
+    room = _room(entry, "Office")
+    assert modes[-1].data == {"entity_id": "climate.hive", "hvac_mode": "heat"}
+    assert all(c.data["entity_id"] != "climate.hive" for c in temperatures)
+
+    # Switched to heat, but its own sensor is warm enough: it does not heat yet.
+    hass.states.async_set("climate.hive", "heat", {**hive, "hvac_action": "idle"})
+    await _reevaluate(hass)
+    assert room.heat_demand
+    assert not room.heating
+    hass.states.async_set("climate.hive", "heat", {**hive, "hvac_action": "heating"})
+    await _reevaluate(hass)
+    assert room.heating
+
+    # The room is warm, its TRV closes: the thermostat is switched off.
+    hass.states.async_set(
+        "climate.trv", "heat", {**cold, "current_temperature": 21.5, "hvac_action": "idle"}
+    )
+    await _reevaluate(hass)
+    assert modes[-1].data == {"entity_id": "climate.hive", "hvac_mode": "off"}
+    await _unload(hass, entry)
+
+
+async def test_tariff_and_solar_adjust_the_target(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A high price lowers the target, a low price and a PV surplus raise it."""
+    assert await async_setup_component(hass, "input_boolean", {"input_boolean": {"heater": {}}})
+    hass.states.async_set("sensor.room_temp", "20.0", {"unit_of_measurement": "°C"})
+    hass.states.async_set("sensor.price", "0.30")
+    hass.states.async_set("sensor.pv", "200", {"unit_of_measurement": "W"})
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Bedroom",
+                {
+                    "source": "switch",
+                    "switches": ["input_boolean.heater"],
+                    "temperature_sensors": ["sensor.room_temp"],
+                },
+            )
+        ],
+        price_sensor="sensor.price",
+        price_high=0.5,
+        price_low=0.1,
+        pv_sensor="sensor.pv",
+    )
+    target = lambda: hass.states.get("sensor.bedroom_target_temperature").state  # noqa: E731
+    assert target() == "21.0"
+    # 21 − 1 at a high price.
+    hass.states.async_set("sensor.price", "0.70")
+    await _reevaluate(hass)
+    assert target() == "20.0"
+    # 21 + 0.5 at a low price, + 0.5 more with 1500 W of surplus (from 1000 W).
+    hass.states.async_set("sensor.price", "0.05")
+    hass.states.async_set("sensor.pv", "1500", {"unit_of_measurement": "W"})
+    await _reevaluate(hass)
+    assert target() == "22.0"
+    offsets = [o[0] for o in hass.states.get("sensor.bedroom_decision").attributes["offsets"]]
+    assert offsets == ["tariff_low", "pv_surplus"]
+    await _unload(hass, entry)
+
+
+async def test_calendar_event_names_the_level(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """An event titled with a level name sets that level while it runs."""
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    hass.states.async_set("climate.trv", "heat", TRV)
+    hass.states.async_set(
+        "calendar.heating", "on", {"message": "Eco", "end_time": "2026-10-12 14:00:00"}
+    )
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"},
+            )
+        ],
+        calendar="calendar.heating",
+    )
+    await _reevaluate(hass)
+    assert hass.states.get("sensor.office_decision").attributes["preset"] == "eco"
+    assert calls[-1].data["temperature"] == 17.0
+    hass.states.async_set("calendar.heating", "off", {})
+    await _reevaluate(hass)
+    assert hass.states.get("sensor.office_decision").attributes["preset"] == "home"
+    await _unload(hass, entry)
+
+
+async def test_alerts_to_a_notify_entity_and_a_failing_service(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A notify entity gets send_message; a service that fails is logged instead."""
+    sent = async_mock_service(hass, "notify", "send_message")
+    hass.states.async_set("notify.living_tv", "unknown")
+    entry, _calls = await _trv_house(
+        hass,
+        freezer,
+        {"Office": "climate.trv"},
+        notify_critical=["notify.living_tv"],
+        notify_warning=["notify.missing"],
+    )
+    house = entry.runtime_data
+    room = _room(entry, "Office")
+    house.notify(
+        "dev",
+        "x",
+        code="device_unavailable",
+        params={"entity": "climate.trv", "minutes": 15},
+        room=room.id,
+    )
+    house.notify("win", "x", code="window_long", params={"minutes": 30}, room=room.id)
+    await hass.async_block_till_done()
+    assert sent[-1].data == {
+        "entity_id": "notify.living_tv",
+        "title": "Home",
+        "message": "Office: climate.trv has been unavailable for more than 15 min.",
+    }
+    assert "Notification via notify.missing failed" in caplog.text
     await _unload(hass, entry)

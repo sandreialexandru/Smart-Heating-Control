@@ -109,6 +109,11 @@ CURVE_CHECK = (-20.0, 20.0)
 # standard errors from 0.
 SUN_MIN = 1.0
 SUN_T_MIN = 5.0
+# The highest / lowest temperature ahead (the inertia of the heating) is
+# looked for at most this far (minutes: twice the longest inertia), and ends
+# once the room turned by this much (°C).
+EXTREME_MINUTES = 480
+TURN_MARGIN = 0.05
 # Predictions look at most this far ahead (minutes), in steps of one minute.
 MAX_MINUTES = 24 * 60
 
@@ -225,6 +230,36 @@ class ThermalModel:
         if indoor <= floor:
             return 0.0
         return self._minutes_until(indoor, outdoor, q, False, floor, sun)
+
+    def extreme(
+        self,
+        indoor: float,
+        outdoor: float | None,
+        q: float,
+        heating: bool,
+        sun: SunAhead | None = None,
+    ) -> float:
+        """Highest temperature ahead without heating, or the lowest one with heating.
+
+        Without heating the room still rises while the radiators or the floor
+        give the heat they hold (the inertia); with heating it still falls until
+        the heat arrives. The simulation stops once the room turned (by
+        ``TURN_MARGIN``) or after ``EXTREME_MINUTES``.
+        """
+        u = 1.0 if heating else 0.0
+        t = best = indoor
+        for minute in range(1, EXTREME_MINUTES + 1):
+            q, q_mean = _q_after(q, u, 1.0, self.tau)
+            t += self.rate(t, outdoor, q_mean, self._sun(sun, minute - 0.5)) / 60
+            if heating:
+                best = min(best, t)
+                if t > best + TURN_MARGIN:
+                    break
+            else:
+                best = max(best, t)
+                if t < best - TURN_MARGIN:
+                    break
+        return best
 
     def _minutes_until(
         self,

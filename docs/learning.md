@@ -315,6 +315,28 @@ of the stop period is used, in 3 passes like the start. During a stop, the
 decision sensor shows the temperature expected at the change, from the same
 simulation.
 
+### Relays: starting and stopping by the inertia
+
+For a relay or an *On / off (hvac mode)* thermostat with *Use the learned
+inertia* on (the default), inside the hysteresis band:
+
+- heating on: the simulation runs **without heating** from now (q of now, the
+  outdoor temperature of now, the expected sun) until the room turns down;
+  when its highest temperature reaches **target + hysteresis**, the heating
+  stops now;
+- heating off: the simulation runs **with heating** until the room turns up;
+  when its lowest temperature reaches **target − hysteresis**, the heating
+  starts now.
+
+At the edges of the band the band decides as before, and the minimum on / off
+times still apply. Example (the room of section 2 with τ = 60 minutes, no
+weather curve, 5 °C outdoors, target 21 °C, hysteresis 0.3, warming up from
+20.5 °C with cold radiators): at 21.1 °C q is 0.84 and the simulation without
+heating peaks at 21.37 °C, above 21.3 °C, so the heating stops at 21.1 °C; the
+room peaks at 21.33 °C. With the band alone the heating stops at 21.3 °C
+(q 0.87) and the room peaks at 21.55 °C. Simulations:
+[guide, chapter 7](guide/07-optimal-start-stop-and-learning.md#starting-and-stopping-by-the-inertia).
+
 ---
 
 ## 8. A house without an outdoor temperature

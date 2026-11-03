@@ -253,7 +253,7 @@ async def test_room_subentry_flow(hass: HomeAssistant) -> None:
     result = await flow.async_configure(result["flow_id"], {"switches": ["input_boolean.heater"]})
     # Relays: only the on / off settings.
     assert result["step_id"] == "control_on_off"
-    assert _keys(result) == {"hysteresis", "min_on_minutes", "min_off_minutes"}
+    assert _keys(result) == {"hysteresis", "min_on_minutes", "min_off_minutes", "inertia_control"}
     result = await flow.async_configure(result["flow_id"], {})
     assert result["step_id"] == "levels"
     assert "nearby_temp" not in _keys(result)

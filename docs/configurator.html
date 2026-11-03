@@ -245,6 +245,11 @@ const minOn = num('min_on_minutes', L('Minimum on time', 'Timp minim pornit'),
 const minOff = num('min_off_minutes', L('Minimum off time', 'Timp minim oprit'),
   L('The shortest pause between two starts. 0 (default) = no wait. Together with the minimum on time it limits how many cycles per hour the boiler can make.', 'Cea mai scurtă pauză între două porniri. 0 (implicit) = fără așteptare. Împreună cu timpul minim pornit limitează numărul de cicluri pe oră ale centralei.'),
   0, 0, 60, 1, 'min');
+const inertiaCtl = bool('inertia_control', L('Use the learned inertia', 'Folosește inerția învățată'),
+  L('Once the room has learned how slowly its heating reacts, the heating stops a little early when the heat still in the radiators or the floor would take the room to the top of the hysteresis band, and starts a little early when the room would fall to its bottom before the heat arrives. The band stays the limit.', 'După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se oprește puțin mai devreme când căldura rămasă în calorifere sau în pardoseală ar duce camera până la limita de sus a histerezisului și pornește puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Banda rămâne limita.'),
+  true,
+  { m: L('Stops and starts by the inertia.', 'Oprește și pornește după inerție.'), e: L('Less heat above the band, mostly for slow heating: in simulations the mean distance from the target fell from 0.33 to 0.27 °C with cast iron radiators and from 0.9 to 0.45 °C with floor heating. Until the room has learned (usually a day) only the band decides.', 'Mai puțină căldură peste bandă, mai ales la încălzirea lentă: în simulări distanța medie față de țintă a scăzut de la 0,33 la 0,27 °C cu calorifere din fontă și de la 0,9 la 0,45 °C cu încălzire în pardoseală. Până învață camera (de obicei o zi) decide doar banda.'), x: L('Cast iron radiators, target 21 °C: stops at about 21.1 °C instead of 21.3 °C, and the room peaks at about 21.3 °C instead of 21.6 °C.', 'Calorifere din fontă, ținta 21 °C: se oprește pe la 21,1 °C în loc de 21,3 °C, iar camera ajunge la circa 21,3 °C în loc de 21,6 °C.') },
+  { m: L('Only the hysteresis decides.', 'Decide doar histerezisul.'), e: L('The heating stops at target + hysteresis and starts at target − hysteresis; slow radiators or a floor keep warming the room after the stop.', 'Încălzirea se oprește la țintă + histerezis și pornește la țintă − histerezis; caloriferele lente sau pardoseala mai încălzesc camera după oprire.'), x: L('Cast iron radiators, target 21 °C: stops at 21.3 °C, the room peaks at about 21.6 °C.', 'Calorifere din fontă, ținta 21 °C: se oprește la 21,3 °C, camera ajunge la circa 21,6 °C.') });
 const reportsQ = rad('reports', L('Does your thermostat report when it is heating?', 'Termostatul raportează când încălzește?'),
   L('Open Developer tools → States, find the thermostat and look for the attribute hvac_action (heating / idle). This is only a question for you; it decides whether the form asks for a hysteresis.', 'Se vede în Instrumente dezvoltator → Stări, la atributul hvac_action al termostatului (heating / idle). E doar o întrebare de ghidare; hotărăște dacă formularul cere un histerezis.'),
   [
@@ -328,7 +333,7 @@ const HOUSE = [
     intro: L('The integration switches the device on and off itself, so it needs to know the room temperature and how tolerant to be.', 'Integrarea pornește și oprește singură dispozitivul, deci trebuie să știe temperatura din cameră și cât de tolerantă să fie.'),
     fields: [
       Object.assign({}, sensorsReq(L('Sensors in the room. Relays have no sensor of their own, so at least one is required. Several sensors are combined later (average, minimum or median).', 'Senzori din cameră. Releele nu au senzor propriu, deci cel puțin unul e obligatoriu. Mai mulți senzori se combină mai târziu (medie, minim sau mediană).')), { show: c => c.h('source') === 'switch' }),
-      hystOnOff, minOn, minOff
+      hystOnOff, minOn, minOff, inertiaCtl
     ]
   },
   {
@@ -566,7 +571,7 @@ const ROOM = [
   {
     id: 'r_onoff', sec: 'rooms', where: P_ROOM, title: L('On / off control', 'Comandă pornit / oprit'), show: c => !c.whole && isOnOff(c),
     intro: HOUSE[3].intro,
-    fields: [hystOnOff, minOn, minOff]
+    fields: [hystOnOff, minOn, minOff, inertiaCtl]
   },
   {
     id: 'r_thermo', sec: 'rooms', where: P_ROOM, title: L('Thermostat', 'Termostat'), show: c => !c.whole && c.src() === 'climate' && c.cmd() !== 'hvac_mode' && !(c.cmd() === 'temperature' && c.r('trv_boost')),

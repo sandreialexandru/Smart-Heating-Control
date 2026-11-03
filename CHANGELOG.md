@@ -7,8 +7,24 @@ GitHub releases.
 
 ## Unreleased
 
+Beta: relays and on / off thermostats start and stop by the inertia the room
+has learned, so slow radiators and floor heating no longer overshoot.
+
 ### Integration and card
 
+- 🔥 **Use the learned inertia** (new option of the *On / off control* step,
+  on by default): for a relay or a thermostat commanded *On / off*, once the
+  room has learned its model, the heating stops a little early when the heat
+  still in the radiators or the floor would take the room to the top of the
+  hysteresis band, and starts a little early when the room would fall to its
+  bottom before the heat arrives. The band and the minimum on / off times stay
+  the limits; until the room has learned, only the band decides. In
+  simulations the mean distance from the target fell from 0.33 to 0.27 °C
+  with cast iron radiators (no more time above target + 0.5 °C, before
+  14 %) and from 0.9 to 0.45 °C with floor heating; little changes for
+  ordinary radiators. The card says *stopped early: the heat still in the
+  radiators takes the room to ~21.3°* while it waits (`no_heat_reason`
+  `inertia`). See [the guide](docs/guide/07-optimal-start-stop-and-learning.md#starting-and-stopping-by-the-inertia).
 - 🏠 Clearer words for the presence of the house: *the house state is Home*
   instead of *the house is home* (*starea casei e „acasă”* in Romanian), in
   the setup forms and in the guest mode banner of the card, so it is not
@@ -23,7 +39,7 @@ GitHub releases.
   [guide](docs/guide/10-card.md).
 - 🏠 The same wording for the presence of the house in the guide, the
   specification and the configurator.
-- 🧭 The configurator explains the learned sun and the external temperature
+- 🧭 The configurator explains *Use the learned inertia*, the learned sun and the external temperature
   written again every 30 minutes.
 
 ## 2.6.0 – 2026-11-03

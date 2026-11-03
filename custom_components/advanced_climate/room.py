@@ -52,6 +52,7 @@ from .const import (
     CONF_HELPER_ON_PRESET,
     CONF_HUMIDITY_SENSOR,
     CONF_HYSTERESIS,
+    CONF_INERTIA_CONTROL,
     CONF_LEVELS,
     CONF_LINKED_WINDOW_SENSORS,
     CONF_MAX_TEMP,
@@ -144,6 +145,7 @@ from .engine import (
     RoomInputs,
     Target,
     decide,
+    on_off_wanted,
     optimal_period,
     optimal_schedule,
     optimal_stop_state,
@@ -340,6 +342,9 @@ class Room:
         self.next_estimate: dict[str, Any] | None = None
         # A relay that should switch but waits for its minimum on / off time.
         self.relay_waiting: str | None = None
+        # Stopped early by the learned inertia: the temperature it still reaches (°C).
+        self.inertia_stop: float | None = None
+        self._inertia_peak: float | None = None
         # When the minimum on / off time of the relay ends (while it waits).
         self._relay_wait_until: datetime | None = None
         # The values sent to each device: a device that reports them later (a
@@ -2076,12 +2081,17 @@ class Room:
                 want = False
             else:
                 hysteresis = float(self.config[CONF_HYSTERESIS])
-                if self.current_temp <= temperature - hysteresis:
-                    want = True
-                elif self.current_temp >= temperature + hysteresis:
-                    want = False
-                else:
-                    want = actual
+                want, by_model = on_off_wanted(
+                    actual,
+                    self.current_temp,
+                    temperature,
+                    hysteresis,
+                    self._inertia_extreme(now),
+                )
+                if by_model and not want:
+                    self.inertia_stop = self._inertia_peak
+        if want or target.kind == KIND_OFF:
+            self.inertia_stop = None
         if want == actual:
             return False
         if self._relay_must_wait(actual, now):
@@ -2109,6 +2119,30 @@ class Room:
             self._relay_on = want
             self._relay_changed = now
         return ok
+
+    def _inertia_extreme(self, now: datetime) -> Callable[[bool], float] | None:
+        """The learned model for starting and stopping by the inertia (None: the band only).
+
+        Only once the room learned its model and with *Use the learned
+        inertia* on.
+        """
+        if not self.config.get(CONF_INERTIA_CONTROL, True) or self.current_temp is None:
+            return None
+        learner = self.learner
+        if not learner.model.learned:
+            return None
+        house = self.house
+        outdoor = house.outdoor_now
+        sun = house.sun_ahead(now)
+        current = self.current_temp
+
+        def extreme(heating: bool) -> float:
+            value = learner.model.extreme(current, outdoor, learner.q, heating, sun)
+            if not heating:
+                self._inertia_peak = value
+            return value
+
+        return extreme
 
     def _note_relay_state(self, actual: bool, now: datetime) -> None:
         """Remember the real relay state; a switch from outside starts the minimum time."""
@@ -2595,6 +2629,13 @@ class Room:
         if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost:
             if self.relay_waiting:
                 return {"code": f"relay_{self.relay_waiting}"}
+            if self.inertia_stop is not None and not self.boost:
+                # Stopped early: the heat still in the radiators or the floor
+                # takes the room this high by itself.
+                return {
+                    "code": "inertia",
+                    "value": round(from_celsius(self.inertia_stop, house.unit), 1),
+                }
             return {
                 "code": "hysteresis",
                 "value": round(

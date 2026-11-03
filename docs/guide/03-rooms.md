@@ -63,11 +63,20 @@ fight. Sensors (temperature, window, occupancy) may be shared by several rooms.
 | Hysteresis | 0.3 °C (0.1 – 3) | Starts below target − hysteresis, stops above target + hysteresis. With a chosen target of 21 °C: starts at 20.7 °C, stops at 21.3 °C. |
 | Minimum on time | 0 min (0 – 60) | The shortest time it stays on. 0 = no wait. Set a few minutes for a relay that starts a boiler without its own anti-cycling, or to spare a mechanical relay. |
 | Minimum off time | 0 min (0 – 60) | The shortest pause between two starts. 0 = no wait. |
+| Use the learned inertia | on | Once the room has learned how slowly its heating reacts, the heating stops a little early when the heat still in the radiators or the floor would take the room to the top of the band, and starts a little early when the room would fall to the bottom of the band before the heat arrives. Off: only the hysteresis decides. |
 
 The minimum time counts from the last switch, **also one made by hand**. When it
 ends, the room is checked again at once. Inside the hysteresis band (in the
 example between 20.7 and 21.3 °C) the relay stays as it is: if you turned it
-off, it stays off.
+off, it stays off. Only *Use the learned inertia* switches inside the band,
+and only by what the room learned; the band stays the limit (at 21.3 °C it stops,
+at 20.7 °C it starts, whatever the model says).
+
+**Example** (cast iron radiators, learned inertia 60 minutes, target 21 °C):
+with the band alone the heating stops at 21.3 °C and the hot radiators take the
+room to about 21.6 °C. With the learned inertia it stops at about 21.1 °C and
+the room peaks at about 21.3 °C. Details and simulations in
+[chapter 7](07-optimal-start-stop-and-learning.md#starting-and-stopping-by-the-inertia).
 
 ### *Temperature* or *Preset*: **Thermostat**
 

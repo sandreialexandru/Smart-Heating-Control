@@ -135,8 +135,8 @@ formular cere apoi doar valorile de care au nevoie și e sărit când nu se apli
 nimic:
 
 - **Încălzire**: sursa, apoi dispozitivele ei (și comanda pentru alte
-  termostate), apoi setările comenzii: histerezis și timpi minimi pentru relee
-  și control on / off (releele au nevoie și de un senzor de temperatură în
+  termostate), apoi setările comenzii: histerezis, timpi minimi și *Folosește
+  inerția învățată* pentru relee și control on / off (releele au nevoie și de un senzor de temperatură în
   cameră), histerezisul pentru comenzile prin temperatură / preset doar când
   termostatul nu raportează `hvac_action`, nimic pentru Generic Thermostat.
 - **Camere**: calibrarea TRV și mișcarea robinetelor doar pentru TRV-uri;

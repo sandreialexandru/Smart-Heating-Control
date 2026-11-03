@@ -66,6 +66,7 @@ from .const import (
     CONF_HOME_RULE,
     CONF_HUMIDITY_SENSOR,
     CONF_HYSTERESIS,
+    CONF_INERTIA_CONTROL,
     CONF_LEVELS,
     CONF_LINKED_WINDOW_SENSORS,
     CONF_MAX_TEMP,
@@ -832,6 +833,7 @@ def _on_off_schema(d: dict[str, Any], with_sensors: bool) -> vol.Schema:
     fields[_req(CONF_HYSTERESIS, d, ROOM_DEFAULTS)] = _number(0.1, 3, 0.1, "°C")
     fields[_req(CONF_MIN_ON, d, ROOM_DEFAULTS)] = _number(0, 60, 1, "min")
     fields[_req(CONF_MIN_OFF, d, ROOM_DEFAULTS)] = _number(0, 60, 1, "min")
+    fields[_req(CONF_INERTIA_CONTROL, d, ROOM_DEFAULTS)] = _bool()
     return vol.Schema(fields)
 
 

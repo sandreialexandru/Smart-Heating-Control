@@ -204,6 +204,7 @@ One select for the house: **Auto / Vacation / Off / Summer**.
 | --- | --- | --- |
 | Hysteresis | 0.3 °C | Relays, on / off control and thermostats without `hvac_action` (not with GT, which has its own tolerances) |
 | Minimum on / off time | 0 / 0 min | Relays only (not with GT); counted from the last switch, also one made by hand; the room is evaluated again when it ends (also for the heat source of the house, whose own minimum on / off time is 0 / 0 min by default); inside the hysteresis band the relay keeps its real state; a manual value set again after a window also waits for it |
+| Use the learned inertia | on | Relays and on / off control: once the room model is learned, inside the hysteresis band the heating stops when the highest temperature ahead without heating (the heat still in the radiators or the floor) reaches target + hysteresis, and starts when the lowest one ahead with heating (before the heat arrives) reaches target − hysteresis; the band and the minimum times stay the limits; `no_heat_reason` `inertia` with the expected temperature |
 | Dynamic tariff | off | Lower by X °C above a price, preheat below a price |
 | PV surplus | off | Raise by X °C with surplus |
 | Statistics | on | Heating hours per room and for the house |

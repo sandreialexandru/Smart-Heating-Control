@@ -135,6 +135,51 @@ comfort is 21.5 °C. If, from what was learned, the room falls from 22 to
 21.5 °C in 40 minutes, `sleep` starts at 22:00 − 40 = **21:20**. With the
 default limit of 30 minutes, it starts at **21:30**.
 
+## Starting and stopping by the inertia
+
+Only for rooms the integration switches on and off itself: a relay, or a
+thermostat commanded *On / off (hvac mode)*. The hysteresis keeps the room in a
+band, e.g. 20.7 – 21.3 °C around 21 °C. Without anything else, the heating stops
+at 21.3 °C and the radiators, still hot, push the room higher; it starts again
+at 20.7 °C and the room still falls until the radiators are warm.
+
+With **Use the learned inertia** (on by default, in the *On / off control*
+step), once the room has learned its model:
+
+- the heating **stops** as soon as the heat still on its way would take the
+  room to the top of the band by itself;
+- it **starts** as soon as the room would fall to the bottom of the band
+  before the heat arrives.
+
+The band stays the limit: at 21.3 °C it always stops, at 20.7 °C it always
+starts, and the minimum on / off times still apply. While stopped early and
+below the target, the card says *stopped early: the heat still in the radiators
+takes the room to ~21.3°*.
+
+**Example** (assumed values: cast iron radiators that add 2 °C per hour,
+inertia 60 minutes, target 21 °C): the band alone stops at 21.3 °C and the room
+peaks at about 21.6 °C; with the learned inertia it stops at about 21.1 °C and
+peaks at about 21.3 °C.
+
+Simulation (fictional rooms, not measurements): heating h and loss k of each
+room as below, the outdoor temperature random between −5 and 10 °C each day
+with ±3 °C between day and night, 21 °C from 06:00 to 23:00 and 18.5 °C at
+night, the sensor rounded to 0.1 °C, small random disturbances, learned from
+the start with the code of the integration; days 5 – 20 between 08:00 and
+23:00, three runs with different weather. Radiators 20 min: h 2.5 °C/h,
+k 0.06; 30 and 60 min: h 2, k 0.05; floor: h 1.6, k 0.04.
+
+| Room (relay, hysteresis 0.3 °C) | Mean distance from the target, band alone → with the inertia | Time more than 0.5 °C above / below the target, band alone → with the inertia | Starts per hour |
+|---|---|---|---|
+| Radiators, inertia 20 min | 0.24 → 0.19 – 0.20 °C | 0.3 – 0.8 % / 0.7 – 1.1 % → 0 / 0 – 0.2 % | 0.45 → 0.50 |
+| Radiators, inertia 30 min | 0.26 → 0.21 °C | 2.0 – 2.4 % / 2.4 – 2.9 % → 0 / 1.8 – 2.1 % | 0.31 → 0.36 |
+| Cast iron, inertia 60 min | 0.33 – 0.34 → 0.27 °C | 13.7 – 14.7 % / 3.8 – 4.6 % → 0 / 6.3 – 6.8 % | 0.20 → 0.26 |
+| Floor heating, inertia 180 min | 0.90 – 0.92 → 0.44 – 0.47 °C | 31 – 34 % / 34 – 36 % → 7 – 9 % / 16 – 18 % | 0.07 → 0.6 |
+
+The slower the heating, the larger the gain: little for ordinary radiators, the
+deviation halved for floor heating. The heating ran as long or less (floor:
+52 – 55 % of the time → 43 – 45 %), since no heat goes above the band.
+
 ## What you see in the card and the sensors
 
 - **Time to target**: while the room is below the target, below the target

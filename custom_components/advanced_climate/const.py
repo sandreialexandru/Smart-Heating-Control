@@ -285,6 +285,8 @@ CONF_USE_HOUSE_SOURCE: Final = "use_house_source"
 CONF_TRV_BOOST_TEMP: Final = "trv_boost_temperature"  # °C; empty = maximum of the house
 CONF_STOP_TOLERANCE: Final = "stop_tolerance"  # comfort kept by optimal stop (other thermostats)
 CONF_MIN_ON: Final = "min_on_minutes"
+# Relays and on / off thermostats: start and stop by the learned inertia (inside the hysteresis).
+CONF_INERTIA_CONTROL: Final = "inertia_control"
 CONF_MIN_OFF: Final = "min_off_minutes"
 CONF_OCCUPANCY_SENSORS: Final = "occupancy_sensors"
 # Room humidity sensor: only for the mold risk alert.
@@ -374,6 +376,7 @@ ROOM_DEFAULTS: Final = {
     CONF_TRV_BOOST: False,
     CONF_STOP_TOLERANCE: 0.0,
     CONF_MIN_ON: 0,
+    CONF_INERTIA_CONTROL: True,
     CONF_MIN_OFF: 0,
     CONF_OCCUPANCY_SENSORS: [],
     CONF_OCCUPANCY_MINUTES: 30,

@@ -86,6 +86,9 @@ cameră și folosește toate opțiunile casei.
     setează (de exemplu câteva minute) când releul pornește o centrală fără
     protecție proprie la cicluri scurte sau ca să fie cruțat un releu mecanic;
     0 e potrivit pentru radiatoarele electrice.
+  - *Folosește inerția învățată* (implicit pornit): după ce s-a învățat,
+    încălzirea se oprește și pornește puțin mai devreme în interiorul benzii,
+    după cât de încet reacționează (vezi [capitolul 3](03-camere.ro.md#releu-sau-pornit--oprit-comandă-pornit--oprit)).
 - **Termostat** (alte termostate comandate prin *Temperatură* sau *Preset*),
   doar dacă termostatul nu spune când încălzește (nu are `hvac_action`):
   - *Histerezis*. Atunci integrarea consideră că încălzește de la

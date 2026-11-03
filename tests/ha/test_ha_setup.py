@@ -3123,3 +3123,81 @@ async def test_presence_time_with_two_sensors_and_before_eco(
     assert state() == "schedule"
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+def _learned_cast_iron() -> object:
+    """The learning of a room with cast iron radiators (inertia 60 min), as after a few days.
+
+    No outdoor temperature in the test house: the loss is learned as a constant.
+    """
+    import math
+
+    from custom_components.advanced_climate.learning import ThermalLearner
+
+    learner = ThermalLearner()
+    t0 = datetime(2026, 10, 1, tzinfo=dt_util.UTC)
+    temp, q, on = 19.0, 0.0, False
+    for i in range(4 * 1440):
+        target = 21.0 if 360 <= i % 1440 < 1380 else 18.5
+        u = 1.0 if on else 0.0
+        q = u + (q - u) * math.exp(-1 / 60)
+        temp += (2.0 * q - 0.05 * (temp - 5.0)) / 60
+        reading = round(temp, 1)
+        on = True if reading <= target - 0.3 else False if reading >= target + 0.3 else on
+        if i % 5 == 0:
+            learner.observe(t0 + timedelta(minutes=i), on, reading, None, False, False)
+    assert learner.model.learned
+    return learner
+
+
+async def _cast_iron_afternoon(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, inertia: bool
+) -> dict:
+    """Three hours of a relay room with cast iron radiators, warming from 20.5 °C to 21 °C."""
+    import math
+
+    hass.states.async_set("sensor.room_temp", "20.5", {"unit_of_measurement": "°C"})
+    entry = await _setup(hass, freezer, inertia_control=inertia)
+    room = next(iter(entry.runtime_data.rooms.values()))
+    room.learner = _learned_cast_iron()
+    temp, q = 20.5, 0.0
+    readings, stopped_at, reasons = [], None, set()
+    for _ in range(180):
+        on = hass.states.get("input_boolean.heater").state == "on"
+        u = 1.0 if on else 0.0
+        q = u + (q - u) * math.exp(-1 / 60)
+        temp += (2.0 * q - 0.05 * (temp - 5.0)) / 60
+        reading = round(temp, 1)
+        readings.append(reading)
+        hass.states.async_set("sensor.room_temp", str(reading), {"unit_of_measurement": "°C"})
+        await _tick(hass, freezer, 60)
+        if stopped_at is None and on and hass.states.get("input_boolean.heater").state == "off":
+            stopped_at = reading
+        reason = hass.states.get("sensor.bedroom_decision").attributes.get("no_heat_reason")
+        if reason:
+            reasons.add(reason["code"])
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    return {"peak": max(readings), "stopped_at": stopped_at, "reasons": reasons}
+
+
+async def test_relay_band_alone_overshoots(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Cast iron radiators, inertia off: the band stops at 21.3 °C, the hot radiators go on."""
+    band = await _cast_iron_afternoon(hass, freezer, inertia=False)
+    assert band["stopped_at"] == 21.3
+    assert band["peak"] >= 21.5
+    assert "inertia" not in band["reasons"]
+
+
+async def test_relay_stops_by_the_learned_inertia(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Cast iron radiators, inertia on: stopped early, the room ends at the top of the band.
+
+    The same room without the inertia peaks at 21.6 °C (the test above).
+    """
+    model = await _cast_iron_afternoon(hass, freezer, inertia=True)
+    assert model["stopped_at"] is not None and model["stopped_at"] <= 21.1
+    assert model["peak"] <= 21.4

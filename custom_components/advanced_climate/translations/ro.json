@@ -60,14 +60,16 @@
           "temperature_sensors": "Senzori de temperatură",
           "hysteresis": "Histerezis",
           "min_on_minutes": "Timp minim pornit",
-          "min_off_minutes": "Timp minim oprit"
+          "min_off_minutes": "Timp minim oprit",
+          "inertia_control": "Folosește inerția învățată"
         },
         "description": "Integrarea pornește și oprește încălzirea în jurul țintei.",
         "data_description": {
           "temperature_sensors": "Senzori din cameră, folosiți în locul senzorului termostatului (mai exacți când termostatul e lângă o sursă de căldură). Lasă gol ca să folosești senzorul termostatului; la relee sunt necesari, releul nu are senzor.",
           "hysteresis": "Încălzirea pornește sub țintă minus această valoare și se oprește peste țintă plus această valoare.",
           "min_on_minutes": "Timp minim pornit. 0 pentru încălzitoare cărora nu le strică pornirile scurte.",
-          "min_off_minutes": "Timp minim oprit între două porniri."
+          "min_off_minutes": "Timp minim oprit între două porniri.",
+          "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se oprește puțin mai devreme când căldura rămasă în calorifere sau în pardoseală ar duce camera până la limita de sus a histerezisului și pornește puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Limitele histerezisului rămân valabile. Cel mai util la încălzirea lentă (calorifere din fontă, încălzire în pardoseală). Oprit: decide doar histerezisul."
         }
       },
       "heating_thermostat": {
@@ -291,14 +293,16 @@
           "temperature_sensors": "Senzori de temperatură",
           "hysteresis": "Histerezis",
           "min_on_minutes": "Timp minim pornit",
-          "min_off_minutes": "Timp minim oprit"
+          "min_off_minutes": "Timp minim oprit",
+          "inertia_control": "Folosește inerția învățată"
         },
         "description": "Integrarea pornește și oprește încălzirea în jurul țintei.",
         "data_description": {
           "temperature_sensors": "Senzori din cameră, folosiți în locul senzorului termostatului (mai exacți când termostatul e lângă o sursă de căldură). Lasă gol ca să folosești senzorul termostatului; la relee sunt necesari, releul nu are senzor.",
           "hysteresis": "Încălzirea pornește sub țintă minus această valoare și se oprește peste țintă plus această valoare.",
           "min_on_minutes": "Timp minim pornit. 0 pentru încălzitoare cărora nu le strică pornirile scurte.",
-          "min_off_minutes": "Timp minim oprit între două porniri."
+          "min_off_minutes": "Timp minim oprit între două porniri.",
+          "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se oprește puțin mai devreme când căldura rămasă în calorifere sau în pardoseală ar duce camera până la limita de sus a histerezisului și pornește puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Limitele histerezisului rămân valabile. Cel mai util la încălzirea lentă (calorifere din fontă, încălzire în pardoseală). Oprit: decide doar histerezisul."
         }
       },
       "heating_thermostat": {
@@ -468,12 +472,14 @@
           "data": {
             "hysteresis": "Histerezis",
             "min_on_minutes": "Timp minim pornit",
-            "min_off_minutes": "Timp minim oprit"
+            "min_off_minutes": "Timp minim oprit",
+            "inertia_control": "Folosește inerția învățată"
           },
           "data_description": {
             "hysteresis": "Încălzirea pornește sub țintă minus această valoare și se oprește peste țintă plus această valoare.",
             "min_on_minutes": "Timp minim pornit. 0 pentru încălzitoare cărora nu le strică pornirile scurte.",
-            "min_off_minutes": "Timp minim oprit între două porniri."
+            "min_off_minutes": "Timp minim oprit între două porniri.",
+            "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se oprește puțin mai devreme când căldura rămasă în calorifere sau în pardoseală ar duce camera până la limita de sus a histerezisului și pornește puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Limitele histerezisului rămân valabile. Cel mai util la încălzirea lentă (calorifere din fontă, încălzire în pardoseală). Oprit: decide doar histerezisul."
           }
         },
         "control_thermostat": {

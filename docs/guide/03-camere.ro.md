@@ -64,11 +64,20 @@ camere care trimit comenzi opuse aceluiași dispozitiv s-ar contrazice. Senzorii
 | Histerezis | 0,3 °C (0,1 – 3) | Pornește sub țintă − histerezis, oprește peste țintă + histerezis. Cu ținta aleasă 21 °C: pornește la 20,7 °C, oprește la 21,3 °C. |
 | Timp minim pornit | 0 min (0 – 60) | Cel mai scurt timp cât rămâne pornit. 0 = fără așteptare. Câteva minute pentru un releu care pornește o centrală fără protecție proprie la cicluri scurte sau ca să fie cruțat un releu mecanic. |
 | Timp minim oprit | 0 min (0 – 60) | Cea mai scurtă pauză între două porniri. 0 = fără așteptare. |
+| Folosește inerția învățată | pornit | După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se oprește puțin mai devreme când căldura rămasă în calorifere sau în pardoseală ar duce camera până la limita de sus a benzii și pornește puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Oprit: decide doar histerezisul. |
 
 Timpul minim se numără de la ultima comutare, **și de la una făcută de mână**.
 Când se termină, camera e verificată din nou imediat. În banda de histerezis
 (în exemplu, între 20,7 și 21,3 °C) releul rămâne în starea în care e: dacă
-a fost oprit de mână, rămâne oprit.
+a fost oprit de mână, rămâne oprit. Doar *Folosește inerția învățată* comută în
+interiorul benzii, și doar după ce a învățat camera; banda rămâne limita (la
+21,3 °C se oprește, la 20,7 °C pornește, orice ar spune modelul).
+
+**Exemplu** (calorifere din fontă, inerție învățată 60 de minute, ținta 21 °C):
+doar cu banda, încălzirea se oprește la 21,3 °C, iar caloriferele fierbinți duc
+camera la circa 21,6 °C. Cu inerția învățată se oprește pe la 21,1 °C, iar
+camera ajunge la circa 21,3 °C. Detalii și simulări în
+[capitolul 7](07-anticipare-si-invatare.ro.md#pornirea-și-oprirea-după-inerție).
 
 ### *Temperatură* sau *Preset*: **Termostat**
 

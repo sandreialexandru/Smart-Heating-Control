@@ -208,6 +208,7 @@ Un select pentru casă: **Auto / Vacanță / Oprit / Vară**.
 | --- | --- | --- |
 | Histerezis | 0,3 °C | Relee, control pornit / oprit și termostate fără `hvac_action` (nu cu GT, care are propriile toleranțe) |
 | Timp minim de pornire / oprire | 0 / 0 min | Doar relee (nu cu GT); se numără de la ultima comutare, și una făcută de mână; camera e evaluată din nou când se termină (la fel pentru sursa de căldură a casei, al cărei timp minim pornită / oprită e implicit 0 / 0 min); în banda de histerezis releul își păstrează starea reală; o valoare manuală refăcută după o fereastră îl așteaptă și ea |
+| Folosește inerția învățată | pornit | Relee și control pornit / oprit: după ce modelul camerei e învățat, în banda de histerezis încălzirea se oprește când cea mai mare temperatură de până atunci fără încălzire (căldura rămasă în calorifere sau în pardoseală) ajunge la țintă + histerezis și pornește când cea mai mică cu încălzire (până ajunge căldura) ajunge la țintă − histerezis; banda și timpii minimi rămân limitele; `no_heat_reason` `inertia` cu temperatura așteptată |
 | Tarif dinamic | oprit | Coboară cu X °C peste un preț, preîncălzește sub un preț |
 | Surplus fotovoltaic | oprit | Ridică cu X °C când există surplus |
 | Statistici | active | Ore de încălzire pe cameră și pentru casă |

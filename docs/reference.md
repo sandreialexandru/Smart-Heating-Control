@@ -126,8 +126,8 @@ Every form shows only what applies. The choices come first; a second form
 then asks only for the values they need, and is skipped when nothing applies:
 
 - **Heating**: the source, then its devices (and the command for other
-  thermostats), then the command settings: hysteresis and minimum times for
-  relays and on / off control (relays also need a room temperature sensor),
+  thermostats), then the command settings: hysteresis, minimum times and
+  *Use the learned inertia* for relays and on / off control (relays also need a room temperature sensor),
   the hysteresis for temperature / preset commands only when the thermostat
   does not report `hvac_action`, nothing for Generic Thermostat.
 - **Rooms**: TRV calibration and valve exercise only for TRVs; the fixed

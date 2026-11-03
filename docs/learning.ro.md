@@ -321,6 +321,28 @@ folosește media prognozei pe perioada opririi, în 3 treceri ca la pornire. În
 timpul unei opriri, senzorul de decizie arată temperatura așteptată la
 schimbare, din aceeași simulare.
 
+### Relee: pornirea și oprirea după inerție
+
+Pentru un releu sau un termostat *Pornit / oprit (hvac mode)* cu *Folosește
+inerția învățată* pornit (implicit), în banda de histerezis:
+
+- cu încălzirea pornită: simularea rulează **fără încălzire** de acum (q de
+  acum, temperatura de afară de acum, soarele așteptat) până când camera începe
+  să scadă; când cea mai mare temperatură a ei ajunge la **țintă + histerezis**,
+  încălzirea se oprește acum;
+- cu încălzirea oprită: simularea rulează **cu încălzire** până când camera
+  începe să crească; când cea mai mică temperatură a ei ajunge la **țintă −
+  histerezis**, încălzirea pornește acum.
+
+La marginile benzii decide banda, ca înainte, iar timpii minimi pornit / oprit
+se respectă în continuare. Exemplu (camera din secțiunea 2 cu τ = 60 de minute,
+fără curbă, afară 5 °C, ținta 21 °C, histerezis 0,3, încălzindu-se de la
+20,5 °C cu caloriferele reci): la 21,1 °C q e 0,84, iar simularea fără
+încălzire ajunge la 21,37 °C, peste 21,3 °C, deci încălzirea se oprește la
+21,1 °C; camera ajunge la 21,33 °C. Doar cu banda, încălzirea se oprește la
+21,3 °C (q 0,87), iar camera ajunge la 21,55 °C. Simulări:
+[ghid, capitolul 7](guide/07-anticipare-si-invatare.ro.md#pornirea-și-oprirea-după-inerție).
+
 ---
 
 ## 8. O casă fără temperatură de afară

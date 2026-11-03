@@ -136,6 +136,53 @@ confortul deci 21,5 °C. Dacă după cele învățate camera scade de la 22 la
 21,5 °C în 40 de minute, `sleep` începe la 22:00 − 40 = **21:20**. Cu limita
 implicită de 30 de minute, începe la **21:30**.
 
+## Pornirea și oprirea după inerție
+
+Doar pentru camerele pe care integrarea le pornește și le oprește singură: un
+releu sau un termostat comandat *Pornit / oprit (hvac mode)*. Histerezisul ține
+camera într-o bandă, de exemplu 20,7 – 21,3 °C în jurul a 21 °C. Fără altceva,
+încălzirea se oprește la 21,3 °C, iar caloriferele, încă fierbinți, duc camera
+mai sus; pornește din nou la 20,7 °C, iar camera mai coboară până se încălzesc
+caloriferele.
+
+Cu **Folosește inerția învățată** (implicit pornit, la pasul *Comandă pornit /
+oprit*), după ce camera și-a învățat modelul:
+
+- încălzirea **se oprește** imediat ce căldura aflată încă pe drum ar duce
+  singură camera la limita de sus a benzii;
+- **pornește** imediat ce camera ar coborî la limita de jos a benzii înainte să
+  ajungă căldura.
+
+Banda rămâne limita: la 21,3 °C se oprește mereu, la 20,7 °C pornește mereu, iar
+timpii minimi pornit / oprit se respectă în continuare. Cât e oprită mai
+devreme și camera e sub țintă, cardul arată *oprită mai devreme: căldura rămasă
+în calorifere duce camera la ~21,3°*.
+
+**Exemplu** (valori presupuse: calorifere din fontă care adaugă 2 °C pe oră,
+inerție 60 de minute, ținta 21 °C): doar cu banda, încălzirea se oprește la
+21,3 °C, iar camera ajunge la circa 21,6 °C; cu inerția învățată se oprește pe
+la 21,1 °C, iar camera ajunge la circa 21,3 °C.
+
+Simulare (camere fictive, nu măsurători): încălzirea h și pierderea k ale
+fiecărei camere ca mai jos, temperatura de afară aleatoare între −5 și 10 °C în
+fiecare zi, cu ±3 °C între zi și noapte, 21 °C între 06:00 și 23:00 și 18,5 °C
+noaptea, senzorul rotunjit la 0,1 °C, mici perturbări aleatoare, învățat de la
+început cu codul integrării; zilele 5 – 20 între 08:00 și 23:00, trei rulări cu
+vreme diferită. Calorifere 20 min: h 2,5 °C/h, k 0,06; 30 și 60 min: h 2,
+k 0,05; pardoseală: h 1,6, k 0,04.
+
+| Cameră (releu, histerezis 0,3 °C) | Distanța medie față de țintă, doar banda → cu inerția | Timp la peste 0,5 °C deasupra / sub țintă, doar banda → cu inerția | Porniri pe oră |
+|---|---|---|---|
+| Calorifere, inerție 20 min | 0,24 → 0,19 – 0,20 °C | 0,3 – 0,8 % / 0,7 – 1,1 % → 0 / 0 – 0,2 % | 0,45 → 0,50 |
+| Calorifere, inerție 30 min | 0,26 → 0,21 °C | 2,0 – 2,4 % / 2,4 – 2,9 % → 0 / 1,8 – 2,1 % | 0,31 → 0,36 |
+| Fontă, inerție 60 min | 0,33 – 0,34 → 0,27 °C | 13,7 – 14,7 % / 3,8 – 4,6 % → 0 / 6,3 – 6,8 % | 0,20 → 0,26 |
+| Încălzire în pardoseală, inerție 180 min | 0,90 – 0,92 → 0,44 – 0,47 °C | 31 – 34 % / 34 – 36 % → 7 – 9 % / 16 – 18 % | 0,07 → 0,6 |
+
+Cu cât încălzirea e mai lentă, cu atât câștigul e mai mare: puțin la
+caloriferele obișnuite, abaterea înjumătățită la încălzirea în pardoseală.
+Încălzirea a mers la fel de mult sau mai puțin (pardoseală: 52 – 55 % din timp
+→ 43 – 45 %), pentru că nu mai merge căldură peste bandă.
+
 ## Ce arată cardul și senzorii
 
 - **Timpul până la țintă**: cât timp camera e sub țintă, sub temperatura țintă

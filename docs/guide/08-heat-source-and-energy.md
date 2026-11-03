@@ -96,6 +96,7 @@ attribute:
 | --- | --- |
 | the room is within the thermostat tolerance | only a little below the target, the thermostat still waits |
 | within the hysteresis of … | the relay waits for the room to fall below target − hysteresis |
+| stopped early: the heat still in the radiators takes the room to ~… | *Use the learned inertia*: the room still warms by itself up to that |
 | the relay waits for its minimum on / off time | relay protection |
 | the heat source waits for its minimum on / off time | boiler protection |
 | waiting for other rooms: X of Y ask for heat | *Rooms needed* |

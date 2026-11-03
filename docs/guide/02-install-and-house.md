@@ -84,6 +84,9 @@ uses every option of the house.
   - *Minimum on time* and *Minimum off time* (0 by default, no wait): set
     them (e.g. a few minutes) when the relay starts a boiler without its own
     anti-cycling, or to spare a mechanical relay; 0 suits electric heaters.
+  - *Use the learned inertia* (on by default): once learned, the heating
+    stops and starts a little early inside the band, by how slowly it reacts
+    (see [chapter 3](03-rooms.md#relay-or-on--off-on--off-control)).
 - **Thermostat** (other thermostats commanded by *Temperature* or *Preset*),
   only when the thermostat does not report when it heats (no `hvac_action`):
   - *Hysteresis*. The integration then counts it as heating from hysteresis

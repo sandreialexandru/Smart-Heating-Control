@@ -626,3 +626,33 @@ def optimal_schedule(
         if window > 0 and remaining <= timedelta(minutes=window):
             return next_preset, RULE_OPTIMAL_STOP
     return current_preset, RULE_SCHEDULE
+
+
+def on_off_wanted(
+    actual: bool,
+    current: float,
+    target: float,
+    hysteresis: float,
+    extreme: Callable[[bool], float] | None = None,
+) -> tuple[bool, bool]:
+    """Whether a relay (or an on / off thermostat) should heat, and whether the model decided.
+
+    Outside the band target ± hysteresis the band decides, as always. Inside
+    it, with ``extreme`` (the learned model: ``extreme(False)`` the highest
+    temperature ahead without heating, ``extreme(True)`` the lowest one with
+    heating), the heating stops as soon as the heat still on its way would take
+    the room to the top of the band, and starts as soon as the room would fall
+    to the bottom of the band before the heat arrives. Without a model it
+    stays as it is.
+    """
+    if current <= target - hysteresis:
+        return True, False
+    if current >= target + hysteresis:
+        return False, False
+    if extreme is None:
+        return actual, False
+    if actual and extreme(False) >= target + hysteresis:
+        return False, True
+    if not actual and extreme(True) <= target - hysteresis:
+        return True, True
+    return actual, False

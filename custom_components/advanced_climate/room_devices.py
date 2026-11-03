@@ -377,7 +377,9 @@ class RoomDevices:
                 return state.attributes.get("preset_mode") == name
         temperature = self._climate_temperature(target)
         if temperature is None:
-            return True
+            # A level the thermostat has no preset for, and whose temperature is
+            # unknown: not reached, so the room says so (``preset_missing``).
+            return False
         # Compared in the unit of the thermostat, as sent.
         current = float_attr(state, ATTR_TEMPERATURE)
         wanted = self._device_value(state, temperature)

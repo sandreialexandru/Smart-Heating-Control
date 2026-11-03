@@ -9,13 +9,13 @@
           "name": "Name",
           "persons": "People",
           "nearby_zones": "Nearby zones",
-          "home_rule": "The house is home when"
+          "home_rule": "The house state is Home when"
         },
         "data_description": {
           "temperature_unit": "Every temperature of this house is entered and shown in this unit. It can be changed later with Reconfigure; the values are converted.",
           "name": "Shown on the devices and in the card.",
-          "persons": "People whose location decides home / nearby / far. Leave empty only if presence should not matter: the house is then always 'home' and only the schedule decides.",
-          "nearby_zones": "Zones where the house counts as 'nearby' (eco), e.g. your city. Outside home and every zone = 'far' (away). Leave empty if you only want home / far.",
+          "persons": "People whose location decides home / nearby / far. Leave empty only if presence should not matter: the house state is then always 'home' and only the schedule decides.",
+          "nearby_zones": "Zones where the house state is 'nearby' (eco), e.g. your city. Outside home and every zone = 'far' (away). Leave empty if you only want home / far.",
           "home_rule": "'At least one' suits most homes. 'Everybody' lowers the heating as soon as one person leaves."
         }
       },
@@ -128,7 +128,7 @@
         "title": "Presence",
         "data": {
           "persons": "People",
-          "home_rule": "The house is home when",
+          "home_rule": "The house state is Home when",
           "nearby_zones": "Nearby zones",
           "nearby_geometric": "Use coordinates for nearby zones",
           "departure_delay": "Departure delay",
@@ -140,14 +140,14 @@
           "travel_time": "Travel time sensor"
         },
         "data_description": {
-          "persons": "People whose location decides home / nearby / far. Leave empty only if presence should not matter: the house is then always 'home' and only the schedule decides.",
+          "persons": "People whose location decides home / nearby / far. Leave empty only if presence should not matter: the house state is then always 'home' and only the schedule decides.",
           "home_rule": "'At least one' suits most homes. 'Everybody' lowers the heating as soon as one person leaves.",
-          "nearby_zones": "Zones where the house counts as 'nearby' (eco), e.g. your city. Outside home and every zone = 'far' (away). Leave empty if you only want home / far.",
+          "nearby_zones": "Zones where the house state is 'nearby' (eco), e.g. your city. Outside home and every zone = 'far' (away). Leave empty if you only want home / far.",
           "nearby_geometric": "Uses the GPS coordinates: someone in a zone that lies inside a nearby zone (e.g. Office in the city) counts as nearby. Turn off if people have no GPS location.",
           "departure_delay": "How long everybody must be gone before the heating is lowered. Avoids reacting to short trips (shop, walking the dog).",
           "arrival_delay": "Usually 0: the heating returns as soon as someone is home. Raise it only if GPS sometimes reports 'home' by mistake.",
-          "presence_sensors": "Keep the house 'home' while on (mmWave, motion, a switch for people without a phone). Leave empty if everybody has the companion app.",
-          "guest_expire_hours": "Guest mode keeps the house 'home'; it turns off by itself after this many hours. 0 = only manually.",
+          "presence_sensors": "Keep the house state 'home' while on (mmWave, motion, a switch for people without a phone). Leave empty if everybody has the companion app.",
+          "guest_expire_hours": "Guest mode keeps the house state 'home'; it turns off by itself after this many hours. 0 = only manually.",
           "proximity_distance": "Proximity integration distance sensor, for preheating on the way home. Leave empty without Proximity.",
           "proximity_direction": "Proximity direction sensor. Set it so that sitting at an office near home does not start the preheating.",
           "travel_time": "Travel time to home (Waze, Google Travel Time) for preheating. Leave empty if you do not have one."

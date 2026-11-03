@@ -129,13 +129,13 @@ opțională a fiecărei camere.
 | --- | --- | --- |
 | Persoane | – | Ce entități `person` contează |
 | Regula pentru acasă | cel puțin una | „Cel puțin una” sau „toată lumea” acasă |
-| Zone apropiate | niciuna | Zone (de exemplu București) în care casa e *aproape* în loc de *departe* |
+| Zone apropiate | niciuna | Zone (de exemplu București) în care starea casei e *aproape* în loc de *departe* |
 | Zone din interiorul unei zone apropiate | automat | O zonă din oraș (de exemplu Birou) contează și ea ca aproape, calculat după coordonate |
 | Proximity | oprit | Distanță și direcție; preîncălzire doar când cineva vine spre casă |
 | Prag de sosire | 10 km sau 20 min | Distanța sau timpul de drum de la care începe preîncălzirea |
-| Întârziere la plecare | 10 min | Așteptare înainte ca o casă să fie considerată goală |
+| Întârziere la plecare | 10 min | Așteptare înainte ca starea casei să se schimbe după plecarea ultimei persoane |
 | Întârziere la sosire | 0 min | Așteptare înainte ca cineva să fie considerat sosit |
-| Senzori de prezență | niciunul | mmWave / mișcare / comutatoare țin casa *acasă* |
+| Senzori de prezență | niciunul | mmWave / mișcare / comutatoare țin starea casei *acasă* |
 | Ocuparea camerei | oprită | Camera trece pe eco după X minute fără ocupare (implicit 30); revine la program după Y minute de prezență fără întrerupere (implicit 0 = imediat; o prezență mai scurtă păstrează eco, iar numărătoarea reîncepe) |
 | Mod oaspeți | oprit | Forțează *acasă*, cu expirare automată opțională; are prioritate față de orice vacanță (mod, date, automată), care continuă când e oprit |
 

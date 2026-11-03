@@ -26,7 +26,7 @@ living room, two people with the Home Assistant app on their phones.
 | --- | --- |
 | 04:50 | The optimal start turns the boiler on (e.g. with 70 learned minutes before 06:00) |
 | 06:00 | `home`, the living room is already at 21 °C |
-| 08:10 | The last person leaves at 08:00; after the 10-minute delay the house is *nearby* (in town): `eco` |
+| 08:10 | The last person leaves at 08:00; after the 10-minute delay the house state is *nearby* (in town): `eco` |
 | 17:30 | Someone comes home: `home` |
 | 22:00 | `sleep` |
 
@@ -88,7 +88,7 @@ outside, pause, mode Summer, outside the season, the minimum time, other rooms
 needed.
 
 **Why is the room on `eco` although I am home?**
-Check the *Presence* sensor: maybe the phone reports wrongly (then the house is
+Check the *Presence* sensor: maybe the phone reports wrongly (then the house state is
 *nearby*). Or the room has occupancy sensors that did not detect you for *Eco
 after no occupancy for* minutes.
 

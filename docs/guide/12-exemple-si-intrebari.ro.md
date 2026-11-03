@@ -26,7 +26,7 @@ sufragerie, doi locuitori cu aplicația Home Assistant pe telefon.
 | --- | --- |
 | 04:50 | Pornirea anticipată pornește centrala (de exemplu cu 70 de minute învățate înainte de 06:00) |
 | 06:00 | `home`, sufrageria e deja la 21 °C |
-| 08:10 | Ultimul pleacă la 08:00; după întârzierea de 10 minute casa e *aproape* (în oraș): `eco` |
+| 08:10 | Ultimul pleacă la 08:00; după întârzierea de 10 minute starea casei e *aproape* (în oraș): `eco` |
 | 17:30 | Cineva vine acasă: `home` |
 | 22:00 | `sleep` |
 
@@ -89,7 +89,7 @@ pauză, modul Vară, în afara sezonului, timpul minim, alte camere necesare.
 
 **De ce camera e pe `eco` deși e cineva acasă?**
 De verificat senzorul *Prezență*: poate un telefon raportează greșit (atunci
-casa e *aproape*). Sau camera are senzori de ocupare și nu a detectat pe nimeni
+starea casei e *aproape*). Sau camera are senzori de ocupare și nu a detectat pe nimeni
 de *Eco după lipsă de ocupare de* minute.
 
 **Un nivel foarte mic în Generic Thermostat, dar camera stă mai cald.**

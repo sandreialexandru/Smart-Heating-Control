@@ -19,7 +19,7 @@ nu trebuie să se răcească prea mult (`eco`). Cu toată lumea plecată din ora
 poate scădea mai mult (`away`).
 
 Fără nicio zonă apropiată, există doar *acasă* și *departe*. Fără nicio
-persoană, casa e mereu *acasă* și decide doar programul.
+persoană, starea casei e mereu *acasă* și decide doar programul.
 
 ## Cum se stabilește starea fiecărei persoane
 
@@ -40,44 +40,44 @@ schimbă nimic: se păstrează ultima stare cunoscută. Nu sunt niciodată trata
 ca plecare.
 
 Dacă nu se știe nimic despre nicio persoană (de exemplu imediat după prima
-pornire), casa e considerată *acasă*, ca să nu fie frig.
+pornire), starea casei e *acasă*, ca să nu fie frig.
 
 ## Regula pentru „acasă”
 
-| Regula | Casa e acasă când | Altfel |
+| Regula | Starea casei e „acasă” când | Altfel |
 | --- | --- | --- |
 | **Cel puțin o persoană e acasă** | oricine e acasă | aproape, dacă cineva e aproape; departe, dacă toți sunt departe |
 | **Toți sunt acasă** | toți cei cunoscuți sunt acasă | aproape, dacă cineva e acasă sau aproape; departe, dacă toți sunt departe |
 
 **Exemplu cu *Toți sunt acasă*.** Andrei e acasă, Maria e la muncă în oraș:
-casa e *aproape* (`eco`). Când vine și Maria, casa e *acasă* (programul).
+starea casei e *aproape* (`eco`). Când vine și Maria, starea casei e *acasă* (programul).
 
 ## Senzori de prezență și modul oaspeți
 
 - **Senzori de prezență** (mmWave, mișcare, un `input_boolean`): cât e pornit
-  oricare dintre ei, casa e *acasă*. Util pentru cine nu are telefon (copii,
+  oricare dintre ei, starea casei e *acasă*. Util pentru cine nu are telefon (copii,
   bunici) sau ca siguranță.
-- **Modul oaspeți** (comutatorul *Mod oaspeți* al casei): ține casa *acasă*
+- **Modul oaspeți** (comutatorul *Mod oaspeți* al casei): ține starea casei *acasă*
   indiferent de persoane, de exemplu când vin musafiri și locuitorii pleacă. Se oprește
   singur după *Modul oaspeți se oprește după* ore (0 = doar manual).
 
 ## Întârzierile
 
-- **Întârziere la plecare** (implicit 10 minute): casa trece spre *aproape* sau
+- **Întârziere la plecare** (implicit 10 minute): starea casei trece spre *aproape* sau
   *departe* doar dacă starea rămâne așa atâtea minute. Un drum scurt la magazin
   nu răcește casa. Întârzierea se numără de când a plecat ultima persoană, deci
   o repornire a Home Assistant nu o ia de la capăt.
-- **Întârziere la sosire** (implicit 0): casa trece spre *acasă* (sau de la
+- **Întârziere la sosire** (implicit 0): starea casei trece spre *acasă* (sau de la
   *departe* la *aproape*) după atâtea minute. De obicei 0, ca încălzirea să revină
   imediat; se mărește doar dacă GPS-ul raportează uneori greșit „acasă”.
 
 **Exemplu.** Toată lumea pleacă la 08:00. Cu întârzierea implicită de 10
-minute, casa trece pe *departe* la 08:10. O întoarcere la 08:05 după cheile
+minute, starea casei trece pe *departe* la 08:10. O întoarcere la 08:05 după cheile
 uitate nu schimbă nimic.
 
 ## Preîncălzirea pe drum spre casă
 
-Când casa e *aproape* sau *departe*, poate începe să se încălzească **cât
+Când starea casei e *aproape* sau *departe*, poate începe să se încălzească **cât
 cineva e pe drum spre casă**, ca să fie cald la sosire. E nevoie de unul dintre:
 
 - integrarea **Proximity** din Home Assistant, cu senzorul de distanță (și

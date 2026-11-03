@@ -7,6 +7,13 @@ GitHub releases.
 
 ## Unreleased
 
+### Integration and card
+
+- 🏠 Clearer words for the presence of the house: *the house state is Home*
+  instead of *the house is home* (*starea casei e „acasă”* in Romanian), in
+  the setup forms and in the guest mode banner of the card, so it is not
+  mistaken for the level *home*.
+
 ### Documentation
 
 - 📖 A new README that shows what the integration does, with a video of the
@@ -14,6 +21,8 @@ GitHub releases.
   details that were in it are in the new [Reference](docs/reference.md).
   The same pictures, the GIF and the video are in the card chapter of the
   [guide](docs/guide/10-card.md).
+- 🏠 The same wording for the presence of the house in the guide, the
+  specification and the configurator.
 - 🧭 The configurator explains the learned sun and the external temperature
   written again every 30 minutes.
 

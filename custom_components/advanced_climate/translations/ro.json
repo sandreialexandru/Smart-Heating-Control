@@ -9,13 +9,13 @@
           "name": "Nume",
           "persons": "Persoane",
           "nearby_zones": "Zone apropiate",
-          "home_rule": "Casa e „acasă” când"
+          "home_rule": "Starea casei e „acasă” când"
         },
         "data_description": {
           "temperature_unit": "Toate temperaturile acestei case se introduc și se afișează în această unitate. Se poate schimba mai târziu din Reconfigurează; valorile sunt convertite.",
           "name": "Apare pe dispozitive și în card.",
-          "persons": "Persoanele a căror locație decide acasă / aproape / departe. Lasă gol doar dacă prezența nu contează: casa e atunci mereu „acasă” și decide doar programul.",
-          "nearby_zones": "Zonele în care casa e „aproape” (eco), de ex. orașul. În afara casei și a zonelor = „departe” (away). Lasă gol dacă vrei doar acasă / departe.",
+          "persons": "Persoanele a căror locație decide acasă / aproape / departe. Lasă gol doar dacă prezența nu contează: starea casei e atunci mereu „acasă” și decide doar programul.",
+          "nearby_zones": "Zonele în care starea casei e „aproape” (eco), de ex. orașul. În afara casei și a zonelor = „departe” (away). Lasă gol dacă vrei doar acasă / departe.",
           "home_rule": "„Cel puțin o persoană” se potrivește majorității. „Toți” coboară încălzirea imediat ce pleacă cineva."
         }
       },
@@ -128,7 +128,7 @@
         "title": "Prezență",
         "data": {
           "persons": "Persoane",
-          "home_rule": "Casa e „acasă” când",
+          "home_rule": "Starea casei e „acasă” când",
           "nearby_zones": "Zone apropiate",
           "nearby_geometric": "Folosește coordonatele pentru zonele apropiate",
           "departure_delay": "Întârziere la plecare",
@@ -140,14 +140,14 @@
           "travel_time": "Senzor de timp de deplasare"
         },
         "data_description": {
-          "persons": "Persoanele a căror locație decide acasă / aproape / departe. Lasă gol doar dacă prezența nu contează: casa e atunci mereu „acasă” și decide doar programul.",
+          "persons": "Persoanele a căror locație decide acasă / aproape / departe. Lasă gol doar dacă prezența nu contează: starea casei e atunci mereu „acasă” și decide doar programul.",
           "home_rule": "„Cel puțin o persoană” se potrivește majorității. „Toți” coboară încălzirea imediat ce pleacă cineva.",
-          "nearby_zones": "Zonele în care casa e „aproape” (eco), de ex. orașul. În afara casei și a zonelor = „departe” (away). Lasă gol dacă vrei doar acasă / departe.",
+          "nearby_zones": "Zonele în care starea casei e „aproape” (eco), de ex. orașul. În afara casei și a zonelor = „departe” (away). Lasă gol dacă vrei doar acasă / departe.",
           "nearby_geometric": "Folosește coordonatele GPS: cine e într-o zonă aflată în interiorul zonei apropiate (de ex. Birou în oraș) e „aproape”. Dezactivează dacă persoanele nu au locație GPS.",
           "departure_delay": "Cât timp trebuie să fie toți plecați până scade încălzirea. Evită reacția la drumuri scurte (magazin, plimbat câinele).",
           "arrival_delay": "De obicei 0: încălzirea revine imediat ce cineva e acasă. Mărește doar dacă GPS-ul raportează uneori greșit „acasă”.",
-          "presence_sensors": "Țin casa „acasă” cât sunt pornite (mmWave, mișcare, un comutator pentru cine nu are telefon). Lasă gol dacă toți au aplicația pe telefon.",
-          "guest_expire_hours": "Modul oaspeți ține casa „acasă”; se oprește singur după atâtea ore. 0 = doar manual.",
+          "presence_sensors": "Țin starea casei „acasă” cât sunt pornite (mmWave, mișcare, un comutator pentru cine nu are telefon). Lasă gol dacă toți au aplicația pe telefon.",
+          "guest_expire_hours": "Modul oaspeți ține starea casei „acasă”; se oprește singur după atâtea ore. 0 = doar manual.",
           "proximity_distance": "Senzorul de distanță al integrării Proximity, pentru preîncălzire pe drumul spre casă. Lasă gol fără Proximity.",
           "proximity_direction": "Senzorul de direcție Proximity. Setează-l ca să nu pornească preîncălzirea când stai la un birou aproape de casă.",
           "travel_time": "Timpul până acasă (Waze, Google Travel Time), pentru preîncălzire. Lasă gol dacă nu ai."

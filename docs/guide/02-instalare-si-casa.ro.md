@@ -40,15 +40,15 @@ că nu are sens pentru alegerile făcute.
 | --- | --- |
 | **Unitatea de temperatură** | °C sau °F. Toate temperaturile casei se introduc și se afișează în ea. Se poate schimba mai târziu (mai jos). |
 | **Nume** | Numele casei, de exemplu „Acasă”. Apare pe dispozitive și în card. |
-| **Persoane** | Entitățile `person` ale celor care locuiesc în casă. Locația lor decide dacă casa e *acasă*, *aproape* sau *departe*. Dacă rămâne gol, casa e mereu *acasă* și decide doar programul. |
-| **Zone apropiate** | Zonele în care casa e *aproape* (`eco`) în loc de *departe* (`away`), de exemplu zona orașului. Dacă rămâne gol, există doar *acasă* și *departe*. |
-| **Casa e „acasă” când** | *Cel puțin o persoană e acasă* (potrivit pentru aproape toate casele) sau *Toți sunt acasă* (încălzirea scade imediat ce pleacă cineva). |
+| **Persoane** | Entitățile `person` ale celor care locuiesc în casă. Locația lor decide dacă starea casei e *acasă*, *aproape* sau *departe*. Dacă rămâne gol, starea casei e mereu *acasă* și decide doar programul. |
+| **Zone apropiate** | Zonele în care starea casei e *aproape* (`eco`) în loc de *departe* (`away`), de exemplu zona orașului. Dacă rămâne gol, există doar *acasă* și *departe*. |
+| **Starea casei e „acasă” când** | *Cel puțin o persoană e acasă* (potrivit pentru aproape toate casele) sau *Toți sunt acasă* (încălzirea scade imediat ce pleacă cineva). |
 
 **Exemplu.** Andrei și Maria locuiesc în București. Se aleg persoanele
 `person.andrei` și `person.maria`, iar ca zonă apropiată o zonă „București”
 (creată în Home Assistant la *Setări → Zone*). Când amândoi sunt la muncă în
-oraș, casa e *aproape* și trece pe `eco`. Când pleacă din oraș, casa e
-*departe* și trece pe `away`.
+oraș, starea casei e *aproape* și camerele trec pe `eco`. Când pleacă din oraș, starea casei e
+*departe* și camerele trec pe `away`.
 
 ### Pasul 2: încălzirea întregii case
 
@@ -119,13 +119,13 @@ schimbă ca la orice cameră: pe pagina integrării, la zona *Whole house*,
 | Setare | Implicit | Ce face |
 | --- | --- | --- |
 | Persoane | – | Ca la crearea casei. |
-| Casa e „acasă” când | cel puțin una | Ca la crearea casei. |
+| Starea casei e „acasă” când | cel puțin una | Ca la crearea casei. |
 | Zone apropiate | niciuna | Ca la crearea casei. |
 | Folosește coordonatele pentru zonele apropiate | pornit | Cineva aflat într-o zonă care e în interiorul unei zone apropiate (de exemplu zona „Birou” din oraș) contează ca *aproape*. Se oprește dacă persoanele nu au locație GPS. |
 | Întârziere la plecare | 10 min | Cât timp trebuie să lipsească toată lumea înainte să scadă încălzirea. Evită reacția la drumuri scurte (magazin, plimbatul câinelui). |
 | Întârziere la sosire | 0 min | De obicei 0: încălzirea revine imediat ce vine cineva. Se mărește doar dacă GPS-ul raportează uneori greșit „acasă”. |
-| Senzori de prezență | niciunul | Țin casa *acasă* cât sunt pornite (mmWave, mișcare, un comutator pentru cine nu are telefon). |
-| Modul oaspeți se oprește după | 0 h | Modul oaspeți ține casa *acasă*; se oprește singur după atâtea ore. 0 = doar manual. |
+| Senzori de prezență | niciunul | Țin starea casei *acasă* cât sunt pornite (mmWave, mișcare, un comutator pentru cine nu are telefon). |
+| Modul oaspeți se oprește după | 0 h | Modul oaspeți ține starea casei *acasă*; se oprește singur după atâtea ore. 0 = doar manual. |
 | Senzor de distanță (Proximity) | – | Pentru preîncălzirea pe drum spre casă. |
 | Senzor de direcție (Proximity) | – | Ca preîncălzirea să pornească doar când cineva vine spre casă, nu când stă la un birou aproape de casă. |
 | Senzor de timp de deplasare | – | Timpul până acasă (Waze, Google Travel Time). |

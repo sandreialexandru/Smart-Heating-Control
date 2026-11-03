@@ -39,15 +39,15 @@ not make sense for your choices.
 | --- | --- |
 | **Temperature unit** | °C or °F. Every temperature of the house is entered and shown in it. It can be changed later (see below). |
 | **Name** | The name of the house, e.g. "Home". Shown on the devices and in the card. |
-| **People** | The `person` entities of the people who live there. Their location decides whether the house is *home*, *nearby* or *far*. Left empty, the house is always *home* and only the schedule decides. |
-| **Nearby zones** | Zones where the house counts as *nearby* (`eco`) instead of *far* (`away`), e.g. the zone of your city. Left empty, there is only *home* and *far*. |
-| **The house is home when** | *At least one person is home* (right for almost every home) or *Everybody is home* (the heating goes down as soon as someone leaves). |
+| **People** | The `person` entities of the people who live there. Their location decides whether the house state is *home*, *nearby* or *far*. Left empty, the house state is always *home* and only the schedule decides. |
+| **Nearby zones** | Zones where the house state is *nearby* (`eco`) instead of *far* (`away`), e.g. the zone of your city. Left empty, there is only *home* and *far*. |
+| **The house state is Home when** | *At least one person is home* (right for almost every home) or *Everybody is home* (the heating goes down as soon as someone leaves). |
 
 **Example.** Andrei and Maria live in Bucharest. You pick `person.andrei` and
 `person.maria`, and a zone "Bucharest" as nearby zone (made in Home Assistant
 under *Settings → Areas, labels & zones → Zones*). When both are at work in
-town, the house is *nearby* and goes to `eco`. When they leave town, the house
-is *far* and goes to `away`.
+town, the house state is *nearby* and the rooms go to `eco`. When they leave town, the house state
+is *far* and the rooms go to `away`.
 
 ### Step 2: the heating of the whole house
 
@@ -117,13 +117,13 @@ house* zone, **⋮ → Reconfigure** (see [chapter 3](03-rooms.md)).
 | Setting | Default | What it does |
 | --- | --- | --- |
 | People | – | As when creating the house. |
-| The house is home when | at least one | As when creating the house. |
+| The house state is Home when | at least one | As when creating the house. |
 | Nearby zones | none | As when creating the house. |
 | Use coordinates for nearby zones | on | Someone in a zone that lies inside a nearby zone (e.g. the "Office" zone in town) counts as *nearby*. Turn off if people have no GPS location. |
 | Departure delay | 10 min | How long everybody must be gone before the heating goes down. Avoids reacting to short trips (shop, walking the dog). |
 | Arrival delay | 0 min | Usually 0: the heating returns as soon as someone is home. Raise it only if GPS sometimes reports "home" by mistake. |
-| Presence sensors | none | Keep the house *home* while on (mmWave, motion, a switch for people without a phone). |
-| Guest mode turns off after | 0 h | Guest mode keeps the house *home*; it turns off after this many hours. 0 = only by hand. |
+| Presence sensors | none | Keep the house state *home* while on (mmWave, motion, a switch for people without a phone). |
+| Guest mode turns off after | 0 h | Guest mode keeps the house state *home*; it turns off after this many hours. 0 = only by hand. |
 | Proximity distance sensor | – | For preheating on the way home. |
 | Proximity direction sensor | – | So preheating starts only when someone comes towards home, not when sitting at an office near home. |
 | Travel time sensor | – | Travel time to home (Waze, Google Travel Time). |

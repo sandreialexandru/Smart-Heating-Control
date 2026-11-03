@@ -12,7 +12,7 @@ Numele entităților sunt date ca în interfața în română. ID-urile încep c
 | *Mod* (select) | Modul: `auto`, `vacation`, `off`, `summer`. |
 | *Prezență* (senzor) | `home`, `nearby`, `far`; atribute: persoanele, `arriving`, `guest_mode`, `vacation_active`, `vacation_suspended`, `vacation_preheating`, `pending`, `pending_since`. |
 | *Pauză* (comutator) | Pauza. |
-| *Mod oaspeți* (comutator) | Modul oaspeți (casa rămâne *acasă*). |
+| *Mod oaspeți* (comutator) | Modul oaspeți (starea casei rămâne *acasă*). |
 | *Început vacanță*, *Sfârșit vacanță* (dată și oră) | Perioada vacanței. Un sfârșit înainte de început (sau egal cu el) e refuzat, ca la `set_vacation`. |
 | *Sezon de încălzire* (senzor binar) | Dacă e sezonul de încălzire. |
 | *Cald afară* (senzor binar) | Dacă încălzirea e oprită pentru că e cald. |

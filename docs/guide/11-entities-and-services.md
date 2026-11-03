@@ -12,7 +12,7 @@ the house or the room, e.g. `sensor.bedroom_decision`.
 | *Mode* (select) | The mode: `auto`, `vacation`, `off`, `summer`. |
 | *Presence* (sensor) | `home`, `nearby`, `far`; attributes: the people, `arriving`, `guest_mode`, `vacation_active`, `vacation_suspended`, `vacation_preheating`, `pending`, `pending_since`. |
 | *Pause* (switch) | The pause. |
-| *Guest mode* (switch) | Guest mode (the house stays *home*). |
+| *Guest mode* (switch) | Guest mode (the house state stays *home*). |
 | *Vacation start*, *Vacation end* (date and time) | The vacation period. An end before (or equal to) the start is refused, as with `set_vacation`. |
 | *Heating season* (binary sensor) | Whether it is the heating season. |
 | *Warm outside* (binary sensor) | Whether the heating is off because it is warm. |

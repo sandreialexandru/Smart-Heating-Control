@@ -19,7 +19,7 @@ Why three states: if you are at work in town, you may be back in 30 minutes,
 so the house should not cool down too much (`eco`). If you have left town, it
 can go lower (`away`).
 
-Without nearby zones there is only *home* and *far*. Without people, the house
+Without nearby zones there is only *home* and *far*. Without people, the house state
 is always *home* and only the schedule decides.
 
 ## How every person is classified
@@ -38,26 +38,26 @@ For every person:
 The states `unknown` and `unavailable` (flat phone battery, app stopped) change
 nothing: the last known state is kept. They never count as leaving.
 
-If nothing is known about anybody (e.g. right after the first start), the house
-counts as *home*, so it is not cold.
+If nothing is known about anybody (e.g. right after the first start), the house state
+is *home*, so it is not cold.
 
 ## The rule for "home"
 
-| Rule | The house is home when | Otherwise |
+| Rule | The house state is Home when | Otherwise |
 | --- | --- | --- |
 | **At least one person is home** | anybody is home | nearby, if someone is nearby; far, if everybody is far |
 | **Everybody is home** | everybody known is home | nearby, if someone is home or nearby; far, if everybody is far |
 
 **Example with *Everybody is home*.** Andrei is home, Maria is at work in town:
-the house is *nearby* (`eco`). When Maria comes too, the house is *home* (the
+the house state is *nearby* (`eco`). When Maria comes too, the house state is *home* (the
 schedule).
 
 ## Presence sensors and guest mode
 
 - **Presence sensors** (mmWave, motion, an `input_boolean`): while any of them
-  is on, the house is *home*. Useful for people without a phone (children,
+  is on, the house state is *home*. Useful for people without a phone (children,
   grandparents) or as a safety net.
-- **Guest mode** (the house's *Guest mode* switch): keeps the house *home*
+- **Guest mode** (the house's *Guest mode* switch): keeps the house state *home*
   whatever the people do, e.g. when guests stay and you leave. It turns off by
   itself after *Guest mode turns off after* hours (0 = only by hand).
 
@@ -67,12 +67,12 @@ schedule).
   *nearby* or *far* only if the state stays so this many minutes. A short trip
   to the shop does not cool the house. The delay counts from when the last
   person left, so a Home Assistant restart does not start it again.
-- **Arrival delay** (0 by default): the house moves towards *home* (or from
+- **Arrival delay** (0 by default): the house state moves towards *home* (or from
   *far* to *nearby*) after this many minutes. Keep 0 so the heating returns at
   once; raise it only if GPS sometimes reports "home" by mistake.
 
-**Example.** You leave at 08:00. With the default delay of 10 minutes, the house
-goes *far* at 08:10. If you come back at 08:05 for the forgotten keys, nothing
+**Example.** You leave at 08:00. With the default delay of 10 minutes, the house state
+goes to *far* at 08:10. If you come back at 08:05 for the forgotten keys, nothing
 happens.
 
 ## Preheating on the way home

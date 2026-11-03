@@ -125,13 +125,13 @@ per-room occupancy.
 | --- | --- | --- |
 | People | – | Which `person` entities count |
 | Home rule | at least one | "At least one" or "everybody" home |
-| Nearby zones | none | Zones (e.g. Bucharest) where the house is *nearby* instead of *far* |
+| Nearby zones | none | Zones (e.g. Bucharest) where the house state is *nearby* instead of *far* |
 | Zones inside a nearby zone | automatic | A zone in the city (e.g. Office) also counts as nearby, computed from coordinates |
 | Proximity | off | Distance and direction; preheat only when someone is coming home |
 | Arrival threshold | 10 km or 20 min | Distance or travel time from which preheating starts |
-| Departure delay | 10 min | Wait before the house counts as empty |
+| Departure delay | 10 min | Wait before the house state changes after the last person leaves |
 | Arrival delay | 0 min | Wait before someone counts as arrived |
-| Presence sensors | none | mmWave / motion / switches keep the house *home* |
+| Presence sensors | none | mmWave / motion / switches keep the house state *home* |
 | Room occupancy | off | The room goes to eco after X minutes without occupancy (30 by default); it follows the schedule again after Y minutes of presence without a break (0 by default = at once; a shorter presence keeps eco and the count starts again) |
 | Guest mode | off | Forces *home*, with optional automatic expiry; wins over every vacation (mode, dates, automatic), which goes on when it is turned off |
 

@@ -12,7 +12,8 @@ name: Mutation testing
 #   there), optionally only some modules or fewer mutants.
 # - A short try (a few mutants of each) when the mutation tools change on dev.
 #
-# The report is in the summary of the run and in the artifact mutation-report.
+# The report is in the summary of the run, in the log of its Report step and
+# in the artifact mutation-report (90 days).
 
 on:
   schedule:
@@ -218,6 +219,9 @@ jobs:
         run: |
           python3 tests/mutation/report.py results/*.json --markdown mutation-report.md --json mutation-all.json
           cat mutation-report.md >> "$GITHUB_STEP_SUMMARY"
+          # Also in the log of this step: it can be read through the API, where the artifacts cannot.
+          echo "----- mutation report -----"
+          cat mutation-report.md
       - uses: actions/upload-artifact@v4
         with:
           name: mutation-report

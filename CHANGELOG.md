@@ -7,14 +7,59 @@ GitHub releases.
 
 ## Unreleased
 
-Beta: a physical model of every room for optimal start and stop (heating,
-weather curve, heat loss, sun and inertia, learned by itself), a mold risk alert, a
-chart with 7 days of history and the predicted temperature, and the code split
-in smaller parts. The learning starts again after the update (about a day).
+Nothing yet.
 
-### Integration
+## 2.6.0 – 2026-11-03
 
-- **New learning: a physical model of every room.** Instead of heating and
+🧠 Every room now learns a physical model of itself and uses it for optimal
+start and stop. 🌦️ The model follows the weather curve of the boiler and ☀️
+the sun. 🍄 A new alert warns about mold risk. 📈 The chart keeps 7 days of
+history and draws the temperature the model expects.
+
+### 🧠 About the learning: what to expect after the update
+
+- 🔄 **Coming from 2.5.0 or earlier, the learning starts again.** The old
+  heating and cooling episodes do not fit the new model and are discarded.
+  The learning of the 2.6.0 alphas (from a4) and betas is kept.
+- ⏱️ **About a day until the first model.** A room needs 4 hours with
+  heating and 4 hours without, as 8 stretches of 30 minutes each. In a
+  lived-in room these usually come within the first day. Until then it uses
+  60 minutes per degree, no inertia and the longest optimal stop you set. The
+  card shows the progress, e.g. *learning… 2 of 4 h with heating, 1 of 4 h
+  without*.
+- 📐 **What is learned, with nothing to set:**
+  - how fast the heating warms the room;
+  - the 🌡️ **weather curve**: how much more a boiler with outdoor compensation
+    gives in the cold, or less for a heat pump; 0 when there is none;
+  - how fast the room loses heat to the outdoors;
+  - the ⏳ **inertia**: how slowly the radiators or a floor heating react;
+  - ☀️ how much the **sun** warms the room.
+- 🌡️ **The weather curve** is learned once the room has heated at outdoor
+  temperatures with a standard deviation of at least 1 °C, for example heating
+  by day and by night with the outdoors ±1.5 °C apart. Until then it is 0.
+- ☀️ **The sun** is learned only in a house with a weather entity, because it
+  needs the clouds. It is used once clearly seen: at least 5 standard errors
+  from 0, after enough sun. For example, 12 stretches of 30 minutes at a sun
+  signal of 0.3 is enough (12 × 0.3² = 1.08, above the threshold of 1). A room
+  without sun keeps 0. In the card *Details* the *Sun* row appears only from
+  then on. It starts from 0 also for those coming from a 2.6.0 beta.
+- 📉 **It keeps adapting.** Older measurements count half after 7 days, so the
+  model follows a house that changes (new radiators, another boiler curve, the
+  season). Measurements far from the model, like a door left open or cooking,
+  count less. *Reset learning* starts from zero at once.
+- 📊 **How good it is**, in simulations of fictional rooms, not measurements:
+  - with a weather curve, the mean error of the optimal start fell from
+    16 – 42 to 4 – 8 minutes;
+  - in a room with a south window, the mean error of a 3 hour prediction fell
+    from 1.1 – 1.2 °C to 0.2 °C by day and from 0.9 – 1.0 °C to under
+    0.1 °C at night.
+
+  The details, assumptions and every number are in
+  [How the integration learns](https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/docs/learning.md).
+
+### 🏠 Integration
+
+- 🧠 **New learning: a physical model of every room.** Instead of heating and
   cooling episodes, each room learns, continuously and with or without
   heating, how fast its heating warms it, how that changes with the outdoor
   temperature (the **weather curve** of a boiler with outdoor compensation, or
@@ -29,7 +74,7 @@ in smaller parts. The learning starts again after the update (about a day).
   count less. In simulations of houses with a weather curve the mean error of
   the optimal start fell from 16 – 42 to 4 – 8 minutes. See
   [How the integration learns](docs/learning.md).
-- **The sun is learned too** (in a house with a weather entity): how many °C
+- ☀️ **The sun is learned too** (in a house with a weather entity): how many °C
   per hour the sun adds to each room, from the sun height (calculated from the
   time and the location of Home Assistant) and the clouds of the weather
   entity (`cloud_coverage`, else its condition). It is used only once clearly
@@ -41,8 +86,7 @@ in smaller parts. The learning starts again after the update (about a day).
   prediction fell from 1.1 – 1.2 °C to 0.2 °C by day and from 0.9 – 1.0 °C to
   under 0.1 °C at night. The *Solar gain* room setting is unchanged. The *Heating
   rate* sensor shows `sun_gain`; the *Outdoor average* sensor `sun_forecast`.
-  The learning of the earlier 2.6.0 betas is kept (its sun starts from 0).
-- **The learning starts again after the update.** The saved episodes do not
+- 🔄 **The learning starts again after the update.** The saved episodes do not
   fit the model and are discarded. Until a room has seen 4 hours with heating
   and 4 without (usually within the first day) the default is used: 60 minutes
   per degree, no inertia, the longest optimal stop.
@@ -56,12 +100,12 @@ in smaller parts. The learning starts again after the update (about a day).
   temperature or preset): it only marked where a heating episode started, and
   the new learning has no episodes. The *Thermostat* page now appears only for
   a thermostat that does not report `hvac_action`, to ask for its hysteresis.
-- **Back from eco after presence of** (new room option, with occupancy
+- 🚶 **Back from eco after presence of** (new room option, with occupancy
   sensors; 0 minutes by default, as before, at most 60): a room in eco for no occupancy
   follows its schedule again only after someone has been present without a
   break for that long, so a short visit does not start the heating
   ([#4](https://github.com/sandreialexandru/Smart-Heating-Control/issues/4)).
-- **Mold risk alert** (a warning) for a room with the new optional *Humidity
+- 🍄 **Mold risk alert** (a warning) for a room with the new optional *Humidity
   sensor* (rooms step *Sensors*): the humidity at the coldest wall, from the
   room temperature and humidity and the outdoor temperature (DIN 4108-2
   method); 80 % or more for an hour raises it, below 75 % it ends. Without a
@@ -69,14 +113,14 @@ in smaller parts. The learning starts again after the update (about a day).
   no mold alert is sent; a humidity sensor that measures outdoors (on the
   weather entity's device, or on the outdoor sensor's device when it has no
   other temperature sensor) is refused. The *Decision* sensor shows `surface_humidity`.
-- **Fix: TRV calibration with the external temperature**
+- 🐛 **Fix: TRV calibration with the external temperature**
   ([#5](https://github.com/sandreialexandru/Smart-Heating-Control/issues/5)).
   A change of one step was sometimes not written (in floating point
   19.7 − 19.6 is 0.0999…, below the step of 0.1), and an unchanged value was
   never written again, so a Sonoff TRVZB went back to its own sensor after
   about 120 minutes. A one step change is now written, and the external
   temperature is written again every 30 minutes even when unchanged.
-- **Fix:** after saving the options, the old settings could still wake up
+- 🐛 **Fix:** after saving the options, the old settings could still wake up
   once (at the next schedule change) and send a command; it no longer does.
 
 - The code of a room is split: what was sent to the devices and their limits
@@ -85,7 +129,7 @@ in smaller parts. The learning starts again after the update (about a day).
 - The log lines of the notifications come from
   `custom_components.advanced_climate.notifier` (before: `.house`).
 
-### Card
+### 🖼️ Card
 
 - **The chart opens in a window** over the dashboard, larger, instead of inside
   the room (one room at a time; closes with ✕, a click outside or Esc).
@@ -93,24 +137,24 @@ in smaller parts. The learning starts again after the update (about a day).
   It stays open and in place while the values update, and a click inside it
   (on its margin too) does not close it. Leaving the dashboard closes it (it
   does not pop up again on return); a phone turned keeps it open.
-- **The chart keeps 7 days of history**: it opens on the last 24 hours and the
+- 📈 **The chart keeps 7 days of history**: it opens on the last 24 hours and the
   next 12, zooms out up to the 7 days and moves through them with the
   navigation bar (shown only while the mouse is over the chart or a finger is
   on it) or a sideways scroll. The values under the pointer are in an opaque
   box. After the first load only what is new is fetched.
-- **Predicted temperature** in the chart (dotted), once the room has learned:
+- 🔮 **Predicted temperature** in the chart (dotted), once the room has learned:
   the learned model simulated along the planned target, with the forecast and
   the expected sun; the
   periods it heats are shown lighter in the heating lane.
 - A fine line at every midnight in the chart, between the days.
-- **A drop icon** (*Mold risk*) on the room, folded or open and in compact
+- 💧 **A drop icon** (*Mold risk*) on the room, folded or open and in compact
   mode, while its mold risk alert is active.
 - **Details**: the state of the learning (with its usual error), the weather
   curve, the learned sun once seen (*+1.50 °C/h with the sun overhead in a clear
   sky · now +0.60 °C/h*), and with a humidity sensor the humidity of the air and at the coldest
   wall (marked *mold risk* from 80 %).
 
-### Development
+### 🛠️ Development
 
 - CI checks the formatting (`ruff format`) and the types of the plain modules
   (mypy); new unit tests for the split parts and a test of the window timings

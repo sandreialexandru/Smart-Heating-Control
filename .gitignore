@@ -4,5 +4,4 @@ __pycache__/
 .venv/
 venv/
 .coverage
-tests/
 node_modules/

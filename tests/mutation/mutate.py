@@ -118,6 +118,11 @@ class Mutator(ast.NodeTransformer):
             return node  # a log line
         return self.generic_visit(node)
 
+    def visit_ClassDef(self, node: ast.ClassDef) -> ast.AST:
+        # The decorators (@dataclass(slots=True)...) are left alone: not logic.
+        node.body = [self.visit(statement) for statement in node.body]
+        return node
+
     def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.AST:
         return self._function(node)
 

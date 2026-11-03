@@ -95,7 +95,8 @@ jobs:
 
   card:
     name: Card (Chromium)
-    runs-on: ubuntu-latest
+    # Playwright 1.56 has its Chromium for Ubuntu 24.04, not yet for the newest runner.
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: tests/card

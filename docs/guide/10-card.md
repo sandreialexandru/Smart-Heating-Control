@@ -5,7 +5,7 @@
 The integration has a Lovelace card with every control: the house, the rooms,
 the chart, the editable schedule and the details.
 
-<p align="center"><img src="../images/card-demo.gif" alt="The card in use" width="400"><br><sub>▶️ <a href="../images/card-demo.mp4">The whole video (40 s, MP4)</a> · invented data</sub></p>
+<p align="center"><img src="../images/card-demo.gif" alt="The card in use" width="400"><br><sub>▶️ <a href="https://github.com/user-attachments/assets/c6d79bb1-91e2-493c-a0cc-5914a0a445a5">The whole video (40 s, MP4)</a> · invented data</sub></p>
 
 ## Adding the card
 

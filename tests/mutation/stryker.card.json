@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker-js/master/packages/core/schema/stryker-schema.json",
+  "testRunner": "command",
+  "commandRunner": { "command": "node tests/card/run.js" },
+  "mutate": ["custom_components/advanced_climate/www/smart-heating-control-card.js"],
+  "mutator": { "excludedMutations": ["StringLiteral", "Regex"] },
+  "coverageAnalysis": "off",
+  "concurrency": 4,
+  "timeoutMS": 90000,
+  "timeoutFactor": 1.5,
+  "reporters": ["json", "clear-text", "progress"],
+  "jsonReporter": { "fileName": "reports/card-mutation.json" },
+  "ignorePatterns": ["docs", "tests/ha", ".github", "*.png", "*.gif", "*.mp4"],
+  "tempDirName": ".stryker-tmp",
+  "cleanTempDir": true
+}

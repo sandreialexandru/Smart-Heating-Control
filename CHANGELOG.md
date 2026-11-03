@@ -83,8 +83,8 @@ learning shows as tiles and the chart legend hides or shows each line.
   adjustments, unavailable devices, low batteries, offset calibration, the
   buttons and the services (coverage from 89 % to 93 % or more).
 - 🧬 Mutation testing (`tests/mutation`): about 3,700 small changes of the
-  code, each run against the tests, to find the mistakes no test would
-  notice. A workflow runs it every week in the night to Sunday (and by hand
+  Python code, and those of the card with Stryker, each run against the
+  tests, to find the mistakes no test would notice. A workflow runs it every week in the night to Sunday (and by hand
   from the Actions tab) and writes a report of the survivors.
 - 🧩 The room controller is split by job into `room.py` (state, schedule,
   decision) and `room_devices.py`, `room_override.py`, `room_optimal.py`,

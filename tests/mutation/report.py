@@ -51,9 +51,10 @@ def main() -> int:
         f"{total['killed']} killed, {total['timeout']} timed out, "
         f"**{total['survived']} survived**"
         + (f", {total['not_run']} not run (time)" if total["not_run"] else "")
+        + (f", {total['invalid']} invalid (the change breaks the code)" if total["invalid"] else "")
         + ".",
         "",
-        "| Module | Mutants | Killed | Timeout | Survived | Not run | Score |",
+        "| Module | Mutants | Killed | Timeout | Survived | Not run / invalid | Score |",
         "|---|---:|---:|---:|---:|---:|---:|",
     ]
     order = sorted(per_file.items(), key=lambda item: -item[1]["survived"])
@@ -61,7 +62,7 @@ def main() -> int:
         mutants = sum(counts.values())
         lines.append(
             f"| `{name}` | {mutants} | {counts['killed']} | {counts['timeout']} | "
-            f"{counts['survived']} | {counts['not_run']} | {score(counts)} |"
+            f"{counts['survived']} | {counts['not_run'] + counts['invalid']} | {score(counts)} |"
         )
     lines += ["", "## Survivors", ""]
     for name, _counts in order:

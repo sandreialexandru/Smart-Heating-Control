@@ -17,6 +17,10 @@ const here = __dirname;
 const shots = process.env.CARD_TEST_SHOTS || path.join(os.tmpdir(), "card-test-shots");
 const files = process.argv[2] ? [process.argv[2]] : fs.readdirSync(here).filter((f) => /^t_.*\.js$/.test(f)).sort();
 const only = process.argv[3];
+// Mutation testing (Stryker, tests/mutation): stop at the first failure, and
+// tell the changed card which mutant is active (it reads it from the page).
+const failFast = !!process.env.CARD_TEST_FAIL_FAST;
+const activeMutant = process.env.__STRYKER_ACTIVE_MUTANT__;
 
 global.ok = (cond, msg) => {
   if (!cond) throw new Error(msg || "assertion failed");
@@ -44,6 +48,11 @@ global.eq = (a, b, msg) => {
         timezoneId: t.opts.tz || "Europe/Bucharest",
         locale: t.opts.locale || "en-GB",
       });
+      if (activeMutant !== undefined) {
+        await ctx.addInitScript((id) => {
+          window.__stryker__ = Object.assign(window.__stryker__ || {}, { activeMutant: id });
+        }, activeMutant);
+      }
       const p = await ctx.newPage();
       const errs = [];
       p.on("pageerror", (e) => errs.push("pageerror: " + e.message));
@@ -67,7 +76,9 @@ global.eq = (a, b, msg) => {
         }
       }
       await ctx.close();
+      if (failFast && fail) break;
     }
+    if (failFast && fail) break;
   }
   console.log(`\n${pass} passed, ${fail} failed`);
   await browser.close();

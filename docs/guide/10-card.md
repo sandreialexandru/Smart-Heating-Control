@@ -5,6 +5,8 @@
 The integration has a Lovelace card with every control: the house, the rooms,
 the chart, the editable schedule and the details.
 
+<p align="center"><img src="../images/card-demo.gif" alt="The card in use" width="400"><br><sub>▶️ <a href="../images/card-demo.mp4">The whole video (40 s, MP4)</a> · invented data</sub></p>
+
 ## Adding the card
 
 The integration adds the card to the dashboard resources by itself (the address
@@ -48,7 +50,11 @@ show_schedule_editor: false
 collapsed: true
 ```
 
+<p align="center"><img src="../images/card-compact.png" alt="Compact card: one tile per room" width="380"></p>
+
 ## The house part
+
+<p align="center"><img src="../images/card-hero.png" alt="The house with its people, mode and buttons, an open room and the other rooms folded" width="380"></p>
 
 - The **flame** next to the presence (see below) while the house asks for heat;
   it flickers while a room of the house really heats.
@@ -113,6 +119,8 @@ sections:
 
 ### The chart
 
+<p align="center"><img src="../images/card-chart.png" alt="The chart: temperature, target, heating, outdoor temperature and the predicted temperature" width="680"></p>
+
 Opened with the **Chart** button in a window over the dashboard, so it has room
 (its history is loaded only then); one room at a time. It closes with the ✕, a
 click outside it or Esc, and when another dashboard view is opened. It keeps **7 days** of history and the next 12 hours,
@@ -149,6 +157,8 @@ outside* appear as they are now, for the whole period.
 
 ### Set for a while
 
+<p align="center"><img src="../images/card-light.png" alt="A manual change with Set for a while open, light theme" width="380"></p>
+
 Set a level or a temperature for a number of hours: *[Set] [21] °C for [2] h*.
 Empty hours = the configured rule for manual changes.
 
@@ -169,6 +179,8 @@ Every profile with its days and an on / off switch:
   profile (which would stay on frost protection).
 
 ### Details
+
+<p align="center"><img src="../images/card-details.png" alt="Room details with what the room learned" width="380"></p>
 
 In groups:
 

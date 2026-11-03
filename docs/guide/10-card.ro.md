@@ -5,6 +5,8 @@
 Integrarea are un card Lovelace cu toate comenzile: casa, camerele, graficul,
 programul editabil și detaliile.
 
+<p align="center"><img src="../images/card-demo.gif" alt="Cardul în folosire" width="400"><br><sub>▶️ <a href="../images/card-demo.mp4">Tot videoclipul (40 s, MP4)</a> · date inventate</sub></p>
+
 ## Adăugarea cardului
 
 Integrarea adaugă singură cardul la resursele dashboard-urilor (adresa
@@ -48,7 +50,11 @@ show_schedule_editor: false
 collapsed: true
 ```
 
+<p align="center"><img src="../images/card-compact.png" alt="Cardul compact: o placă pe cameră" width="380"></p>
+
 ## Partea casei
+
+<p align="center"><img src="../images/card-hero.png" alt="Casa cu persoanele, modul și butoanele, o cameră deschisă și celelalte pliate" width="380"></p>
 
 - **Flacăra** lângă prezență (mai jos) cât casa cere căldură; pâlpâie cât
   o cameră a casei chiar încălzește.
@@ -113,6 +119,8 @@ Graficul și secțiunile:
 
 ### Graficul
 
+<p align="center"><img src="../images/card-chart.png" alt="Graficul: temperatura, ținta, încălzirea, temperatura de afară și temperatura prezisă" width="680"></p>
+
 Se deschide cu butonul **Grafic** într-o fereastră peste dashboard, ca să aibă
 loc (istoricul se încarcă doar atunci); câte o cameră pe rând. Se închide cu ✕,
 cu un clic în afara ei, cu Esc și la trecerea pe altă pagină a dashboard-ului. Păstrează **7 zile** de istoric și
@@ -148,6 +156,8 @@ senzorii căzuți și *Cald afară* apar așa cum sunt acum, pe toată perioada.
 
 ### Setează temporar
 
+<p align="center"><img src="../images/card-light.png" alt="O modificare manuală cu Setează temporar deschis, temă deschisă" width="380"></p>
+
 Se pune un nivel sau o temperatură pentru un număr de ore: *[Setează] [21] °C pentru
 [2] h*. Ore goale = regula configurată pentru modificările manuale.
 
@@ -167,6 +177,8 @@ Fiecare profil cu zilele lui și un comutator pornit / oprit:
   zile fără profil (care ar rămâne pe antiîngheț).
 
 ### Detalii
+
+<p align="center"><img src="../images/card-details.png" alt="Detaliile camerei cu ce a învățat camera" width="380"></p>
 
 Pe grupuri:
 

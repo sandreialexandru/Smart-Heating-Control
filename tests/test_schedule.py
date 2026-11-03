@@ -38,6 +38,8 @@ class ParseTest(unittest.TestCase):
             "",
             "workday 06:00 home",
             "workday: 25:00 home",
+            "workday: 24:00 home",
+            "workday: 06:60 home",
             "workday: 06:00 boost",
             "workday: 06:00 home, 06:00 sleep",
             "workday: 06:00 home\nworkday: 07:00 home",
@@ -45,6 +47,10 @@ class ParseTest(unittest.TestCase):
         ):
             with self.subTest(text=text), self.assertRaises(schedule.ScheduleError):
                 schedule.parse_schedule(text, PRESETS)
+
+    def test_edges_of_the_day(self) -> None:
+        profiles = schedule.parse_schedule("workday: 00:00 sleep, 23:59 home", PRESETS)
+        self.assertEqual([s.minute for s in profiles["workday"]], [0, 23 * 60 + 59])
 
     def test_custom_names(self) -> None:
         profiles = schedule.parse_schedule("workday: 06:00 Day, 22:00 Night", ["Day", "Night"])
@@ -112,6 +118,16 @@ class LookupTest(unittest.TestCase):
         state = sched.lookup(datetime(2026, 10, 17, 2, 0, tzinfo=TZ), weekday_info)
         self.assertEqual((state.profile, state.preset), ("workday", "sleep"))
         self.assertEqual(state.next_change, datetime(2026, 10, 17, 10, 0, tzinfo=TZ))
+        # The schedule day of Friday starts at 04:00 that day, not at midnight.
+        self.assertEqual(
+            sched.day_start(date(2026, 10, 16), TZ), datetime(2026, 10, 16, 4, 0, tzinfo=TZ)
+        )
+        self.assertEqual(
+            sched.schedule_day(datetime(2026, 10, 17, 3, 59, tzinfo=TZ)), date(2026, 10, 16)
+        )
+        self.assertEqual(
+            sched.schedule_day(datetime(2026, 10, 17, 4, 0, tzinfo=TZ)), date(2026, 10, 17)
+        )
 
     def test_upcoming(self) -> None:
         start = datetime(2026, 10, 12, 5, 0, tzinfo=TZ)

@@ -7,6 +7,16 @@ GitHub releases.
 
 ## Unreleased
 
+### Development
+
+- 🧪 Tests for what mutation testing found unchecked: the coldest wall below
+  0 °C outside and the mold thresholds, distances between coordinates and a
+  zone without them, far → nearby as an arrival, times like 24:00 or 06:60,
+  the start of a schedule day that does not begin at midnight, the highest
+  sun of the day in Bucharest in June and November, the clouds of every
+  weather condition, and the renaming of a whole-house zone named like the
+  house.
+
 ## 2.6.1 – 2026-11-04
 
 🔥 Relays, on / off thermostats and TRVs with the boost now start and stop by

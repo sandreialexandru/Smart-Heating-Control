@@ -995,3 +995,36 @@ async def test_calibration_offset_from_the_trv_on_the_same_device(
     # 0 + (20 − 22) = −2.0.
     assert numbers[-1].data == {"entity_id": "number.trv_offset", "value": -2.0}
     await _unload(hass, entry)
+
+
+async def test_whole_house_zone_named_like_the_house_is_renamed(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A whole-house zone called like the house gets its own name (two devices, two names)."""
+    await hass.config.async_set_time_zone("Europe/Bucharest")
+    freezer.move_to("2026-10-12 09:00:00+00:00")
+    hass.states.async_set("person.andrei", "home")
+    hass.states.async_set("climate.trv", "heat", TRV)
+    async_mock_service(hass, "climate", "set_temperature")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        options={"persons": ["person.andrei"], "nearby_zones": []},
+        subentries_data=[
+            {
+                "data": {
+                    "source": "climate",
+                    "climates": ["climate.trv"],
+                    "command_mode": "temperature",
+                },
+                "subentry_type": SUBENTRY_ROOM,
+                "title": "Home",
+                "unique_id": "whole_house",
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert [s.title for s in entry.subentries.values()] == ["Whole house"]
+    await _unload(hass, entry)

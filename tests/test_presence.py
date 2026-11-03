@@ -130,3 +130,48 @@ class ArrivingTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DistanceTest(unittest.TestCase):
+    def test_known_distances(self) -> None:
+        # One degree along a meridian or the equator: π × 6371.0088 km / 180 = 111.195 km.
+        self.assertAlmostEqual(presence.distance_m(0.0, 0.0, 1.0, 0.0), 111195, delta=1)
+        self.assertAlmostEqual(presence.distance_m(0.0, 0.0, 0.0, 1.0), 111195, delta=1)
+        # One degree of longitude at 44° N: 111.195 km × cos 44° = 79.99 km.
+        self.assertAlmostEqual(presence.distance_m(44.0, 26.0, 44.0, 27.0), 79985, delta=20)
+        self.assertEqual(presence.distance_m(44.4, 26.1, 44.4, 26.1), 0.0)
+
+    def test_zone_without_coordinates(self) -> None:
+        nowhere = presence.ZoneInfo("zone.nowhere", "Nowhere", None, None, 50000)
+        self.assertFalse(nowhere.contains(44.4377, 26.0997))
+        self.assertEqual(
+            presence.classify_person(
+                person("not_home", 44.4377, 26.0997), [nowhere], [nowhere], True
+            ),
+            "far",
+        )
+
+
+class DelayKindTest(unittest.TestCase):
+    """From far to nearby is an arrival, from nearby to far a departure."""
+
+    def test_far_to_nearby_uses_the_arrival_delay(self) -> None:
+        now = datetime(2026, 10, 12, 12, 0, tzinfo=TZ)
+        deb = presence.PresenceDebouncer()
+        deb.update("far", now, timedelta(0), timedelta(hours=1))
+        deb.update("nearby", now, timedelta(0), timedelta(hours=1))
+        self.assertEqual(deb.current, "nearby")
+        # Back to far: the departure delay (1 h) applies.
+        deb.update("far", now, timedelta(0), timedelta(hours=1))
+        self.assertEqual(deb.current, "nearby")
+        deb.update("far", now + timedelta(hours=1), timedelta(0), timedelta(hours=1))
+        self.assertEqual(deb.current, "far")
+
+    def test_far_for(self) -> None:
+        now = datetime(2026, 10, 12, 12, 0, tzinfo=TZ)
+        deb = presence.PresenceDebouncer()
+        self.assertEqual(deb.far_for(now), timedelta(0))
+        deb.update("home", now, timedelta(0), timedelta(0))
+        self.assertEqual(deb.far_for(now + timedelta(hours=2)), timedelta(0))
+        deb.update("far", now, timedelta(0), timedelta(0))
+        self.assertEqual(deb.far_for(now + timedelta(hours=2)), timedelta(hours=2))

@@ -17,6 +17,19 @@ class MoldTest(unittest.TestCase):
         # Room 20 °C, outdoor 0 °C, factor 0.70: the wall is 0 + 0.7 × 20 = 14 °C.
         self.assertAlmostEqual(mold.surface_temperature(20.0, 0.0), 14.0)
 
+    def test_coldest_wall_in_the_cold(self) -> None:
+        # 20 °C inside, −10 °C outside: −10 + 0.7 × (20 − (−10)) = 11.0 °C.
+        self.assertAlmostEqual(mold.surface_temperature(20.0, -10.0), 11.0)
+        # A worse wall (factor 0.6): −10 + 0.6 × 30 = 8.0 °C.
+        self.assertAlmostEqual(mold.surface_temperature(20.0, -10.0, 0.6), 8.0)
+
+    def test_thresholds_of_the_guide(self) -> None:
+        # Mold from 80 % at the coldest wall (DIN 4108-2), ends below 75 %, after an hour.
+        self.assertEqual(mold.MOLD_SURFACE_RH, 80.0)
+        self.assertEqual(mold.MOLD_CLEAR_RH, 75.0)
+        self.assertEqual(mold.MOLD_MINUTES, 60.0)
+        self.assertEqual(mold.F_RSI, 0.70)
+
     def test_surface_humidity(self) -> None:
         # 60 % at 20 °C is 0.6 × 23.37 hPa of vapour; at 14 °C that is about 88 %.
         self.assertAlmostEqual(mold.surface_humidity(20.0, 60.0, 0.0), 87.7, delta=0.5)

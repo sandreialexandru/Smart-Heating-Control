@@ -440,6 +440,50 @@ class SunTest(unittest.TestCase):
         # midnight UTC the sun is down.
         self.assertLess(sun.sin_elevation(datetime(2026, 11, 3, tzinfo=UTC), 44.4, 26.1), 0)
 
+    def test_solar_noon_in_bucharest(self) -> None:
+        """The highest sun of the day at 44.43° N, 26.10° E, minute by minute.
+
+        Solar noon (UTC) = 12:00 − 4 min × 26.10 − the equation of time
+        (about −1.6 min on 21 June, +16.4 min on 3 November): 10:17 and 09:59.
+        The highest elevation is 90° − 44.43° + the declination (+23.44° on
+        21 June, −15.2° on 3 November): 69.0° and 30.4°.
+        """
+        for day, noon, elevation in (
+            (datetime(2026, 6, 21, tzinfo=UTC), (10, 17), 69.0),
+            (datetime(2026, 11, 3, tzinfo=UTC), (9, 59), 30.4),
+        ):
+            best = max(
+                range(6 * 60, 14 * 60),
+                key=lambda m, d=day: sun.sin_elevation(d + timedelta(minutes=m), 44.43, 26.10),
+            )
+            self.assertLessEqual(abs(best - (noon[0] * 60 + noon[1])), 2, day)
+            top = sun.sin_elevation(day + timedelta(minutes=best), 44.43, 26.10)
+            self.assertAlmostEqual(math.degrees(math.asin(top)), elevation, delta=0.4)
+
+    def test_clouds_of_each_condition(self) -> None:
+        # Rain, snow, fog and storms: a closed sky; clear: almost none; windy says nothing.
+        for condition in (
+            "fog",
+            "rainy",
+            "pouring",
+            "snowy",
+            "snowy-rainy",
+            "hail",
+            "lightning",
+            "lightning-rainy",
+            "exceptional",
+        ):
+            self.assertEqual(sun.cover_of(None, condition), 1.0, condition)
+        self.assertEqual(sun.cover_of(None, "sunny"), 0.1)
+        self.assertEqual(sun.cover_of(None, "clear-night"), 0.1)
+        self.assertEqual(sun.cover_of(None, "windy"), 0.5)
+        self.assertEqual(sun.cover_of(None, "windy-variant"), 0.7)
+        # A closed sky lets a quarter of the light through, half-covered most of it:
+        # 1 − 0.75 × 0.5^3.4 = 0.929.
+        self.assertAlmostEqual(sun.cloud_factor(1.0), 0.25)
+        self.assertAlmostEqual(sun.cloud_factor(0.5), 0.929, delta=0.001)
+        self.assertEqual(sun.cloud_factor(2.0), 0.25)
+
     def test_signal_and_clouds(self) -> None:
         noon = datetime(2026, 11, 3, 10, 20, tzinfo=UTC)
         clear = sun.signal(noon, 44.4, 26.1, 0.0)

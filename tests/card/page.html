@@ -1,0 +1,12 @@
+<!doctype html><html><head><meta charset="utf-8"></head>
+<body style="margin:0;background:#fafafa;--primary-color:#03a9f4;--primary-text-color:#212121;--secondary-text-color:#727272;--card-background-color:#fff;--primary-background-color:#fafafa;--divider-color:#e0e0e0;--warning-color:#ffa600;--error-color:#db4437;font-family:sans-serif">
+<script src="fixtures.js"></script><script src="../../custom_components/advanced_climate/www/smart-heating-control-card.js"></script>
+<div id="host" style="max-width:900px;margin:8px"></div>
+<script>
+window.mount = (config, hassOpts) => {
+  const host = document.getElementById("host"); host.innerHTML = "";
+  window.card = document.createElement("smart-heating-control-card");
+  card.setConfig(config); host.appendChild(card); card.hass = makeHass(hassOpts); return true;
+};
+window.sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+</script></body></html>

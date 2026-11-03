@@ -62,6 +62,8 @@ jobs:
           # The newest tested version (requirements_test.txt).
           - name: newest
             requirements: -r requirements_test.txt
+            # Coverage measured once, on the newest version (report only, no minimum).
+            coverage: "--cov --cov-report=term-missing:skip-covered"
           # The minimum in hacs.json (Home Assistant 2026.6.0).
           - name: minimum (2026.6.0)
             requirements: pytest-homeassistant-custom-component==0.13.336
@@ -71,10 +73,12 @@ jobs:
         with:
           python-version: "3.14"
       - run: pip install ${{ matrix.requirements }}
+      - if: matrix.coverage
+        run: python -c "import pytest_cov" || pip install pytest-cov
       - name: pytest
         run: |
           set +e
-          pytest -v -p no:cacheprovider > pytest.log 2>&1
+          pytest -v -p no:cacheprovider ${{ matrix.coverage }} > pytest.log 2>&1
           status=$?
           cat pytest.log
           if [ $status -ne 0 ]; then
@@ -83,3 +87,31 @@ jobs:
             tail -60 pytest.log | sed ':a;N;$!ba;s/\n/%0A/g' | sed 's/^/::warning title=pytest tail::/'
           fi
           exit $status
+      - name: Coverage in the summary
+        if: always() && matrix.coverage
+        run: |
+          echo "### Coverage (Home Assistant and logic tests)" >> "$GITHUB_STEP_SUMMARY"
+          coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY" || true
+
+  card:
+    name: Card (Chromium)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tests/card
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: node run.js
+        env:
+          CARD_TEST_SHOTS: ${{ runner.temp }}/card-test-shots
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: card-test-failures
+          path: ${{ runner.temp }}/card-test-shots
+          if-no-files-found: ignore

@@ -1,0 +1,11 @@
+{
+  "name": "smart-heating-control-card-tests",
+  "private": true,
+  "description": "Tests of the Lovelace card in Chromium (see run.js).",
+  "scripts": {
+    "test": "node run.js"
+  },
+  "devDependencies": {
+    "playwright": "1.56.0"
+  }
+}

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import math
 from collections import deque
 from collections.abc import Callable
 from datetime import date, datetime, timedelta
@@ -11,20 +10,13 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import Event, EventStateChangedData, State, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
-)
-from homeassistant.helpers import (
-    device_registry as dr,
 )
 from homeassistant.helpers import (
     entity_registry as er,
@@ -33,31 +25,19 @@ from homeassistant.helpers.event import async_call_later, async_track_state_chan
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    CALIBRATION_EXTERNAL,
-    CALIBRATION_OFFSET,
-    CALIBRATION_REFRESH_MINUTES,
     COMMAND_HVAC,
     COMMAND_PRESET,
     COMMAND_TEMPERATURE,
-    CONF_ALERT_WINDOW_MINUTES,
     CONF_AREA,
-    CONF_BATTERY_THRESHOLD,
-    CONF_BOILER_MIN_ROOMS,
-    CONF_CALIBRATION_ENTITIES,
-    CONF_CALIBRATION_MODE,
     CONF_CLIMATES,
     CONF_COMMAND_MODE,
     CONF_FROST_TEMP,
     CONF_HELPER_OFF_PRESET,
     CONF_HELPER_ON_PRESET,
-    CONF_HUMIDITY_SENSOR,
     CONF_HYSTERESIS,
-    CONF_INERTIA_CONTROL,
     CONF_LEVELS,
     CONF_LINKED_WINDOW_SENSORS,
     CONF_MAX_TEMP,
-    CONF_MIN_OFF,
-    CONF_MIN_ON,
     CONF_NEARBY_LIMIT,
     CONF_NEARBY_MODE,
     CONF_NEARBY_TEMP,
@@ -68,28 +48,22 @@ from .const import (
     CONF_OPTIMAL_START_MAX,
     CONF_OPTIMAL_STOP,
     CONF_OPTIMAL_STOP_MINUTES,
-    CONF_OVERRIDE_HOURS,
-    CONF_OVERRIDE_MODE,
     CONF_PRESET_MAP,
     CONF_PRESET_NAMES,
     CONF_PROFILE_DAYS,
-    CONF_REFERENCE_ROOM,
     CONF_SCHEDULE,
     CONF_SCHEDULE_HELPER,
     CONF_SCHEDULE_SOURCE,
     CONF_SOLAR_OFFSET,
     CONF_SOURCE,
-    CONF_STOP_TOLERANCE,
     CONF_SWITCHES,
     CONF_TEMP_AGGREGATION,
     CONF_TEMP_SENSORS,
     CONF_TRV_BOOST,
-    CONF_TRV_BOOST_TEMP,
     CONF_USE_HOUSE_SOURCE,
     CONF_VALVE_DAY,
     CONF_VALVE_EXERCISE,
     CONF_VALVE_TIME,
-    CONF_VERIFY_COMMANDS,
     CONF_WINDOW_ACTION,
     CONF_WINDOW_CLOSE_DELAY,
     CONF_WINDOW_DROP_DEGREES,
@@ -99,7 +73,6 @@ from .const import (
     CONF_WINDOW_SENSORS,
     DEFAULT_LEVEL_TEMPS,
     DEFAULT_SCHEDULE,
-    DEVICE_LIMIT_HOURS,
     DOMAIN,
     EVENT_DECISION_CHANGED,
     GT_DOMAIN,
@@ -110,10 +83,7 @@ from .const import (
     MODE_SUMMER,
     MODE_VACATION,
     OCCUPANCY_RETURN_MAX,
-    OVERRIDE_FIXED,
-    OVERRIDE_NEXT,
     PRESET_FROST,
-    PRESET_NONE,
     PRESETS,
     ROOM_DEFAULTS,
     RULE_MAX,
@@ -124,18 +94,14 @@ from .const import (
     RULE_SAFETY,
     RULE_SCHEDULE,
     RULE_STARTING,
-    RULE_VACATION,
     SCHEDULE_HELPER,
-    SENT_RECENT_MINUTES,
-    SENT_STABLE_SECONDS,
     SOURCE_CLIMATE,
     SOURCE_GT,
     SOURCE_SWITCH,
     VALVE_EXERCISE_SECONDS,
-    VERIFY_DELAY,
     WEEKDAYS,
 )
-from .device_echo import DeviceLimits, SentValues, close, limit_kind, step_margin
+from .device_echo import DeviceLimits, SentValues
 from .engine import (
     KIND_NONE,
     KIND_OFF,
@@ -145,34 +111,34 @@ from .engine import (
     RoomInputs,
     Target,
     decide,
-    on_off_wanted,
-    optimal_period,
     optimal_schedule,
     optimal_stop_state,
 )
-from .learning import MAX_MINUTES, SunAhead, ThermalLearner
-from .mold import MOLD_CLEAR_RH, MOLD_MINUTES, MOLD_SURFACE_RH, surface_humidity
+from .learning import ThermalLearner
+from .room_alerts import RoomAlerts
+from .room_common import (
+    DEVICE_LIMIT_KEEP,
+    SENT_RECENT,
+    SENT_STABLE,
+)
+from .room_devices import RoomDevices
+from .room_optimal import RoomOptimal
+from .room_override import RoomOverride
+from .room_status import RoomStatus
 from .schedule import (
     Schedule,
     ScheduleError,
     ScheduleState,
     Slot,
     parse_schedule,
-    uncovered_days,
 )
 from .trend import TemperatureTrend
 from .util import (
     aggregate,
     as_list,
     climate_temp,
-    delta_from_celsius,
-    delta_to_celsius,
     finite,
-    float_attr,
-    float_state,
-    from_celsius,
     from_iso,
-    heat_mode,
     iso,
     parse_clock,
     system_unit,
@@ -186,23 +152,9 @@ if TYPE_CHECKING:
     from .house import House
 
 _LOGGER = logging.getLogger(__name__)
-# How far below the frost protection temperature a room is told (°C).
-FROST_ALERT_MARGIN = 0.5
-SENT_RECENT = timedelta(minutes=SENT_RECENT_MINUTES)
-SENT_STABLE = timedelta(seconds=SENT_STABLE_SECONDS)
-DEVICE_LIMIT_KEEP = timedelta(hours=DEVICE_LIMIT_HOURS)
 
 
-def device_values(state: State) -> dict[str, Any]:
-    """What a person set on a device: mode (or on / off), preset and temperature."""
-    values: dict[str, Any] = {"state": state.state}
-    if state.domain == "climate":
-        values["preset_mode"] = state.attributes.get("preset_mode")
-        values["temperature"] = state.attributes.get(ATTR_TEMPERATURE)
-    return values
-
-
-class Room:
+class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
     """Controller for one room (config subentry)."""
 
     def __init__(self, house: House, subentry: ConfigSubentry, stored: dict[str, Any]) -> None:
@@ -647,132 +599,10 @@ class Room:
         self._update_window(now)
         self.house.async_request_evaluate()
 
-    def _remember_preset_temp(self, state: State | None) -> None:
-        """Learn the temperatures of the thermostat presets from the climate state."""
-        if not valid(state):
-            return
-        preset = self.level_of_device_preset(state.attributes.get("preset_mode"))  # type: ignore[union-attr]
-        temperature = climate_temp(self.hass, state, ATTR_TEMPERATURE)
-        if preset is not None and temperature is not None:
-            self.observed_temps[preset] = temperature
-
-    def _is_manual_change(self, event: Event, old: State | None, new: State | None) -> bool:
-        """True when a person changed the thermostat (not the integration, nor a late confirmation)."""
-        if old is None or new is None or not valid(old) or not valid(new):
-            return False
-        if self.house.is_own_context(event.context):
-            return False
-        if not self.house.started:
-            return False
-        if self.sent.is_echo(event.data["entity_id"], old, new, dt_util.utcnow()):
-            return False
-        if old.state != new.state:
-            return True
-        for attr in ("preset_mode", ATTR_TEMPERATURE):
-            if old.attributes.get(attr) != new.attributes.get(attr):
-                return True
-        return False
-
-    def _handle_manual_change(self, entity_id: str, new: State | None) -> None:
-        """Respect a manual change (or revert it with the child lock)."""
-        # From now on the device shows a person's values, not ours: if the person
-        # later sets the value we sent before, that is a manual change too.
-        self.sent.forget(entity_id)
-        self._boosted = False  # the person's value replaced the boost
-        # In a pause the change is kept (it applies after the pause); the child
-        # lock does not undo it then, since a pause sends nothing.
-        if self.child_lock and self.decision is not None and not self.house.paused:
-            _LOGGER.debug("Room %s: child lock reverts a manual change", self.name)
-            self.hass.async_create_task(self._async_apply(self.decision.target, force=True))
-            return
-        description = "manual change"
-        if new is not None:
-            if new.state == STATE_OFF:
-                description = "turned off"
-            elif new.attributes.get("preset_mode") not in (None, PRESET_NONE):
-                description = f"preset {new.attributes.get('preset_mode')}"
-            elif (value := climate_temp(self.hass, new, ATTR_TEMPERATURE)) is not None:
-                unit = self.house.unit
-                description = f"{from_celsius(value, unit):.1f} {unit}"
-            elif entity_id in self.switches:
-                description = f"switch {new.state}"
-        # What the person set is kept, to set it again after an interruption
-        # (a window opened, frost protection).
-        devices = {entity_id: device_values(new)} if new is not None else None
-        if self.house.override_scope_house:
-            for room in self.house.rooms.values():
-                room.set_override(
-                    description, source=self.name, devices=devices if room is self else None
-                )
-        else:
-            self.set_override(description, devices=devices)
-
-    def set_override(
-        self,
-        description: str,
-        *,
-        source: str | None = None,
-        hours: float | None = None,
-        target: Target | None = None,
-        devices: dict[str, dict[str, Any]] | None = None,
-    ) -> None:
-        """Start a manual override.
-
-        ``target`` is a level or temperature set by the card or a service: it is
-        sent while the manual change applies. ``devices`` are the values a
-        person set on the devices: they are only set again after an
-        interruption (a higher rule changed the devices meanwhile).
-        """
-        now = dt_util.utcnow()
-        kept: dict[str, dict[str, Any]] = {}
-        if target is None and self.override and not self.override.get("target"):
-            # Another device of the room changed by hand: keep the earlier ones too.
-            kept = dict(self.override.get("devices") or {})
-        kept.update(devices or {})
-        mode = self.house.options[CONF_OVERRIDE_MODE]
-        if hours is None and mode == OVERRIDE_FIXED:
-            hours = float(self.house.options[CONF_OVERRIDE_HOURS])
-        until = now + timedelta(hours=hours) if hours else None
-        self.override = {
-            "description": description if source is None else f"{description} ({source})",
-            "since": now,
-            "until": until,
-            "mode": OVERRIDE_FIXED if until else OVERRIDE_NEXT,
-            "signature": list(self.signature) if self.signature else None,
-            "target": target.as_dict() if target else None,
-            "devices": kept if target is None else {},
-            "interrupted": False,
-            # A change made on a device is already there; one from the card or
-            # a service is sent when the manual change applies.
-            "applied": target is None,
-        }
-        self.house.async_save()
-
-    def clear_override(self) -> None:
-        """Clear the manual override."""
-        self.override = None
-        self.house.async_save()
-
     def reset_learning(self) -> None:
         """Forget the learned thermal model (it is learned again from now)."""
         self.learner.reset()
         self.house.async_save()
-
-    def _check_override(self, now: datetime, signature: tuple) -> None:
-        """End the manual change when its time is over or something relevant changed."""
-        if self.override is None:
-            return
-        until = self.override.get("until")
-        if until is not None:
-            if now >= until:
-                self.override = None
-            return
-        stored = self.override.get("signature")
-        if stored is None:
-            self.override["signature"] = list(signature)
-        elif tuple(stored) != tuple(signature):
-            # Something relevant changed: the override ends.
-            self.override = None
 
     # ------------------------------------------------------------------
     # Inputs
@@ -824,225 +654,6 @@ class Room:
             if (v := temp_state(self.hass, entity_id, self.house.unit)) is not None
         ]
         return aggregate(values, self.config[CONF_TEMP_AGGREGATION])
-
-    def _gt_cold_tolerance(self) -> float:
-        """The cold tolerance of the Generic Thermostat of the room (°C), 0 when unknown."""
-        value = self._gt_tolerance("cold_tolerance")
-        return 0.0 if value is None else value
-
-    def _gt_tolerance(self, key: str) -> float | None:
-        """A tolerance of the Generic Thermostat of the room (°C), None when it cannot be read.
-
-        Only a Generic Thermostat set up in the user interface has its settings
-        in a config entry; one from YAML does not say.
-        """
-        value = self._gt_options().get(key)
-        if value is None:
-            return None
-        try:
-            return float(delta_to_celsius(float(value), system_unit(self.hass)))
-        except (TypeError, ValueError):
-            return None
-
-    def prediction_band(self) -> tuple[float, float, bool] | None:
-        """How the heating of the room is switched around the target, for the prediction.
-
-        (°C below the target where it starts, °C above where it stops, whether
-        the learned inertia starts and stops it inside). Generic Thermostat:
-        its cold and hot tolerance (None when they cannot be read: not known);
-        relays,
-        on / off control and the TRV boost: the hysteresis, with the learned
-        inertia when on; thermostats without hvac_action: the hysteresis. None
-        for the other thermostats and TRVs: they regulate by themselves, with a
-        band nobody knows, and hold the target.
-        """
-        if self.source == SOURCE_GT:
-            cold = self._gt_tolerance("cold_tolerance")
-            hot = self._gt_tolerance("hot_tolerance")
-            return None if cold is None or hot is None else (cold, hot, False)
-        hysteresis = float(self.config[CONF_HYSTERESIS])
-        if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost:
-            return hysteresis, hysteresis, bool(self.config.get(CONF_INERTIA_CONTROL, True))
-        if self.lacks_hvac_action():
-            return hysteresis, hysteresis, False
-        return None
-
-    def stop_tolerance(self) -> float:
-        """How far below a level the room may fall during an optimal stop (its comfort)."""
-        if self.source == SOURCE_GT:
-            return self._gt_cold_tolerance()
-        if (
-            self.source == SOURCE_SWITCH
-            or self.command_mode == COMMAND_HVAC
-            or self.boost
-            or self.lacks_hvac_action()
-        ):
-            return float(self.config[CONF_HYSTERESIS])
-        return float(self.config.get(CONF_STOP_TOLERANCE, 0.0))
-
-    def lacks_hvac_action(self) -> bool:
-        """A thermostat of the room does not report hvac_action (or cannot be checked now).
-
-        Such thermostats are handled like relays: their heat demand and the
-        comfort of the optimal stop use the hysteresis.
-        """
-        return any(
-            not valid(state := self.hass.states.get(entity_id))
-            or "hvac_action" not in state.attributes  # type: ignore[union-attr]
-            for entity_id in self.climates
-        )
-
-    def comfort_floor(self, preset: str) -> float | None:
-        """Lowest temperature still in the comfort of ``preset`` (optimal stop)."""
-        level = self.level_temp(preset)
-        return None if level is None else level - max(0.0, self.stop_tolerance())
-
-    def stop_needed(self, preset: str, outdoor: float | None) -> float | None:
-        """Minutes the room can cool and stay in the comfort of ``preset``.
-
-        None before any cooling is learned (the longest optimal stop is used).
-        """
-        floor = self.comfort_floor(preset)
-        if floor is None or self.current_temp is None:
-            return None
-        return self.learner.model.minutes_to_fall(
-            self.current_temp,
-            floor,
-            outdoor,
-            self.learner.q,
-            self.house.sun_ahead(dt_util.utcnow()),
-        )
-
-    def optimal_estimate(
-        self, now: datetime, state: ScheduleState, outdoor_known: bool, stop_allowed: bool
-    ) -> dict[str, Any] | None:
-        """When the optimal start / stop for the next change begins, and with what.
-
-        The outdoor temperature is the one expected while it runs (hourly
-        forecast), else the one of now. The period depends on that temperature,
-        so it is worked out again a few times from the period found before.
-        """
-        change, next_preset = state.next_change, state.next_preset
-        if change is None or next_preset is None or change <= now or self.current_temp is None:
-            return None
-        now_temp = self.level_temp(state.preset)
-        next_temp = self.level_temp(next_preset)
-        if now_temp is None or next_temp is None:
-            return None
-        house = self.house
-        if next_temp > now_temp and self.config[CONF_OPTIMAL_START]:
-            kind = RULE_OPTIMAL_START
-            limit = float(self.config[CONF_OPTIMAL_START_MAX])
-        elif (
-            next_temp < now_temp
-            and self.config[CONF_OPTIMAL_STOP]
-            and outdoor_known
-            and stop_allowed
-        ):
-            kind = RULE_OPTIMAL_STOP
-            limit = float(self.config[CONF_OPTIMAL_STOP_MINUTES])
-        else:
-            return None
-        gap = next_temp - self.current_temp
-        floor = self.comfort_floor(state.preset)
-        # The period starts now at first, then as long before the change as
-        # found before: the sun of that time of day is counted.
-        begins = [now]
-
-        def minutes_for(outdoor: float | None) -> float | None:
-            model, q = self.learner.model, self.learner.q
-            sun = house.sun_ahead(begins[0])
-            if kind == RULE_OPTIMAL_START:
-                if gap <= 0:
-                    return 0.0
-                return self._minutes_to_heat(next_temp, outdoor, sun)
-            if floor is None:
-                return None
-            return model.minutes_to_fall(self.current_temp, floor, outdoor, q, sun)
-
-        def outdoor_for(length: float) -> tuple[float | None, str]:
-            begins[0] = max(now, change - timedelta(minutes=length))
-            return house.outdoor_between(change - timedelta(minutes=length), change)
-
-        minutes, outdoor, source = optimal_period(
-            limit, minutes_for, outdoor_for, house.outdoor_now
-        )
-        needed = minutes_for(outdoor)
-        return {
-            "kind": kind,
-            "change": change,
-            "preset": next_preset,
-            "minutes": minutes,
-            "needed": needed,
-            "outdoor": outdoor,
-            "outdoor_source": source,
-            "learned": self.learner.model.learned,
-        }
-
-    def stop_forecast(self, now: datetime) -> dict[str, Any] | None:
-        """During an optimal stop: the expected temperature at the scheduled change."""
-        state = self.schedule_state
-        if (
-            self.decision is None
-            or self.decision.rule != RULE_OPTIMAL_STOP
-            or state is None
-            or state.next_change is None
-            or self.current_temp is None
-        ):
-            return None
-        minutes = max(0.0, (state.next_change - now).total_seconds() / 60)
-        outdoor, _ = self.house.outdoor_between(now, state.next_change)
-        model = self.learner.model
-        if not model.learned:
-            return None
-        value = model.simulate(
-            self.current_temp, outdoor, self.learner.q, False, minutes, self.house.sun_ahead(now)
-        )
-        return {"at": state.next_change.isoformat(), "temperature": value}
-
-    def _start_needed(
-        self, preset: str | None, outdoor: float | None, now: datetime
-    ) -> float | None:
-        """Minutes the room needs to heat up to the level of ``preset`` (learned)."""
-        if preset is None or self.current_temp is None:
-            return None
-        level = self.level_temp(preset)
-        if level is None or level <= self.current_temp:
-            return None
-        return self._minutes_to_heat(level, outdoor, self.house.sun_ahead(now))
-
-    def _minutes_to_heat(
-        self, target: float, outdoor: float | None, sun: SunAhead | None = None
-    ) -> float:
-        """Minutes to heat up to ``target``; a whole day when the model never gets there.
-
-        The heating may be too weak for that target at that outdoor
-        temperature: the optimal start then begins as early as it may.
-        """
-        if self.current_temp is None:
-            return float(MAX_MINUTES)
-        minutes = self.learner.model.minutes_to_heat(
-            self.current_temp, target, outdoor, self.learner.q, sun
-        )
-        return float(MAX_MINUTES) if minutes is None else minutes
-
-    def time_to_target(self, outdoor: float | None) -> int | None:
-        """Minutes until the target is reached, as learned (None when not heating up)."""
-        if self.current_temp is None or self.target_temperature is None:
-            return None
-        if self.decision is None or self.decision.target.kind == KIND_OFF or self.window_open:
-            return None
-        gap = self.target_temperature - self.current_temp
-        if gap <= 0:
-            return None
-        minutes = self.learner.model.minutes_to_heat(
-            self.current_temp,
-            self.target_temperature,
-            outdoor,
-            self.learner.q,
-            self.house.sun_ahead(dt_util.utcnow()),
-        )
-        return None if minutes is None else max(1, round(minutes))
 
     def _window_sensor_open(self) -> bool:
         """A window or door sensor of the room (or a linked one) is open right now."""
@@ -1512,18 +1123,6 @@ class Room:
                 return STATE_OFF in (state.attributes.get("hvac_modes") or [])  # type: ignore[union-attr]
         return True
 
-    def _override_target(self) -> Target | None:
-        """Level or temperature of a manual change set by the card or a service."""
-        stored = (self.override or {}).get("target")
-        if not isinstance(stored, dict) or stored.get("kind") not in (
-            KIND_TEMPERATURE,
-            KIND_PRESET,
-        ):
-            return None
-        return Target(
-            stored["kind"], preset=stored.get("preset"), temperature=stored.get("temperature")
-        )
-
     def _resolve_temperature(self, target: Target) -> float | None:
         """Temperature a target stands for (level, manual temperature or the thermostat)."""
         if target.kind == KIND_TEMPERATURE:
@@ -1634,1124 +1233,6 @@ class Room:
         if self.decision is None or self.decision.target.kind == KIND_OFF:
             return None
         return round(self.target_temperature - self.current_temp, 2)
-
-    # ------------------------------------------------------------------
-    # Commands
-    # ------------------------------------------------------------------
-    async def _call(self, domain: str, service: str, data: dict[str, Any]) -> bool:
-        """Call a service with the context of the integration; False when it fails."""
-        try:
-            await self.hass.services.async_call(
-                domain, service, data, blocking=True, context=self.house.new_context()
-            )
-        except (HomeAssistantError, ValueError) as err:
-            _LOGGER.warning("Room %s: %s.%s failed: %s", self.name, domain, service, err)
-            return False
-        return True
-
-    async def _async_apply(self, target: Target, *, force: bool = False) -> None:
-        """Send the commands needed to reach ``target``."""
-        on_off = self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC
-        if target.kind == KIND_NONE:
-            # Nothing is sent (pause, no schedule) unless a manual change applies.
-            self.relay_waiting = None
-            self._relay_wait_until = None
-            if self.decision is None or self.decision.rule != RULE_OVERRIDE or not self.override:
-                await self._async_boost_without_target(target)
-                return
-            stored = self._override_target()
-            if stored is None:
-                await self._async_boost_without_target(target)
-                # Changed on the device: set again only after an interruption.
-                if self.override.get("interrupted"):
-                    self.override["interrupted"] = False
-                    for entity_id, values in (self.override.get("devices") or {}).items():
-                        if not await self._async_restore_device(entity_id, values):
-                            # The minimum on / off time runs: set again when it ends.
-                            self.override["interrupted"] = True
-                return
-            # Set by the card or a service: kept on the devices (relays regulate around it).
-            self.override["interrupted"] = False
-            target = stored
-        if self._boost_capable:
-            # The demand first, so the TRVs get the right temperature now.
-            heat = target.kind != KIND_OFF and self._exercise_until is None
-            temperature = self._resolve_temperature(target)
-            if self.boost:
-                self._boost_demand = heat and self._boost_wanted(temperature)
-            elif (
-                self._frost_boost_possible()
-                and temperature is not None
-                and temperature <= self.frost_temp() + 1e-9
-            ):
-                self._boost_demand = heat and self._frost_wanted(temperature)
-            else:
-                self._boost_demand = False
-        sent = False
-        if on_off:
-            sent = await self._async_apply_relay(target)
-        else:
-            for entity_id in self.climates:
-                sent |= await self._async_apply_climate(entity_id, target, force)
-        if self._boost_capable:
-            self._boosted = self._boost_demand
-            self._boost_base = (
-                None if target.kind == KIND_OFF else self._target_temperature_of(target)
-            )
-        if sent and self.house.options[CONF_VERIFY_COMMANDS]:
-            self._schedule_verify(target)
-
-    @property
-    def boost_active(self) -> bool:
-        """The TRVs hold the boost temperature now (the TRV boost or frost protection)."""
-        return self._boost_capable and self._boosted
-
-    @property
-    def _boost_capable(self) -> bool:
-        """TRVs commanded with a temperature or a preset can be boosted."""
-        return self.source == SOURCE_CLIMATE and self.command_mode != COMMAND_HVAC
-
-    def _frost_boost_possible(self) -> bool:
-        """A TRV room without the boost, with its own room sensor (frost protection).
-
-        The TRV next to the radiator reads warmer than the room: at the frost
-        protection temperature it would not open, so it is boosted like the TRV
-        boost while the room sensor is below the frost protection.
-        """
-        return (
-            not self.boost
-            and self._boost_capable
-            and bool(as_list(self.config.get(CONF_TEMP_SENSORS)))
-            and not self.external_failed
-        )
-
-    def _frost_wanted(self, frost: float) -> bool:
-        """Frost protection demand from the room sensor: below it, until it + hysteresis."""
-        if self.current_temp is None:
-            return False
-        if self.current_temp < frost:
-            return True
-        if self.current_temp >= frost + float(self.config[CONF_HYSTERESIS]):
-            return False
-        return self._boost_demand  # between the limits: as it was
-
-    def _boost_wanted(self, temperature: float | None) -> bool:
-        """The room asks for heat (boost rooms): the room sensor with the hysteresis.
-
-        Between the limits it stays as it was, or follows the learned inertia
-        (as a relay).
-        """
-        if temperature is None or self.current_temp is None:
-            self.inertia_stop = None
-            return False
-        hysteresis = float(self.config[CONF_HYSTERESIS])
-        want, by_model = on_off_wanted(
-            self._boost_demand,
-            self.current_temp,
-            temperature,
-            hysteresis,
-            self._inertia_extreme(dt_util.utcnow()),
-        )
-        if want:
-            self.inertia_stop = None
-        elif by_model:
-            self.inertia_stop = self._inertia_peak
-        return want
-
-    def boost_temperature(self, temperature: float) -> float:
-        """Temperature the TRVs get while the room asks for heat (°C).
-
-        The boost temperature of the room (the maximum of the house when empty),
-        never below the target, never above the maximum of the house nor of the TRVs.
-        """
-        chosen = self.config.get(CONF_TRV_BOOST_TEMP) if self.boost else None
-        value = float(chosen) if chosen not in (None, "") else self.max_temp()
-        value = min(value, self.max_temp())
-        device_max = self.device_max_temp()
-        if device_max is not None:
-            value = min(value, device_max)
-        return max(value, temperature)
-
-    def _learned_max(self) -> float | None:
-        """Lowest maximum learned from the thermostats of the room (°C)."""
-        unit = system_unit(self.hass)
-        values = [
-            float(to_celsius(v, unit))
-            for eid in self.climates
-            if (v := self._device_limit(eid, "max")) is not None
-        ]
-        return min(values) if values else None
-
-    def _target_temperature_of(self, target: Target) -> float | None:
-        """Temperature of a target, before the boost."""
-        if target.kind == KIND_TEMPERATURE:
-            return target.temperature
-        if target.kind == KIND_PRESET:
-            return self.level_temp(target.preset or "")
-        return None
-
-    def _climate_temperature(self, target: Target) -> float | None:
-        """Temperature a thermostat gets for ``target`` (with the TRV boost)."""
-        temperature = self._target_temperature_of(target)
-        if temperature is not None and self._boost_capable and self._boost_demand:
-            return self.boost_temperature(temperature)
-        return temperature
-
-    async def _async_boost_without_target(self, target: Target) -> None:
-        """Boost rooms when nothing is sent (pause, no schedule, a change on the TRV).
-
-        A boost we left on the TRVs is taken back to the target, so a TRV never
-        keeps the boost temperature while nobody regulates it; the heat demand
-        follows the room sensor against what the TRV is set to.
-        """
-        if not self._boost_capable:
-            return
-        # Until the TRVs report it, the temperature they hold is the one taken back.
-        temperature = self._resolve_temperature(target)
-        if self._boosted and self._boost_base is not None:
-            temperature = self._boost_base
-            for entity_id in self.climates:
-                state = self.hass.states.get(entity_id)
-                if valid(state):
-                    assert state is not None
-                    await self._send(
-                        entity_id,
-                        "set_temperature",
-                        ATTR_TEMPERATURE,
-                        self._device_value(state, self._boost_base),
-                    )
-        self._boosted = False
-        heat = self._exercise_until is None
-        # Without the TRV boost the demand comes from the TRVs again.
-        self._boost_demand = self.boost and heat and self._boost_wanted(temperature)
-
-    async def _async_restore_device(self, entity_id: str, values: dict[str, Any]) -> bool:
-        """Set again what a person set on a device (after an interruption).
-
-        False while the minimum on / off time of a relay (or on / off thermostat)
-        runs: it is set again when that time ends.
-        """
-        state = self.hass.states.get(entity_id)
-        if not valid(state) or not values:
-            return True
-        assert state is not None
-        domain = entity_id.split(".", 1)[0]
-        wanted = values.get("state")
-        on_off = self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC
-        if on_off and wanted and state.state != wanted:
-            actual = self._relay_actual()
-            now = dt_util.utcnow()
-            if actual is not None:
-                self._note_relay_state(actual, now)
-                if (wanted != STATE_OFF) != actual and self._relay_must_wait(actual, now):
-                    return False
-        if domain != "climate":
-            if (
-                wanted in (STATE_ON, STATE_OFF)
-                and state.state != wanted
-                and await self._call(
-                    domain,
-                    SERVICE_TURN_ON if wanted == STATE_ON else SERVICE_TURN_OFF,
-                    {ATTR_ENTITY_ID: entity_id},
-                )
-            ):
-                self.sent.set_last(entity_id, {"state": wanted})
-                if entity_id in self.switches:
-                    self._relay_on = wanted == STATE_ON
-                    self._relay_changed = dt_util.utcnow()
-            return True
-        if (
-            wanted
-            and state.state != wanted
-            and await self._send(entity_id, "set_hvac_mode", "hvac_mode", wanted, "state")
-            and on_off
-        ):
-            self._relay_on = wanted != STATE_OFF
-            self._relay_changed = dt_util.utcnow()
-        if wanted == STATE_OFF:
-            return True
-        preset = values.get("preset_mode")
-        if preset not in (None, PRESET_NONE):
-            if state.attributes.get("preset_mode") != preset:
-                await self._send(entity_id, "set_preset_mode", "preset_mode", preset)
-            return True
-        temperature = values.get("temperature")
-        if temperature is not None and float_attr(state, ATTR_TEMPERATURE) != temperature:
-            await self._send(entity_id, "set_temperature", ATTR_TEMPERATURE, temperature)
-        return True
-
-    def sends_preset(self, preset: str) -> bool:
-        """The level is sent to the device as a preset (else as a temperature)."""
-        if self.source not in (SOURCE_GT, SOURCE_CLIMATE) or self.command_mode != COMMAND_PRESET:
-            return False
-        for entity_id in self.climates:
-            state = self.hass.states.get(entity_id)
-            if valid(state):
-                available = list(state.attributes.get("preset_modes") or [])  # type: ignore[union-attr]
-                return self._device_preset(preset, available) is not None
-        return self.source == SOURCE_GT
-
-    def _device_preset(self, preset: str, available: list[str]) -> str | None:
-        """Map a level to the device preset name."""
-        if self.source == SOURCE_GT:
-            return preset if preset in available else None
-        if self.preset_map is None:
-            return None
-        candidates = [self.preset_map.get(preset)]
-        if self._legacy_map:
-            candidates.append(preset)
-        for candidate in candidates:
-            if candidate and candidate in available:
-                return candidate
-        return None
-
-    def _matches(self, state: State, target: Target) -> bool:
-        """Return True if the climate state already matches the target."""
-        if target.kind == KIND_OFF:
-            if STATE_OFF in (state.attributes.get("hvac_modes") or []):
-                return state.state == STATE_OFF
-            return float_attr(state, ATTR_TEMPERATURE) == float_attr(state, "min_temp")
-        if state.state == STATE_OFF:
-            return False
-        if target.kind == KIND_PRESET and self.command_mode == COMMAND_PRESET:
-            name = self._device_preset(
-                target.preset or "", list(state.attributes.get("preset_modes") or [])
-            )
-            if name is not None:
-                return state.attributes.get("preset_mode") == name
-        temperature = self._climate_temperature(target)
-        if temperature is None:
-            return True
-        # Compared in the unit of the thermostat, as sent.
-        current = float_attr(state, ATTR_TEMPERATURE)
-        wanted = self._device_value(state, temperature)
-        return current is not None and abs(current - wanted) < 0.05
-
-    async def _async_apply_climate(self, entity_id: str, target: Target, force: bool) -> bool:
-        """Bring one thermostat to the target (mode, preset or temperature)."""
-        state = self.hass.states.get(entity_id)
-        if not valid(state):
-            return False
-        assert state is not None
-        if not force and self._matches(state, target):
-            return False
-        self.sent.start(entity_id)
-        modes = list(state.attributes.get("hvac_modes") or [])
-        # Turned on only with a mode that heats (no guess when there is none).
-        on_mode = heat_mode(modes) if {"heat", "auto"} & set(modes) else None
-
-        if target.kind == KIND_OFF:
-            if STATE_OFF in modes:
-                return await self._send(entity_id, "set_hvac_mode", "hvac_mode", STATE_OFF, "state")
-            minimum = float_attr(state, "min_temp")
-            if minimum is None:
-                return False
-            return await self._send(entity_id, "set_temperature", ATTR_TEMPERATURE, minimum)
-
-        if state.state == STATE_OFF and on_mode:
-            await self._send(entity_id, "set_hvac_mode", "hvac_mode", on_mode, "state")
-
-        if target.kind == KIND_PRESET and self.command_mode == COMMAND_PRESET:
-            available = list(state.attributes.get("preset_modes") or [])
-            name = self._device_preset(target.preset or "", available)
-            if name is not None:
-                self.house.clear_alert(f"preset_{self.id}_{target.preset}")
-                return await self._send(entity_id, "set_preset_mode", "preset_mode", name)
-        temperature = self._climate_temperature(target)
-        if temperature is None:
-            self.house.notify(
-                f"preset_{self.id}_{target.preset}",
-                f"{self.name}: the level '{self.display_name(target.preset)}' is not "
-                f"available on {entity_id} and its temperature is unknown. "
-                "Configure this preset in the thermostat.",
-                code="preset_missing",
-                params={"level": self.display_name(target.preset), "entity": entity_id},
-                room=self.id,
-            )
-            return False
-        return await self._send(
-            entity_id, "set_temperature", ATTR_TEMPERATURE, self._device_value(state, temperature)
-        )
-
-    def _device_value(self, state: State, temperature: float) -> float:
-        """Temperature to send, in the unit of the thermostat.
-
-        A thermostat rounds to its own step; where that would take a value
-        within the maximum of the house above it, the value is rounded down to
-        the step instead, so the thermostat never holds more than the maximum.
-        A value meant to be above the maximum (the valve exercise) is sent as
-        it is.
-        """
-        unit = system_unit(self.hass)
-        value = round(float(from_celsius(temperature, unit)), 1)
-        step = float_attr(state, "target_temp_step")
-        if step:
-            maximum = float(from_celsius(self.max_temp(), unit))
-            if value <= maximum + 1e-9 < round(value / step) * step:
-                value = round(math.floor(maximum / step + 1e-9) * step, 2)
-        # The limits the device applies by itself: sent within them, so what it
-        # reports is what was sent (not a manual change).
-        high = self._device_limit(state.entity_id, "max")
-        low = self._device_limit(state.entity_id, "min")
-        if high is not None:
-            value = min(value, high)
-        if low is not None:
-            value = max(value, low)
-        return value
-
-    def _device_limit(self, entity_id: str, kind: str) -> float | None:
-        """A limit learned from the device (its unit); forgotten after a day, to see a new setting."""
-        value, expired = self.limits.get(entity_id, kind, dt_util.utcnow())
-        if expired:
-            self.house.clear_alert(f"limit_{entity_id}_{kind}")
-        return value
-
-    def _check_device_limit(self, entity_id: str, old: State | None, new: State | None) -> bool:
-        """True when a thermostat reports its own limit instead of the value sent.
-
-        After a boost or the valve exercise (a value above the target) it may
-        report less, but at least the target: that is its own maximum. After
-        frost protection or off (a value below every level) it may report more,
-        but below the lowest level: that is its own minimum. Neither is a
-        manual change; the limit is kept for the next commands and told.
-        """
-        if old is None or new is None or not valid(new):
-            return False
-        if float_attr(new, ATTR_TEMPERATURE) == float_attr(old, ATTR_TEMPERATURE):
-            return False
-        return self._learn_device_limit(entity_id, new, reported_now=True)
-
-    def _learn_device_limit(
-        self, entity_id: str, new: State | None, *, reported_now: bool = False
-    ) -> bool:
-        """True when what a thermostat shows now is its own limit for the last value sent.
-
-        Also used without a change of the device (the verification, the next
-        command): a TRV that already held its limit reports nothing new.
-        """
-        if new is None or not valid(new) or new.state == STATE_OFF:
-            return False
-        sent = self.sent.last_value(entity_id, ATTR_TEMPERATURE)
-        reported = float_attr(new, ATTR_TEMPERATURE)
-        if sent is None or reported is None:
-            return False
-        try:
-            sent = float(sent)
-        except (TypeError, ValueError):
-            return False
-        # A TRV that has shown the value sent accepted it: any other value after
-        # that is a person's, not its limit.
-        if self.sent.is_confirmed(entity_id, ATTR_TEMPERATURE):
-            return False
-        now = dt_util.utcnow()
-        # Only right after the command: a TRV holds its limit when it gets it.
-        sent_at = self.sent.last_sent_at(entity_id, ATTR_TEMPERATURE)
-        if sent_at is None or now - sent_at > SENT_RECENT:
-            return False
-        # A value sent before, reported now (late, or once more after the new one),
-        # is an echo, not a limit. (At the check, the TRV has held what it shows
-        # since before the command was sent again.)
-        margin = step_margin(new)
-        earlier = self.sent.recent_values(entity_id, ATTR_TEMPERATURE, now)
-        if (
-            reported_now
-            and any(close(reported, v, margin) for v in earlier)
-            and not close(reported, sent, margin)
-        ):
-            return False
-        unit = system_unit(self.hass)
-        base = self._target_temperature_of(self.decision.target) if self.decision else None
-        levels = [self.level_temp(p) for p in PRESETS]
-        lowest = min((v for v in levels if v is not None), default=None)
-        kind = limit_kind(
-            sent,
-            reported,
-            margin,
-            target=None if base is None else float(from_celsius(base, unit)),
-            exercising=self._exercise_until is not None,
-            lowest_level=None if lowest is None else float(from_celsius(lowest, unit)),
-        )
-        if kind is None:
-            return False
-        previous = self.limits.learn(entity_id, kind, reported, now)
-        if previous is not None and abs(previous - reported) > margin:
-            # The limit changed on the device: the alert tells the new value.
-            self.house.clear_alert(f"limit_{entity_id}_{kind}")
-        self.sent.replace(entity_id, ATTR_TEMPERATURE, reported)
-        shown = f"{reported:g} {unit}"
-        self.house.notify(
-            f"limit_{entity_id}_{kind}",
-            f"{self.name}: {entity_id} accepts at {'most' if kind == 'max' else 'least'} {shown}; "
-            f"{'raise its Max temperature' if kind == 'max' else 'lower its Min temperature'} "
-            "on the device if the room needs more.",
-            code=f"device_limit_{kind}",
-            params={"entity": entity_id, "value": shown},
-            room=self.id,
-        )
-        return True
-
-    async def _send(
-        self, entity_id: str, service: str, key: str, value: Any, field: str | None = None
-    ) -> bool:
-        """Send one climate command and remember the value it sets."""
-        name = field or key
-        # What the device shows before the command: some TRVs report it once more
-        # after showing the new value, however long ago it was set. Only for the
-        # temperature and the preset: turning a device off by hand right after it
-        # was turned on stays a manual change.
-        before = self.hass.states.get(entity_id)
-        shown = None
-        if valid(before) and name != "state":
-            shown = before.state if name == "state" else before.attributes.get(name)  # type: ignore[union-attr]
-        ok = await self._call("climate", service, {ATTR_ENTITY_ID: entity_id, key: value})
-        if ok:
-            self.sent.record(entity_id, name, value, shown, dt_util.utcnow())
-        return ok
-
-    async def _async_apply_relay(self, target: Target) -> bool:
-        """On/off control for switches or climates in hvac_mode command mode."""
-        now = dt_util.utcnow()
-        self.relay_waiting = None
-        self._relay_wait_until = None
-        # The real state first: inside the hysteresis band it stays as it is
-        # (also when a person switched it by hand).
-        actual = self._relay_actual()
-        if actual is None:
-            return False
-        self._note_relay_state(actual, now)
-        if target.kind == KIND_OFF:
-            want = False
-        else:
-            temperature = self._resolve_temperature(target)
-            if temperature is None or self.current_temp is None:
-                want = False
-            else:
-                hysteresis = float(self.config[CONF_HYSTERESIS])
-                want, by_model = on_off_wanted(
-                    actual,
-                    self.current_temp,
-                    temperature,
-                    hysteresis,
-                    self._inertia_extreme(now),
-                )
-                if by_model and not want:
-                    self.inertia_stop = self._inertia_peak
-        if want or target.kind == KIND_OFF:
-            self.inertia_stop = None
-        if want == actual:
-            return False
-        if self._relay_must_wait(actual, now):
-            return False
-        ok = True
-        if self.source == SOURCE_SWITCH:
-            for entity_id in self.switches:
-                sent = await self._call(
-                    entity_id.split(".", 1)[0],
-                    SERVICE_TURN_ON if want else SERVICE_TURN_OFF,
-                    {ATTR_ENTITY_ID: entity_id},
-                )
-                if sent:
-                    self.sent.set_last(entity_id, {"state": STATE_ON if want else STATE_OFF})
-                ok &= sent
-        else:
-            for entity_id in self.climates:
-                state = self.hass.states.get(entity_id)
-                on_mode = heat_mode(state.attributes.get("hvac_modes") if valid(state) else None)  # type: ignore[union-attr]
-                self.sent.start(entity_id)
-                ok &= await self._send(
-                    entity_id, "set_hvac_mode", "hvac_mode", on_mode if want else STATE_OFF, "state"
-                )
-        if ok:
-            self._relay_on = want
-            self._relay_changed = now
-        return ok
-
-    def _inertia_extreme(self, now: datetime) -> Callable[[bool], float] | None:
-        """The learned model for starting and stopping by the inertia (None: the band only).
-
-        Only once the room learned its model and with *Use the learned
-        inertia* on.
-        """
-        if not self.config.get(CONF_INERTIA_CONTROL, True) or self.current_temp is None:
-            return None
-        learner = self.learner
-        if not learner.model.learned:
-            return None
-        house = self.house
-        outdoor = house.outdoor_now
-        sun = house.sun_ahead(now)
-        current = self.current_temp
-
-        def extreme(heating: bool) -> float:
-            value = learner.model.extreme(current, outdoor, learner.q, heating, sun)
-            if not heating:
-                self._inertia_peak = value
-            return value
-
-        return extreme
-
-    def _note_relay_state(self, actual: bool, now: datetime) -> None:
-        """Remember the real relay state; a switch from outside starts the minimum time."""
-        if self._relay_on is not None and actual != self._relay_on:
-            self._relay_changed = now
-        self._relay_on = actual
-
-    def _relay_must_wait(self, actual: bool, now: datetime) -> bool:
-        """True while the minimum on / off time of the relay runs (and note until when)."""
-        if self._relay_changed is None:
-            return False
-        minimum = timedelta(
-            minutes=float(self.config[CONF_MIN_ON] if actual else self.config[CONF_MIN_OFF])
-        )
-        if now - self._relay_changed < minimum:
-            self.relay_waiting = "min_on" if actual else "min_off"
-            self._relay_wait_until = self._relay_changed + minimum
-            return True
-        return False
-
-    def _relay_actual(self) -> bool | None:
-        """True when a relay (or on / off thermostat) is on now."""
-        entities = self.switches if self.source == SOURCE_SWITCH else self.climates
-        states = [self.hass.states.get(eid) for eid in entities]
-        usable = [s for s in states if valid(s)]
-        if not usable:
-            return None
-        return any(s.state not in (STATE_OFF,) for s in usable)  # type: ignore[union-attr]
-
-    def _schedule_verify(self, target: Target) -> None:
-        """Check later that the devices accepted the command; retry once, then alert."""
-        if self._verify_unsub:
-            self._verify_unsub()
-            self._verify_unsub = None
-        if self._stopped:
-            return
-        expected = target
-
-        async def _verify(_now: datetime) -> None:
-            """Compare the devices with the command sent."""
-            self._verify_unsub = None
-            # A manual change set by the card or a service has no target in the
-            # decision (it is "respected"); its stored target is checked instead.
-            current = (
-                self._override_target()
-                if self.decision is not None and self.decision.rule == RULE_OVERRIDE
-                else self.decision.target
-                if self.decision is not None
-                else None
-            )
-            if current != expected:
-                self._verify_attempts = 0
-                return
-            if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC:
-                self._verify_attempts = 0
-                return
-            mismatched = []
-            for eid in self.climates:
-                state = self.hass.states.get(eid)
-                if not valid(state) or self._matches(state, expected):  # type: ignore[arg-type]
-                    continue
-                # Still not there after the command was sent again: a TRV that
-                # holds its own limit (it may have held it already, so it reported
-                # no change) is learned instead of the alert. Not at the first
-                # check: a TRV may just not have reported yet.
-                if (
-                    self._verify_attempts >= 1
-                    and self._learn_device_limit(eid, state)
-                    and self._matches(state, expected)  # type: ignore[arg-type]
-                ):
-                    continue
-                mismatched.append(eid)
-            if not mismatched:
-                self._verify_attempts = 0
-                self.house.clear_alert(f"verify_{self.id}")
-                return
-            self._verify_attempts += 1
-            if self._verify_attempts == 1:
-                await self._async_apply(expected, force=True)
-            else:
-                self._verify_attempts = 0
-                self.house.notify(
-                    f"verify_{self.id}",
-                    f"{self.name}: {', '.join(mismatched)} did not accept "
-                    f"{expected.describe(self.house.unit)}.",
-                    repeat=timedelta(hours=6),
-                    code="not_accepted",
-                    params={"entities": mismatched, "target": expected.describe(self.house.unit)},
-                    room=self.id,
-                )
-
-        self._verify_unsub = async_call_later(self.hass, VERIFY_DELAY, _verify)
-
-    async def async_apply_manual(self, target: Target, hours: float | None) -> None:
-        """Service: set a manual target and keep it as an override.
-
-        A temperature is kept between the frost protection and the maximum.
-        The new manual change ends the earlier one (and what it kept).
-        """
-        if target.kind == KIND_TEMPERATURE and target.temperature is not None:
-            limited = min(max(target.temperature, self.frost_temp()), self.max_temp())
-            target = Target(KIND_TEMPERATURE, preset=target.preset, temperature=limited)
-        # Sent by the decision that follows, only when the manual change applies
-        # (not in a pause, with a window open, in mode Off...).
-        self.set_override(
-            f"set by service: {target.describe(self.house.unit)}", hours=hours, target=target
-        )
-
-    # ------------------------------------------------------------------
-    # Calibration
-    # ------------------------------------------------------------------
-    async def _async_calibrate(self, now: datetime) -> None:
-        """Write the external temperature (or the offset) to the TRV calibration entities."""
-        mode = self.config[CONF_CALIBRATION_MODE]
-        if mode not in (CALIBRATION_OFFSET, CALIBRATION_EXTERNAL) or self.house.paused:
-            return
-        external = self.external_temperature()
-        if external is None:
-            return
-        entity_reg = er.async_get(self.hass)
-        for number_id in as_list(self.config.get(CONF_CALIBRATION_ENTITIES)):
-            number = self.hass.states.get(number_id)
-            if not valid(number):
-                continue
-            assert number is not None
-            last = self._calibration_written.get(number_id)
-            interval = timedelta(minutes=10 if mode == CALIBRATION_OFFSET else 5)
-            if last is not None and now - last < interval:
-                continue
-            step = float_attr(number, "step") or 0.1
-            minimum = float_attr(number, "min")
-            maximum = float_attr(number, "max")
-            if (current := finite(number.state)) is None:
-                continue  # not a number: this entity is skipped
-            # The TRV number has its own unit (usually °C).
-            number_unit = number.attributes.get("unit_of_measurement") or system_unit(self.hass)
-            if mode == CALIBRATION_EXTERNAL:
-                value = float(from_celsius(external, number_unit))
-            else:
-                climate_id = self._climate_on_same_device(entity_reg, number_id)
-                device_temp = (
-                    climate_temp(self.hass, self.hass.states.get(climate_id), "current_temperature")
-                    if climate_id
-                    else None
-                )
-                if device_temp is None:
-                    continue
-                value = current + float(delta_from_celsius(external - device_temp, number_unit))
-            value = round(round(value / step) * step, 2)
-            if minimum is not None:
-                value = max(minimum, value)
-            if maximum is not None:
-                value = min(maximum, value)
-            # A change smaller than a step (or 0.1) is not sent, with a small
-            # tolerance: in floating point 19.7 − 19.6 is 0.0999999… In the
-            # external temperature mode the value is sent again at least every
-            # CALIBRATION_REFRESH_MINUTES even when unchanged: some TRVs (Sonoff
-            # TRVZB: after about 2 hours) go back to their own sensor when no
-            # value comes.
-            small = abs(value - current) < max(step, 0.1) - 1e-6
-            refresh_due = mode == CALIBRATION_EXTERNAL and (
-                last is None or now - last >= timedelta(minutes=CALIBRATION_REFRESH_MINUTES)
-            )
-            if small and not refresh_due:
-                continue
-            if await self._call("number", "set_value", {ATTR_ENTITY_ID: number_id, "value": value}):
-                self._calibration_written[number_id] = now
-
-    def _climate_on_same_device(self, registry: er.EntityRegistry, entity_id: str) -> str | None:
-        """Thermostat on the same device as a calibration entity."""
-        entry = registry.async_get(entity_id)
-        if entry is None or entry.device_id is None:
-            return self.climates[0] if len(self.climates) == 1 else None
-        for climate_id in self.climates:
-            climate_entry = registry.async_get(climate_id)
-            if climate_entry is not None and climate_entry.device_id == entry.device_id:
-                return climate_id
-        return None
-
-    # ------------------------------------------------------------------
-    # Alerts
-    # ------------------------------------------------------------------
-    def _check_mold(self, now: datetime) -> None:
-        """Mold risk alert: only with a humidity sensor and a known outdoor temperature.
-
-        Without a humidity sensor or without an outdoor source in the house
-        there is no alert. While a value is unknown for a moment (a sensor
-        unavailable), an alert already told stays as it is: ending it would
-        tell that the risk is over, and it is not known.
-        """
-        house = self.house
-        key = f"mold_{self.id}"
-        humidity = float_state(self.hass, self.config.get(CONF_HUMIDITY_SENSOR))
-        self.humidity = humidity if humidity is not None and 0 <= humidity <= 100 else None
-        if not self.config.get(CONF_HUMIDITY_SENSOR) or not house.outdoor_configured:
-            self.surface_humidity = None
-            self._mold_since = None
-            house.clear_alert(key)
-            return
-        outdoor = house.outdoor_now
-        if (
-            humidity is None
-            or not 0 <= humidity <= 100
-            or outdoor is None
-            or self.current_temp is None
-        ):
-            self.surface_humidity = None
-            self._mold_since = None
-            return
-        surface = surface_humidity(self.current_temp, humidity, outdoor)
-        self.surface_humidity = round(surface, 1)
-        if surface >= MOLD_SURFACE_RH:
-            since = self._mold_since = self._mold_since or now
-            if now - since >= timedelta(minutes=MOLD_MINUTES):
-                house.notify(
-                    key,
-                    f"{self.name}: mold risk, the coldest wall is at about {surface:.0f}% "
-                    f"humidity (room {humidity:.0f}%).",
-                    code="mold_risk",
-                    params={"surface": round(surface), "humidity": round(humidity)},
-                    room=self.id,
-                )
-        elif surface < MOLD_CLEAR_RH:
-            self._mold_since = None
-            house.clear_alert(key)
-
-    def _check_alerts(self, now: datetime) -> None:
-        """Alerts for long open windows, unavailable devices, failed sensors and schedule errors."""
-        house = self.house
-        # Window open for too long while heating matters.
-        if self.window_open and self.window.opened_at is not None:
-            minutes = float(house.options[CONF_ALERT_WINDOW_MINUTES])
-            heating_relevant = house.mode not in (MODE_OFF, MODE_SUMMER) and house.season_active
-            if heating_relevant and now - self.window.opened_at >= timedelta(minutes=minutes):
-                house.notify(
-                    f"window_{self.id}",
-                    f"{self.name}: a window has been open for more than {minutes:.0f} minutes.",
-                    code="window_long",
-                    params={"minutes": round(minutes)},
-                    room=self.id,
-                )
-        # The room fell clearly below the frost protection temperature (the heating
-        # cannot keep it); told once, until the room is back at it.
-        frost = self.frost_temp()
-        if self.current_temp is not None and self.current_temp <= frost - FROST_ALERT_MARGIN:
-            unit = house.unit
-            house.notify(
-                f"frost_{self.id}",
-                f"{self.name}: the room is below the frost protection temperature "
-                f"({from_celsius(frost, unit):.1f} {unit}).",
-                code="frost_protection",
-                params={
-                    "current": f"{from_celsius(self.current_temp, unit):.1f}",
-                    "frost": f"{from_celsius(frost, unit):.1f}",
-                },
-                room=self.id,
-            )
-        elif self.current_temp is not None and self.current_temp >= frost:
-            house.clear_alert(f"frost_{self.id}")
-        self._check_mold(now)
-        # Unavailable devices.
-        limit = timedelta(minutes=house.alert_unavailable_minutes)
-        for entity_id in self.climates + self.switches:
-            state = self.hass.states.get(entity_id)
-            if valid(state):
-                if self._unavailable_since.pop(entity_id, None) is not None:
-                    house.clear_alert(f"unavailable_{entity_id}")
-                continue
-            since = self._unavailable_since.setdefault(entity_id, now)
-            if now - since >= limit:
-                house.notify(
-                    f"unavailable_{entity_id}",
-                    f"{self.name}: {entity_id} has been unavailable for more than "
-                    f"{limit.total_seconds() / 60:.0f} minutes.",
-                    code="device_unavailable",
-                    params={"entity": entity_id, "minutes": round(limit.total_seconds() / 60)},
-                    room=self.id,
-                )
-        # External sensors.
-        if self.external_failed:
-            fallback = "the device sensor" if not self.sensor_failed else "eco"
-            house.notify(
-                f"sensor_{self.id}",
-                f"{self.name}: the temperature sensors are unavailable; using {fallback}.",
-                code="sensor_unavailable",
-                params={"fallback": "eco" if self.sensor_failed else "device"},
-                room=self.id,
-            )
-        else:
-            house.clear_alert(f"sensor_{self.id}")
-        # Schedule errors.
-        if self.schedule_error:
-            house.notify(
-                f"schedule_{self.id}",
-                f"{self.name}: the schedule is invalid ({self.schedule_error}); "
-                "the default schedule is used.",
-                code="schedule_invalid",
-                params={"error": self.schedule_error},
-                room=self.id,
-            )
-        else:
-            house.clear_alert(f"schedule_{self.id}")
-        # Days without an active profile (frost protection on those days).
-        gaps = (
-            uncovered_days(self.schedule.profile_days)
-            if not (
-                self.config.get(CONF_SCHEDULE_SOURCE) == SCHEDULE_HELPER
-                and self.config.get(CONF_SCHEDULE_HELPER)
-            )
-            else {"days": [], "free_days": False, "workdays": False}
-        )
-        if gaps["days"] or gaps["free_days"] or gaps["workdays"]:
-            house.notify(
-                f"schedule_gap_{self.id}",
-                f"{self.name}: no active schedule profile on "
-                + ", ".join(
-                    [
-                        *gaps["days"],
-                        *(["free days"] if gaps["free_days"] else []),
-                        *(["workdays on the weekend"] if gaps["workdays"] else []),
-                    ]
-                )
-                + "; the room keeps its frost protection on those days.",
-                code="schedule_gap",
-                params=dict(gaps),
-                room=self.id,
-            )
-        else:
-            house.clear_alert(f"schedule_gap_{self.id}")
-
-    @callback
-    def check_batteries(self) -> None:
-        """Alert about low batteries of the room devices."""
-        threshold = float(self.house.options[CONF_BATTERY_THRESHOLD])
-        entity_reg = er.async_get(self.hass)
-        device_reg = dr.async_get(self.hass)
-        devices: set[str] = set()
-        related = (
-            self.climates
-            + self.switches
-            + as_list(self.config.get(CONF_TEMP_SENSORS))
-            + as_list(self.config.get(CONF_WINDOW_SENSORS))
-            + as_list(self.config.get(CONF_OCCUPANCY_SENSORS))
-        )
-        for entity_id in related:
-            entry = entity_reg.async_get(entity_id)
-            if entry is not None and entry.device_id:
-                devices.add(entry.device_id)
-        for device_id in devices:
-            device = device_reg.async_get(device_id)
-            for entry in er.async_entries_for_device(entity_reg, device_id):
-                if entry.domain != "sensor":
-                    continue
-                if (entry.device_class or entry.original_device_class) != "battery":
-                    continue
-                state = self.hass.states.get(entry.entity_id)
-                if not valid(state):
-                    continue
-                level = finite(state.state)  # type: ignore[union-attr]
-                if level is None:
-                    continue
-                key = f"battery_{entry.entity_id}"
-                if level < threshold:
-                    name = (device.name_by_user or device.name) if device else entry.entity_id
-                    self.house.notify(
-                        key,
-                        f"{self.name}: low battery on {name} ({level:.0f}%).",
-                        repeat=timedelta(days=1),
-                        code="battery_low",
-                        params={"device": name, "level": round(level)},
-                        room=self.id,
-                    )
-                else:
-                    self.house.clear_alert(key)
-
-    # ------------------------------------------------------------------
-    # Setters used by entities and services
-    # ------------------------------------------------------------------
-    async def async_set_level(self, preset: str, value: float) -> None:
-        """Set the temperature of a custom level."""
-        if preset == "nearby":
-            self.nearby_temp = value
-        else:
-            self.levels[preset] = value
-        await self.house.async_evaluate_or_notify()
-
-    async def async_set_child_lock(self, on: bool) -> None:
-        """Enable or disable the child lock."""
-        self.child_lock = on
-        await self.house.async_evaluate_or_notify()
-
-    # ------------------------------------------------------------------
-    # Diagnostics / attributes
-    # ------------------------------------------------------------------
-    def override_info(self) -> dict[str, Any] | None:
-        """Override details for attributes."""
-        if not self.override:
-            return None
-        return {
-            "description": self.override.get("description"),
-            "since": iso(self.override.get("since")),
-            "until": iso(self.override.get("until")),
-            "mode": self.override.get("mode"),
-            # Set by the card / a service, or on the device itself.
-            "origin": "card" if self.override.get("target") else "device",
-            "devices": list((self.override.get("devices") or {}).keys()),
-            # A higher rule changed the devices: the manual value comes back after it.
-            "interrupted": bool(self.override.get("interrupted")),
-            # False while a higher rule has kept it from the devices so far.
-            "applied": bool(self.override.get("applied", True)),
-            # What the manual change holds (°C), also while a higher rule interrupts it.
-            **self._override_level(),
-        }
-
-    def _override_level(self) -> dict[str, Any]:
-        """Level and temperature (°C) a manual change holds, when known."""
-        stored = self._override_target()
-        if stored is not None:
-            return {"preset": stored.preset, "temperature": self._resolve_temperature(stored)}
-        for values in (self.override or {}).get("devices", {}).values():
-            if values.get("state") == STATE_OFF:
-                return {"preset": None, "temperature": None}
-            level = self.level_of_device_preset(values.get("preset_mode"))
-            if level is not None:
-                return {"preset": level, "temperature": self.level_temp(level)}
-            if values.get("temperature") is not None:
-                try:
-                    value = to_celsius(float(values["temperature"]), system_unit(self.hass))
-                except (TypeError, ValueError):
-                    continue
-                return {"preset": None, "temperature": value}
-        return {"preset": None, "temperature": None}
-
-    def hold_until(self, now: datetime) -> datetime | None:
-        """Until when the current level holds before the schedule applies, when known.
-
-        A planned vacation ends when its preheating starts; a calendar event
-        at its end. (The card plans the rest from the decision and the schedule.)
-        """
-        rule = self.decision.rule if self.decision else None
-        if rule == RULE_VACATION:
-            return self.house.vacation_until(now)
-        end = self.house.calendar_end
-        if self._calendar_preset() is not None and end is not None and end > now:
-            return end
-        return None
-
-    def no_heat_reason(self) -> dict[str, Any] | None:
-        """Why the room does not heat although it is below its target."""
-        decision = self.decision
-        if (
-            decision is None
-            or decision.target.kind == KIND_OFF
-            or decision.rule == RULE_PAUSE
-            or self.current_temp is None
-            or self.target_temperature is None
-            or self.current_temp >= self.target_temperature
-            or self.heating
-            or self._exercise_until is not None
-        ):
-            return None
-        house = self.house
-        configured, source_on = house.heat_source_state()
-        if self.heat_demand and self.uses_house_source:
-            if configured and source_on is None:
-                return {"code": "source_unknown"}
-            if house.source_waiting:
-                return {"code": f"source_{house.source_waiting}"}
-            reference = house.options.get(CONF_REFERENCE_ROOM)
-            if (
-                reference
-                and reference in house.rooms
-                and reference != self.id
-                and not house.rooms[reference].heat_demand
-            ):
-                return {"code": "reference_room", "room": house.rooms[reference].name}
-            needed = max(1, int(house.options[CONF_BOILER_MIN_ROOMS]))
-            count = sum(
-                1 for room in house.rooms.values() if room.heat_demand and room.uses_house_source
-            )
-            if not reference and count < needed:
-                return {"code": "rooms_needed", "count": count, "needed": needed}
-            return {"code": "source_off"}
-        if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost:
-            if self.relay_waiting:
-                return {"code": f"relay_{self.relay_waiting}"}
-            if self.inertia_stop is not None:
-                # Stopped early: the heat already given
-                # takes the room this high by itself.
-                return {
-                    "code": "inertia",
-                    "value": round(from_celsius(self.inertia_stop, house.unit), 1),
-                }
-            return {
-                "code": "hysteresis",
-                "value": round(
-                    delta_from_celsius(float(self.config[CONF_HYSTERESIS]), house.unit), 2
-                ),
-            }
-        states = [st for eid in self.climates if valid(st := self.hass.states.get(eid))]
-        if states and all(st.state == STATE_OFF for st in states):  # type: ignore[union-attr]
-            return {"code": "device_off"}
-        return {"code": "tolerance"}
-
-    def diagnostics(self) -> dict[str, Any]:
-        """Diagnostics for this room."""
-        return {
-            "id": self.id,
-            "config": self.config,
-            "rule": self.rule,
-            "decision": self.decision.as_dict() if self.decision else None,
-            "current_temperature": self.current_temp,
-            "target_temperature": self.target_temperature,
-            "heat_demand": self.heat_demand,
-            "window_open": self.window_open,
-            "override": self.override_info(),
-            "schedule_error": self.schedule_error,
-            "schedule_state": (
-                {
-                    "preset": self.schedule_state.preset,
-                    "profile": self.schedule_state.profile,
-                    "next_change": iso(self.schedule_state.next_change),
-                    "next_preset": self.schedule_state.next_preset,
-                }
-                if self.schedule_state
-                else None
-            ),
-            "levels": {p: self.level_temp(p) for p in PRESETS},
-            "thermal_model": self._model_info(),
-            "runtime_hours": round(self.runtime_s / 3600, 2),
-            "decisions": list(self.decisions),
-        }
-
-    def _model_info(self) -> dict[str, Any]:
-        """The learned thermal model (°C), for the diagnostics."""
-        learner, model = self.learner, self.learner.model
-        return {
-            "learned": model.learned,
-            "heating_per_hour": model.h,
-            "weather_curve": model.c,
-            "sun_gain": model.s,
-            "loss": model.k,
-            "constant_loss": model.constant_loss,
-            "inertia_minutes": model.tau,
-            "heat_reaching_now": round(learner.q, 3),
-            "error_per_hour": None if learner.error is None else round(learner.error, 3),
-            "heating_stretches": round(learner.heat_windows, 1),
-            "idle_stretches": round(learner.idle_windows, 1),
-            "outdoor_mean": model.outdoor_mean,
-            "candidates": [
-                {
-                    "inertia_minutes": fit.tau,
-                    "heating_per_hour": None if (sol := fit.solve()) is None else round(sol[0], 4),
-                    "loss": None if sol is None else round(sol[1], 5),
-                    "weather_curve": None if sol is None else round(sol[2], 5),
-                    "sun_gain": None if sol is None else round(sol[3], 4),
-                    "sun_seen": round(fit.a44, 3),
-                    "outdoor_spread": round(fit.spread(), 2),
-                    "error": round(fit.error / fit.weight, 5) if fit.weight > 0 else None,
-                }
-                for fit in learner.fits
-            ],
-        }
 
     @property
     def domain(self) -> str:

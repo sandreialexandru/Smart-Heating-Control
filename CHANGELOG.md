@@ -64,6 +64,16 @@ learning shows as tiles and the chart legend hides or shows each line.
   the setup forms and in the guest mode banner of the card, so it is not
   mistaken for the level *home*.
 
+### Development
+
+- 🧪 The tests of the card are in the repository (`tests/card`, 55 checks in
+  Chromium with a fake Home Assistant) and run in CI on every push.
+- 📊 CI measures the test coverage (on the newest Home Assistant) and shows it
+  in the summary of the run; no minimum yet.
+- 🧩 The room controller is split by job into `room.py` (state, schedule,
+  decision) and `room_devices.py`, `room_override.py`, `room_optimal.py`,
+  `room_alerts.py`, `room_status.py`. Nothing changes in what it does.
+
 ### Documentation
 
 - 📖 A new README that shows what the integration does, with a video of the

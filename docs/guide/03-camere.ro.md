@@ -186,7 +186,11 @@ calorifer), senzorul de pe perete spune 20,5 °C, iar offsetul TRV-ului e acum 0
 Cu *Offset*, integrarea adaugă la offsetul actual diferența 20,5 − 22 = −1,5 °C,
 deci scrie −1,5 °C, ca TRV-ul să „vadă” temperatura reală a camerei. Offsetul
 se ajustează cel mult o dată la 10 minute, temperatura externă cel mult o dată
-la 5 minute, și nimic în pauză.
+la 5 minute, și nimic în pauză. O schimbare se scrie de la un pas al entității
+(de obicei 0,1 °C). Temperatura externă se mai scrie o dată, neschimbată, la
+fiecare 30 de minute: unele TRV-uri (Sonoff TRVZB după circa 120 de minute)
+revin la senzorul lor când nu primesc nicio valoare, deci 30 de minute lasă loc
+pentru câteva scrieri pierdute.
 
 **Ocuparea camerei.** Funcționează doar când programul cere un nivel mai cald
 decât `eco`: o cameră goală nu ajunge niciodată mai caldă decât ar fi după

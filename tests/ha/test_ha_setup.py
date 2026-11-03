@@ -1140,6 +1140,8 @@ async def test_sun_signal_from_the_weather(
     entry = await _setup(
         hass, freezer, house_options={"weather": "weather.home"}, optimal_start=True
     )
+    # The forecast is read after the start.
+    await _tick(hass, freezer, 15)
     house = entry.runtime_data
     # 12:00 in Bucharest on 12 October: the sun is about 37° high (sin 0.6), clear sky.
     assert 0.55 < house.sun_now < 0.65
@@ -1826,6 +1828,52 @@ async def test_calibration_entity_with_a_value_that_is_not_a_number(
     await _tick(hass, freezer, 15)
     room = next(iter(entry.runtime_data.rooms.values()))
     assert room.heat_demand  # evaluated to the end (hvac_action heating)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_external_temperature_is_sent_on_a_step_and_again_unchanged(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """External temperature: a 0.1 step is sent (19.6 → 19.7); unchanged, again after 30 min.
+
+    Issue #5: in floating point 19.7 − 19.6 is 0.0999…, below the step of 0.1;
+    and a Sonoff TRVZB falls back to its own sensor after about 2 hours
+    without a value.
+    """
+    trv = {
+        "hvac_modes": ["heat", "off"],
+        "current_temperature": 20.0,
+        "temperature": 21.0,
+        "hvac_action": "heating",
+    }
+    hass.states.async_set("climate.trv", "heat", trv)
+    hass.states.async_set("sensor.office_temp", "19.7", {"unit_of_measurement": "°C"})
+    attrs = {"min": -10, "max": 50, "step": 0.1, "unit_of_measurement": "°C"}
+    hass.states.async_set("number.trv_external", "19.6", attrs)
+    async_mock_service(hass, "climate", "set_temperature")
+    calls = async_mock_service(hass, "number", "set_value")
+    entry = await _boost_house(
+        hass,
+        freezer,
+        {
+            "trv_boost": False,
+            "calibration_mode": "external",
+            "calibration_entities": ["number.trv_external"],
+        },
+    )
+    await _tick(hass, freezer, 15)
+    values = [c.data["value"] for c in calls if c.data["entity_id"] == "number.trv_external"]
+    assert values and values[-1] == 19.7
+    # The TRV took it; the room stays at 19.7: nothing more for a while.
+    hass.states.async_set("number.trv_external", "19.7", attrs)
+    sent = len(calls)
+    await _tick(hass, freezer, 20 * 60)
+    assert len(calls) == sent
+    # 30 minutes after the last write the same value goes again.
+    await _tick(hass, freezer, 11 * 60)
+    assert len(calls) == sent + 1
+    assert calls[-1].data["value"] == 19.7
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 

@@ -69,6 +69,13 @@ in smaller parts. The learning starts again after the update (about a day).
   no mold alert is sent; a humidity sensor that measures outdoors (on the
   weather entity's device, or on the outdoor sensor's device when it has no
   other temperature sensor) is refused. The *Decision* sensor shows `surface_humidity`.
+- **Fix: TRV calibration with the external temperature**
+  ([#5](https://github.com/sandreialexandru/Smart-Heating-Control/issues/5)).
+  A change of one step was sometimes not written (in floating point
+  19.7 − 19.6 is 0.0999…, below the step of 0.1), and an unchanged value was
+  never written again, so a Sonoff TRVZB went back to its own sensor after
+  about 120 minutes. A one step change is now written, and the external
+  temperature is written again every 30 minutes even when unchanged.
 - **Fix:** after saving the options, the old settings could still wake up
   once (at the next schedule change) and send a command; it no longer does.
 

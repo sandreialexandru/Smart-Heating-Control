@@ -35,6 +35,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     CALIBRATION_EXTERNAL,
     CALIBRATION_OFFSET,
+    CALIBRATION_REFRESH_MINUTES,
     COMMAND_HVAC,
     COMMAND_PRESET,
     COMMAND_TEMPERATURE,
@@ -2261,7 +2262,17 @@ class Room:
                 value = max(minimum, value)
             if maximum is not None:
                 value = min(maximum, value)
-            if abs(value - current) < max(step, 0.1):
+            # A change smaller than a step (or 0.1) is not sent, with a small
+            # tolerance: in floating point 19.7 − 19.6 is 0.0999999… In the
+            # external temperature mode the value is sent again at least every
+            # CALIBRATION_REFRESH_MINUTES even when unchanged: some TRVs (Sonoff
+            # TRVZB: after about 2 hours) go back to their own sensor when no
+            # value comes.
+            small = abs(value - current) < max(step, 0.1) - 1e-6
+            refresh_due = mode == CALIBRATION_EXTERNAL and (
+                last is None or now - last >= timedelta(minutes=CALIBRATION_REFRESH_MINUTES)
+            )
+            if small and not refresh_due:
                 continue
             if await self._call("number", "set_value", {ATTR_ENTITY_ID: number_id, "value": value}):
                 self._calibration_written[number_id] = now

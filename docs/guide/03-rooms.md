@@ -182,7 +182,11 @@ radiator), the wall sensor says 20.5 °C, and the TRV offset is 0 now. With
 *Offset*, the integration adds the difference 20.5 − 22 = −1.5 °C to the current
 offset, so it writes −1.5 °C, and the TRV "sees" the real room temperature. The
 offset is adjusted at most every 10 minutes, the external temperature at most
-every 5 minutes, and nothing in a pause.
+every 5 minutes, and nothing in a pause. A change is written from one step of
+the entity (usually 0.1 °C). The external temperature is also written again,
+unchanged, every 30 minutes: some TRVs (the Sonoff TRVZB after about 120
+minutes) go back to their own sensor when no value comes, so 30 minutes leave
+room for a few lost writes.
 
 **Room occupancy.** It works only when the schedule asks for a level warmer than
 `eco`: an empty room never gets warmer than the schedule would make it.

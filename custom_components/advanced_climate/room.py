@@ -1702,15 +1702,27 @@ class Room:
         return self._boost_demand  # between the limits: as it was
 
     def _boost_wanted(self, temperature: float | None) -> bool:
-        """The room asks for heat (boost rooms): the room sensor with the hysteresis."""
+        """The room asks for heat (boost rooms): the room sensor with the hysteresis.
+
+        Between the limits it stays as it was, or follows the learned inertia
+        (as a relay).
+        """
         if temperature is None or self.current_temp is None:
+            self.inertia_stop = None
             return False
         hysteresis = float(self.config[CONF_HYSTERESIS])
-        if self.current_temp <= temperature - hysteresis:
-            return True
-        if self.current_temp >= temperature + hysteresis:
-            return False
-        return self._boost_demand  # between the limits: as it was
+        want, by_model = on_off_wanted(
+            self._boost_demand,
+            self.current_temp,
+            temperature,
+            hysteresis,
+            self._inertia_extreme(dt_util.utcnow()),
+        )
+        if want:
+            self.inertia_stop = None
+        elif by_model:
+            self.inertia_stop = self._inertia_peak
+        return want
 
     def boost_temperature(self, temperature: float) -> float:
         """Temperature the TRVs get while the room asks for heat (°C).
@@ -2629,8 +2641,8 @@ class Room:
         if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost:
             if self.relay_waiting:
                 return {"code": f"relay_{self.relay_waiting}"}
-            if self.inertia_stop is not None and not self.boost:
-                # Stopped early: the heat still in the radiators or the floor
+            if self.inertia_stop is not None:
+                # Stopped early: the heat already given
                 # takes the room this high by itself.
                 return {
                     "code": "inertia",

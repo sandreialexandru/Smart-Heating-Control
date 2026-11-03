@@ -69,7 +69,7 @@
           "hysteresis": "Încălzirea pornește sub țintă minus această valoare și se oprește peste țintă plus această valoare.",
           "min_on_minutes": "Timp minim pornit. 0 pentru încălzitoare cărora nu le strică pornirile scurte.",
           "min_off_minutes": "Timp minim oprit între două porniri.",
-          "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se oprește puțin mai devreme când căldura rămasă în calorifere sau în pardoseală ar duce camera până la limita de sus a histerezisului și pornește puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Limitele histerezisului rămân valabile. Cel mai util la încălzirea lentă (calorifere din fontă, încălzire în pardoseală). Oprit: decide doar histerezisul."
+          "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se oprește puțin mai devreme când căldura deja dată ar duce camera până la limita de sus a histerezisului și pornește puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Limitele histerezisului rămân valabile. Cel mai util la încălzirea lentă (calorifere din fontă, încălzire în pardoseală). Oprit: decide doar histerezisul."
         }
       },
       "heating_thermostat": {
@@ -88,12 +88,14 @@
         "data": {
           "temperature_sensors": "Senzori de temperatură",
           "trv_boost_temperature": "Temperatura de forțare",
-          "hysteresis": "Histerezis"
+          "hysteresis": "Histerezis",
+          "inertia_control": "Folosește inerția învățată"
         },
         "data_description": {
           "temperature_sensors": "Senzorii din cameră: cererea de căldură se decide după ei, nu după senzorul TRV-ului de lângă calorifer.",
           "trv_boost_temperature": "Trimisă TRV-urilor cât camera cere căldură, niciodată sub țintă și niciodată peste temperatura maximă a casei sau a TRV-urilor. Gol = temperatura maximă a casei.",
-          "hysteresis": "Camera cere căldură sub ținta minus această valoare și se oprește peste ținta plus această valoare, măsurat de senzorul camerei."
+          "hysteresis": "Camera cere căldură sub ținta minus această valoare și se oprește peste ținta plus această valoare, măsurat de senzorul camerei.",
+          "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, forțarea se termină puțin mai devreme când căldura deja dată ar duce singură camera până la limita de sus a histerezisului și începe puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Banda rămâne limita. Oprit: decide doar histerezisul."
         }
       }
     },
@@ -302,7 +304,7 @@
           "hysteresis": "Încălzirea pornește sub țintă minus această valoare și se oprește peste țintă plus această valoare.",
           "min_on_minutes": "Timp minim pornit. 0 pentru încălzitoare cărora nu le strică pornirile scurte.",
           "min_off_minutes": "Timp minim oprit între două porniri.",
-          "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se oprește puțin mai devreme când căldura rămasă în calorifere sau în pardoseală ar duce camera până la limita de sus a histerezisului și pornește puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Limitele histerezisului rămân valabile. Cel mai util la încălzirea lentă (calorifere din fontă, încălzire în pardoseală). Oprit: decide doar histerezisul."
+          "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se oprește puțin mai devreme când căldura deja dată ar duce camera până la limita de sus a histerezisului și pornește puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Limitele histerezisului rămân valabile. Cel mai util la încălzirea lentă (calorifere din fontă, încălzire în pardoseală). Oprit: decide doar histerezisul."
         }
       },
       "heating_thermostat": {
@@ -402,12 +404,14 @@
         "data": {
           "temperature_sensors": "Senzori de temperatură",
           "trv_boost_temperature": "Temperatura de forțare",
-          "hysteresis": "Histerezis"
+          "hysteresis": "Histerezis",
+          "inertia_control": "Folosește inerția învățată"
         },
         "data_description": {
           "temperature_sensors": "Senzorii din cameră: cererea de căldură se decide după ei, nu după senzorul TRV-ului de lângă calorifer.",
           "trv_boost_temperature": "Trimisă TRV-urilor cât camera cere căldură, niciodată sub țintă și niciodată peste temperatura maximă a casei sau a TRV-urilor. Gol = temperatura maximă a casei.",
-          "hysteresis": "Camera cere căldură sub ținta minus această valoare și se oprește peste ținta plus această valoare, măsurat de senzorul camerei."
+          "hysteresis": "Camera cere căldură sub ținta minus această valoare și se oprește peste ținta plus această valoare, măsurat de senzorul camerei.",
+          "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, forțarea se termină puțin mai devreme când căldura deja dată ar duce singură camera până la limita de sus a histerezisului și începe puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Banda rămâne limita. Oprit: decide doar histerezisul."
         }
       }
     },
@@ -479,7 +483,7 @@
             "hysteresis": "Încălzirea pornește sub țintă minus această valoare și se oprește peste țintă plus această valoare.",
             "min_on_minutes": "Timp minim pornit. 0 pentru încălzitoare cărora nu le strică pornirile scurte.",
             "min_off_minutes": "Timp minim oprit între două porniri.",
-            "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se oprește puțin mai devreme când căldura rămasă în calorifere sau în pardoseală ar duce camera până la limita de sus a histerezisului și pornește puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Limitele histerezisului rămân valabile. Cel mai util la încălzirea lentă (calorifere din fontă, încălzire în pardoseală). Oprit: decide doar histerezisul."
+            "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se oprește puțin mai devreme când căldura deja dată ar duce camera până la limita de sus a histerezisului și pornește puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Limitele histerezisului rămân valabile. Cel mai util la încălzirea lentă (calorifere din fontă, încălzire în pardoseală). Oprit: decide doar histerezisul."
           }
         },
         "control_thermostat": {
@@ -699,11 +703,13 @@
           "description": "Cât camera cere căldură, TRV-urile primesc temperatura de forțare, în rest ținta. Camera cere căldură de la ținta minus histerezisul până la ținta plus histerezisul, măsurat de senzorul camerei.",
           "data": {
             "trv_boost_temperature": "Temperatura de forțare",
-            "hysteresis": "Histerezis"
+            "hysteresis": "Histerezis",
+            "inertia_control": "Folosește inerția învățată"
           },
           "data_description": {
             "trv_boost_temperature": "Trimisă TRV-urilor cât camera cere căldură, niciodată sub țintă și niciodată peste temperatura maximă a casei sau a TRV-urilor. Gol = temperatura maximă a casei.",
-            "hysteresis": "Camera cere căldură sub ținta minus această valoare și se oprește peste ținta plus această valoare, măsurat de senzorul camerei."
+            "hysteresis": "Camera cere căldură sub ținta minus această valoare și se oprește peste ținta plus această valoare, măsurat de senzorul camerei.",
+            "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, forțarea se termină puțin mai devreme când căldura deja dată ar duce singură camera până la limita de sus a histerezisului și începe puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Banda rămâne limita. Oprit: decide doar histerezisul."
           }
         }
       },

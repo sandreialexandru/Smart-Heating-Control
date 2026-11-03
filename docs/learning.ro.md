@@ -323,8 +323,9 @@ schimbare, din aceeași simulare.
 
 ### Relee: pornirea și oprirea după inerție
 
-Pentru un releu sau un termostat *Pornit / oprit (hvac mode)* cu *Folosește
-inerția învățată* pornit (implicit), în banda de histerezis:
+Pentru un releu, un termostat *Pornit / oprit (hvac mode)* sau TRV-uri cu
+forțare (cererea lor de căldură după senzorul camerei) cu *Folosește inerția
+învățată* pornit (implicit), în banda de histerezis:
 
 - cu încălzirea pornită: simularea rulează **fără încălzire** de acum (q de
   acum, temperatura de afară de acum, soarele așteptat) până când camera începe

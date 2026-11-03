@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.7.0b1";
+const CARD_VERSION = "2.6.1b1";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -251,7 +251,7 @@ const TEXT = {
     no_heat: "Not heating",
     nh_tolerance: "the room is within the thermostat tolerance",
     nh_hysteresis: "within the hysteresis of {value}°",
-    nh_inertia: "stopped early: the heat still in the radiators takes the room to ~{value}°",
+    nh_inertia: "stopped early: the heat already given still takes the room to ~{value}°",
     nh_relay_min_on: "the relay waits for its minimum on time",
     nh_relay_min_off: "the relay waits for its minimum off time",
     nh_source_min_on: "the heat source waits for its minimum on time",
@@ -503,7 +503,7 @@ const TEXT = {
     no_heat: "Nu încălzește",
     nh_tolerance: "camera e în toleranța termostatului",
     nh_hysteresis: "în histerezisul de {value}°",
-    nh_inertia: "oprită mai devreme: căldura rămasă în calorifere duce camera la ~{value}°",
+    nh_inertia: "oprită mai devreme: căldura deja dată duce camera la ~{value}°",
     nh_relay_min_on: "releul așteaptă timpul minim pornit",
     nh_relay_min_off: "releul așteaptă timpul minim oprit",
     nh_source_min_on: "sursa de căldură așteaptă timpul minim pornit",

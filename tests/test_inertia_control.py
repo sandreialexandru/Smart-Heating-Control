@@ -34,6 +34,7 @@ def _simulate(
     outdoor_known: bool = True,
     sun_gain: float = 0.0,
     stats_from: int = 4,
+    delay: int = 0,
 ) -> dict:
     """One room for ``days`` days; statistics of the day level from day ``stats_from`` on."""
     rnd = random.Random(seed)
@@ -51,6 +52,7 @@ def _simulate(
     learner = learning.ThermalLearner()
     t0 = datetime(2026, 11, 1, tzinfo=timezone.utc)
     temp, q, on = 19.0, 0.0, False
+    asked: list[bool] = []
     reading_before = None
     stats = {"minutes": 0, "dev": 0.0, "above": 0, "below": 0, "starts": 0, "by_model": 0}
     peak_over = 0.0
@@ -60,7 +62,10 @@ def _simulate(
         minute = i % 1440
         target = 21.0 if 360 <= minute < 1380 else 18.5
         true_tau = tau_after if tau_after is not None and i >= change_day * 1440 else tau
-        u = 1.0 if on else 0.0
+        # TRVs follow the demand a few minutes later (``delay``).
+        asked.append(on)
+        valve = asked[-1 - delay] if len(asked) > delay else False
+        u = 1.0 if valve else 0.0
         q = u + (q - u) * math.exp(-1 / true_tau)
         out = outdoor(i)
         temp += (h * q - k * (temp - out) + sun_gain * sun(i) + rnd.gauss(0, noise)) / 60
@@ -68,7 +73,7 @@ def _simulate(
         if i % 5 == 0:
             learner.observe(
                 t0 + timedelta(minutes=i),
-                on,
+                valve,
                 reading,
                 round(out, 1) if outdoor_known else None,
                 False,
@@ -192,6 +197,16 @@ class InertiaRealLifeTest(unittest.TestCase):
         self.assertIsNotNone(learned_at)
         self.assertGreater(learned_at, 60)
         self.assertEqual(band["trace"][:learned_at], model["trace"][:learned_at])
+
+    def test_trv_boost(self) -> None:
+        # TRVs with the boost: the room sensor decides like a relay, the valves
+        # follow 3 minutes later.
+        band, model = self._both(h=2.0, k=0.05, tau=30.0, delay=3)
+        for b, m in zip(band, model, strict=True):
+            self.assertGreater(b["above"], 0.03)
+            self.assertLess(m["above"], 0.01)
+            self.assertLess(m["dev"], b["dev"])
+            self.assertLess(m["starts_per_hour"], 0.7)
 
     def test_house_that_changes(self) -> None:
         # New, slower radiators on day 6: the model follows; no rapid switching meanwhile.

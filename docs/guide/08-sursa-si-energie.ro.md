@@ -94,7 +94,7 @@ Cardul spune de ce, iar senzorul *Decizie* are atributul `no_heat_reason`:
 | --- | --- |
 | camera e în toleranța termostatului | e foarte puțin sub țintă, termostatul încă așteaptă |
 | în histerezisul de … | releul așteaptă să coboare sub țintă − histerezis |
-| oprită mai devreme: căldura rămasă în calorifere duce camera la ~… | *Folosește inerția învățată*: camera se mai încălzește singură până acolo |
+| oprită mai devreme: căldura deja dată duce camera la ~… | *Folosește inerția învățată*: camera se mai încălzește singură până acolo |
 | releul așteaptă timpul minim pornit / oprit | protecția releului |
 | sursa de căldură așteaptă timpul minim pornit / oprit | protecția centralei |
 | așteaptă alte camere: X din Y cer căldură | *Camere necesare* |

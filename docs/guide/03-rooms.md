@@ -63,7 +63,7 @@ fight. Sensors (temperature, window, occupancy) may be shared by several rooms.
 | Hysteresis | 0.3 °C (0.1 – 3) | Starts below target − hysteresis, stops above target + hysteresis. With a chosen target of 21 °C: starts at 20.7 °C, stops at 21.3 °C. |
 | Minimum on time | 0 min (0 – 60) | The shortest time it stays on. 0 = no wait. Set a few minutes for a relay that starts a boiler without its own anti-cycling, or to spare a mechanical relay. |
 | Minimum off time | 0 min (0 – 60) | The shortest pause between two starts. 0 = no wait. |
-| Use the learned inertia | on | Once the room has learned how slowly its heating reacts, the heating stops a little early when the heat still in the radiators or the floor would take the room to the top of the band, and starts a little early when the room would fall to the bottom of the band before the heat arrives. Off: only the hysteresis decides. |
+| Use the learned inertia | on | Once the room has learned how slowly its heating reacts, the heating stops a little early when the heat already given would take the room to the top of the band, and starts a little early when the room would fall to the bottom of the band before the heat arrives. Off: only the hysteresis decides. |
 
 The minimum time counts from the last switch, **also one made by hand**. When it
 ends, the room is checked again at once. Inside the hysteresis band (in the
@@ -107,11 +107,13 @@ needs heat:
 | --- | --- | --- |
 | Boost temperature | empty = the maximum temperature of the house | Sent to the TRVs while the room asks for heat. Between the frost protection and the maximum of the house; never below the target and never above the maximum of the TRVs. |
 | Hysteresis | 0.3 °C (0.1 – 3) | The band of the heat demand, as for relays. |
+| Use the learned inertia | on | As for relays: once learned, the boost ends a little early when the heat already given would take the room to the top of the band, and starts a little early when the room would fall to its bottom first. |
 
 **Example** (the values chosen in the form): target 20 °C, hysteresis 0.2 °C,
 maximum of the house 25 °C, boost temperature empty. At 20 − 0.2 = 19.8 °C in
 the room the TRVs get 25 °C; at 20 + 0.2 = 20.2 °C they get 20 °C again. Between
-19.8 and 20.2 °C it stays as it was.
+19.8 and 20.2 °C it stays as it was, or, with the learned inertia, ends or
+starts early by what the room learned.
 
 The boost applies to every heat demand, also to frost protection. Without the
 boost, a TRV room with temperature sensors is boosted for frost protection only

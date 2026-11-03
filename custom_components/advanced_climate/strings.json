@@ -69,7 +69,7 @@
           "hysteresis": "Heating starts below target minus this value and stops above target plus this value.",
           "min_on_minutes": "Minimum time on. 0 for heaters that do not mind short cycles.",
           "min_off_minutes": "Minimum time off between two starts.",
-          "inertia_control": "Once the room learned how slowly its heating reacts, the heating stops a little early when the heat still in the radiators or the floor would take the room to the top of the hysteresis band, and starts a little early when the room would fall to its bottom before the heat arrives. The band itself stays the limit. Most useful for slow heating (cast iron radiators, floor heating). Off: only the hysteresis decides."
+          "inertia_control": "Once the room learned how slowly its heating reacts, the heating stops a little early when the heat already given would take the room to the top of the hysteresis band, and starts a little early when the room would fall to its bottom before the heat arrives. The band itself stays the limit. Most useful for slow heating (cast iron radiators, floor heating). Off: only the hysteresis decides."
         }
       },
       "heating_thermostat": {
@@ -88,12 +88,14 @@
         "data": {
           "temperature_sensors": "Temperature sensors",
           "trv_boost_temperature": "Boost temperature",
-          "hysteresis": "Hysteresis"
+          "hysteresis": "Hysteresis",
+          "inertia_control": "Use the learned inertia"
         },
         "data_description": {
           "temperature_sensors": "Sensors in the room: the heat demand is decided from them, not from the TRV sensor next to the radiator.",
           "trv_boost_temperature": "Sent to the TRVs while the room asks for heat, never below the target and never above the maximum temperature of the house or of the TRVs. Empty = the maximum temperature of the house.",
-          "hysteresis": "The room asks for heat below target minus this value and stops above target plus this value, measured by the room sensor."
+          "hysteresis": "The room asks for heat below target minus this value and stops above target plus this value, measured by the room sensor.",
+          "inertia_control": "Once the room learned how slowly its heating reacts, the boost ends a little early when the heat already given would take the room to the top of the hysteresis band by itself, and starts a little early when the room would fall to its bottom before the heat arrives. The band stays the limit. Off: only the hysteresis decides."
         }
       }
     },
@@ -302,7 +304,7 @@
           "hysteresis": "Heating starts below target minus this value and stops above target plus this value.",
           "min_on_minutes": "Minimum time on. 0 for heaters that do not mind short cycles.",
           "min_off_minutes": "Minimum time off between two starts.",
-          "inertia_control": "Once the room learned how slowly its heating reacts, the heating stops a little early when the heat still in the radiators or the floor would take the room to the top of the hysteresis band, and starts a little early when the room would fall to its bottom before the heat arrives. The band itself stays the limit. Most useful for slow heating (cast iron radiators, floor heating). Off: only the hysteresis decides."
+          "inertia_control": "Once the room learned how slowly its heating reacts, the heating stops a little early when the heat already given would take the room to the top of the hysteresis band, and starts a little early when the room would fall to its bottom before the heat arrives. The band itself stays the limit. Most useful for slow heating (cast iron radiators, floor heating). Off: only the hysteresis decides."
         }
       },
       "heating_thermostat": {
@@ -402,12 +404,14 @@
         "data": {
           "temperature_sensors": "Temperature sensors",
           "trv_boost_temperature": "Boost temperature",
-          "hysteresis": "Hysteresis"
+          "hysteresis": "Hysteresis",
+          "inertia_control": "Use the learned inertia"
         },
         "data_description": {
           "temperature_sensors": "Sensors in the room: the heat demand is decided from them, not from the TRV sensor next to the radiator.",
           "trv_boost_temperature": "Sent to the TRVs while the room asks for heat, never below the target and never above the maximum temperature of the house or of the TRVs. Empty = the maximum temperature of the house.",
-          "hysteresis": "The room asks for heat below target minus this value and stops above target plus this value, measured by the room sensor."
+          "hysteresis": "The room asks for heat below target minus this value and stops above target plus this value, measured by the room sensor.",
+          "inertia_control": "Once the room learned how slowly its heating reacts, the boost ends a little early when the heat already given would take the room to the top of the hysteresis band by itself, and starts a little early when the room would fall to its bottom before the heat arrives. The band stays the limit. Off: only the hysteresis decides."
         }
       }
     },
@@ -479,7 +483,7 @@
             "hysteresis": "Heating starts below target minus this value and stops above target plus this value.",
             "min_on_minutes": "Minimum time on. 0 for heaters that do not mind short cycles.",
             "min_off_minutes": "Minimum time off between two starts.",
-            "inertia_control": "Once the room learned how slowly its heating reacts, the heating stops a little early when the heat still in the radiators or the floor would take the room to the top of the hysteresis band, and starts a little early when the room would fall to its bottom before the heat arrives. The band itself stays the limit. Most useful for slow heating (cast iron radiators, floor heating). Off: only the hysteresis decides."
+            "inertia_control": "Once the room learned how slowly its heating reacts, the heating stops a little early when the heat already given would take the room to the top of the hysteresis band, and starts a little early when the room would fall to its bottom before the heat arrives. The band itself stays the limit. Most useful for slow heating (cast iron radiators, floor heating). Off: only the hysteresis decides."
           }
         },
         "control_thermostat": {
@@ -699,11 +703,13 @@
           "description": "While the room asks for heat the TRVs get the boost temperature, the rest of the time the target. The room asks for heat from target minus the hysteresis until target plus the hysteresis, measured by the room sensor.",
           "data": {
             "trv_boost_temperature": "Boost temperature",
-            "hysteresis": "Hysteresis"
+            "hysteresis": "Hysteresis",
+            "inertia_control": "Use the learned inertia"
           },
           "data_description": {
             "trv_boost_temperature": "Sent to the TRVs while the room asks for heat, never below the target and never above the maximum temperature of the house or of the TRVs. Empty = the maximum temperature of the house.",
-            "hysteresis": "The room asks for heat below target minus this value and stops above target plus this value, measured by the room sensor."
+            "hysteresis": "The room asks for heat below target minus this value and stops above target plus this value, measured by the room sensor.",
+            "inertia_control": "Once the room learned how slowly its heating reacts, the boost ends a little early when the heat already given would take the room to the top of the hysteresis band by itself, and starts a little early when the room would fall to its bottom before the heat arrives. The band stays the limit. Off: only the hysteresis decides."
           }
         }
       },

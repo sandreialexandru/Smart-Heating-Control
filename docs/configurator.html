@@ -246,7 +246,7 @@ const minOff = num('min_off_minutes', L('Minimum off time', 'Timp minim oprit'),
   L('The shortest pause between two starts. 0 (default) = no wait. Together with the minimum on time it limits how many cycles per hour the boiler can make.', 'Cea mai scurtă pauză între două porniri. 0 (implicit) = fără așteptare. Împreună cu timpul minim pornit limitează numărul de cicluri pe oră ale centralei.'),
   0, 0, 60, 1, 'min');
 const inertiaCtl = bool('inertia_control', L('Use the learned inertia', 'Folosește inerția învățată'),
-  L('Once the room has learned how slowly its heating reacts, the heating stops a little early when the heat still in the radiators or the floor would take the room to the top of the hysteresis band, and starts a little early when the room would fall to its bottom before the heat arrives. The band stays the limit.', 'După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se oprește puțin mai devreme când căldura rămasă în calorifere sau în pardoseală ar duce camera până la limita de sus a histerezisului și pornește puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Banda rămâne limita.'),
+  L('Once the room has learned how slowly its heating reacts, the heating stops a little early when the heat already given would take the room to the top of the hysteresis band, and starts a little early when the room would fall to its bottom before the heat arrives. The band stays the limit.', 'După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se oprește puțin mai devreme când căldura deja dată ar duce camera până la limita de sus a histerezisului și pornește puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Banda rămâne limita.'),
   true,
   { m: L('Stops and starts by the inertia.', 'Oprește și pornește după inerție.'), e: L('Less heat above the band, mostly for slow heating: in simulations the mean distance from the target fell from 0.33 to 0.27 °C with cast iron radiators and from 0.9 to 0.45 °C with floor heating. Until the room has learned (usually a day) only the band decides.', 'Mai puțină căldură peste bandă, mai ales la încălzirea lentă: în simulări distanța medie față de țintă a scăzut de la 0,33 la 0,27 °C cu calorifere din fontă și de la 0,9 la 0,45 °C cu încălzire în pardoseală. Până învață camera (de obicei o zi) decide doar banda.'), x: L('Cast iron radiators, target 21 °C: stops at about 21.1 °C instead of 21.3 °C, and the room peaks at about 21.3 °C instead of 21.6 °C.', 'Calorifere din fontă, ținta 21 °C: se oprește pe la 21,1 °C în loc de 21,3 °C, iar camera ajunge la circa 21,3 °C în loc de 21,6 °C.') },
   { m: L('Only the hysteresis decides.', 'Decide doar histerezisul.'), e: L('The heating stops at target + hysteresis and starts at target − hysteresis; slow radiators or a floor keep warming the room after the stop.', 'Încălzirea se oprește la țintă + histerezis și pornește la țintă − histerezis; caloriferele lente sau pardoseala mai încălzesc camera după oprire.'), x: L('Cast iron radiators, target 21 °C: stops at 21.3 °C, the room peaks at about 21.6 °C.', 'Calorifere din fontă, ținta 21 °C: se oprește la 21,3 °C, camera ajunge la circa 21,6 °C.') });
@@ -348,7 +348,7 @@ const HOUSE = [
     intro: L('The room sensor decides when the TRVs get the boost temperature.', 'Senzorul din cameră hotărăște când TRV-urile primesc temperatura de forțare.'),
     fields: [
       sensorsReq(L('The room sensors that decide the heat demand. Required for the boost.', 'Senzorii din cameră care hotărăsc cererea de căldură. Obligatorii pentru forțare.')),
-      boostTemp, hystBoost
+      boostTemp, hystBoost, inertiaCtl
     ]
   }
 ];
@@ -581,7 +581,7 @@ const ROOM = [
   {
     id: 'r_boost', sec: 'rooms', where: P_ROOM, title: L('TRV boost', 'Forțarea TRV'), show: c => !c.whole && c.src() === 'climate' && c.cmd() === 'temperature' && !!c.r('trv_boost'),
     intro: HOUSE[5].intro,
-    fields: [boostTemp, hystBoost]
+    fields: [boostTemp, hystBoost, inertiaCtl]
   },
   {
     id: 'r_levels', sec: 'rooms', where: P_ROOM, title: L('Levels', 'Niveluri'),

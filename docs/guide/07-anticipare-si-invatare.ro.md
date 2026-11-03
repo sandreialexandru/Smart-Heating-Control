@@ -139,7 +139,8 @@ implicită de 30 de minute, începe la **21:30**.
 ## Pornirea și oprirea după inerție
 
 Doar pentru camerele pe care integrarea le pornește și le oprește singură: un
-releu sau un termostat comandat *Pornit / oprit (hvac mode)*. Histerezisul ține
+releu, un termostat comandat *Pornit / oprit (hvac mode)* sau TRV-uri cu
+forțare (mai jos). Histerezisul ține
 camera într-o bandă, de exemplu 20,7 – 21,3 °C în jurul a 21 °C. Fără altceva,
 încălzirea se oprește la 21,3 °C, iar caloriferele, încă fierbinți, duc camera
 mai sus; pornește din nou la 20,7 °C, iar camera mai coboară până se încălzesc
@@ -155,8 +156,8 @@ oprit*), după ce camera și-a învățat modelul:
 
 Banda rămâne limita: la 21,3 °C se oprește mereu, la 20,7 °C pornește mereu, iar
 timpii minimi pornit / oprit se respectă în continuare. Cât e oprită mai
-devreme și camera e sub țintă, cardul arată *oprită mai devreme: căldura rămasă
-în calorifere duce camera la ~21,3°*.
+devreme și camera e sub țintă, cardul arată *oprită mai devreme: căldura deja
+dată duce camera la ~21,3°*.
 
 **Exemplu** (valori presupuse: calorifere din fontă care adaugă 2 °C pe oră,
 inerție 60 de minute, ținta 21 °C): doar cu banda, încălzirea se oprește la
@@ -182,6 +183,25 @@ Cu cât încălzirea e mai lentă, cu atât câștigul e mai mare: puțin la
 caloriferele obișnuite, abaterea înjumătățită la încălzirea în pardoseală.
 Încălzirea a mers la fel de mult sau mai puțin (pardoseală: 52 – 55 % din timp
 → 43 – 45 %), pentru că nu mai merge căldură peste bandă.
+
+**TRV-uri cu forțare** (*Forțează temperatura TRV cât încălzește*): senzorul
+camerei decide cererea de căldură cu histerezisul, ca la un releu, deci inerția
+învățată se aplică la fel. Într-o simulare cu TRV-uri care urmează după 3
+minute (în rest aceleași ipoteze ca mai sus):
+
+| Cameră (TRV cu forțare) | Distanța medie față de țintă, doar banda → cu inerția | Timp la peste 0,5 °C deasupra țintei | Porniri pe oră |
+|---|---|---|---|
+| Calorifere, inerție 20 min | 0,28 → 0,23 – 0,25 °C | 5,3 – 6,7 % → 0 – 0,3 % | 0,40 → 0,45 |
+| Calorifere, inerție 30 min | 0,28 – 0,31 → 0,23 – 0,25 °C | 6,4 – 7,4 % → 0 – 0,1 % | 0,30 → 0,32 |
+| Fontă, inerție 60 min | 0,36 → 0,30 – 0,31 °C | 17,9 – 20,1 % → 0 | 0,20 → 0,23 |
+
+Timpul la peste 0,5 °C sub țintă a rămas cam la fel pentru calorifere
+(1,0 – 4,3 % → 0,7 – 3,0 %) și a crescut pentru fontă (3,4 – 6,3 % →
+7,3 – 8,0 %).
+
+Termostatele și TRV-urile comandate prin *Temperatură* fără forțare, precum și
+Generic Thermostat, se reglează singure: integrarea nu le pornește și oprește,
+deci inerția învățată nu se aplică acolo.
 
 ## Ce arată cardul și senzorii
 

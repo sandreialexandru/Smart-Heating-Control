@@ -64,7 +64,7 @@ camere care trimit comenzi opuse aceluiași dispozitiv s-ar contrazice. Senzorii
 | Histerezis | 0,3 °C (0,1 – 3) | Pornește sub țintă − histerezis, oprește peste țintă + histerezis. Cu ținta aleasă 21 °C: pornește la 20,7 °C, oprește la 21,3 °C. |
 | Timp minim pornit | 0 min (0 – 60) | Cel mai scurt timp cât rămâne pornit. 0 = fără așteptare. Câteva minute pentru un releu care pornește o centrală fără protecție proprie la cicluri scurte sau ca să fie cruțat un releu mecanic. |
 | Timp minim oprit | 0 min (0 – 60) | Cea mai scurtă pauză între două porniri. 0 = fără așteptare. |
-| Folosește inerția învățată | pornit | După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se oprește puțin mai devreme când căldura rămasă în calorifere sau în pardoseală ar duce camera până la limita de sus a benzii și pornește puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Oprit: decide doar histerezisul. |
+| Folosește inerția învățată | pornit | După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se oprește puțin mai devreme când căldura deja dată ar duce camera până la limita de sus a benzii și pornește puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Oprit: decide doar histerezisul. |
 
 Timpul minim se numără de la ultima comutare, **și de la una făcută de mână**.
 Când se termină, camera e verificată din nou imediat. În banda de histerezis
@@ -109,11 +109,13 @@ camera are nevoie de căldură:
 | --- | --- | --- |
 | Temperatura de forțare | gol = temperatura maximă a casei | Trimisă TRV-urilor cât camera cere căldură. Între antiîngheț și maximul casei; niciodată sub țintă și niciodată peste maximul TRV-urilor. |
 | Histerezis | 0,3 °C (0,1 – 3) | Banda cererii de căldură, ca la relee. |
+| Folosește inerția învățată | pornit | Ca la relee: după ce s-a învățat, forțarea se termină puțin mai devreme când căldura deja dată ar duce camera la limita de sus a benzii și începe puțin mai devreme când camera ar coborî întâi la limita de jos. |
 
 **Exemplu** (valorile alese în formular): ținta 20 °C, histerezis 0,2 °C,
 maximul casei 25 °C, temperatura de forțare goală. La 20 − 0,2 = 19,8 °C în
 cameră, TRV-urile primesc 25 °C; la 20 + 0,2 = 20,2 °C primesc iar 20 °C. Între
-19,8 și 20,2 °C rămâne cum era.
+19,8 și 20,2 °C rămâne cum era sau, cu inerția învățată, se termină ori începe
+mai devreme, după ce a învățat camera.
 
 Forțarea se aplică la orice cerere de căldură, și la antiîngheț. Fără forțare,
 o cameră cu TRV-uri și senzori de temperatură e forțată doar pentru antiîngheț

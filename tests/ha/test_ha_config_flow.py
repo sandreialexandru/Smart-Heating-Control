@@ -779,7 +779,7 @@ async def test_trv_boost_in_the_room_form(hass: HomeAssistant) -> None:
     )
     # No Thermostat page: the tolerances are not used with the boost.
     assert result["step_id"] == "control_boost"
-    assert _keys(result) == {"trv_boost_temperature", "hysteresis"}
+    assert _keys(result) == {"trv_boost_temperature", "hysteresis", "inertia_control"}
     result = await rooms.async_configure(
         result["flow_id"], {"trv_boost_temperature": 23, "hysteresis": 0.2}
     )

@@ -886,6 +886,7 @@ def _boost_schema(d: dict[str, Any], low: float, high: float, with_sensors: bool
         )
     fields[_opt(CONF_TRV_BOOST_TEMP, d)] = _number(low, high, 0.5, "°C")
     fields[_req(CONF_HYSTERESIS, d, ROOM_DEFAULTS)] = _number(0.1, 3, 0.1, "°C")
+    fields[_req(CONF_INERTIA_CONTROL, d, ROOM_DEFAULTS)] = _bool()
     return vol.Schema(fields)
 
 

@@ -137,8 +137,8 @@ default limit of 30 minutes, it starts at **21:30**.
 
 ## Starting and stopping by the inertia
 
-Only for rooms the integration switches on and off itself: a relay, or a
-thermostat commanded *On / off (hvac mode)*. The hysteresis keeps the room in a
+Only for rooms the integration switches on and off itself: a relay, a
+thermostat commanded *On / off (hvac mode)*, or TRVs with the boost (below). The hysteresis keeps the room in a
 band, e.g. 20.7 – 21.3 °C around 21 °C. Without anything else, the heating stops
 at 21.3 °C and the radiators, still hot, push the room higher; it starts again
 at 20.7 °C and the room still falls until the radiators are warm.
@@ -153,7 +153,7 @@ step), once the room has learned its model:
 
 The band stays the limit: at 21.3 °C it always stops, at 20.7 °C it always
 starts, and the minimum on / off times still apply. While stopped early and
-below the target, the card says *stopped early: the heat still in the radiators
+below the target, the card says *stopped early: the heat already given still
 takes the room to ~21.3°*.
 
 **Example** (assumed values: cast iron radiators that add 2 °C per hour,
@@ -179,6 +179,25 @@ k 0.06; 30 and 60 min: h 2, k 0.05; floor: h 1.6, k 0.04.
 The slower the heating, the larger the gain: little for ordinary radiators, the
 deviation halved for floor heating. The heating ran as long or less (floor:
 52 – 55 % of the time → 43 – 45 %), since no heat goes above the band.
+
+**TRVs with the boost** (*Boost the TRVs while heating*): the room sensor
+decides the heat demand with the hysteresis, like a relay, so the learned
+inertia works the same way there. In a simulation of TRVs that follow 3
+minutes later (otherwise the same assumptions as above):
+
+| Room (TRV boost) | Mean distance from the target, band alone → with the inertia | Time more than 0.5 °C above the target | Starts per hour |
+|---|---|---|---|
+| Radiators, inertia 20 min | 0.28 → 0.23 – 0.25 °C | 5.3 – 6.7 % → 0 – 0.3 % | 0.40 → 0.45 |
+| Radiators, inertia 30 min | 0.28 – 0.31 → 0.23 – 0.25 °C | 6.4 – 7.4 % → 0 – 0.1 % | 0.30 → 0.32 |
+| Cast iron, inertia 60 min | 0.36 → 0.30 – 0.31 °C | 17.9 – 20.1 % → 0 | 0.20 → 0.23 |
+
+The time more than 0.5 °C below the target stayed about the same for the
+radiators (1.0 – 4.3 % → 0.7 – 3.0 %) and rose for cast iron (3.4 – 6.3 % →
+7.3 – 8.0 %).
+
+Thermostats and TRVs commanded by *Temperature* without the boost, and Generic
+Thermostat, regulate by themselves: the integration does not switch them, so
+the learned inertia does not apply there.
 
 ## What you see in the card and the sensors
 

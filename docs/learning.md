@@ -317,8 +317,9 @@ simulation.
 
 ### Relays: starting and stopping by the inertia
 
-For a relay or an *On / off (hvac mode)* thermostat with *Use the learned
-inertia* on (the default), inside the hysteresis band:
+For a relay, an *On / off (hvac mode)* thermostat or TRVs with the boost
+(their heat demand from the room sensor) with *Use the learned inertia* on
+(the default), inside the hysteresis band:
 
 - heating on: the simulation runs **without heating** from now (q of now, the
   outdoor temperature of now, the expected sun) until the room turns down;

@@ -136,8 +136,9 @@ următoarele 12 ore și se deschide pe ultimele 24 de ore și următoarele 12:
   termostatele fără `hvac_action` după histerezis. Linia urcă și coboară în
   jurul țintei, cum face camera în realitate. Termostatele și TRV-urile
   comandate prin temperatură sau preset care raportează `hvac_action` se
-  reglează singure: pentru ele linia ține ținta, iar încălzirea prevăzută e o
-  singură perioadă mai deschisă („încălzește cât îi trebuie”);
+  reglează singure: pentru ele, ca și pentru un Generic Thermostat configurat
+  în YAML (toleranțele lui nu se pot citi), linia ține ținta, iar încălzirea
+  prevăzută e o singură perioadă mai deschisă („încălzește cât îi trebuie”);
 - ținta, ca linie în trepte, colorată după nivel;
 - nivelurile planificate;
 - perioadele în care camera a încălzit, pe o bandă separată, iar înainte, mai

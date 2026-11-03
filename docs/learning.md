@@ -593,12 +593,13 @@ loss learned* (*falls 0.70 °C/h now*).
 hours (dotted): the model of section 2 simulated minute by minute along the
 planned target, with the hourly forecast and the expected sun. The heating is
 switched as the device does it (the `band` of the `model` attribute, °C below
-and above the target): the *cold* / *hot tolerance* of Generic Thermostat
-(0.3 °C each when it does not say), the hysteresis for relays, on / off
-control, the TRV boost and thermostats without `hvac_action`, with the
-starting and stopping by the inertia of section 7 when `inertia_control` is
-on. Thermostats and TRVs that regulate by themselves have no band: the
-prediction holds the target and draws their heating as one period.
+and above the target): the *cold* / *hot tolerance* of Generic Thermostat,
+the hysteresis for relays, on / off control, the TRV boost and thermostats
+without `hvac_action`, with the starting and stopping by the inertia of
+section 7 when `inertia_control` is on. No band when it is not known:
+thermostats and TRVs that regulate by themselves, and a Generic Thermostat
+whose tolerances cannot be read (one set up in YAML). Then the prediction
+holds the target and draws the heating as one period.
 
 **Diagnostics** – `thermal_model` with all the numbers of the model and the
 ten inertia candidates (each with its h, c, k, s, error, `outdoor_spread`, the

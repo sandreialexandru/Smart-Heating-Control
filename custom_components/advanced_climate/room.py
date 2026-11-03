@@ -102,7 +102,6 @@ from .const import (
     DEVICE_LIMIT_HOURS,
     DOMAIN,
     EVENT_DECISION_CHANGED,
-    GT_DEFAULT_TOLERANCE,
     GT_DOMAIN,
     GT_PRESET_KEYS,
     MAX_DECISION_LOG,
@@ -823,38 +822,40 @@ class Room:
         return aggregate(values, self.config[CONF_TEMP_AGGREGATION])
 
     def _gt_cold_tolerance(self) -> float:
-        """The cold tolerance of the Generic Thermostat of the room (°C)."""
-        return self._gt_tolerance("cold_tolerance", 0.0)
+        """The cold tolerance of the Generic Thermostat of the room (°C), 0 when unknown."""
+        value = self._gt_tolerance("cold_tolerance")
+        return 0.0 if value is None else value
 
-    def _gt_tolerance(self, key: str, default: float) -> float:
-        """A tolerance of the Generic Thermostat of the room (°C), ``default`` when unknown."""
+    def _gt_tolerance(self, key: str) -> float | None:
+        """A tolerance of the Generic Thermostat of the room (°C), None when it cannot be read.
+
+        Only a Generic Thermostat set up in the user interface has its settings
+        in a config entry; one from YAML does not say.
+        """
         value = self._gt_options().get(key)
+        if value is None:
+            return None
         try:
-            return (
-                float(delta_to_celsius(float(value), system_unit(self.hass)))
-                if value is not None
-                else default
-            )
+            return float(delta_to_celsius(float(value), system_unit(self.hass)))
         except (TypeError, ValueError):
-            return default
+            return None
 
     def prediction_band(self) -> tuple[float, float, bool] | None:
         """How the heating of the room is switched around the target, for the prediction.
 
         (°C below the target where it starts, °C above where it stops, whether
         the learned inertia starts and stops it inside). Generic Thermostat:
-        its cold and hot tolerance (0.3 °C, its default, when unknown); relays,
+        its cold and hot tolerance (None when they cannot be read: not known);
+        relays,
         on / off control and the TRV boost: the hysteresis, with the learned
         inertia when on; thermostats without hvac_action: the hysteresis. None
         for the other thermostats and TRVs: they regulate by themselves, with a
         band nobody knows, and hold the target.
         """
         if self.source == SOURCE_GT:
-            return (
-                self._gt_tolerance("cold_tolerance", GT_DEFAULT_TOLERANCE),
-                self._gt_tolerance("hot_tolerance", GT_DEFAULT_TOLERANCE),
-                False,
-            )
+            cold = self._gt_tolerance("cold_tolerance")
+            hot = self._gt_tolerance("hot_tolerance")
+            return None if cold is None or hot is None else (cold, hot, False)
         hysteresis = float(self.config[CONF_HYSTERESIS])
         if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost:
             return hysteresis, hysteresis, bool(self.config.get(CONF_INERTIA_CONTROL, True))

@@ -33,8 +33,9 @@ predicted temperature of the chart follows how each device switches.
   the learned inertia), thermostats without `hvac_action` by the hysteresis.
   The line now goes up and down around the target as the room does, instead
   of staying flat with many short heating periods. Thermostats and TRVs that
-  regulate by themselves still hold the target; their heating ahead is one
-  period. The *Heating rate* sensor has the `band` in its `model`.
+  regulate by themselves, and a Generic Thermostat set up in YAML (its
+  tolerances cannot be read), still hold the target; their heating ahead is
+  one period. The *Heating rate* sensor has the `band` in its `model`.
 - 🏠 Clearer words for the presence of the house: *the house state is Home*
   instead of *the house is home* (*starea casei e „acasă”* in Romanian), in
   the setup forms and in the guest mode banner of the card, so it is not

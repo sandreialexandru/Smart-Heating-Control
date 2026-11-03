@@ -601,12 +601,13 @@ acum*).
 12 ore (punctat): modelul din secțiunea 2 simulat minut cu minut după ținta
 planificată, cu prognoza orară și soarele așteptat. Încălzirea pornește și se
 oprește cum o face dispozitivul (`band` din atributul `model`, °C sub și peste
-țintă): *cold* / *hot tolerance* ale Generic Thermostat (câte 0,3 °C când nu
-le spune), histerezisul pentru relee, control pornit / oprit, forțarea TRV și
-termostatele fără `hvac_action`, cu pornirea și oprirea după inerție din
-secțiunea 7 când `inertia_control` e pornit. Termostatele și TRV-urile care se
-reglează singure nu au bandă: predicția ține ținta și desenează încălzirea lor
-ca o singură perioadă.
+țintă): *cold* / *hot tolerance* ale Generic Thermostat, histerezisul pentru
+relee, control pornit / oprit, forțarea TRV și termostatele fără
+`hvac_action`, cu pornirea și oprirea după inerție din secțiunea 7 când
+`inertia_control` e pornit. Fără bandă când nu se cunoaște: termostatele și
+TRV-urile care se reglează singure și un Generic Thermostat ale cărui toleranțe
+nu se pot citi (unul configurat în YAML). Atunci predicția ține ținta și
+desenează încălzirea ca o singură perioadă.
 
 **Diagnostic** – `thermal_model` cu toate numerele modelului și cei zece
 candidați de inerție (fiecare cu h, c, k, s, eroarea, `outdoor_spread`,

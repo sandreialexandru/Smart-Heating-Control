@@ -136,7 +136,8 @@ and opens on the last 24 hours and the next 12:
   without `hvac_action` by the hysteresis. So the line goes up and down around
   the target as the room really does. Thermostats and TRVs commanded by
   temperature or preset that report `hvac_action` regulate by themselves: for
-  them the line holds the target and the heating ahead is one lighter period
+  them, and for a Generic Thermostat set up in YAML (its tolerances cannot be
+  read), the line holds the target and the heating ahead is one lighter period
   ("it heats as much as it needs");
 - the target, as a step line, coloured by level;
 - the planned levels;

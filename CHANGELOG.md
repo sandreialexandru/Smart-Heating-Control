@@ -7,11 +7,21 @@ GitHub releases.
 
 ## Unreleased
 
-Beta: relays, on / off thermostats and TRVs with the boost start and stop by
-the inertia the room has learned, so slow heating no longer overshoots; the
-predicted temperature of the chart follows how each device switches. The
-card is easier to read: an arrow shows whether a room warms or cools, the
-learning shows as tiles and the chart legend hides or shows each line.
+## 2.6.1 – 2026-11-04
+
+🔥 Relays, on / off thermostats and TRVs with the boost now start and stop by
+the inertia the room has learned, so slow heating no longer overshoots. 📈 The
+predicted temperature of the chart follows how each device really switches.
+🖼️ The card is easier to read: an arrow shows whether a room warms or cools,
+the learning shows as tiles and the chart legend hides or shows each line.
+🧪 Many more tests, now also of the card, and a weekly mutation testing.
+
+### 🧠 After the update
+
+- ✅ **The learning is kept**: rooms that learned with 2.6.0 go on from there.
+- 🔥 *Use the learned inertia* is **on by default** for relays, on / off
+  thermostats and the TRV boost: it acts once the room has learned its model,
+  only inside the hysteresis band. It can be turned off in the room options.
 
 ### Card
 
@@ -40,7 +50,6 @@ learning shows as tiles and the chart legend hides or shows each line.
   unknown (e.g. a Generic Thermostat without that preset) was taken as already
   reached: nothing was sent and the *preset missing* alert never came. Now the
   alert comes.
-
 - 🔥 **Use the learned inertia** (new option of the *On / off control* and
   *TRV boost* steps, on by default): for a relay, a thermostat commanded
   *On / off* or TRVs with the boost, once the room has learned its model, the
@@ -84,8 +93,9 @@ learning shows as tiles and the chart legend hides or shows each line.
   buttons and the services (coverage from 89 % to 93 % or more).
 - 🧬 Mutation testing (`tests/mutation`): about 3,700 small changes of the
   Python code, and those of the card with Stryker, each run against the
-  tests, to find the mistakes no test would notice. A workflow runs it every week in the night to Sunday (and by hand
-  from the Actions tab) and writes a report of the survivors.
+  tests, to find the mistakes no test would notice. A workflow runs it every
+  week in the night to Sunday (and by hand from the Actions tab) and writes a
+  report of the survivors.
 - 🧩 The room controller is split by job into `room.py` (state, schedule,
   decision) and `room_devices.py`, `room_override.py`, `room_optimal.py`,
   `room_alerts.py`, `room_status.py`. Nothing changes in what it does.

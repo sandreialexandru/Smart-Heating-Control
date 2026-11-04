@@ -3,7 +3,9 @@
     python tests/mutation/stryker_results.py reports/card-mutation.json --out results/card-0.json
 
 Then report.py puts the card and the Python modules in one report. Mutants
-Stryker could not run (they break the code before any test) are "invalid".
+Stryker could not run (they break the code before any test) are "invalid";
+those outside the lines of the job (Stryker lists them as "Ignored") are left
+out, since the job of those lines tests them.
 """
 
 from __future__ import annotations
@@ -19,7 +21,6 @@ STATUS = {
     "NoCoverage": "survived",
     "CompileError": "invalid",
     "RuntimeError": "invalid",
-    "Ignored": "invalid",
     "Pending": "not_run",
 }
 
@@ -35,6 +36,8 @@ def main() -> int:
         lines = item.get("source", "").splitlines()
         name = Path(path).name
         for index, mutant in enumerate(item.get("mutants", [])):
+            if mutant.get("status") == "Ignored":
+                continue  # outside the lines of this job: another job tests it
             line = mutant["location"]["start"]["line"]
             replacement = " ".join(str(mutant.get("replacement", "")).split())
             if len(replacement) > 60:

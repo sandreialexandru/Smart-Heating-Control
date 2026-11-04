@@ -44,7 +44,10 @@ GitHub releases.
   while heating** in both. For the heat source the new option is **Start and
   stop the source by its temperature**. The explanation of each says when to
   choose the other one. The card shows *By the room sensor* instead of *TRV
-  boost*. Only the labels and the explanations change; the settings are kept.
+  boost*. The explanations of the zone and of the room options now say what
+  the devices get while heating: the *Temperature while heating*, by default
+  the maximum temperature of the house. Only the labels and the explanations
+  change; the settings are kept.
 
 ### Card
 

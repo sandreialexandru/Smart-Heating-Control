@@ -51,7 +51,7 @@
           "climates": "The thermostat that controls the boiler, e.g. the Generic Thermostat entity (climate.climate).",
           "switches": "Only when a relay heats the house directly, without a thermostat.",
           "command_mode": "Only for thermostats other than Generic Thermostat. See the room settings for the difference.",
-          "trv_boost": "While the house asks for heat (by its temperature sensors, with the hysteresis), the thermostat or the TRVs get a higher temperature, so they keep heating until the house is warm; the rest of the time they get the target. Useful when the device measures in the wrong place (a thermostat in the hallway, a TRV next to the radiator). Needs a temperature sensor. Only with the Temperature command. Not the same as 'Start and stop the source by its temperature': that one is for a thermostat that only starts the boiler for rooms with their own TRVs (then choose 'Each room heats separately' and pick the thermostat as the heat source)."
+          "trv_boost": "While the house asks for heat (by its temperature sensors, with the hysteresis), the thermostat or the TRVs get the Temperature while heating (by default the maximum temperature of the house), so they keep heating until the house is warm; the rest of the time they get the target. Useful when the device measures in the wrong place (a thermostat in the hallway, a TRV next to the radiator). Needs a temperature sensor. Only with the Temperature command. Not the same as 'Start and stop the source by its temperature': that one is for a thermostat that only starts the boiler for rooms with their own TRVs (then choose 'Each room heats separately' and pick the thermostat as the heat source)."
         }
       },
       "heating_on_off": {
@@ -286,7 +286,7 @@
           "climates": "The thermostat that controls the boiler, e.g. the Generic Thermostat entity (climate.climate).",
           "switches": "Only when a relay heats the house directly, without a thermostat.",
           "command_mode": "Only for thermostats other than Generic Thermostat. See the room settings for the difference.",
-          "trv_boost": "While the house asks for heat (by its temperature sensors, with the hysteresis), the thermostat or the TRVs get a higher temperature, so they keep heating until the house is warm; the rest of the time they get the target. Useful when the device measures in the wrong place (a thermostat in the hallway, a TRV next to the radiator). Needs a temperature sensor. Only with the Temperature command. Not the same as 'Start and stop the source by its temperature': that one is for a thermostat that only starts the boiler for rooms with their own TRVs (then choose 'Each room heats separately' and pick the thermostat as the heat source)."
+          "trv_boost": "While the house asks for heat (by its temperature sensors, with the hysteresis), the thermostat or the TRVs get the Temperature while heating (by default the maximum temperature of the house), so they keep heating until the house is warm; the rest of the time they get the target. Useful when the device measures in the wrong place (a thermostat in the hallway, a TRV next to the radiator). Needs a temperature sensor. Only with the Temperature command. Not the same as 'Start and stop the source by its temperature': that one is for a thermostat that only starts the boiler for rooms with their own TRVs (then choose 'Each room heats separately' and pick the thermostat as the heat source)."
         }
       },
       "heating_on_off": {
@@ -471,7 +471,7 @@
             "climates": "The thermostats of this room. Several thermostats in one room all get the same command.",
             "switches": "The relays that heat this room.",
             "command_mode": "Temperature: the integration sends the temperature of each level (most TRVs). Preset: each level uses a preset of the thermostat, with the thermostat's temperature. On / off: the thermostat is only switched on and off, the integration keeps the temperature.",
-            "trv_boost": "While the room asks for heat, the TRVs get a higher temperature so they stay open until the room is warm; the rest of the time they get the target. The heat demand then comes from the room sensor, with the hysteresis. Needs a temperature sensor in the room. Only with the Temperature command.",
+            "trv_boost": "While the room asks for heat, the TRVs get the Temperature while heating (by default the maximum temperature of the house), so they stay open until the room is warm; the rest of the time they get the target. The heat demand then comes from the room sensor, with the hysteresis. Needs a temperature sensor in the room. Only with the Temperature command.",
             "use_house_source": "On: the room's heat comes from the heat source of the house (radiators on the boiler): it starts the boiler when it asks for heat, and it heats only while the boiler runs. Off: the room has its own heat (electric heater, heat pump, air conditioner): it does not start the boiler, and it heats while its own device runs."
           }
         },

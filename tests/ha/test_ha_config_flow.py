@@ -581,6 +581,18 @@ async def test_heat_source_and_generic_thermostat_relay(hass: HomeAssistant) -> 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options["boiler_boost"] is False
     await hass.async_block_till_done()
+    # The idle temperature: below the maximum of the house, kept in °C.
+    result = await options.async_init(entry.entry_id)
+    result = await options.async_configure(result["flow_id"], {"next_step_id": "boiler"})
+    result = await options.async_configure(result["flow_id"], {"boiler_entity": "climate.hive"})
+    assert "boiler_idle_temp" in {str(k) for k in result["data_schema"].schema}
+    base = {"boiler_min_rooms": 1, "boiler_min_on": 0, "boiler_min_off": 0, "boiler_boost": True}
+    result = await options.async_configure(result["flow_id"], {**base, "boiler_idle_temp": 25.0})
+    assert result["errors"] == {"boiler_idle_temp": "idle_not_below_max"}
+    result = await options.async_configure(result["flow_id"], {**base, "boiler_idle_temp": 17.5})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options["boiler_idle_temp"] == 17.5
+    await hass.async_block_till_done()
 
 
 def _house_with_zone(

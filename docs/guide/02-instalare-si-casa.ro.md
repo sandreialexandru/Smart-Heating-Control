@@ -226,6 +226,7 @@ Al doilea formular, doar cu o sursă de căldură:
 | Camere necesare pentru pornirea sursei | 1 | Câte camere trebuie să ceară căldură ca să pornească sursa. Cel mult numărul de camere ale casei; dacă mai târziu se șterg camere și rămân mai puține, apare o alertă. |
 | Timp minim pornită / oprită | 0 / 0 min | 0 = sursa urmează imediat cererea de căldură. O valoare mai mare protejează de cicluri scurte o centrală fără protecție proprie. |
 | Boost pentru sursa de căldură | pornit | Doar pentru un termostat (`climate`) ca sursă: temperatura maximă a casei ca să pornească, antiînghețul casei ca să se oprească, mereu pe încălzire. Oprit: i se schimbă doar modul. |
+| Temperatura sursei în repaus | – (antiîngheț) | Doar cu boost: ce primește termostatul cât nicio cameră nu cere căldură, de exemplu 17,5 °C când încălzește și calorifere fără TRV. Sub maximul casei. |
 | Cameră de referință | – | Doar această cameră decide când merge sursa; celelalte doar își deschid sau închid robinetele. |
 
 Detalii: [capitolul 8](08-sursa-si-energie.ro.md).

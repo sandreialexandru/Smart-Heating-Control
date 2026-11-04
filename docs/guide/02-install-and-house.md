@@ -224,6 +224,7 @@ The second form, only with a heat source:
 | Rooms needed to start the heat source | 1 | How many rooms must ask for heat to start it. At most the number of rooms of the house; if rooms are removed later and fewer remain, you get an alert. |
 | Heat source minimum on / off time | 0 / 0 min | 0 = the source follows the heat demand at once. A larger value protects a boiler without its own anti-cycling from short cycles. |
 | Boost the heat source | on | Only for a thermostat (`climate`) as the source: the maximum temperature of the house to start it, the frost protection of the house to stop it, always in its heat mode. Off: only its mode is switched. |
+| Heat source idle temperature | – (frost protection) | Only with the boost: what the thermostat gets while no room asks, e.g. 17.5 °C when it also heats radiators without TRVs. Below the maximum of the house. |
 | Reference room | – | Only this room decides when the source runs; the others only open or close their valves. |
 
 Details: [chapter 8](08-heat-source-and-energy.md).

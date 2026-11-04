@@ -33,10 +33,19 @@ default, like the TRV boost) it stays in its heat mode and gets:
 
 - to **start**: the *Maximum temperature* of the house (25 °C by default), not
   above the maximum of the thermostat;
-- to **stop**: the *Frost protection* temperature of the house (7 °C by
-  default), not below its minimum. It does not heat by its own sensor
-  meanwhile, but still protects the house against frost if Home Assistant
-  stops.
+- to **stop**: the *Heat source idle temperature*, by default the *Frost
+  protection* temperature of the house (7 °C), not below its minimum. At the
+  frost protection it does not heat by its own sensor meanwhile, but still
+  protects the house against frost if Home Assistant stops.
+
+**Heat source idle temperature** (optional, only with the boost): a higher value,
+e.g. 17.5 °C, lets the thermostat keep its own area at that temperature by its
+own sensor while no room asks. Useful when it also heats radiators **without
+TRVs** (a hallway thermostat, TRVs only in some rooms): those rooms are then
+kept at about that temperature, and a TRV room that asks still gets the maximum.
+It must be below the maximum of the house. Do not raise the house's *Frost
+protection* for this: it is also the temperature of Off mode and of an open
+window, and the lowest any level can go.
 
 A target set on it by hand is taken back. Without the boost, or for a
 thermostat without a target temperature, only its mode is switched: `heat` (or

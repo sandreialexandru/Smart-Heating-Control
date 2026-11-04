@@ -41,6 +41,7 @@ from .const import (
     CONF_BATTERY_THRESHOLD,
     CONF_BOILER_BOOST,
     CONF_BOILER_ENTITY,
+    CONF_BOILER_IDLE_TEMP,
     CONF_BOILER_MIN_OFF,
     CONF_BOILER_MIN_ON,
     CONF_BOILER_MIN_ROOMS,
@@ -278,6 +279,7 @@ TEMP_ABSOLUTE_KEYS = {
     CONF_MAX_TEMP,
     CONF_NEARBY_TEMP,
     CONF_TRV_BOOST_TEMP,
+    CONF_BOILER_IDLE_TEMP,
     *(f"temp_{p}" for p in PRESETS),
 }
 TEMP_DELTA_KEYS = {
@@ -552,6 +554,8 @@ def _boiler_details(v: dict[str, Any], rooms: list[selector.SelectOptionDict]) -
         if str(v[CONF_BOILER_ENTITY]).startswith("climate."):
             # A thermostat as the heat source: boosted like the TRVs.
             fields[_req(CONF_BOILER_BOOST, v, d)] = selector.BooleanSelector()
+            # Empty: the frost protection of the house (only with the boost).
+            fields[_opt(CONF_BOILER_IDLE_TEMP, v)] = _number(3, 30, 0.5, "°C")
         if len(rooms) > 1:
             fields[_opt(CONF_REFERENCE_ROOM, v)] = selector.SelectSelector(
                 selector.SelectSelectorConfig(
@@ -1384,7 +1388,14 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
     ) -> ConfigFlowResult:
         """Settings of the chosen boiler."""
         schema = _boiler_details(self._pending_values, self._room_options())
-        return self._second("boiler_details", schema, user_input)
+        errors: dict[str, str] = {}
+        if user_input is not None and user_input.get(CONF_BOILER_IDLE_TEMP) is not None:
+            idle = _kept(user_input, self._unit())[CONF_BOILER_IDLE_TEMP]
+            maximum = float({**HOUSE_DEFAULTS, **self._pending}[CONF_MAX_TEMP])
+            if float(idle) >= maximum:
+                # It would never stop: idle at or above what starts it.
+                errors[CONF_BOILER_IDLE_TEMP] = "idle_not_below_max"
+        return self._second("boiler_details", schema, user_input, errors)
 
     async def async_step_behavior(
         self, user_input: dict[str, Any] | None = None

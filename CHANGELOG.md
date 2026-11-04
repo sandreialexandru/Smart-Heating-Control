@@ -21,6 +21,10 @@ GitHub releases.
   (Heat source and heat demand → Heat source), **on by default**; off keeps the
   old behaviour (only its mode, heat / off). A thermostat without a target
   temperature is still switched by its mode.
+- 🌡️ **Heat source idle temperature** (optional, with the boost): what the
+  thermostat source gets while no room asks, instead of the frost protection
+  (e.g. 17.5 °C for a hallway thermostat that also heats radiators without
+  TRVs). Below the maximum of the house.
 
 ### Card
 

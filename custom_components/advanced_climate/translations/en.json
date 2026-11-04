@@ -381,14 +381,16 @@
           "boiler_min_on": "Heat source minimum on time",
           "boiler_min_off": "Heat source minimum off time",
           "reference_room": "Reference room",
-          "boiler_boost": "Boost the heat source"
+          "boiler_boost": "Boost the heat source",
+          "boiler_idle_temp": "Heat source idle temperature"
         },
         "data_description": {
           "boiler_min_rooms": "How many rooms must ask for heat to start it. 1 = any room.",
           "boiler_min_on": "Minimum run time, against short cycles. 0 (default) = the heat source stops as soon as no room asks for heat. A longer time needs a bypass or a radiator without a TRV.",
           "boiler_min_off": "Minimum pause between starts.",
           "reference_room": "Only this room decides when it runs, the others just open or close their valves. Leave empty to use the number of rooms.",
-          "boiler_boost": "A thermostat as the heat source (e.g. Hive, Nest, Tado, a Generic Thermostat) starts the boiler only by its own target and sensor. On (default): it stays in its heat mode; to start it gets the maximum temperature of the house, to stop it the frost protection temperature of the house (it then still protects against frost if Home Assistant stops). Its own target set by hand is taken back. Off: only its mode is switched (heat / off). A thermostat without a target temperature is always switched by its mode."
+          "boiler_boost": "A thermostat as the heat source (e.g. Hive, Nest, Tado, a Generic Thermostat) starts the boiler only by its own target and sensor. On (default): it stays in its heat mode; to start it gets the maximum temperature of the house, to stop it the idle temperature (by default the frost protection temperature of the house) (it then still protects against frost if Home Assistant stops). Its own target set by hand is taken back. Off: only its mode is switched (heat / off). A thermostat without a target temperature is always switched by its mode.",
+          "boiler_idle_temp": "Only with the boost: what the thermostat gets while no room asks for heat. Empty (default): the frost protection temperature of the house, so the boiler stays off. A higher value (e.g. 17.5 °C) lets the thermostat keep its own area, by its own sensor, at that temperature: useful when it also heats radiators without TRVs. It must be below the maximum temperature of the house."
         }
       },
       "behavior_details": {
@@ -431,7 +433,8 @@
       "room_sensor_is_outdoor": "{entity} is the outdoor sensor of {owner}. Choose a sensor in the room.",
       "boost_sensor_required": "The TRV boost needs a temperature sensor of the room.",
       "boost_temperature_only": "The TRV boost works only with the Temperature command.",
-      "invalid_recipient": "“{recipient}” cannot be used: write a notify service (notify.name), optionally followed by email addresses, e.g. notify.me_gmail_com: ana@example.com, ion@example.com."
+      "invalid_recipient": "“{recipient}” cannot be used: write a notify service (notify.name), optionally followed by email addresses, e.g. notify.me_gmail_com: ana@example.com, ion@example.com.",
+      "idle_not_below_max": "The idle temperature must be below the maximum temperature of the house."
     }
   },
   "config_subentries": {

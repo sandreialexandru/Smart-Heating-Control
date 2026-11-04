@@ -169,6 +169,8 @@ CONF_BOILER_MIN_OFF: Final = "boiler_min_off"
 # A thermostat as the heat source is boosted: the maximum of the house to start
 # it, the frost protection of the house to stop it (like the TRV boost).
 CONF_BOILER_BOOST: Final = "boiler_boost"
+# °C the boosted heat source idles at (empty: the frost protection of the house).
+CONF_BOILER_IDLE_TEMP: Final = "boiler_idle_temp"
 CONF_ROOM_DIFF_ALERT: Final = "room_diff_alert"
 
 CONF_OVERRIDE_MODE: Final = "override_mode"

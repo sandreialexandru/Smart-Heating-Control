@@ -33,9 +33,19 @@ implicit, ca boost-ul TRV) rămâne pe încălzire și primește:
 
 - ca să **pornească**: *Temperatura maximă* a casei (implicit 25 °C), nu peste
   maximul termostatului;
-- ca să se **oprească**: temperatura de *Antiîngheț* a casei (implicit 7 °C),
-  nu sub minimul lui. Între timp nu încălzește după senzorul lui, dar protejează
-  casa la îngheț dacă Home Assistant se oprește.
+- ca să se **oprească**: *Temperatura sursei în repaus*, implicit temperatura de
+  *Antiîngheț* a casei (7 °C), nu sub minimul lui. La antiîngheț nu încălzește
+  între timp după senzorul lui, dar protejează casa la îngheț dacă Home
+  Assistant se oprește.
+
+**Temperatura sursei în repaus** (opțională, doar cu boost): o valoare mai mare,
+de exemplu 17,5 °C, îl lasă pe termostat să țină zona lui la acea temperatură,
+după senzorul lui, cât nicio cameră nu cere căldură. Util când încălzește și
+calorifere **fără TRV** (un termostat pe hol, TRV-uri doar în unele camere):
+acele camere sunt ținute cam la acea temperatură, iar o cameră cu TRV care cere
+căldură primește în continuare maximul. Trebuie să fie sub maximul casei. Nu
+ridicați pentru asta *Antiînghețul* casei: e și temperatura modului Oprit și a
+unei ferestre deschise, și cea mai mică valoare pe care o poate avea un nivel.
 
 O țintă pusă manual pe el e readusă. Fără boost, sau pentru un termostat fără
 temperatură țintă, i se schimbă doar modul: `heat` (sau `auto`, dacă nu are

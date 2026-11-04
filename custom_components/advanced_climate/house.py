@@ -45,6 +45,7 @@ from .const import (
     CONF_AUTO_VACATION_HOURS,
     CONF_BOILER_BOOST,
     CONF_BOILER_ENTITY,
+    CONF_BOILER_IDLE_TEMP,
     CONF_BOILER_MIN_OFF,
     CONF_BOILER_MIN_ON,
     CONF_BOILER_MIN_ROOMS,
@@ -1454,7 +1455,9 @@ class House:
             return None
         unit = system_unit(self.hass)
         start = float(from_celsius(float(self.options[CONF_MAX_TEMP]), unit))
-        stop = float(from_celsius(float(self.options[CONF_FROST_TEMP]), unit))
+        idle = self.options.get(CONF_BOILER_IDLE_TEMP)
+        idle = float(self.options[CONF_FROST_TEMP]) if idle in (None, "") else float(idle)
+        stop = float(from_celsius(idle, unit))
         step = float_attr(state, "target_temp_step") or (1.0 if unit == FAHRENHEIT else 0.5)
         start = math.floor(start / step + 1e-9) * step
         stop = math.ceil(stop / step - 1e-9) * step

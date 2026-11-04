@@ -1655,3 +1655,44 @@ async def test_boosted_heat_source_in_fahrenheit(
     # 7 °C = 44.6 °F, up to its step: 45.
     assert sent == [77.0, 45.0]
     await _unload(hass, entry)
+
+
+async def test_boosted_heat_source_idles_at_its_own_temperature(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """With an idle temperature the boosted source stops at it, not at the frost protection.
+
+    A thermostat that also heats radiators without TRVs keeps its area at 17.5 °C
+    by its own sensor; a target set by hand is taken back to 17.5 °C.
+    """
+    entry, calls, cold = await _hive_house(hass, freezer, "heat", 25.0, boiler_idle_temp=17.5)
+    hass.states.async_set(
+        "climate.hive", "heat", {**HIVE, "temperature": 25.0, "hvac_action": "heating"}
+    )
+    hass.states.async_set(
+        "climate.trv", "heat", {**cold, "current_temperature": 21.5, "hvac_action": "idle"}
+    )
+    await _reevaluate(hass)
+    assert _hive_calls(calls)[-1] == ("set_temperature", {"temperature": 17.5, "hvac_mode": "heat"})
+    hass.states.async_set(
+        "climate.hive", "heat", {**HIVE, "temperature": 17.5, "hvac_action": "idle"}
+    )
+    await _reevaluate(hass)
+    count = len(_hive_calls(calls))
+    # Settled at 17.5: nothing more; at 7 by hand: back to 17.5.
+    await _reevaluate(hass)
+    assert len(_hive_calls(calls)) == count
+    hass.states.async_set(
+        "climate.hive", "heat", {**HIVE, "temperature": 7.0, "hvac_action": "idle"}
+    )
+    await _reevaluate(hass)
+    assert _hive_calls(calls)[-1] == ("set_temperature", {"temperature": 17.5, "hvac_mode": "heat"})
+    # It heats by itself at 17.5 (its hallway below it): not taken for a start of the
+    # integration, nothing is sent.
+    hass.states.async_set(
+        "climate.hive", "heat", {**HIVE, "temperature": 17.5, "hvac_action": "heating"}
+    )
+    count = len(_hive_calls(calls))
+    await _reevaluate(hass)
+    assert len(_hive_calls(calls)) == count
+    await _unload(hass, entry)

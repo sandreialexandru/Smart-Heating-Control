@@ -1038,7 +1038,9 @@ def _model(**values):
     """A learned model: 2 °C/h of heating, 0.5 °C/h of loss (constant), no inertia."""
     from custom_components.advanced_climate.learning import ThermalModel
 
-    return ThermalModel(h=2.0, k=0.5, tau=0.0, constant_loss=True, learned=True, **values)
+    return ThermalModel(
+        **{"h": 2.0, "k": 0.5, "tau": 0.0, "constant_loss": True, "learned": True, **values}
+    )
 
 
 async def test_time_to_target_from_the_learned_model(
@@ -1066,12 +1068,15 @@ async def test_expected_temperature_during_an_optimal_stop(
 ) -> None:
     """21:45, home until 22:00: the room can cool 15 minutes and is still 20.9 °C then.
 
-    Loss 0.5 °C/h for a quarter of an hour: 21 − 0.125 = 20.875 °C, shown as 20.9.
-    The comfort of home is 21 − 0.3 (the hysteresis) = 20.7 °C, reached after 36
-    minutes: longer than the 30 minutes allowed, so the stop starts at 21:30.
+    The optimal stop needs the outdoor temperature: 5 °C. A loss of 0.03125 per
+    hour × (21 − 5) °C = 0.5 °C/h for a quarter of an hour: 21 − 0.125 = 20.875 °C,
+    shown as 20.9. The comfort of home is 21 − 0.3 (the hysteresis) = 20.7 °C,
+    reached after about 36 minutes: longer than the 30 minutes allowed, so the
+    stop starts at 21:30.
     """
     assert await async_setup_component(hass, "input_boolean", {"input_boolean": {"heater": {}}})
     hass.states.async_set("sensor.room_temp", "21.0", {"unit_of_measurement": "°C"})
+    hass.states.async_set("sensor.outdoor", "5.0", {"unit_of_measurement": "°C"})
     data = {
         "source": "switch",
         "switches": ["input_boolean.heater"],
@@ -1079,9 +1084,15 @@ async def test_expected_temperature_during_an_optimal_stop(
         "optimal_stop": True,
         "optimal_stop_minutes": 30,
     }
-    entry = await _house(hass, freezer, [("Bedroom", data)], at="2026-10-12 18:45:00+00:00")
+    entry = await _house(
+        hass,
+        freezer,
+        [("Bedroom", data)],
+        at="2026-10-12 18:45:00+00:00",
+        outdoor_sensor="sensor.outdoor",
+    )
     room = _room(entry, "Bedroom")
-    room.learner._model = _model()
+    room.learner._model = _model(k=0.03125, constant_loss=False)
     await _reevaluate(hass)
     decision = hass.states.get("sensor.bedroom_decision")
     assert decision.state == "optimal_stop"

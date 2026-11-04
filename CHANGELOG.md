@@ -16,6 +16,21 @@ GitHub releases.
   sun of the day in Bucharest in June and November, the clouds of every
   weather condition, and the renaming of a whole-house zone named like the
   house.
+- 🧪 Tests from the first full mutation run (Python 62.8 %, card 30.2 % of
+  the mutants noticed): the limit of ±3 °C on the adjustments, the levels
+  exactly at the maximum or the frost protection, the edges of the band with
+  the learned inertia, no optimal stop when it is off and the ones exactly on
+  time, the texts in °F, which stretches the learning uses, the time to the
+  target and the expected temperature during an optimal stop, every attribute
+  of the *Decision* sensor, a preset or an hvac mode set by hand coming back
+  after a window, the calibration within the range of its number, the valve
+  exercise (5 minutes, after a manual change, only on its day), the alert for
+  rooms that stay cold; in the card the history, the prediction and the
+  tooltip values, and every button (mode, pause, guests, buttons of the
+  house and the room, a temperature for a while, vacation dates, the
+  heating time period, the schedule editor and its profiles).
+- 🧬 The card's mutation jobs are split by how many mutants their lines have
+  (12 jobs of about 400), not by equal lines (from 74 to 919).
 
 ## 2.6.1 – 2026-11-04
 

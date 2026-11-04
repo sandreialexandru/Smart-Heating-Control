@@ -466,3 +466,215 @@ class ReasonKeyTest(unittest.TestCase):
                 )
             )
             self.assertTrue(d.key, d)
+
+
+class EdgesTest(unittest.TestCase):
+    """The limits and equalities the guide describes, exactly at the limit."""
+
+    def test_adjustments_are_capped_at_3_degrees(self) -> None:
+        # +2 and +2.5 make +4.5, capped at +3: home 22 → 25 (with a maximum of 30).
+        d = engine.decide(inputs(offsets=[("a", 2.0), ("b", 2.5)], max_temp=30.0))
+        self.assertAlmostEqual(d.target.temperature, 25.0)
+        # −5 is capped at −3: 22 → 19.
+        d = engine.decide(inputs(offsets=[("tariff_high", -5.0)]))
+        self.assertAlmostEqual(d.target.temperature, 19.0)
+
+    def test_tiny_adjustments_and_rounding(self) -> None:
+        # Under 0.05 °C in total: the level stays a preset.
+        d = engine.decide(inputs(offsets=[("pv", 0.03), ("tariff", 0.01)]))
+        self.assertEqual((d.target.kind, d.target.preset), ("preset", "home"))
+        # From 0.05 °C on: a temperature, rounded to 0.1 °C (22 + 0.33 = 22.3).
+        d = engine.decide(inputs(offsets=[("pv", 0.33)]))
+        self.assertEqual(d.target.kind, "temperature")
+        self.assertEqual(d.target.temperature, 22.3)
+        self.assertEqual(d.offsets, [("pv", 0.33)])
+
+    def test_adjustments_described_in_the_house_unit(self) -> None:
+        d = engine.decide(inputs(offsets=[("tariff_high", -1.0)], unit="°F"))
+        # −1 °C is −1.8 °F; 21 °C is 69.8 °F.
+        self.assertIn("tariff_high -1.8", d.description)
+        self.assertEqual(engine.fmt_delta(0.5, "°F"), "+0.9")
+        self.assertEqual(engine.fmt_temp(21.0, "°F"), "69.8 °F")
+
+    def test_targets_in_words(self) -> None:
+        self.assertEqual(engine.Target("preset", preset="eco").describe(), "preset eco")
+        self.assertEqual(engine.Target("temperature", temperature=20.0).describe("°F"), "68.0 °F")
+        self.assertEqual(
+            engine.Target("temperature", preset="home", temperature=21.5).describe(),
+            "21.5 °C (home)",
+        )
+        self.assertEqual(engine.Target("off").describe(), "off")
+        self.assertEqual(engine.Target("none").describe(), "no command")
+
+    def test_a_level_exactly_at_the_maximum_or_the_frost_protection(self) -> None:
+        # Comfort 23 °C with a maximum of 23 °C: allowed as it is.
+        d = engine.decide(inputs(schedule_preset="comfort", max_temp=23.0))
+        self.assertEqual((d.rule, d.target.kind), (const.RULE_SCHEDULE, "preset"))
+        d = engine.decide(inputs(schedule_preset="comfort", max_temp=22.9))
+        self.assertEqual((d.rule, d.target.temperature), (const.RULE_MAX, 22.9))
+        # Away 10 °C with frost protection at 10 °C: allowed; at 10.5 °C it is raised.
+        d = engine.decide(inputs(presence="far", frost_temp=10.0))
+        self.assertEqual((d.rule, d.target.kind), (const.RULE_FAR, "preset"))
+        d = engine.decide(inputs(presence="far", frost_temp=10.5))
+        self.assertEqual((d.rule, d.target.temperature), (const.RULE_SAFETY, 10.5))
+
+    def test_frost_protection_starts_below_it_not_at_it(self) -> None:
+        d = engine.decide(inputs(mode=const.MODE_SUMMER, current_temp=7.0))
+        self.assertEqual(d.rule, const.RULE_SUMMER)
+        d = engine.decide(inputs(mode=const.MODE_SUMMER, current_temp=6.9))
+        self.assertEqual((d.rule, d.key), (const.RULE_SAFETY, "frost_below"))
+
+    def test_nearby_fixed_temperature_needs_a_value(self) -> None:
+        d = engine.decide(
+            inputs(presence="nearby", nearby_mode=const.NEARBY_TEMPERATURE, nearby_temp=None)
+        )
+        self.assertEqual((d.key, d.target.preset), ("nearby", "eco"))
+        d = engine.decide(
+            inputs(presence="nearby", nearby_mode=const.NEARBY_TEMPERATURE, nearby_temp=16.5)
+        )
+        self.assertEqual((d.key, d.target.temperature), ("nearby_temperature", 16.5))
+
+    def test_nearby_not_above_the_schedule_only_when_lower(self) -> None:
+        # Sleep 19 °C on the schedule, eco 19 °C: equal, so eco (nearby) applies.
+        same = dict(LEVELS, eco=19.0)
+        d = engine.decide(
+            inputs(
+                presence="nearby", schedule_preset="sleep", nearby_limit=True, level_temp=same.get
+            )
+        )
+        self.assertEqual((d.key, d.target.preset), ("nearby", "eco"))
+        lower = dict(LEVELS, eco=19.5)
+        d = engine.decide(
+            inputs(
+                presence="nearby", schedule_preset="sleep", nearby_limit=True, level_temp=lower.get
+            )
+        )
+        self.assertEqual((d.key, d.target.preset), ("nearby_schedule", "sleep"))
+
+    def test_band_edges_with_the_model(self) -> None:
+        # Target 20 °C, hysteresis 0.5 °C. The heat on its way takes the room exactly
+        # to 20.5 °C (the top of the band): stop now, by the model.
+        self.assertEqual(engine.on_off_wanted(True, 20.2, 20.0, 0.5, lambda h: 20.5), (False, True))
+        # It would fall exactly to 19.5 °C (the bottom) before the heat arrives: start now.
+        self.assertEqual(engine.on_off_wanted(False, 19.8, 20.0, 0.5, lambda h: 19.5), (True, True))
+        # At the edges themselves the band decides, not the model.
+        self.assertEqual(
+            engine.on_off_wanted(False, 19.5, 20.0, 0.5, lambda h: 99.0), (True, False)
+        )
+        self.assertEqual(
+            engine.on_off_wanted(True, 20.5, 20.0, 0.5, lambda h: -99.0), (False, False)
+        )
+
+
+class OptimalEdgesTest(unittest.TestCase):
+    def test_no_optimal_stop_when_it_is_off(self) -> None:
+        change = NOW + timedelta(minutes=20)
+        self.assertEqual(
+            engine.optimal_schedule(
+                NOW, "home", change, "sleep", 22.0, LEVELS.get, None, False, 120, False, 30
+            ),
+            ("home", const.RULE_SCHEDULE),
+        )
+        # Nor towards a warmer level (that is an optimal start).
+        self.assertEqual(
+            engine.optimal_schedule(
+                NOW, "sleep", change, "home", 22.5, LEVELS.get, None, False, 120, True, 30
+            ),
+            ("sleep", const.RULE_SCHEDULE),
+        )
+
+    def test_exactly_on_time(self) -> None:
+        # The room needs 60 minutes and 60 remain: the optimal start begins.
+        change = NOW + timedelta(minutes=60)
+        args = (NOW, "sleep", change, "home", 20.0, LEVELS.get)
+        self.assertEqual(engine.optimal_schedule(*args, 60.0, True, 120, False, 30)[0], "home")
+        self.assertEqual(engine.optimal_schedule(*args, 59.0, True, 120, False, 30)[0], "sleep")
+        # The longest stop is 30 minutes and 30 remain: the optimal stop begins.
+        stop = (
+            NOW,
+            "home",
+            NOW + timedelta(minutes=30),
+            "sleep",
+            22.0,
+            LEVELS.get,
+            None,
+            False,
+            120,
+            True,
+        )
+        self.assertEqual(engine.optimal_schedule(*stop, 30)[0], "sleep")
+        self.assertEqual(engine.optimal_schedule(*stop, 29)[0], "home")
+        # A longest stop of 0: never.
+        self.assertEqual(engine.optimal_schedule(*stop, 0)[0], "home")
+
+    def test_nothing_to_do(self) -> None:
+        # The change is now, the next level is as warm, or the room is already there.
+        self.assertEqual(
+            engine.optimal_schedule(
+                NOW, "sleep", NOW, "home", 18.0, LEVELS.get, 60.0, True, 120, False, 30
+            ),
+            ("sleep", const.RULE_SCHEDULE),
+        )
+        same = dict(LEVELS, sleep=22.0)
+        self.assertEqual(
+            engine.optimal_schedule(
+                NOW,
+                "sleep",
+                NOW + timedelta(minutes=10),
+                "home",
+                18.0,
+                same.get,
+                60.0,
+                True,
+                120,
+                False,
+                30,
+            )[0],
+            "sleep",
+        )
+        self.assertEqual(
+            engine.optimal_schedule(
+                NOW,
+                "sleep",
+                NOW + timedelta(minutes=10),
+                "home",
+                22.0,
+                LEVELS.get,
+                60.0,
+                True,
+                120,
+                False,
+                30,
+            )[0],
+            "sleep",
+        )
+        # A start already running is kept only while optimal start is on.
+        self.assertEqual(
+            engine.optimal_schedule(
+                NOW,
+                "sleep",
+                NOW + timedelta(minutes=10),
+                "home",
+                22.0,
+                LEVELS.get,
+                60.0,
+                False,
+                120,
+                False,
+                30,
+                True,
+            )[0],
+            "sleep",
+        )
+
+    def test_short_period_still_follows_the_forecast(self) -> None:
+        # Half a minute needed: the forecast for it is still looked up.
+        minutes, out, source = engine.optimal_period(
+            60, lambda out: 0.5, lambda length: (2.0, "forecast"), 5.0
+        )
+        self.assertEqual((minutes, out, source), (0.5, 2.0, "forecast"))
+        # No forecast for the period: the value of now.
+        self.assertEqual(
+            engine.optimal_period(60, lambda out: 30.0, lambda length: (None, "forecast"), 5.0),
+            (30.0, 5.0, "now"),
+        )

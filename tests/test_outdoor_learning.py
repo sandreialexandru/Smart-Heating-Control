@@ -425,6 +425,51 @@ class ThermalModelTest(unittest.TestCase):
         self.assertFalse(learner.observe(t0 - timedelta(minutes=5), True, 20.5, 5.0))
 
 
+class StretchTest(unittest.TestCase):
+    """Which 30-minute stretches the learning uses."""
+
+    T0 = datetime(2026, 11, 1, 12, 0, tzinfo=UTC)
+
+    def feed(self, learner, minutes, **kw) -> list[bool]:
+        """Readings at the given minutes (heating on, 20 °C rising 0.1 °C each, 5 °C out)."""
+        out = []
+        for i, m in enumerate(minutes):
+            args = {"heating": True, "current": 20.0 + 0.1 * i, "outdoor": 5.0, **kw}
+            out.append(learner.observe(self.T0 + timedelta(minutes=m), **args))
+        return out
+
+    def test_a_whole_stretch_is_learned_at_30_minutes(self) -> None:
+        learner = learning.ThermalLearner()
+        self.assertEqual(self.feed(learner, [0, 10, 20, 30]), [False, False, False, True])
+        # All of it with the heating on (no inertia yet): a heating stretch.
+        self.assertEqual((learner.heat_windows, learner.idle_windows), (1.0, 0.0))
+
+    def test_readings_20_minutes_apart_are_still_one_stretch(self) -> None:
+        learner = learning.ThermalLearner()
+        self.assertEqual(self.feed(learner, [0, 20, 40]), [False, False, True])
+        # 21 minutes apart: the stretch starts again from the later reading.
+        learner = learning.ThermalLearner()
+        self.assertEqual(self.feed(learner, [0, 21, 41, 51]), [False, False, False, True])
+
+    def test_unknown_sun_in_daylight_is_not_used(self) -> None:
+        learner = learning.ThermalLearner()
+        self.assertEqual(self.feed(learner, [0, 10, 20, 30], sun=None), [False] * 4)
+        self.assertEqual(learner.heat_windows, 0.0)
+
+    def test_unknown_room_temperature_drops_the_stretch(self) -> None:
+        learner = learning.ThermalLearner()
+        self.feed(learner, [0, 10])
+        self.assertFalse(learner.observe(self.T0 + timedelta(minutes=20), True, None, 5.0))
+        # It starts again with the next reading: 30 minutes from it.
+        self.assertEqual(self.feed(learner, [25, 35, 45, 55]), [False, False, False, True])
+
+    def test_two_readings_at_the_same_moment(self) -> None:
+        learner = learning.ThermalLearner()
+        self.feed(learner, [0, 10])
+        self.assertFalse(learner.observe(self.T0 + timedelta(minutes=10), True, 20.5, 5.0))
+        self.assertEqual(self.feed(learner, [20, 30]), [False, True])
+
+
 class SunTest(unittest.TestCase):
     """The sun signal and the learned sun gain."""
 

@@ -78,7 +78,7 @@ jobs:
           PYTHON: ${{ inputs.python }}
           CARD: ${{ inputs.card }}
         run: |
-          card_shards=10
+          card_shards=12
           python=true
           card=true
           case "$EVENT" in
@@ -87,19 +87,14 @@ jobs:
             *) shards="${SHARDS:-20}"; limit="${LIMIT:-0}"; files="$FILES"; ref="$REF"
                python="${PYTHON:-true}"; card="${CARD:-true}" ;;
           esac
-          # The card in equal parts of its lines (Stryker mutates the lines of a range);
-          # the short try only a few lines.
+          # The card in ranges of lines with about as many mutants each
+          # (tests/mutation/card_parts.py); the short try only a few lines.
           card_file=custom_components/advanced_climate/www/smart-heating-control-card.js
-          card_matrix=$(EVENT="$EVENT" N="$card_shards" FILE="$card_file" python3 -c "
-          import json, os
-          lines = sum(1 for _ in open(os.environ['FILE'], encoding='utf-8'))
-          n = int(os.environ['N'])
-          if os.environ['EVENT'] == 'push':
-              parts = [{'part': 0, 'range': '1200-1215'}]
-          else:
-              size = -(-lines // n)
-              parts = [{'part': i, 'range': f'{i * size + 1}-{min(lines, (i + 1) * size)}'} for i in range(n)]
-          print(json.dumps(parts))")
+          if [ "$EVENT" = push ]; then
+            card_matrix='[{"part": 0, "range": "1200-1215"}]'
+          else
+            card_matrix=$(python3 tests/mutation/card_parts.py "$card_file" "$card_shards")
+          fi
           if ! [[ "$shards" =~ ^[0-9]+$ ]] || (( shards < 1 || shards > 20 )); then shards=20; fi
           if ! [[ "$limit" =~ ^[0-9]+$ ]]; then limit=0; fi
           matrix=$(python3 -c "import json; print(json.dumps(list(range($shards))))")

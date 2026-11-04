@@ -34,11 +34,12 @@ async def _house(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     rooms: list[tuple[str, dict]],
+    at: str = "2026-10-12 09:00:00+00:00",
     **options: object,
 ) -> MockConfigEntry:
-    """A house with the given rooms, Monday 12:00 local time (the schedule asks for home)."""
+    """A house with the given rooms, by default Monday 12:00 local time (home)."""
     await hass.config.async_set_time_zone("Europe/Bucharest")
-    freezer.move_to("2026-10-12 09:00:00+00:00")
+    freezer.move_to(at)
     hass.states.async_set("person.andrei", "home")
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -1027,4 +1028,310 @@ async def test_whole_house_zone_named_like_the_house_is_renamed(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert [s.title for s in entry.subentries.values()] == ["Whole house"]
+    await _unload(hass, entry)
+
+
+# ---------------------------------------------------------------------------
+# What the room tells the card, with a learned model
+# ---------------------------------------------------------------------------
+def _model(**values):
+    """A learned model: 2 °C/h of heating, 0.5 °C/h of loss (constant), no inertia."""
+    from custom_components.advanced_climate.learning import ThermalModel
+
+    return ThermalModel(h=2.0, k=0.5, tau=0.0, constant_loss=True, learned=True, **values)
+
+
+async def test_time_to_target_from_the_learned_model(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """20 → 21 °C at 2 − 0.5 = 1.5 °C/h: 40 minutes; none when warm or with a window open."""
+    entry = await _relay_house(hass, freezer, 20.0)
+    room = _room(entry, "Bedroom")
+    room.learner._model = _model()
+    await _reevaluate(hass)
+    assert hass.states.get("sensor.bedroom_decision").attributes["time_to_target"] == 40
+    hass.states.async_set("binary_sensor.window", "on")
+    await _tick(hass, freezer, 65)
+    assert hass.states.get("sensor.bedroom_decision").attributes["time_to_target"] is None
+    hass.states.async_set("binary_sensor.window", "off")
+    await _tick(hass, freezer, 65)
+    hass.states.async_set("sensor.room_temp", "21.2", {"unit_of_measurement": "°C"})
+    await _reevaluate(hass)
+    assert hass.states.get("sensor.bedroom_decision").attributes["time_to_target"] is None
+    await _unload(hass, entry)
+
+
+async def test_expected_temperature_during_an_optimal_stop(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """21:45, home until 22:00: the room can cool 15 minutes and is still 20.9 °C then.
+
+    Loss 0.5 °C/h for a quarter of an hour: 21 − 0.125 = 20.875 °C, shown as 20.9.
+    The comfort of home is 21 − 0.3 (the hysteresis) = 20.7 °C, reached after 36
+    minutes: longer than the 30 minutes allowed, so the stop starts at 21:30.
+    """
+    assert await async_setup_component(hass, "input_boolean", {"input_boolean": {"heater": {}}})
+    hass.states.async_set("sensor.room_temp", "21.0", {"unit_of_measurement": "°C"})
+    data = {
+        "source": "switch",
+        "switches": ["input_boolean.heater"],
+        "temperature_sensors": ["sensor.room_temp"],
+        "optimal_stop": True,
+        "optimal_stop_minutes": 30,
+    }
+    entry = await _house(hass, freezer, [("Bedroom", data)], at="2026-10-12 18:45:00+00:00")
+    room = _room(entry, "Bedroom")
+    room.learner._model = _model()
+    await _reevaluate(hass)
+    decision = hass.states.get("sensor.bedroom_decision")
+    assert decision.state == "optimal_stop"
+    forecast = decision.attributes["stop_forecast"]
+    assert forecast["temperature"] == 20.9
+    assert dt_util.parse_datetime(forecast["at"]) == dt_util.parse_datetime(
+        "2026-10-12T19:00:00+00:00"
+    )
+    assert hass.states.get("input_boolean.heater").state == "off"
+    await _unload(hass, entry)
+
+
+async def test_every_attribute_of_the_decision_sensor(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A relay room at noon on a Monday, 20 °C, nothing learned yet: what the card reads."""
+    entry = await _relay_house(hass, freezer, 20.0)
+    attrs = hass.states.get("sensor.bedroom_decision").attributes
+    expected = {
+        "room_name": "Bedroom",
+        "reason_key": "schedule",
+        "reason_params": {"preset": "home"},
+        "target_kind": "preset",
+        "preset": "home",
+        "temperature_unit": "°C",
+        "target_temperature": 21.0,
+        "current_temperature": 20.0,
+        "offsets": [],
+        "presence": "home",
+        "window_open": False,
+        "override": None,
+        "profile": "workday",
+        "next_preset": "sleep",
+        "schedule_error": None,
+        "schedule_editable": True,
+        "levels": {
+            "home": 21.0,
+            "sleep": 18.0,
+            "eco": 17.0,
+            "away": 12.0,
+            "comfort": 22.0,
+            "activity": 20.0,
+        },
+        "min_temperature": 7.0,
+        "max_temperature": 25.0,
+        "climate_entities": [],
+        "device_preset": None,
+        "trv_boost": None,
+        "device_level": None,
+        # Until learned: 60 minutes per degree, 1 °C to go.
+        "time_to_target": 60,
+        "temperature_trend": 0,
+        "stop_forecast": None,
+        "next_estimate": None,
+        "no_heat_reason": None,
+        "hold_until": None,
+        "alerts": [],
+        "optimal_stop_cancelled": False,
+        "rate_learned": False,
+        "humidity": None,
+        "surface_humidity": None,
+        "device_levels": [],
+        "heat_demand": True,
+        "heating": True,
+        "day_boundary": 0,
+        "source": "switch",
+        "custom_levels": True,
+        "house_name": "Home",
+    }
+    assert {key: attrs[key] for key in expected} == expected
+    assert dt_util.parse_datetime(attrs["next_change"]) == dt_util.parse_datetime(
+        "2026-10-12T19:00:00+00:00"
+    )
+    assert attrs["plan"][0]["preset"] == "home"
+    assert [p["preset"] for p in attrs["plan"][1:]] == ["sleep"]
+    assert list(attrs["schedule"]) == ["workday", "weekend"]
+    await _unload(hass, entry)
+
+
+# ---------------------------------------------------------------------------
+# Set again after an interruption: thermostats by preset and by hvac mode
+# ---------------------------------------------------------------------------
+async def test_a_preset_chosen_on_the_thermostat_comes_back_after_a_window(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Away chosen by hand; the window brings frost protection; then Away again."""
+    presets = async_mock_service(hass, "climate", "set_preset_mode")
+    temperatures = async_mock_service(hass, "climate", "set_temperature")
+    hass.states.async_set("climate.smart", "heat", SMART)
+    hass.states.async_set("binary_sensor.window", "off")
+    data = {
+        "source": "climate",
+        "climates": ["climate.smart"],
+        "command_mode": "preset",
+        "preset_map": {"home": "Comfort", "eco": "Eco", "away": "Away"},
+        "window_sensors": ["binary_sensor.window"],
+    }
+    entry = await _house(hass, freezer, [("Office", data)])
+    hass.states.async_set(
+        "climate.smart", "heat", {**SMART, "preset_mode": "Away"}, context=Context()
+    )
+    await _tick(hass, freezer, 5)
+    assert hass.states.get("sensor.office_decision").state == "manual_override"
+    hass.states.async_set("binary_sensor.window", "on")
+    await _tick(hass, freezer, 65)
+    assert temperatures[-1].data == {"entity_id": "climate.smart", "temperature": 7.0}
+    # The thermostat takes the frost temperature and leaves its preset.
+    hass.states.async_set(
+        "climate.smart", "heat", {**SMART, "preset_mode": "none", "temperature": 7.0}
+    )
+    await _tick(hass, freezer, 5)
+    hass.states.async_set("binary_sensor.window", "off")
+    await _tick(hass, freezer, 65)
+    assert hass.states.get("sensor.office_decision").state == "manual_override"
+    assert presets[-1].data == {"entity_id": "climate.smart", "preset_mode": "Away"}
+    await _unload(hass, entry)
+
+
+async def test_an_on_off_thermostat_turned_on_by_hand_comes_back_after_a_window(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Turned on by hand in a warm room; off with the window; on again after it."""
+    modes = async_mock_service(hass, "climate", "set_hvac_mode")
+    onoff = {"hvac_modes": ["heat", "off"], "current_temperature": 21.5, "temperature": 21.0}
+    hass.states.async_set("climate.onoff", "off", onoff)
+    hass.states.async_set("binary_sensor.window", "off")
+    data = {
+        "source": "climate",
+        "climates": ["climate.onoff"],
+        "command_mode": "hvac_mode",
+        "window_sensors": ["binary_sensor.window"],
+        "min_on_minutes": 0,
+        "min_off_minutes": 0,
+    }
+    entry = await _house(hass, freezer, [("Office", data)])
+    hass.states.async_set("climate.onoff", "heat", onoff, context=Context())
+    await _tick(hass, freezer, 5)
+    assert hass.states.get("sensor.office_decision").state == "manual_override"
+    hass.states.async_set("binary_sensor.window", "on")
+    await _tick(hass, freezer, 65)
+    assert modes[-1].data == {"entity_id": "climate.onoff", "hvac_mode": "off"}
+    hass.states.async_set("climate.onoff", "off", onoff)
+    await _tick(hass, freezer, 5)
+    hass.states.async_set("binary_sensor.window", "off")
+    await _tick(hass, freezer, 65)
+    assert modes[-1].data == {"entity_id": "climate.onoff", "hvac_mode": "heat"}
+    await _unload(hass, entry)
+
+
+async def test_calibration_offset_within_the_range_of_the_number(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The only TRV of the room is the reference; the offset stays within the number's range.
+
+    TRV 22 °C, room 20 °C: an offset of −2 °C is wanted, the number allows −1 °C at least.
+    """
+    hass.states.async_set(
+        "climate.trv", "heat", {**TRV, "current_temperature": 22.0, "hvac_action": "idle"}
+    )
+    hass.states.async_set("sensor.office_temp", "20.0", {"unit_of_measurement": "°C"})
+    hass.states.async_set("number.trv_offset", "0.0", {"min": -1, "max": 5, "step": 0.5})
+    async_mock_service(hass, "climate", "set_temperature")
+    data = {
+        "source": "climate",
+        "climates": ["climate.trv"],
+        "command_mode": "temperature",
+        "temperature_sensors": ["sensor.office_temp"],
+        "calibration_mode": "offset",
+        "calibration_entities": ["number.trv_offset"],
+    }
+    entry = await _house(hass, freezer, [("Office", data)])
+    numbers = async_mock_service(hass, "number", "set_value")
+    await _tick(hass, freezer, 601)
+    assert numbers[-1].data == {"entity_id": "number.trv_offset", "value": -1.0}
+    await _unload(hass, entry)
+
+
+async def test_valve_exercise_runs_5_minutes_waits_for_a_manual_change_and_keeps_its_day(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Still on after 2.5 minutes; a manual change postpones it; another day: nothing."""
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    hass.states.async_set("climate.trv", "heat", TRV)
+    data = {
+        "source": "climate",
+        "climates": ["climate.trv"],
+        "command_mode": "temperature",
+        "valve_exercise": True,
+        "valve_exercise_day": "mon",
+        "valve_exercise_time": "12:10:00",
+    }
+    entry = await _house(hass, freezer, [("Office", data)])
+    decision = lambda: hass.states.get("sensor.office_decision").state
+    assert decision() == "schedule"
+    await hass.services.async_call(
+        DOMAIN,
+        "set_override",
+        {"room": "Office", "temperature": 22, "duration_hours": 1},
+        blocking=True,
+    )
+    for _ in range(12):
+        await _tick(hass, freezer, 60)
+    # 12:12: due, but the manual change goes first.
+    assert decision() == "manual_override"
+    await hass.services.async_call(DOMAIN, "clear_override", {"room": "Office"}, blocking=True)
+    await _tick(hass, freezer, 5)
+    assert decision() == "valve_exercise"
+    assert calls[-1].data["temperature"] == 30.0
+    await _tick(hass, freezer, 150)
+    assert decision() == "valve_exercise"
+    await _tick(hass, freezer, 160)
+    assert decision() == "schedule"
+    await _unload(hass, entry)
+
+
+async def test_no_valve_exercise_on_another_day(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    async_mock_service(hass, "climate", "set_temperature")
+    hass.states.async_set("climate.trv", "heat", TRV)
+    data = {
+        "source": "climate",
+        "climates": ["climate.trv"],
+        "command_mode": "temperature",
+        "valve_exercise": True,
+        "valve_exercise_day": "tue",
+        "valve_exercise_time": "11:00:00",
+    }
+    entry = await _house(hass, freezer, [("Office", data)])
+    for _ in range(3):
+        await _tick(hass, freezer, 300)
+    assert hass.states.get("sensor.office_decision").state == "schedule"
+    await _unload(hass, entry)
+
+
+async def test_rooms_that_stay_cold_while_others_are_warm(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """With the alert at 2 °C: the kitchen 3 °C below its target while the office is warm."""
+    entry, _calls = await _trv_house(
+        hass, freezer, {"Office": "climate.trv", "Kitchen": "climate.trv2"}, room_diff_alert=2.0
+    )
+    house = entry.runtime_data
+    hass.states.async_set("climate.trv", "heat", {**TRV, "current_temperature": 21.5})
+    hass.states.async_set("climate.trv2", "heat", {**TRV, "current_temperature": 18.0})
+    await _reevaluate(hass)
+    alert = house.active_alerts["room_difference"]
+    assert alert["params"] == {"rooms": [["Kitchen", 3.0]]}
+    # 1.5 °C below: within the 2 °C, the alert ends.
+    hass.states.async_set("climate.trv2", "heat", {**TRV, "current_temperature": 19.5})
+    await _reevaluate(hass)
+    assert "room_difference" not in house.active_alerts
     await _unload(hass, entry)

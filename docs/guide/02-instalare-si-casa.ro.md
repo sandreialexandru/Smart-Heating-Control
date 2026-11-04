@@ -52,12 +52,12 @@ ale integrării ar comanda același dispozitiv).
 
 | Locuința | Încălzirea întregii case | Camere | Sursa de căldură |
 | --- | --- | --- | --- |
-| **Un termostat sau releu pentru toată locuința, fără TRV-uri** (de exemplu un apartament cu Generic Thermostat pe centrală) | Generic Thermostat, Alte termostate sau Comutator (releu) | – | – (nu se oferă cu Generic Thermostat sau releu) |
-| **TRV-uri pe calorifere, centrala are un releu în Home Assistant** | Încă fără dispozitive | câte una pentru fiecare cameră cu TRV | **releul centralei** |
-| **TRV-uri pe calorifere, centrala e pornită de un termostat din Home Assistant** (Hive, Nest, Tado, Netatmo) | Încă fără dispozitive | câte una pentru fiecare cameră cu TRV | **acel termostat**, cu *Boost pentru sursa de căldură* pornit |
-| **TRV-uri doar pe unele calorifere, un termostat pornește centrala** (de exemplu un termostat pe hol) | Încă fără dispozitive | camerele cu TRV | **acel termostat**, cu *Boost* pornit și o *Temperatura sursei în repaus* (de exemplu 17,5 °C) pentru caloriferele fără TRV |
-| **Radiatoare electrice, aer condiționat, pompă de căldură în fiecare cameră** | Încă fără dispozitive | câte una pentru fiecare cameră, cu releul sau termostatul ei | – (fiecare cameră se încălzește singură) |
-| **Un singur radiator electric sau aer condiționat pentru toată locuința** | Comutator (releu) sau Alte termostate | – | – |
+| **Un termostat sau releu pentru toată locuința, fără TRV-uri** (de exemplu un apartament cu Generic Thermostat pe centrală) | Generic Thermostat, Alt termostat pentru toată casa sau Comutator (releu) | – | – (nu se oferă cu Generic Thermostat sau releu) |
+| **TRV-uri pe calorifere, centrala are un releu în Home Assistant** | Fiecare cameră se încălzește separat | câte una pentru fiecare cameră cu TRV | **releul centralei** |
+| **TRV-uri pe calorifere, centrala e pornită de un termostat din Home Assistant** (Hive, Nest, Tado, Netatmo) | Fiecare cameră se încălzește separat | câte una pentru fiecare cameră cu TRV | **acel termostat**, cu *Boost pentru sursa de căldură* pornit |
+| **TRV-uri doar pe unele calorifere, un termostat pornește centrala** (de exemplu un termostat pe hol) | Fiecare cameră se încălzește separat | camerele cu TRV | **acel termostat**, cu *Boost* pornit și o *Temperatura sursei în repaus* (de exemplu 17,5 °C) pentru caloriferele fără TRV |
+| **Radiatoare electrice, aer condiționat, pompă de căldură în fiecare cameră** | Fiecare cameră se încălzește separat | câte una pentru fiecare cameră, cu releul sau termostatul ei | – (fiecare cameră se încălzește singură) |
+| **Un singur radiator electric sau aer condiționat pentru toată locuința** | Comutator (releu) sau Alt termostat pentru toată casa | – | – |
 | **Un termostat sau un releu pe toată casa și TRV-uri în unele camere** | termostatul sau releul | camerele cu TRV | ⚠️ nu se poate: vezi mai jos |
 
 **De ce ultimul caz e limitat.** Zona întregii case pornește centrala doar după
@@ -78,18 +78,18 @@ calorifer fără TRV (de obicei în baie).
 - *Un apartament, un Generic Thermostat comută releul centralei, fără TRV-uri*:
   Încălzirea întregii case = Generic Thermostat. Nimic altceva; pagina *Sursa
   de căldură* nici nu apare.
-- *O casă, un releu Shelly pe centrală, TRV-uri în toate camerele*: Încă fără
-  dispozitive; câte o cameră pentru fiecare cameră cu TRV (*Alte termostate /
-  TRV-uri*, cu forțarea TRV când camera are senzorul ei); *Sursa de căldură* =
-  releul Shelly.
-- *O casă, un Hive pe hol legat la centrală, TRV-uri în trei camere*: Încă fără
-  dispozitive; trei camere cu TRV; *Sursa de căldură* = Hive, *Boost pentru
-  sursa de căldură* pornit, *Temperatura sursei în repaus* 17,5 °C. Hive ține
-  restul casei la circa 17,5 °C și primește maximul când o cameră cu TRV cere
-  căldură.
-- *Radiatoare electrice pe prize inteligente*: Încă fără dispozitive; câte o
-  cameră pentru fiecare cameră (*Comutator (releu)*, cu senzorul ei de
-  temperatură); fără sursă de căldură.
+- *O casă, un releu Shelly pe centrală, TRV-uri în toate camerele*: *Fiecare
+  cameră se încălzește separat*; câte o cameră pentru fiecare cameră cu TRV
+  (*Alte termostate / TRV-uri*, cu forțarea TRV când camera are senzorul ei);
+  *Sursa de căldură* = releul Shelly.
+- *O casă, un Hive pe hol legat la centrală, TRV-uri în trei camere*: *Fiecare
+  cameră se încălzește separat*; trei camere cu TRV; *Sursa de căldură* = Hive,
+  *Boost pentru sursa de căldură* pornit, *Temperatura sursei în repaus*
+  17,5 °C. Hive ține restul casei la circa 17,5 °C și primește maximul când o
+  cameră cu TRV cere căldură.
+- *Radiatoare electrice pe prize inteligente*: *Fiecare cameră se încălzește
+  separat*; câte o cameră pentru fiecare cameră (*Comutator (releu)*, cu
+  senzorul ei de temperatură); fără sursă de căldură.
 
 ## Crearea casei
 
@@ -119,9 +119,9 @@ oraș, starea casei e *aproape* și camerele trec pe `eco`. Când pleacă din or
 | Alegere | Când se folosește |
 | --- | --- |
 | **Generic Thermostat** | Un Generic Thermostat pornește centrala (cazul cel mai des întâlnit). |
-| **Alte termostate / TRV-uri** | Un termostat smart care nu e Generic Thermostat (de exemplu un termostat Zigbee sau Wi-Fi). |
+| **Alt termostat pentru toată casa** | Un singur termostat smart, care nu e Generic Thermostat, încălzește toată locuința (de exemplu Nest, Tado, Hive, un termostat Zigbee sau Wi-Fi). |
 | **Comutator (releu)** | Un releu pornește direct încălzirea, fără termostat. |
-| **Încă fără dispozitive** | Nimic nu încălzește toată casa ca o singură zonă; fiecare cameră se adaugă cu încălzirea ei: TRV-uri sau robinete pe calorifere, radiatoare electrice, pompă de căldură sau aer condiționat, încălzire în pardoseală. |
+| **Fiecare cameră se încălzește separat** | Nimic nu încălzește toată casa ca o singură zonă; fiecare cameră se adaugă cu încălzirea ei: TRV-uri sau robinete pe calorifere, radiatoare electrice, pompă de căldură sau aer condiționat, încălzire în pardoseală. |
 
 Ce se alege aici devine zona **Whole house** (toată casa), care se comportă ca o
 cameră și folosește toate opțiunile casei.

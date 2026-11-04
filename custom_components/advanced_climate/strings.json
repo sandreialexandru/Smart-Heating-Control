@@ -34,9 +34,9 @@
         "data": {
           "source": "Heated by"
         },
-        "description": "The thermostat (or relay) that heats the whole house. It becomes the zone {zone} and works with every option of the house. Rooms with their own valves can be added later with \"Add room\".",
+        "description": "The one thermostat (or relay) that heats the whole home. It becomes the zone {zone} and works with every option of the house. If the rooms heat separately (TRVs on the radiators, heaters, air conditioners), choose \"Each room heats separately\" and add every room with \"Add room\".",
         "data_description": {
-          "source": "What heats the whole house: a Generic Thermostat or a relay that starts the boiler, or another thermostat. 'No heating devices yet' when nothing heats the whole house as one zone and every room is added with its own heating: TRVs or valves on the radiators, electric heaters, a heat pump or air conditioner, underfloor heating."
+          "source": "What heats the whole house: a Generic Thermostat, another thermostat (Nest, Tado, Hive…) or a relay that starts the boiler. 'Each room heats separately' when no single device heats the whole home: TRVs or valves on the radiators, electric heaters, air conditioners, underfloor zones; every room is then added with its own device, and with TRVs the boiler relay (or the thermostat that starts the boiler) is picked as the heat source."
         }
       },
       "heating_devices": {
@@ -269,9 +269,9 @@
         "data": {
           "source": "Heated by"
         },
-        "description": "The thermostat (or relay) that heats the whole house. It becomes the zone {zone} and works with every option of the house. Rooms with their own valves can be added later with \"Add room\".",
+        "description": "The one thermostat (or relay) that heats the whole home. It becomes the zone {zone} and works with every option of the house. If the rooms heat separately (TRVs on the radiators, heaters, air conditioners), choose \"Each room heats separately\" and add every room with \"Add room\".",
         "data_description": {
-          "source": "What heats the whole house: a Generic Thermostat or a relay that starts the boiler, or another thermostat. 'No heating devices yet' when nothing heats the whole house as one zone and every room is added with its own heating: TRVs or valves on the radiators, electric heaters, a heat pump or air conditioner, underfloor heating."
+          "source": "What heats the whole house: a Generic Thermostat, another thermostat (Nest, Tado, Hive…) or a relay that starts the boiler. 'Each room heats separately' when no single device heats the whole home: TRVs or valves on the radiators, electric heaters, air conditioners, underfloor zones; every room is then added with its own device, and with TRVs the boiler relay (or the thermostat that starts the boiler) is picked as the heat source."
         }
       },
       "heating_devices": {
@@ -922,9 +922,9 @@
     "house_source": {
       "options": {
         "generic_thermostat": "Generic Thermostat",
-        "climate": "Other thermostats / TRVs",
+        "climate": "Another thermostat for the whole home",
         "switch": "Switch (relay)",
-        "none": "No heating devices yet"
+        "none": "Each room heats separately (TRVs, heaters, AC)"
       }
     },
     "command_mode": {

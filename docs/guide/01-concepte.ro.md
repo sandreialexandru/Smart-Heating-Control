@@ -42,8 +42,8 @@ Camere separate se adaugă doar pentru camerele cu robinete sau termostate propr
 
 **Exemplu.** Un apartament cu centrală pe gaz și un singur termostat în
 sufragerie: se creează casa, se alege termostatul la *Încălzirea întregii case*
-și gata. O casă cu TRV-uri în fiecare cameră: se creează casa (se poate alege
-*Încă fără dispozitive*), apoi se adaugă câte o cameră pentru fiecare cameră cu
+și gata. O casă cu TRV-uri în fiecare cameră: se creează casa (se alege
+*Fiecare cameră se încălzește separat*), apoi se adaugă câte o cameră pentru fiecare cameră cu
 TRV.
 
 ## Nivelurile (preseturile)

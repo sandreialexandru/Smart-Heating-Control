@@ -52,12 +52,12 @@ would otherwise command the same device).
 
 | Your home | Heating of the whole house | Rooms | Heat source |
 | --- | --- | --- | --- |
-| **One thermostat or relay for the whole home, no TRVs** (e.g. a flat with a Generic Thermostat on the boiler) | Generic Thermostat, Other thermostats or Switch (relay) | – | – (not offered with Generic Thermostat or a relay) |
-| **TRVs on the radiators, the boiler has a relay in Home Assistant** | No heating devices yet | one per room with TRVs | **the boiler relay** |
-| **TRVs on the radiators, the boiler is started by a thermostat in Home Assistant** (Hive, Nest, Tado, Netatmo) | No heating devices yet | one per room with TRVs | **that thermostat**, with *Boost the heat source* on |
-| **TRVs on only some radiators, a thermostat starts the boiler** (e.g. a hallway thermostat) | No heating devices yet | the rooms with TRVs | **that thermostat**, with *Boost* on and a *Heat source idle temperature* (e.g. 17.5 °C) for the radiators without TRVs |
-| **Electric heaters, air conditioners, a heat pump per room** | No heating devices yet | one per room, with its relay or thermostat | – (each room heats by itself) |
-| **A single electric heater or air conditioner for the whole home** | Switch (relay) or Other thermostats | – | – |
+| **One thermostat or relay for the whole home, no TRVs** (e.g. a flat with a Generic Thermostat on the boiler) | Generic Thermostat, Another thermostat for the whole home or Switch (relay) | – | – (not offered with Generic Thermostat or a relay) |
+| **TRVs on the radiators, the boiler has a relay in Home Assistant** | Each room heats separately | one per room with TRVs | **the boiler relay** |
+| **TRVs on the radiators, the boiler is started by a thermostat in Home Assistant** (Hive, Nest, Tado, Netatmo) | Each room heats separately | one per room with TRVs | **that thermostat**, with *Boost the heat source* on |
+| **TRVs on only some radiators, a thermostat starts the boiler** (e.g. a hallway thermostat) | Each room heats separately | the rooms with TRVs | **that thermostat**, with *Boost* on and a *Heat source idle temperature* (e.g. 17.5 °C) for the radiators without TRVs |
+| **Electric heaters, air conditioners, a heat pump per room** | Each room heats separately | one per room, with its relay or thermostat | – (each room heats by itself) |
+| **A single electric heater or air conditioner for the whole home** | Switch (relay) or Another thermostat for the whole home | – | – |
 | **A thermostat or relay on the whole house and TRVs in some rooms** | the thermostat or relay | the rooms with TRVs | ⚠️ none possible: see below |
 
 **Why the last case is limited.** The whole-house zone starts the boiler only
@@ -78,15 +78,17 @@ one radiator without a TRV (often in the bathroom).
 - *A flat, a Generic Thermostat switches the boiler relay, no TRVs*: Heating of
   the whole house = Generic Thermostat. Nothing else; the *Heat source* page
   is not even offered.
-- *A house, a Shelly relay on the boiler, TRVs in every room*: No heating
-  devices yet; one room per TRV room (*Other thermostats / TRVs*, with the TRV
-  boost when the room has its own sensor); *Heat source* = the Shelly relay.
-- *A house, a Hive in the hallway wired to the boiler, TRVs in three rooms*: No
-  heating devices yet; three TRV rooms; *Heat source* = the Hive, *Boost the
-  heat source* on, *Heat source idle temperature* 17.5 °C. The Hive keeps the
-  rest of the house at about 17.5 °C and gets the maximum when a TRV room asks.
-- *Electric heaters on smart plugs*: No heating devices yet; one room per room
-  (*Switch (relay)*, with its temperature sensor); no heat source.
+- *A house, a Shelly relay on the boiler, TRVs in every room*: *Each room
+  heats separately*; one room per TRV room (*Other thermostats / TRVs*, with
+  the TRV boost when the room has its own sensor); *Heat source* = the Shelly
+  relay.
+- *A house, a Hive in the hallway wired to the boiler, TRVs in three rooms*:
+  *Each room heats separately*; three TRV rooms; *Heat source* = the Hive,
+  *Boost the heat source* on, *Heat source idle temperature* 17.5 °C. The Hive
+  keeps the rest of the house at about 17.5 °C and gets the maximum when a TRV
+  room asks.
+- *Electric heaters on smart plugs*: *Each room heats separately*; one room per
+  room (*Switch (relay)*, with its temperature sensor); no heat source.
 
 ## Creating the house
 
@@ -116,9 +118,9 @@ is *far* and the rooms go to `away`.
 | Choice | When to use it |
 | --- | --- |
 | **Generic Thermostat** | A Generic Thermostat starts the boiler (the most common case). |
-| **Other thermostats / TRVs** | A smart thermostat that is not Generic Thermostat (e.g. a Zigbee or Wi-Fi thermostat). |
+| **Another thermostat for the whole home** | One smart thermostat that is not Generic Thermostat heats the whole home (e.g. Nest, Tado, Hive, a Zigbee or Wi-Fi thermostat). |
 | **Switch (relay)** | A relay turns the heating on directly, without a thermostat. |
-| **No heating devices yet** | Nothing heats the whole house as one zone; every room is added with its own heating: TRVs or valves on the radiators, electric heaters, a heat pump or air conditioner, underfloor heating. |
+| **Each room heats separately** | Nothing heats the whole house as one zone; every room is added with its own heating: TRVs or valves on the radiators, electric heaters, a heat pump or air conditioner, underfloor heating. |
 
 What you pick becomes the zone **Whole house**, which behaves like a room and
 uses every option of the house.

@@ -37,7 +37,7 @@ Leave *Heat source* empty: Generic Thermostat already starts the boiler.
 **What you have:** a boiler with a Shelly relay in Home Assistant, Zigbee TRVs
 in the bedroom, the living room and the office, window sensors.
 
-1. Create the house, *Heating of the whole house*: *No heating devices yet*.
+1. Create the house, *Heating of the whole house*: *Each room heats separately*.
 2. Add one room each: *Other thermostats / TRVs*, command *Temperature*, the
    levels, the window sensor; optionally a wall sensor with *Offset*
    calibration; the valve exercise.

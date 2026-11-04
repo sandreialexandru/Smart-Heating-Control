@@ -654,7 +654,7 @@ async def test_saving_a_generic_thermostat_whole_house_drops_the_heat_source(
 
 
 async def test_heat_source_shown_for_trvs_on_the_whole_house(hass: HomeAssistant) -> None:
-    """Other thermostats / TRVs on the whole house: the heat source can be chosen."""
+    """Another thermostat for the whole home: the heat source can be chosen."""
     entry = _house_with_zone(
         hass, {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"}
     )

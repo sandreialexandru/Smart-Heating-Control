@@ -42,8 +42,8 @@ Add separate rooms only when some rooms have their own valves or thermostats
 
 **Example.** A flat with a gas boiler and one thermostat in the living room:
 create the house, pick the thermostat under *Heating of the whole house*, done.
-A house with TRVs in every room: create the house (you may pick *No heating
-devices yet*), then add one room for every room with a TRV.
+A house with TRVs in every room: create the house (pick *Each room heats
+separately*), then add one room for every room with a TRV.
 
 ## The levels (presets)
 

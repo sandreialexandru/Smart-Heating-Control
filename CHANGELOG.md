@@ -26,6 +26,17 @@ GitHub releases.
   (e.g. 17.5 °C for a hallway thermostat that also heats radiators without
   TRVs). Below the maximum of the house.
 
+### Setup
+
+- 🏷️ **Clearer choices for the heating of the whole house.** *Other thermostats
+  / TRVs* is now **Another thermostat for the whole home**, and *No heating
+  devices yet* is now **Each room heats separately (TRVs, heaters, AC)**: a
+  house with TRVs on the radiators picks the second one and adds its rooms.
+  Only the labels and the explanations change; existing houses are not
+  affected. The guide has a new section, *Which setup for my house?*, with
+  every kind of home, and the configurator a new case for a thermostat that
+  starts the boiler.
+
 ### Card
 
 - 🔌 **Devices in the Details**: every entity of the room (thermostats,

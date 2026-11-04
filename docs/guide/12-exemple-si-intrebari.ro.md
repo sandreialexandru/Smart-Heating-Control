@@ -37,7 +37,7 @@ sufragerie, doi locuitori cu aplicația Home Assistant pe telefon.
 **Ce există:** o centrală cu un releu Shelly în Home Assistant, TRV-uri Zigbee în
 dormitor, sufragerie și birou, senzori de fereastră.
 
-1. Se creează casa, *Încălzirea întregii case*: *Încă fără dispozitive*.
+1. Se creează casa, *Încălzirea întregii case*: *Fiecare cameră se încălzește separat*.
 2. Se adaugă câte o cameră: *Alte termostate / TRV-uri*, comanda *Temperatură*,
    nivelurile, senzorul de fereastră; opțional un senzor pe perete cu
    calibrare *Offset*; mișcarea robinetelor.

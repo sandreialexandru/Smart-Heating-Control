@@ -34,9 +34,9 @@
         "data": {
           "source": "Încălzită prin"
         },
-        "description": "Termostatul (sau releul) care încălzește toată casa. Devine zona „{zone}” și folosește toate opțiunile casei. Camerele cu robinete proprii se pot adăuga mai târziu cu „Adaugă cameră”.",
+        "description": "Termostatul (sau releul) care încălzește singur toată locuința. Devine zona {zone} și folosește toate opțiunile casei. Dacă încăperile se încălzesc separat (TRV-uri pe calorifere, radiatoare, aer condiționat), alegeți „Fiecare cameră se încălzește separat” și adăugați fiecare cameră cu „Adaugă cameră”.",
         "data_description": {
-          "source": "Ce încălzește toată casa: un Generic Thermostat sau un releu care pornește centrala, ori alt termostat. „Încă fără dispozitive” când nimic nu încălzește toată casa ca o singură zonă și fiecare cameră se adaugă cu încălzirea ei: TRV-uri sau robinete pe calorifere, radiatoare electrice, pompă de căldură sau aer condiționat, încălzire în pardoseală."
+          "source": "Ce încălzește toată casa: un Generic Thermostat, alt termostat (Nest, Tado, Hive…) sau un releu care pornește centrala. „Fiecare cameră se încălzește separat” când niciun dispozitiv nu încălzește singur toată locuința: TRV-uri sau robinete pe calorifere, radiatoare electrice, aer condiționat, zone de încălzire în pardoseală; fiecare cameră se adaugă apoi cu dispozitivul ei, iar cu TRV-uri releul centralei (sau termostatul care o pornește) se alege ca sursă de căldură."
         }
       },
       "heating_devices": {
@@ -269,9 +269,9 @@
         "data": {
           "source": "Încălzită prin"
         },
-        "description": "Termostatul (sau releul) care încălzește toată casa. Devine zona „{zone}” și folosește toate opțiunile casei. Camerele cu robinete proprii se pot adăuga mai târziu cu „Adaugă cameră”.",
+        "description": "Termostatul (sau releul) care încălzește singur toată locuința. Devine zona {zone} și folosește toate opțiunile casei. Dacă încăperile se încălzesc separat (TRV-uri pe calorifere, radiatoare, aer condiționat), alegeți „Fiecare cameră se încălzește separat” și adăugați fiecare cameră cu „Adaugă cameră”.",
         "data_description": {
-          "source": "Ce încălzește toată casa: un Generic Thermostat sau un releu care pornește centrala, ori alt termostat. „Încă fără dispozitive” când nimic nu încălzește toată casa ca o singură zonă și fiecare cameră se adaugă cu încălzirea ei: TRV-uri sau robinete pe calorifere, radiatoare electrice, pompă de căldură sau aer condiționat, încălzire în pardoseală."
+          "source": "Ce încălzește toată casa: un Generic Thermostat, alt termostat (Nest, Tado, Hive…) sau un releu care pornește centrala. „Fiecare cameră se încălzește separat” când niciun dispozitiv nu încălzește singur toată locuința: TRV-uri sau robinete pe calorifere, radiatoare electrice, aer condiționat, zone de încălzire în pardoseală; fiecare cameră se adaugă apoi cu dispozitivul ei, iar cu TRV-uri releul centralei (sau termostatul care o pornește) se alege ca sursă de căldură."
         }
       },
       "heating_devices": {
@@ -922,9 +922,9 @@
     "house_source": {
       "options": {
         "generic_thermostat": "Generic Thermostat",
-        "climate": "Alte termostate / TRV-uri",
+        "climate": "Alt termostat pentru toată casa",
         "switch": "Comutator (releu)",
-        "none": "Încă fără dispozitive"
+        "none": "Fiecare cameră se încălzește separat (TRV-uri, radiatoare, AC)"
       }
     },
     "command_mode": {

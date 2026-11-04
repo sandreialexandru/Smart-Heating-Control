@@ -54,7 +54,7 @@ ale integrării ar comanda același dispozitiv).
 | --- | --- | --- | --- |
 | **Un termostat sau releu pentru toată locuința, fără TRV-uri** (de exemplu un apartament cu Generic Thermostat pe centrală) | Generic Thermostat, Alt termostat pentru toată casa sau Comutator (releu) | – | – (nu se oferă cu Generic Thermostat sau releu) |
 | **TRV-uri pe calorifere, centrala are un releu în Home Assistant** | Fiecare cameră se încălzește separat | câte una pentru fiecare cameră cu TRV | **releul centralei** |
-| **TRV-uri pe calorifere, centrala e pornită de un termostat din Home Assistant** (Hive, Nest, Tado, Netatmo) | Fiecare cameră se încălzește separat | câte una pentru fiecare cameră cu TRV | **acel termostat**, cu *Boost pentru sursa de căldură* pornit |
+| **TRV-uri pe calorifere, centrala e pornită de un termostat din Home Assistant** (Hive, Nest, Tado, Netatmo) | Fiecare cameră se încălzește separat | câte una pentru fiecare cameră cu TRV | **acel termostat**, cu *Pornește și oprește sursa prin temperatura ei* pornit |
 | **TRV-uri doar pe unele calorifere, un termostat pornește centrala** (de exemplu un termostat pe hol) | Fiecare cameră se încălzește separat | camerele cu TRV | **acel termostat**, cu *Boost* pornit și o *Temperatura sursei în repaus* (de exemplu 17,5 °C) pentru caloriferele fără TRV |
 | **Radiatoare electrice, aer condiționat, pompă de căldură în fiecare cameră** | Fiecare cameră se încălzește separat | câte una pentru fiecare cameră, cu releul sau termostatul ei | – (fiecare cameră se încălzește singură) |
 | **Un singur radiator electric sau aer condiționat pentru toată locuința** | Comutator (releu) sau Alt termostat pentru toată casa | – | – |
@@ -84,7 +84,7 @@ calorifer fără TRV (de obicei în baie).
   *Sursa de căldură* = releul Shelly.
 - *O casă, un Hive pe hol legat la centrală, TRV-uri în trei camere*: *Fiecare
   cameră se încălzește separat*; trei camere cu TRV; *Sursa de căldură* = Hive,
-  *Boost pentru sursa de căldură* pornit, *Temperatura sursei în repaus*
+  *Pornește și oprește sursa prin temperatura ei* pornit, *Temperatura sursei în repaus*
   17,5 °C. Hive ține restul casei la circa 17,5 °C și primește maximul când o
   cameră cu TRV cere căldură.
 - *Radiatoare electrice pe prize inteligente*: *Fiecare cameră se încălzește
@@ -134,6 +134,16 @@ cameră și folosește toate opțiunile casei.
 - **Comandă**: doar pentru alte termostate decât Generic Thermostat; în
   [capitolul 3](03-camere.ro.md#comanda-pentru-alte-termostate) pentru
   diferența dintre *Temperatură*, *Preset* și *Pornit / oprit*.
+- **Încălzește după senzorii camerelor**: doar cu alt termostat și comanda
+  *Temperatură*. Cât casa cere căldură, după senzorii ei de temperatură și
+  histerezis, termostatul primește o temperatură mai mare (implicit maximul
+  casei), ca să încălzească până se face cald; în rest primește ținta. Util
+  când termostatul măsoară într-un loc nepotrivit, de exemplu pe hol. Pagina
+  următoare cere senzorii, temperatura, histerezisul și *Folosește inerția
+  învățată*. Nu e același lucru cu *Pornește și oprește sursa prin
+  temperatura ei*, care e pentru un termostat ce doar pornește centrala
+  pentru camere cu TRV-urile lor (*Fiecare cameră se încălzește separat*, cu
+  termostatul ca *Sursă de căldură*).
 
 **Pasul 4: setările comenzii.** Apare doar când e nevoie:
 
@@ -287,8 +297,8 @@ Al doilea formular, doar cu o sursă de căldură:
 | --- | --- | --- |
 | Camere necesare pentru pornirea sursei | 1 | Câte camere trebuie să ceară căldură ca să pornească sursa. Cel mult numărul de camere ale casei; dacă mai târziu se șterg camere și rămân mai puține, apare o alertă. |
 | Timp minim pornită / oprită | 0 / 0 min | 0 = sursa urmează imediat cererea de căldură. O valoare mai mare protejează de cicluri scurte o centrală fără protecție proprie. |
-| Boost pentru sursa de căldură | pornit | Doar pentru un termostat (`climate`) ca sursă: temperatura maximă a casei ca să pornească, antiînghețul casei ca să se oprească, mereu pe încălzire. Oprit: i se schimbă doar modul. |
-| Temperatura sursei în repaus | – (antiîngheț) | Doar cu boost: ce primește termostatul cât nicio cameră nu cere căldură, de exemplu 17,5 °C când încălzește și calorifere fără TRV. Sub maximul casei. |
+| Pornește și oprește sursa prin temperatura ei | pornit | Doar pentru un termostat (`climate`) ca sursă: temperatura maximă a casei ca să pornească, antiînghețul casei ca să se oprească, mereu pe încălzire. Oprit: i se schimbă doar modul. |
+| Temperatura sursei în repaus | – (antiîngheț) | Doar cu *Pornește și oprește sursa prin temperatura ei*: ce primește termostatul cât nicio cameră nu cere căldură, de exemplu 17,5 °C când încălzește și calorifere fără TRV. Sub maximul casei. |
 | Cameră de referință | – | Doar această cameră decide când merge sursa; celelalte doar își deschid sau închid robinetele. |
 
 Detalii: [capitolul 8](08-sursa-si-energie.ro.md).

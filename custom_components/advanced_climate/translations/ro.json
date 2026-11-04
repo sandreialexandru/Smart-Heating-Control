@@ -45,13 +45,13 @@
           "climates": "Termostate",
           "switches": "Comutatoare (relee)",
           "command_mode": "Comandă",
-          "trv_boost": "Forțează temperatura TRV cât încălzește"
+          "trv_boost": "Încălzește după senzorii camerelor"
         },
         "data_description": {
           "climates": "Termostatul care comandă centrala, de ex. entitatea Generic Thermostat (climate.climate).",
           "switches": "Doar când un releu încălzește casa direct, fără termostat.",
           "command_mode": "Doar pentru alte termostate decât Generic Thermostat. Diferența e explicată la setările camerei.",
-          "trv_boost": "Cât camera cere căldură, TRV-urile primesc o temperatură mai mare, ca să rămână deschise până se încălzește camera; în rest primesc ținta. Cererea de căldură vine atunci de la senzorul camerei, cu histerezisul. Are nevoie de un senzor de temperatură în cameră. Doar cu comanda Temperatură."
+          "trv_boost": "Cât casa cere căldură (după senzorii ei de temperatură, cu histerezisul), termostatul sau TRV-urile primesc o temperatură mai mare, ca să încălzească până se face cald; în rest primesc ținta. Util când dispozitivul măsoară într-un loc nepotrivit (un termostat pe hol, un TRV lângă calorifer). Are nevoie de un senzor de temperatură. Doar cu comanda Temperatură. Nu e același lucru cu „Pornește și oprește sursa prin temperatura ei”: aceea e pentru un termostat care doar pornește centrala pentru camere cu TRV-urile lor (atunci se alege „Fiecare cameră se încălzește separat” și termostatul ca sursă de căldură)."
         }
       },
       "heating_on_off": {
@@ -83,19 +83,19 @@
         }
       },
       "heating_boost": {
-        "title": "Forțarea TRV",
-        "description": "Cât camera cere căldură, TRV-urile primesc temperatura de forțare, în rest ținta. Camera cere căldură de la ținta minus histerezisul până la ținta plus histerezisul, măsurat de senzorul camerei.",
+        "title": "Încălzire după senzorii camerelor",
+        "description": "Cât casa cere căldură, termostatul (sau TRV-urile) primesc temperatura de mai jos, în rest ținta. Casa cere căldură de la ținta minus histerezisul până la ținta plus histerezisul, măsurat de senzorii ei.",
         "data": {
           "temperature_sensors": "Senzori de temperatură",
-          "trv_boost_temperature": "Temperatura de forțare",
+          "trv_boost_temperature": "Temperatura cât încălzește",
           "hysteresis": "Histerezis",
           "inertia_control": "Folosește inerția învățată"
         },
         "data_description": {
-          "temperature_sensors": "Senzorii din cameră: cererea de căldură se decide după ei, nu după senzorul TRV-ului de lângă calorifer.",
-          "trv_boost_temperature": "Trimisă TRV-urilor cât camera cere căldură, niciodată sub țintă și niciodată peste temperatura maximă a casei sau a TRV-urilor. Gol = temperatura maximă a casei.",
-          "hysteresis": "Camera cere căldură sub ținta minus această valoare și se oprește peste ținta plus această valoare, măsurat de senzorul camerei.",
-          "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, forțarea se termină puțin mai devreme când căldura deja dată ar duce singură camera până la limita de sus a histerezisului și începe puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Banda rămâne limita. Oprit: decide doar histerezisul."
+          "temperature_sensors": "Senzorii din camerele casei: cererea de căldură se decide după ei, nu după senzorul termostatului sau al TRV-urilor.",
+          "trv_boost_temperature": "Trimisă termostatului (sau TRV-urilor) cât casa cere căldură, niciodată sub țintă și niciodată peste temperatura maximă a casei sau a dispozitivului. Gol = temperatura maximă a casei.",
+          "hysteresis": "Casa cere căldură sub ținta minus această valoare și se oprește peste ținta plus această valoare, măsurat de senzorii ei.",
+          "inertia_control": "După ce casa a învățat cât de încet reacționează încălzirea, temperatura mai mare se termină puțin mai devreme când căldura deja dată ar duce singură casa până la limita de sus a histerezisului și începe puțin mai devreme când casa ar coborî la limita de jos înainte să ajungă căldura. Banda rămâne limita. Oprit: decide doar histerezisul."
         }
       }
     },
@@ -106,8 +106,8 @@
       "entity_is_source": "{entity} e sursa de căldură a casei {owner}. Nu poate fi și dispozitivul unei camere.",
       "entity_is_gt_heater": "{entity} e releul unui Generic Thermostat folosit de {owner}. Nu poate fi comandat și aici.",
       "room_sensor_is_outdoor": "{entity} e senzorul exterior al casei {owner}. Alege un senzor din cameră.",
-      "boost_sensor_required": "Forțarea TRV are nevoie de un senzor de temperatură al camerei.",
-      "boost_temperature_only": "Forțarea TRV merge doar cu comanda Temperatură."
+      "boost_sensor_required": "Încălzirea după senzorii camerelor are nevoie de un senzor de temperatură.",
+      "boost_temperature_only": "Încălzirea după senzorii camerelor merge doar cu comanda Temperatură."
     },
     "abort": {
       "reconfigure_successful": "Salvat."
@@ -280,13 +280,13 @@
           "climates": "Termostate",
           "switches": "Comutatoare (relee)",
           "command_mode": "Comandă",
-          "trv_boost": "Forțează temperatura TRV cât încălzește"
+          "trv_boost": "Încălzește după senzorii camerelor"
         },
         "data_description": {
           "climates": "Termostatul care comandă centrala, de ex. entitatea Generic Thermostat (climate.climate).",
           "switches": "Doar când un releu încălzește casa direct, fără termostat.",
           "command_mode": "Doar pentru alte termostate decât Generic Thermostat. Diferența e explicată la setările camerei.",
-          "trv_boost": "Cât camera cere căldură, TRV-urile primesc o temperatură mai mare, ca să rămână deschise până se încălzește camera; în rest primesc ținta. Cererea de căldură vine atunci de la senzorul camerei, cu histerezisul. Are nevoie de un senzor de temperatură în cameră. Doar cu comanda Temperatură."
+          "trv_boost": "Cât casa cere căldură (după senzorii ei de temperatură, cu histerezisul), termostatul sau TRV-urile primesc o temperatură mai mare, ca să încălzească până se face cald; în rest primesc ținta. Util când dispozitivul măsoară într-un loc nepotrivit (un termostat pe hol, un TRV lângă calorifer). Are nevoie de un senzor de temperatură. Doar cu comanda Temperatură. Nu e același lucru cu „Pornește și oprește sursa prin temperatura ei”: aceea e pentru un termostat care doar pornește centrala pentru camere cu TRV-urile lor (atunci se alege „Fiecare cameră se încălzește separat” și termostatul ca sursă de căldură)."
         }
       },
       "heating_on_off": {
@@ -381,7 +381,7 @@
           "boiler_min_on": "Timp minim pornită",
           "boiler_min_off": "Timp minim oprită",
           "reference_room": "Cameră de referință",
-          "boiler_boost": "Boost pentru sursa de căldură",
+          "boiler_boost": "Pornește și oprește sursa prin temperatura ei",
           "boiler_idle_temp": "Temperatura sursei în repaus"
         },
         "data_description": {
@@ -389,8 +389,8 @@
           "boiler_min_on": "Timpul minim de funcționare, contra pornirilor scurte. 0 (implicit) = sursa se oprește imediat ce nu mai cere nicio cameră. Un timp mai mare cere bypass sau un calorifer fără TRV.",
           "boiler_min_off": "Pauza minimă între porniri.",
           "reference_room": "Doar această cameră decide pornirea, celelalte doar își deschid sau închid robinetele. Lasă gol ca să conteze numărul de camere.",
-          "boiler_boost": "Un termostat folosit ca sursă de căldură (de exemplu Hive, Nest, Tado, un Generic Thermostat) pornește centrala doar după ținta și senzorul lui. Pornit (implicit): rămâne pe încălzire; ca să pornească primește temperatura maximă a casei, ca să se oprească temperatura de repaus (implicit antiînghețul casei) (așa protejează în continuare la îngheț dacă Home Assistant se oprește). Ținta schimbată manual pe el este readusă. Oprit: i se schimbă doar modul (încălzire / oprit). Un termostat fără temperatură țintă este comandat întotdeauna prin mod.",
-          "boiler_idle_temp": "Doar cu boost: ce primește termostatul cât nicio cameră nu cere căldură. Gol (implicit): temperatura de antiîngheț a casei, deci centrala rămâne oprită. O valoare mai mare (de exemplu 17,5 °C) îl lasă să țină zona lui, după senzorul lui, la acea temperatură: util când încălzește și calorifere fără TRV. Trebuie să fie sub temperatura maximă a casei."
+          "boiler_boost": "Un termostat folosit ca sursă de căldură (de exemplu Hive, Nest, Tado, un Generic Thermostat) pornește centrala doar după ținta și senzorul lui. Pornit (implicit): rămâne pe încălzire; ca să pornească primește temperatura maximă a casei, ca să se oprească temperatura de repaus (implicit antiînghețul casei) (așa protejează în continuare la îngheț dacă Home Assistant se oprește). Ținta schimbată manual pe el este readusă. Oprit: i se schimbă doar modul (încălzire / oprit). Un termostat fără temperatură țintă este comandat întotdeauna prin mod. Nu e același lucru cu „Încălzește după senzorii camerelor” de la zona casei: aceea e pentru un termostat care încălzește singur toată casa.",
+          "boiler_idle_temp": "Doar cu „Pornește și oprește sursa prin temperatura ei”: ce primește termostatul cât nicio cameră nu cere căldură. Gol (implicit): temperatura de antiîngheț a casei, deci centrala rămâne oprită. O valoare mai mare (de exemplu 17,5 °C) îl lasă să țină zona lui, după senzorul lui, la acea temperatură: util când încălzește și calorifere fără TRV. Trebuie să fie sub temperatura maximă a casei."
         }
       },
       "behavior_details": {
@@ -403,19 +403,19 @@
         }
       },
       "heating_boost": {
-        "title": "Forțarea TRV",
-        "description": "Cât camera cere căldură, TRV-urile primesc temperatura de forțare, în rest ținta. Camera cere căldură de la ținta minus histerezisul până la ținta plus histerezisul, măsurat de senzorul camerei.",
+        "title": "Încălzire după senzorii camerelor",
+        "description": "Cât casa cere căldură, termostatul (sau TRV-urile) primesc temperatura de mai jos, în rest ținta. Casa cere căldură de la ținta minus histerezisul până la ținta plus histerezisul, măsurat de senzorii ei.",
         "data": {
           "temperature_sensors": "Senzori de temperatură",
-          "trv_boost_temperature": "Temperatura de forțare",
+          "trv_boost_temperature": "Temperatura cât încălzește",
           "hysteresis": "Histerezis",
           "inertia_control": "Folosește inerția învățată"
         },
         "data_description": {
-          "temperature_sensors": "Senzorii din cameră: cererea de căldură se decide după ei, nu după senzorul TRV-ului de lângă calorifer.",
-          "trv_boost_temperature": "Trimisă TRV-urilor cât camera cere căldură, niciodată sub țintă și niciodată peste temperatura maximă a casei sau a TRV-urilor. Gol = temperatura maximă a casei.",
-          "hysteresis": "Camera cere căldură sub ținta minus această valoare și se oprește peste ținta plus această valoare, măsurat de senzorul camerei.",
-          "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, forțarea se termină puțin mai devreme când căldura deja dată ar duce singură camera până la limita de sus a histerezisului și începe puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Banda rămâne limita. Oprit: decide doar histerezisul."
+          "temperature_sensors": "Senzorii din camerele casei: cererea de căldură se decide după ei, nu după senzorul termostatului sau al TRV-urilor.",
+          "trv_boost_temperature": "Trimisă termostatului (sau TRV-urilor) cât casa cere căldură, niciodată sub țintă și niciodată peste temperatura maximă a casei sau a dispozitivului. Gol = temperatura maximă a casei.",
+          "hysteresis": "Casa cere căldură sub ținta minus această valoare și se oprește peste ținta plus această valoare, măsurat de senzorii ei.",
+          "inertia_control": "După ce casa a învățat cât de încet reacționează încălzirea, temperatura mai mare se termină puțin mai devreme când căldura deja dată ar duce singură casa până la limita de sus a histerezisului și începe puțin mai devreme când casa ar coborî la limita de jos înainte să ajungă căldura. Banda rămâne limita. Oprit: decide doar histerezisul."
         }
       }
     },
@@ -431,8 +431,8 @@
       "entity_is_gt_heater": "{entity} e releul unui Generic Thermostat folosit de {owner}. Nu poate fi comandat și aici.",
       "outdoor_is_room_sensor": "{entity} e senzor de temperatură al {owner}. Senzorul exterior trebuie să fie alt senzor.",
       "room_sensor_is_outdoor": "{entity} e senzorul exterior al casei {owner}. Alege un senzor din cameră.",
-      "boost_sensor_required": "Forțarea TRV are nevoie de un senzor de temperatură al camerei.",
-      "boost_temperature_only": "Forțarea TRV merge doar cu comanda Temperatură.",
+      "boost_sensor_required": "Încălzirea după senzorii camerelor are nevoie de un senzor de temperatură.",
+      "boost_temperature_only": "Încălzirea după senzorii camerelor merge doar cu comanda Temperatură.",
       "invalid_recipient": "„{recipient}” nu poate fi folosit: scrie un serviciu de notificare (notify.nume), urmat opțional de adrese de email, de ex. notify.eu_gmail_com: ana@exemplu.ro, ion@exemplu.ro.",
       "idle_not_below_max": "Temperatura de repaus trebuie să fie sub temperatura maximă a casei."
     }

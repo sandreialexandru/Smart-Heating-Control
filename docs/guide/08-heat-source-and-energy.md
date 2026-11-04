@@ -37,8 +37,8 @@ thermostat). A `switch` or an `input_boolean` is turned on and off.
 
 A `climate` (a Hive, Nest, Tado or Netatmo thermostat, a Generic Thermostat)
 starts the boiler only by its own target and sensor: switched to `heat` with a
-low target it would not fire it. So with **Boost the heat source** (on by
-default, like the TRV boost) it stays in its heat mode and gets:
+low target it would not fire it. So with **Start and stop the source by its
+temperature** (on by default) it stays in its heat mode and gets:
 
 - to **start**: the *Maximum temperature* of the house (25 °C by default), not
   above the maximum of the thermostat;

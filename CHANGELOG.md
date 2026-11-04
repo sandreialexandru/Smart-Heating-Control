@@ -9,19 +9,19 @@ GitHub releases.
 
 ### Integration
 
-- 🔥 **Boost the heat source** ([#6](https://github.com/sandreialexandru/Smart-Heating-Control/issues/6)):
+- 🔥 **Start and stop the source by its temperature** ([#6](https://github.com/sandreialexandru/Smart-Heating-Control/issues/6)):
   a thermostat as the heat source of the house (Hive, Nest, Tado, Netatmo, a
   Generic Thermostat) starts the boiler only by its own target and sensor, so
-  switched to *heat* with a low target it never fired it. Now, like the TRV
-  boost, it stays in its heat mode and gets the *Maximum temperature* of the
+  switched to *heat* with a low target it never fired it. Now, like a TRV
+  heated by the room sensors, it stays in its heat mode and gets the *Maximum temperature* of the
   house to start (not above its own maximum) and the *Frost protection* of the
   house to stop (not below its minimum): the boiler fires when the rooms ask,
   and the thermostat still protects against frost if Home Assistant stops. A
-  target set on it by hand is taken back. New option *Boost the heat source*
+  target set on it by hand is taken back. New option *Start and stop the source by its temperature*
   (Heat source and heat demand → Heat source), **on by default**; off keeps the
   old behaviour (only its mode, heat / off). A thermostat without a target
   temperature is still switched by its mode.
-- 🌡️ **Heat source idle temperature** (optional, with the boost): what the
+- 🌡️ **Heat source idle temperature** (optional, with *Start and stop the source by its temperature*): what the
   thermostat source gets while no room asks, instead of the frost protection
   (e.g. 17.5 °C for a hallway thermostat that also heats radiators without
   TRVs). Below the maximum of the house.
@@ -36,6 +36,13 @@ GitHub releases.
   affected. The guide has a new section, *Which setup for my house?*, with
   every kind of home, and the configurator a new case for a thermostat that
   starts the boiler.
+- 🏷️ **Two options that were both called boost now have their own names.** For
+  the whole-house zone, *Boost TRV temperature while heating* is now **Heat by
+  the room sensors** (also for a thermostat, not only for TRVs), with its own
+  page *Heating by the room sensors*. For the heat source the new option is
+  **Start and stop the source by its temperature**. The explanation of each
+  says when to choose the other one. Only the labels and the explanations
+  change.
 
 ### Card
 

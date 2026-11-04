@@ -36,8 +36,8 @@ termostatul centralei). Un `switch` sau un `input_boolean` e pornit și oprit.
 
 Un `climate` (un termostat Hive, Nest, Tado sau Netatmo, un Generic Thermostat)
 pornește centrala doar după ținta și senzorul lui: trecut pe `heat` cu o țintă
-mică, nu o pornește. De aceea, cu **Boost pentru sursa de căldură** (pornit
-implicit, ca boost-ul TRV) rămâne pe încălzire și primește:
+mică, nu o pornește. De aceea, cu **Pornește și oprește sursa prin temperatura
+ei** (pornit implicit) rămâne pe încălzire și primește:
 
 - ca să **pornească**: *Temperatura maximă* a casei (implicit 25 °C), nu peste
   maximul termostatului;

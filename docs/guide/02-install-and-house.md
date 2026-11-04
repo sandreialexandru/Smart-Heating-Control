@@ -54,7 +54,7 @@ would otherwise command the same device).
 | --- | --- | --- | --- |
 | **One thermostat or relay for the whole home, no TRVs** (e.g. a flat with a Generic Thermostat on the boiler) | Generic Thermostat, Another thermostat for the whole home or Switch (relay) | – | – (not offered with Generic Thermostat or a relay) |
 | **TRVs on the radiators, the boiler has a relay in Home Assistant** | Each room heats separately | one per room with TRVs | **the boiler relay** |
-| **TRVs on the radiators, the boiler is started by a thermostat in Home Assistant** (Hive, Nest, Tado, Netatmo) | Each room heats separately | one per room with TRVs | **that thermostat**, with *Boost the heat source* on |
+| **TRVs on the radiators, the boiler is started by a thermostat in Home Assistant** (Hive, Nest, Tado, Netatmo) | Each room heats separately | one per room with TRVs | **that thermostat**, with *Start and stop the source by its temperature* on |
 | **TRVs on only some radiators, a thermostat starts the boiler** (e.g. a hallway thermostat) | Each room heats separately | the rooms with TRVs | **that thermostat**, with *Boost* on and a *Heat source idle temperature* (e.g. 17.5 °C) for the radiators without TRVs |
 | **Electric heaters, air conditioners, a heat pump per room** | Each room heats separately | one per room, with its relay or thermostat | – (each room heats by itself) |
 | **A single electric heater or air conditioner for the whole home** | Switch (relay) or Another thermostat for the whole home | – | – |
@@ -84,7 +84,7 @@ one radiator without a TRV (often in the bathroom).
   relay.
 - *A house, a Hive in the hallway wired to the boiler, TRVs in three rooms*:
   *Each room heats separately*; three TRV rooms; *Heat source* = the Hive,
-  *Boost the heat source* on, *Heat source idle temperature* 17.5 °C. The Hive
+  *Start and stop the source by its temperature* on, *Heat source idle temperature* 17.5 °C. The Hive
   keeps the rest of the house at about 17.5 °C and gets the maximum when a TRV
   room asks.
 - *Electric heaters on smart plugs*: *Each room heats separately*; one room per
@@ -133,6 +133,17 @@ uses every option of the house.
 - **Command**: only for thermostats other than Generic Thermostat; see
   [chapter 3](03-rooms.md#command-for-other-thermostats) for the difference
   between *Temperature*, *Preset* and *On / off*.
+- **Heat by the room sensors**: only with another thermostat and the
+  *Temperature* command. While the house asks for heat, by its own
+  temperature sensors and the hysteresis, the thermostat gets a higher
+  temperature (by default the maximum of the house), so it keeps heating
+  until the house is warm; the rest of the time it gets the target. Useful
+  when the thermostat measures in the wrong place, e.g. in the hallway. The
+  next page asks for the sensors, the temperature, the hysteresis and *Use
+  the learned inertia*. Not the same as *Start and stop the source by its
+  temperature*, which is for a thermostat that only starts the boiler for
+  rooms with their own TRVs (*Each room heats separately*, with the
+  thermostat as the *Heat source*).
 
 **Step 4: the command settings.** Only when needed:
 
@@ -285,8 +296,8 @@ The second form, only with a heat source:
 | --- | --- | --- |
 | Rooms needed to start the heat source | 1 | How many rooms must ask for heat to start it. At most the number of rooms of the house; if rooms are removed later and fewer remain, you get an alert. |
 | Heat source minimum on / off time | 0 / 0 min | 0 = the source follows the heat demand at once. A larger value protects a boiler without its own anti-cycling from short cycles. |
-| Boost the heat source | on | Only for a thermostat (`climate`) as the source: the maximum temperature of the house to start it, the frost protection of the house to stop it, always in its heat mode. Off: only its mode is switched. |
-| Heat source idle temperature | – (frost protection) | Only with the boost: what the thermostat gets while no room asks, e.g. 17.5 °C when it also heats radiators without TRVs. Below the maximum of the house. |
+| Start and stop the source by its temperature | on | Only for a thermostat (`climate`) as the source: the maximum temperature of the house to start it, the frost protection of the house to stop it, always in its heat mode. Off: only its mode is switched. |
+| Heat source idle temperature | – (frost protection) | Only with *Start and stop the source by its temperature*: what the thermostat gets while no room asks, e.g. 17.5 °C when it also heats radiators without TRVs. Below the maximum of the house. |
 | Reference room | – | Only this room decides when the source runs; the others only open or close their valves. |
 
 Details: [chapter 8](08-heat-source-and-energy.md).

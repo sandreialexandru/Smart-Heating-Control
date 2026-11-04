@@ -2996,7 +2996,6 @@ class SmartHeatingControlCard extends HTMLElement {
         <div class="quickset">
           ${this._btn(this._t("apply"), `data-action="quick-temp" data-room="${esc(a.room_id)}"`, {
             icon: "thermometer-check",
-            kind: "soft-accent",
           })}
           <label class="numfield"><input type="number" step="0.5" min="${
             num(a.min_temperature) ?? (fahrenheit ? 41 : 5)
@@ -4287,10 +4286,10 @@ const STYLE = `
   .chev.open { transform: rotate(45deg); }
   .toggle.sm { font-size: 0.85em; margin-left: auto; }
   .quickset { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-  .quickset .btn { padding: 7px 12px; }
+  .quickset .btn { min-height: 36px; }
   .quickset .numfield { gap: 4px; white-space: nowrap; }
-  .quickset .numfield input { width: 4em; }
-  .quickset .numfield input[data-quick="hours"] { width: 4.6em; }
+  /* Room for "17.5", "100.5" (°F) or "auto" next to the arrows of the field. */
+  .quickset .numfield input { width: 5.8em; padding: 7px 8px; }
   .lockrow { display: flex; align-items: center; background: var(--ac-surface); border-radius: 10px; padding: 4px 10px; }
   .lockrow .toggle { width: 100%; justify-content: space-between; flex-direction: row-reverse; font-size: 0.9em; }
   .lockrow .toggle .knob { background: var(--ac-line); }

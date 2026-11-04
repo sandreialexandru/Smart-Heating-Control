@@ -63,6 +63,10 @@ GitHub releases.
   the first digit. Now the whole time can be typed; the bar follows at once,
   the rows are sorted again when the field is left, and Save right after
   typing still saves the new time.
+- 🐛 **Set for a while on a narrow card** ([#6](https://github.com/sandreialexandru/Smart-Heating-Control/issues/6)):
+  the temperature and duration fields cut their values (*17.* for 17.5,
+  *aut* for auto); they are now wide enough. The *Set* button looks like the
+  other buttons of the card.
 
 ### Development
 

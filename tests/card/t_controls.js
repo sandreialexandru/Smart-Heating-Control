@@ -82,3 +82,24 @@ test("mold badge on the open room shows the alert text", async (p) => {
   const t = await p.evaluate(() => { const i = card.shadowRoot.querySelector('.pill ha-icon[icon="mdi:water-alert-outline"]'); return i ? i.parentElement.title : null; });
   ok(t && t.includes("84"), "badge: " + t);
 });
+
+test("set for a while on a narrow card: the values fit their fields, Set is a plain button", async (p) => {
+  await p.evaluate(() => { document.getElementById("host").style.maxWidth = "300px"; });
+  await mount(p, {}, { rooms: R }); await click(p, '[data-key="quick-r1"]'); await p.waitForTimeout(100);
+  const r = await p.evaluate(() => {
+    const ctx = document.createElement("canvas").getContext("2d");
+    const room = (inp, text) => {
+      const cs = getComputedStyle(inp);
+      ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      // The arrows of a number field take about 18 px.
+      const free = inp.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 18;
+      return free - ctx.measureText(text).width;
+    };
+    const q = (k) => card.shadowRoot.querySelector(`input[data-quick="${k}"][data-room="r1"]`);
+    return { temp: room(q("temp"), "100.5"), hours: room(q("hours"), q("hours").placeholder),
+      btn: card.shadowRoot.querySelector('[data-action="quick-temp"]').className.trim() };
+  });
+  ok(r.temp >= 0, "temperature cut: " + r.temp);
+  ok(r.hours >= 0, "hours cut: " + r.hours);
+  eq(r.btn, "btn", "Set like the other buttons");
+});

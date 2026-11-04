@@ -323,8 +323,8 @@ schimbare, din aceeași simulare.
 
 ### Relee: pornirea și oprirea după inerție
 
-Pentru un releu, un termostat *Pornit / oprit (hvac mode)* sau TRV-uri cu
-forțare (cererea lor de căldură după senzorul camerei) cu *Folosește inerția
+Pentru un releu, un termostat *Pornit / oprit (hvac mode)* sau TRV-uri încălzite
+după senzorul camerei (cererea lor de căldură după senzorul camerei) cu *Folosește inerția
 învățată* pornit (implicit), în banda de histerezis:
 
 - cu încălzirea pornită: simularea rulează **fără încălzire** de acum (q de
@@ -602,7 +602,7 @@ temperatură* (*+0.050 °C/h*, *pentru fiecare °C mai frig afară*, sau *fără
 planificată, cu prognoza orară și soarele așteptat. Încălzirea pornește și se
 oprește cum o face dispozitivul (`band` din atributul `model`, °C sub și peste
 țintă): *cold* / *hot tolerance* ale Generic Thermostat, histerezisul pentru
-relee, control pornit / oprit, forțarea TRV și termostatele fără
+relee, control pornit / oprit, încălzirea după senzorul camerei și termostatele fără
 `hvac_action`, cu pornirea și oprirea după inerție din secțiunea 7 când
 `inertia_control` e pornit. Fără bandă când nu se cunoaște: termostatele și
 TRV-urile care se reglează singure și un Generic Thermostat ale cărui toleranțe

@@ -121,8 +121,8 @@ siguranță:
 - **temperatura maximă**: o temperatură setată peste maxim e coborâtă, iar o
   cameră cu releu sau comandată pornit / oprit e oprită cât e la maxim sau
   peste;
-- **forțarea TRV**: o forțare rămasă pe TRV-uri când începe pauza e adusă
-  înapoi la țintă o dată ([capitolul 3](03-camere.ro.md)).
+- **încălzirea după senzorul camerei**: o temperatură mai mare rămasă pe TRV-uri
+  când începe pauza e adusă înapoi la țintă o dată ([capitolul 3](03-camere.ro.md)).
 
 În card apare o bandă sus cât timp casa e în pauză. O modificare manuală făcută
 în pauză se păstrează și se aplică după pauză: una din card sau din serviciu se
@@ -161,8 +161,8 @@ Niciun nivel nu poate fi setat în integrare sub antiîngheț: câmpurile, cardu
 setat la 7 °C nu s-ar deschide. De aceea, într-o cameră cu TRV-uri și senzori
 de temperatură proprii, antiînghețul se decide după senzorul camerei: sub
 antiîngheț camera cere căldură (pornește sursa de căldură), iar TRV-urile
-primesc temperatura maximă a casei (sau temperatura de forțare a camerei, cu
-forțarea TRV), până când camera ajunge la antiîngheț + histerezis. Apoi primesc
+primesc temperatura maximă a casei (sau temperatura cât încălzește a camerei, cu
+*Încălzește după senzorul camerei*), până când camera ajunge la antiîngheț + histerezis. Apoi primesc
 iar temperatura de antiîngheț. Histerezisul e setarea camerei; când pașii de
 dinainte nu l-au cerut, pasul *Senzori: detalii* îl cere ca *Histerezis la
 antiîngheț*.

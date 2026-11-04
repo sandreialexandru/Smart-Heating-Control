@@ -109,7 +109,7 @@ Sub antet:
   se știe încă (atributul `temperature_trend` al senzorului *Decizie*);
 - lângă el **motivul** (în limba cardului), **timpul până la țintă** (de exemplu
   *~35 min*) sau, în timpul unei opriri anticipate, **temperatura estimată la
-  schimbare** (*~21.5° la 22:00*), modul oaspeți cât e pornit, **forțarea TRV** când e pornită pentru
+  schimbare** (*~21.5° la 22:00*), modul oaspeți cât e pornit, **După senzorul camerei** când e pornită pentru
   cameră și ce măsoară dispozitivul însuși (camerele cu TRV / dispozitive
   climate);
 - **Azi**: profilul zilei ca bară pe ziua programului (de la *Ziua programului începe la*
@@ -141,7 +141,7 @@ următoarele 12 ore și se deschide pe ultimele 24 de ore și următoarele 12:
   soare, inerție) simulat minut cu minut după ținta planificată, cu prognoza
   orară. Încălzirea pornește și se oprește cum o face dispozitivul: Generic
   Thermostat după *cold* și *hot tolerance*, releele, controlul pornit / oprit
-  și forțarea TRV după histerezis (și după inerția învățată, când e pornită),
+  și încălzirea după senzorul camerei după histerezis (și după inerția învățată, când e pornită),
   termostatele fără `hvac_action` după histerezis. Linia urcă și coboară în
   jurul țintei, cum face camera în realitate. Termostatele și TRV-urile
   comandate prin temperatură sau preset care raportează `hvac_action` se

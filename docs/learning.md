@@ -317,7 +317,7 @@ simulation.
 
 ### Relays: starting and stopping by the inertia
 
-For a relay, an *On / off (hvac mode)* thermostat or TRVs with the boost
+For a relay, an *On / off (hvac mode)* thermostat or TRVs heated by the room sensor
 (their heat demand from the room sensor) with *Use the learned inertia* on
 (the default), inside the hysteresis band:
 
@@ -594,7 +594,7 @@ hours (dotted): the model of section 2 simulated minute by minute along the
 planned target, with the hourly forecast and the expected sun. The heating is
 switched as the device does it (the `band` of the `model` attribute, °C below
 and above the target): the *cold* / *hot tolerance* of Generic Thermostat,
-the hysteresis for relays, on / off control, the TRV boost and thermostats
+the hysteresis for relays, on / off control, heating by the room sensor and thermostats
 without `hvac_action`, with the starting and stopping by the inertia of
 section 7 when `inertia_control` is on. No band when it is not known:
 thermostats and TRVs that regulate by themselves, and a Generic Thermostat

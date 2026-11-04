@@ -188,7 +188,7 @@ Regulile sunt evaluate de sus în jos; prima care se aplică decide:
 1. Siguranță (antiîngheț, temperatură maximă) – aplicată mereu, și unei
    modificări manuale și în pauză (un nivel peste maxim se trimite ca maxim);
    antiînghețul pornește singur sursa de căldură
-2. Pauză – se trimite doar siguranța (și forțarea TRV e adusă înapoi la țintă)
+2. Pauză – se trimite doar siguranța (și o temperatură mai mare lăsată de încălzirea după senzorul camerei e adusă înapoi la țintă)
 3. Mișcarea robinetelor – în orice mod, nu cu o fereastră deschisă
 4. Mod Oprit / Vară / în afara sezonului de încălzire
 5. Fereastră deschisă
@@ -415,7 +415,7 @@ type: custom:smart-heating-control-card
 Fiecare cameră arată și decizia, o flacără (conturată cât cere căldură, plină și pâlpâind cât
 încălzește; și la casă și la camerele pliate) / insignele pentru fereastră / modificare manuală, un arc cu temperatura camerei (gol la
 antiîngheț, plin la maxim; doar arată valoarea), o săgeată ↑ / ↓ în deschiderea lui cât camera se încălzește sau se răcește (`temperature_trend`: cel puțin 0,2 °C/h în ultimele 30 de minute) și ținta, motivul, timpul până
-la țintă, forțarea TRV când e pornită, ce măsoară dispozitivul însuși, profilul
+la țintă, încălzirea după senzorul camerei când e pornită, ce măsoară dispozitivul însuși, profilul
 zilei ca bară și un buton *Automat* (înapoi la automat) în rândul de butoane cât există o modificare manuală. Butoanele de sub arc deschid *Temporar* (setează
 temporar; o modificare manuală cu sfârșit arată cât mai are), *Program* (fiecare profil cu zilele lui și un comutator pornit /
 oprit; zilele se aleg în editor), *Grafic*, *Niveluri* (temperaturile nivelurilor) și *Detalii*, fiecare separat (mai

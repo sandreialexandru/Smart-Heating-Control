@@ -109,7 +109,7 @@ header:
   attribute of the *Decision* sensor);
 - next to it the **reason** (in the card language), the **time to target**
   (e.g. *~35 min*) or, during an optimal stop, the **expected temperature at
-  the change** (*~21.5° at 22:00*), guest mode while it is on, the **TRV boost** when it is on for the
+  the change** (*~21.5° at 22:00*), guest mode while it is on, **By the room sensor** when it is on for the
   room, and what the device itself measures (rooms with TRVs / climate
   devices);
 - **Today**: the profile of the day as a bar over the schedule day (from the
@@ -139,8 +139,8 @@ and opens on the last 24 hours and the next 12:
   learned model of the room (heating, weather curve, heat loss, sun, inertia)
   simulated minute by minute along the planned target, with the hourly
   forecast. The heating is switched as the device does it: Generic Thermostat
-  by its *cold* and *hot tolerance*, relays, on / off control and the TRV
-  boost by the hysteresis (and the learned inertia when it is on), thermostats
+  by its *cold* and *hot tolerance*, relays, on / off control and heating
+  by the room sensor by the hysteresis (and the learned inertia when it is on), thermostats
   without `hvac_action` by the hysteresis. So the line goes up and down around
   the target as the room really does. Thermostats and TRVs commanded by
   temperature or preset that report `hvac_action` regulate by themselves: for

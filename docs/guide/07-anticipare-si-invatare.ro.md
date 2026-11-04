@@ -140,7 +140,7 @@ implicită de 30 de minute, începe la **21:30**.
 
 Doar pentru camerele pe care integrarea le pornește și le oprește singură: un
 releu, un termostat comandat *Pornit / oprit (hvac mode)* sau TRV-uri cu
-forțare (mai jos). Histerezisul ține
+*Încălzește după senzorul camerei* (mai jos). Histerezisul ține
 camera într-o bandă, de exemplu 20,7 – 21,3 °C în jurul a 21 °C. Fără altceva,
 încălzirea se oprește la 21,3 °C, iar caloriferele, încă fierbinți, duc camera
 mai sus; pornește din nou la 20,7 °C, iar camera mai coboară până se încălzesc
@@ -184,12 +184,12 @@ caloriferele obișnuite, abaterea înjumătățită la încălzirea în pardosea
 Încălzirea a mers la fel de mult sau mai puțin (pardoseală: 52 – 55 % din timp
 → 43 – 45 %), pentru că nu mai merge căldură peste bandă.
 
-**TRV-uri cu forțare** (*Forțează temperatura TRV cât încălzește*): senzorul
+**TRV-uri încălzite după senzorul camerei** (*Încălzește după senzorul camerei*): senzorul
 camerei decide cererea de căldură cu histerezisul, ca la un releu, deci inerția
 învățată se aplică la fel. Într-o simulare cu TRV-uri care urmează după 3
 minute (în rest aceleași ipoteze ca mai sus):
 
-| Cameră (TRV cu forțare) | Distanța medie față de țintă, doar banda → cu inerția | Timp la peste 0,5 °C deasupra țintei | Porniri pe oră |
+| Cameră (încălzire după senzorul camerei) | Distanța medie față de țintă, doar banda → cu inerția | Timp la peste 0,5 °C deasupra țintei | Porniri pe oră |
 |---|---|---|---|
 | Calorifere, inerție 20 min | 0,28 → 0,23 – 0,25 °C | 5,3 – 6,7 % → 0 – 0,3 % | 0,40 → 0,45 |
 | Calorifere, inerție 30 min | 0,28 – 0,31 → 0,23 – 0,25 °C | 6,4 – 7,4 % → 0 – 0,1 % | 0,30 → 0,32 |
@@ -199,7 +199,7 @@ Timpul la peste 0,5 °C sub țintă a rămas cam la fel pentru calorifere
 (1,0 – 4,3 % → 0,7 – 3,0 %) și a crescut pentru fontă (3,4 – 6,3 % →
 7,3 – 8,0 %).
 
-Termostatele și TRV-urile comandate prin *Temperatură* fără forțare, precum și
+Termostatele și TRV-urile comandate prin *Temperatură* fără încălzirea după senzorul camerei, precum și
 Generic Thermostat, se reglează singure: integrarea nu le pornește și oprește,
 deci inerția învățată nu se aplică acolo.
 

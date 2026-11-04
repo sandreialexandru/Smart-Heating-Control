@@ -119,8 +119,8 @@ safety:
   is started for it, then stopped);
 - **maximum temperature**: a set temperature above the maximum is lowered, and a
   relay or on / off room is turned off while at the maximum or above;
-- **TRV boost**: a boost left on the TRVs when the pause starts is taken back to
-  the target once (see [chapter 3](03-rooms.md)).
+- **heating by the room sensor**: a higher temperature left on the TRVs when the
+  pause starts is taken back to the target once (see [chapter 3](03-rooms.md)).
 
 The card shows a band at the top while the house is paused. A manual change
 made in a pause is kept and applies after the pause: one from the card or a
@@ -161,8 +161,8 @@ the room: with the room at 5 °C and the TRV reading 8 °C (example values), a
 TRV set to 7 °C would not open. So in a TRV room with its own temperature
 sensors, frost protection is decided from the room sensor: below the frost
 protection the room asks for heat (the heat source starts) and the TRVs get the
-maximum temperature of the house (or the boost temperature of the room with the
-TRV boost), until the room reaches frost protection + hysteresis. Then they get
+maximum temperature of the house (or the temperature while heating of the room
+with *Heat by the room sensor*), until the room reaches frost protection + hysteresis. Then they get
 the frost protection temperature again. The hysteresis is the room setting; when
 the earlier steps did not ask for it, the *Sensors: details* step asks for it
 as *Frost protection hysteresis*.

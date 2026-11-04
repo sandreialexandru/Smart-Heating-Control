@@ -55,7 +55,7 @@ ale integrării ar comanda același dispozitiv).
 | **Un termostat sau releu pentru toată locuința, fără TRV-uri** (de exemplu un apartament cu Generic Thermostat pe centrală) | Generic Thermostat, Alt termostat pentru toată casa sau Comutator (releu) | – | – (nu se oferă cu Generic Thermostat sau releu) |
 | **TRV-uri pe calorifere, centrala are un releu în Home Assistant** | Fiecare cameră se încălzește separat | câte una pentru fiecare cameră cu TRV | **releul centralei** |
 | **TRV-uri pe calorifere, centrala e pornită de un termostat din Home Assistant** (Hive, Nest, Tado, Netatmo) | Fiecare cameră se încălzește separat | câte una pentru fiecare cameră cu TRV | **acel termostat**, cu *Pornește și oprește sursa prin temperatura ei* pornit |
-| **TRV-uri doar pe unele calorifere, un termostat pornește centrala** (de exemplu un termostat pe hol) | Fiecare cameră se încălzește separat | camerele cu TRV | **acel termostat**, cu *Boost* pornit și o *Temperatura sursei în repaus* (de exemplu 17,5 °C) pentru caloriferele fără TRV |
+| **TRV-uri doar pe unele calorifere, un termostat pornește centrala** (de exemplu un termostat pe hol) | Fiecare cameră se încălzește separat | camerele cu TRV | **acel termostat**, cu *Pornește și oprește sursa prin temperatura ei* pornit și o *Temperatura sursei în repaus* (de exemplu 17,5 °C) pentru caloriferele fără TRV |
 | **Radiatoare electrice, aer condiționat, pompă de căldură în fiecare cameră** | Fiecare cameră se încălzește separat | câte una pentru fiecare cameră, cu releul sau termostatul ei | – (fiecare cameră se încălzește singură) |
 | **Un singur radiator electric sau aer condiționat pentru toată locuința** | Comutator (releu) sau Alt termostat pentru toată casa | – | – |
 | **Un termostat sau un releu pe toată casa și TRV-uri în unele camere** | termostatul sau releul | camerele cu TRV | ⚠️ nu se poate: vezi mai jos |
@@ -80,7 +80,7 @@ calorifer fără TRV (de obicei în baie).
   de căldură* nici nu apare.
 - *O casă, un releu Shelly pe centrală, TRV-uri în toate camerele*: *Fiecare
   cameră se încălzește separat*; câte o cameră pentru fiecare cameră cu TRV
-  (*Alte termostate / TRV-uri*, cu forțarea TRV când camera are senzorul ei);
+  (*Alte termostate / TRV-uri*, cu *Încălzește după senzorul camerei* când camera are senzorul ei);
   *Sursa de căldură* = releul Shelly.
 - *O casă, un Hive pe hol legat la centrală, TRV-uri în trei camere*: *Fiecare
   cameră se încălzește separat*; trei camere cu TRV; *Sursa de căldură* = Hive,

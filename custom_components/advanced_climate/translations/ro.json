@@ -464,7 +464,7 @@
             "climates": "Termostate",
             "switches": "Comutatoare (relee)",
             "command_mode": "Comandă",
-            "trv_boost": "Forțează temperatura TRV cât încălzește",
+            "trv_boost": "Încălzește după senzorul camerei",
             "use_house_source": "Se încălzește de la sursa de căldură a casei"
           },
           "data_description": {
@@ -704,17 +704,17 @@
           }
         },
         "control_boost": {
-          "title": "Forțarea TRV",
-          "description": "Cât camera cere căldură, TRV-urile primesc temperatura de forțare, în rest ținta. Camera cere căldură de la ținta minus histerezisul până la ținta plus histerezisul, măsurat de senzorul camerei.",
+          "title": "Încălzire după senzorul camerei",
+          "description": "Cât camera cere căldură, TRV-urile primesc temperatura cât încălzește, în rest ținta. Camera cere căldură de la ținta minus histerezisul până la ținta plus histerezisul, măsurat de senzorul camerei.",
           "data": {
-            "trv_boost_temperature": "Temperatura de forțare",
+            "trv_boost_temperature": "Temperatura cât încălzește",
             "hysteresis": "Histerezis",
             "inertia_control": "Folosește inerția învățată"
           },
           "data_description": {
             "trv_boost_temperature": "Trimisă TRV-urilor cât camera cere căldură, niciodată sub țintă și niciodată peste temperatura maximă a casei sau a TRV-urilor. Gol = temperatura maximă a casei.",
             "hysteresis": "Camera cere căldură sub ținta minus această valoare și se oprește peste ținta plus această valoare, măsurat de senzorul camerei.",
-            "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, forțarea se termină puțin mai devreme când căldura deja dată ar duce singură camera până la limita de sus a histerezisului și începe puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Banda rămâne limita. Oprit: decide doar histerezisul."
+            "inertia_control": "După ce camera a învățat cât de încet reacționează încălzirea, încălzirea se termină puțin mai devreme când căldura deja dată ar duce singură camera până la limita de sus a histerezisului și începe puțin mai devreme când camera ar coborî la limita de jos înainte să ajungă căldura. Banda rămâne limita. Oprit: decide doar histerezisul."
           }
         }
       },
@@ -732,8 +732,8 @@
         "entity_is_gt_heater": "{entity} e releul unui Generic Thermostat folosit de {owner}. Nu poate fi comandat și aici.",
         "room_sensor_is_outdoor": "{entity} e senzorul exterior al casei {owner}. Alege un senzor din cameră.",
         "humidity_sensor_is_outdoor": "{entity} e pe dispozitivul senzorului exterior sau al entității meteo a casei {owner}: măsoară afară. Alege un senzor de umiditate din cameră.",
-        "boost_sensor_required": "Forțarea TRV are nevoie de un senzor de temperatură al camerei.",
-        "boost_temperature_only": "Forțarea TRV merge doar cu comanda Temperatură.",
+        "boost_sensor_required": "Încălzirea după senzorul camerei are nevoie de un senzor de temperatură al camerei.",
+        "boost_temperature_only": "Încălzirea după senzorul camerei merge doar cu comanda Temperatură.",
         "invalid_level_name": "Numele de nivel „{name}” nu poate fi folosit în program: folosește litere, cifre, spații, „_” sau „-” (fără „,” „:” „#”).",
         "level_name_is_key": "Numele „{name}” e numele intern al altui nivel în program (home, sleep, eco, away, comfort, activity, frost): alege altul."
       }

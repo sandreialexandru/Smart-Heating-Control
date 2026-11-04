@@ -34,7 +34,7 @@ heating are skipped.
 | **Thermostats** | The thermostats of the room (for Generic Thermostat and other thermostats / TRVs). Several thermostats in one room all get the same command, e.g. two TRVs on two radiators of the living room. |
 | **Switches (relays)** | The relays that heat the room (only for *Switch*). |
 | **Command** | Only for other thermostats / TRVs, see below. |
-| **Boost TRV temperature while heating** | Only for other thermostats / TRVs with the *Temperature* command (otherwise *The TRV boost works only with the Temperature command*), see step 3. |
+| **Heat by the room sensor** | Only for other thermostats / TRVs with the *Temperature* command (otherwise *Heating by the room sensor works only with the Temperature command*), see step 3. Not the same as *Heat by the room sensors* of the whole-house zone, which does the same for a thermostat that heats the whole home. |
 | **Heats from the heat source of the house** | Only when the house has a *Heat source* (on by default). On: the room's radiators are on the boiler; the room starts the boiler when it asks for heat and heats only while the boiler runs. Off: the room has its own heat (electric heater, heat pump, air conditioner); it does not start the boiler, does not count for *Rooms needed*, cannot be the *Reference room* and heats while its own device runs. |
 
 At least one device must be picked (otherwise *Select at least one device*).
@@ -87,41 +87,42 @@ or is unavailable during the setup; otherwise this page is skipped.
 | --- | --- | --- |
 | Hysteresis | 0.3 °C | Only when the thermostat does not report when it heats (`hvac_action`) or is unavailable during the setup. It then counts as heating from hysteresis below its set temperature to hysteresis above it, like a relay. Used for the heat demand, the boiler, the heating time, the learning and as the tolerance of the optimal stop. |
 
-### *Temperature* with boost: **TRV boost**
+### *Temperature* by the room sensor: **Heating by the room sensor**
 
-With the boost the *Thermostat* page is not shown: the optimal stop tolerance
+With this option the *Thermostat* page is not shown: the optimal stop tolerance
 is not used, the hysteresis takes its place.
 
 A TRV measures the temperature next to the radiator, which is warmer than the
-room, so it may close before the room is warm. With *Boost TRV temperature while
-heating* the room sensor decides instead, and the TRV is kept open while the room
+room, so it may close before the room is warm. With *Heat by the room sensor* the
+room sensor decides instead, and the TRV is kept open while the room
 needs heat:
 
 - the room **asks for heat** at target − hysteresis and stops at target +
   hysteresis, measured by the **room temperature sensors** (required, see step 5);
-- while it asks for heat, the TRVs get the **Boost temperature**; the rest of
+- while it asks for heat, the TRVs get the **Temperature while heating**; the rest of
   the time they get the **target**, so the TRV closes by itself and keeps the
   room even when Home Assistant is down.
 
 | Field | Default | What it does |
 | --- | --- | --- |
-| Boost temperature | empty = the maximum temperature of the house | Sent to the TRVs while the room asks for heat. Between the frost protection and the maximum of the house; never below the target and never above the maximum of the TRVs. |
+| Temperature while heating | empty = the maximum temperature of the house | Sent to the TRVs while the room asks for heat. Between the frost protection and the maximum of the house; never below the target and never above the maximum of the TRVs. |
 | Hysteresis | 0.3 °C (0.1 – 3) | The band of the heat demand, as for relays. |
-| Use the learned inertia | on | As for relays: once learned, the boost ends a little early when the heat already given would take the room to the top of the band, and starts a little early when the room would fall to its bottom first. |
+| Use the learned inertia | on | As for relays: once learned, the heating ends a little early when the heat already given would take the room to the top of the band, and starts a little early when the room would fall to its bottom first. |
 
 **Example** (the values chosen in the form): target 20 °C, hysteresis 0.2 °C,
-maximum of the house 25 °C, boost temperature empty. At 20 − 0.2 = 19.8 °C in
+maximum of the house 25 °C, temperature while heating empty. At 20 − 0.2 = 19.8 °C in
 the room the TRVs get 25 °C; at 20 + 0.2 = 20.2 °C they get 20 °C again. Between
 19.8 and 20.2 °C it stays as it was, or, with the learned inertia, ends or
 starts early by what the room learned.
 
-The boost applies to every heat demand, also to frost protection. Without the
-boost, a TRV room with temperature sensors is boosted for frost protection only
+It applies to every heat demand, also to frost protection. Without this
+option, a TRV room with temperature sensors gets the higher temperature for frost protection only
 (see [chapter 9](09-windows-manual-safety.md#frost-protection)). With the
 valve exercise, a window open with *Turn off*, or mode Off with devices that
-turn off, there is no boost. In a **pause** nothing is sent, except that a boost
-left on the TRVs is taken back to the target once, so no TRV stays boosted while
-nothing regulates it. The card shows it in *Details* as *TRV boost*.
+turn off, there is no higher temperature. In a **pause** nothing is sent, except
+that a higher temperature left on the TRVs is taken back to the target once, so
+no TRV stays high while nothing regulates it. The card shows it in *Details* as
+*By the room sensor*.
 
 ### Generic Thermostat
 
@@ -174,7 +175,7 @@ roles stay the same: "Work" is still the `home` level.
 
 | Field | What to do |
 | --- | --- |
-| **Temperature sensors** | Not shown with Generic Thermostat: GT keeps the temperature by the sensor of its own configuration, and the integration uses that one too (another sensor is changed in the GT settings). Sensors in the room, used instead of the thermostat sensor (more accurate when the thermostat sits next to the radiator). Empty = the thermostat sensor. **Required for relays**, which have no sensor (otherwise *Relays need a temperature sensor of the room*), and for the TRV boost (otherwise *The TRV boost needs a temperature sensor of the room*). The outdoor sensor of a house is refused. A sensor that reports no unit is read in the unit of the house. |
+| **Temperature sensors** | Not shown with Generic Thermostat: GT keeps the temperature by the sensor of its own configuration, and the integration uses that one too (another sensor is changed in the GT settings). Sensors in the room, used instead of the thermostat sensor (more accurate when the thermostat sits next to the radiator). Empty = the thermostat sensor. **Required for relays**, which have no sensor (otherwise *Relays need a temperature sensor of the room*), and for heating by the room sensor (otherwise *Heating by the room sensor needs a temperature sensor of the room*). The outdoor sensor of a house is refused. A sensor that reports no unit is read in the unit of the house. |
 | **TRV calibration** | Only for TRVs and only with a room sensor. *Offset*: corrects the TRV sensor. *External temperature input*: writes the room temperature into the TRV (if it has that input). *Off* otherwise. |
 | **Occupancy sensors** | Motion / presence sensors of the room: when the room is empty for a while it goes to `eco` even if someone is home. Empty for rooms that should only follow the schedule. |
 | **Humidity sensor** | Only for the **mold risk alert**: the humidity of the room, with the outdoor temperature of the house, gives the humidity at the coldest wall (see [chapter 9](09-windows-manual-safety.md#mold-risk)). Without it, or without an outdoor temperature (sensor or weather entity), no mold alert is sent. Also shown with Generic Thermostat. A humidity sensor that measures outdoors is refused: one of the device of the weather entity, or of the device of the outdoor sensor when that device has no other temperature sensor (an outdoor sensor; a gateway with indoor sensors too is accepted). |
@@ -248,7 +249,7 @@ With optimal start or stop on, **Optimal start / stop** appears:
 | --- | --- | --- |
 | Maximum early start | 120 min (10 – 1440, i.e. up to 24 h) | The optimal start never begins earlier than this. |
 | Maximum early stop | 30 min (5 – 1440, i.e. up to 24 h) | The optimal stop never begins earlier than this. Until the cooling is learned, the lower level starts exactly this early. |
-| Optimal stop tolerance | 0 (0 – 2 °C) | Only for thermostats that report `hvac_action`, are not Generic Thermostat and do not use the TRV boost: how far below the current level the room may fall before the change. 0 = the room must not fall below the level, so it stops early only when warmer than the level. |
+| Optimal stop tolerance | 0 (0 – 2 °C) | Only for thermostats that report `hvac_action`, are not Generic Thermostat and do not use heating by the room sensor: how far below the current level the room may fall before the change. 0 = the room must not fall below the level, so it stops early only when warmer than the level. |
 
 Details: [chapter 4](04-schedule.md) and
 [chapter 7](07-optimal-start-stop-and-learning.md).

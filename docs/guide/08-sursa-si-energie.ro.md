@@ -27,7 +27,7 @@ căldură (după propriul senzor). O cameră cu TRV care are nevoie de căldură
 acel senzor e cald rămâne rece: integrarea nu poate porni centrala pentru ea.
 Soluția: releul centralei ca *Sursă de căldură* în loc de pe toată casa (cu un
 termostat care pornește și el centrala, un releu legat în paralel cu el), sau
-termostatul folosit ca *Sursă de căldură* (cu boost) în loc de pe toată casa.
+termostatul folosit ca *Sursă de căldură* (cu *Pornește și oprește sursa prin temperatura ei*) în loc de pe toată casa.
 
 ## Cum comandă integrarea sursa de căldură
 
@@ -46,7 +46,7 @@ ei** (pornit implicit) rămâne pe încălzire și primește:
   între timp după senzorul lui, dar protejează casa la îngheț dacă Home
   Assistant se oprește.
 
-**Temperatura sursei în repaus** (opțională, doar cu boost): o valoare mai mare,
+**Temperatura sursei în repaus** (opțională, doar cu *Pornește și oprește sursa prin temperatura ei*): o valoare mai mare,
 de exemplu 17,5 °C, îl lasă pe termostat să țină zona lui la acea temperatură,
 după senzorul lui, cât nicio cameră nu cere căldură. Util când încălzește și
 calorifere **fără TRV** (un termostat pe hol, TRV-uri doar în unele camere):
@@ -55,7 +55,7 @@ căldură primește în continuare maximul. Trebuie să fie sub maximul casei. N
 ridicați pentru asta *Antiînghețul* casei: e și temperatura modului Oprit și a
 unei ferestre deschise, și cea mai mică valoare pe care o poate avea un nivel.
 
-O țintă pusă manual pe el e readusă. Fără boost, sau pentru un termostat fără
+O țintă pusă manual pe el e readusă. Fără *Pornește și oprește sursa prin temperatura ei*, sau pentru un termostat fără
 temperatură țintă, i se schimbă doar modul: `heat` (sau `auto`, dacă nu are
 `heat`) la pornire și `off` la oprire; atunci încălzește după ținta lui, care
 trebuie să fie peste senzorul lui.

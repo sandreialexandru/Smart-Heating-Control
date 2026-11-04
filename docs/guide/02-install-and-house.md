@@ -55,7 +55,7 @@ would otherwise command the same device).
 | **One thermostat or relay for the whole home, no TRVs** (e.g. a flat with a Generic Thermostat on the boiler) | Generic Thermostat, Another thermostat for the whole home or Switch (relay) | – | – (not offered with Generic Thermostat or a relay) |
 | **TRVs on the radiators, the boiler has a relay in Home Assistant** | Each room heats separately | one per room with TRVs | **the boiler relay** |
 | **TRVs on the radiators, the boiler is started by a thermostat in Home Assistant** (Hive, Nest, Tado, Netatmo) | Each room heats separately | one per room with TRVs | **that thermostat**, with *Start and stop the source by its temperature* on |
-| **TRVs on only some radiators, a thermostat starts the boiler** (e.g. a hallway thermostat) | Each room heats separately | the rooms with TRVs | **that thermostat**, with *Boost* on and a *Heat source idle temperature* (e.g. 17.5 °C) for the radiators without TRVs |
+| **TRVs on only some radiators, a thermostat starts the boiler** (e.g. a hallway thermostat) | Each room heats separately | the rooms with TRVs | **that thermostat**, with *Start and stop the source by its temperature* on and a *Heat source idle temperature* (e.g. 17.5 °C) for the radiators without TRVs |
 | **Electric heaters, air conditioners, a heat pump per room** | Each room heats separately | one per room, with its relay or thermostat | – (each room heats by itself) |
 | **A single electric heater or air conditioner for the whole home** | Switch (relay) or Another thermostat for the whole home | – | – |
 | **A thermostat or relay on the whole house and TRVs in some rooms** | the thermostat or relay | the rooms with TRVs | ⚠️ none possible: see below |
@@ -80,7 +80,7 @@ one radiator without a TRV (often in the bathroom).
   is not even offered.
 - *A house, a Shelly relay on the boiler, TRVs in every room*: *Each room
   heats separately*; one room per TRV room (*Other thermostats / TRVs*, with
-  the TRV boost when the room has its own sensor); *Heat source* = the Shelly
+  *Heat by the room sensor* when the room has its own sensor); *Heat source* = the Shelly
   relay.
 - *A house, a Hive in the hallway wired to the boiler, TRVs in three rooms*:
   *Each room heats separately*; three TRV rooms; *Heat source* = the Hive,

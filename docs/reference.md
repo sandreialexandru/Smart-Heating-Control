@@ -176,7 +176,7 @@ Rules are evaluated from the top; the first one that applies wins:
 1. Safety (frost protection, maximum temperature) – always applied, also to a
    manual change and in pause (a level above the maximum is sent as the
    maximum); frost protection starts the heat source on its own
-2. Pause – only safety is sent (and a TRV boost is taken back to the target)
+2. Pause – only safety is sent (and a higher temperature left by heating by the room sensor is taken back to the target)
 3. Valve exercise – in every mode, not with a window open
 4. Mode Off / Summer / outside the heating season
 5. Window open
@@ -393,7 +393,7 @@ type: custom:smart-heating-control-card
 Every room also shows its decision, a flame (outlined while it asks for heat, full and flickering
 while it heats; also on the house and on folded rooms) / window / manual change badges, an arc with the room temperature (empty at the frost protection, full at
 the maximum; it only shows the value), an arrow ↑ / ↓ in its opening while the room warms or cools (`temperature_trend`: at least 0.2 °C/h over the last 30 minutes) and the target, the reason, the time to
-target, the TRV boost when it is on, what the device itself measures, today's
+target, heating by the room sensor when it is on, what the device itself measures, today's
 profile as a bar, and an *Automatic* button (back to automatic) in the row of buttons while there is a manual change. Buttons under the arc open *For a while* (set for
 a while; a manual change with an end shows the time it has left), *Schedule* (each profile with its days and an on / off switch; its
 days are chosen in the editor), *Chart*, *Levels* (level temperatures) and *Details*, each on its own (several

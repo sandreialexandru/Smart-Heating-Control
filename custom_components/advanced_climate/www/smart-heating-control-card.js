@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.2b6";
+const CARD_VERSION = "2.6.2b7";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -204,7 +204,7 @@ const TEXT = {
     level_temps_gt: "Preset temperatures (set in Generic Thermostat)",
     from_device: "thermostat",
     device_preset: "Thermostat preset now",
-    trv_boost: "TRV boost",
+    trv_boost: "By the room sensor",
     trv_boost_on: "on • {temp}",
     trv_boost_off: "{temp} while heating",
     no_preset: "none (manual temperature)",
@@ -291,7 +291,7 @@ const TEXT = {
     legend_forecast: "forecast",
     est_mark_start: "start ~{time}",
     est_mark_stop: "stop ~{time}",
-    paused_banner: "Pause: only frost protection, the maximum temperature and taking a TRV boost back to the target are sent",
+    paused_banner: "Pause: only frost protection, the maximum temperature and putting the TRVs back on the target are sent",
     learn_heat: "Heating",
     learn_heat_sub: "now",
     learn_inertia: "Inertia",
@@ -389,8 +389,8 @@ const TEXT = {
     asks_heat: "Asks for heat",
     auto_short: "Automatic",
     device_temp: "Device {temp}",
-    trv_boost_chip: "TRV boost · {temp}",
-    trv_boost_chip_off: "TRV boost {temp} while heating",
+    trv_boost_chip: "Heating by sensor · {temp}",
+    trv_boost_chip_off: "By sensor: {temp} while heating",
   },
   ro: {
     title: "Încălzire",
@@ -489,7 +489,7 @@ const TEXT = {
     level_temps_gt: "Temperaturile preseturilor (setate în Generic Thermostat)",
     from_device: "din termostat",
     device_preset: "Preset în termostat acum",
-    trv_boost: "Forțare TRV",
+    trv_boost: "După senzorul camerei",
     trv_boost_on: "activă • {temp}",
     trv_boost_off: "{temp} cât încălzește",
     no_preset: "niciunul (temperatură manuală)",
@@ -576,7 +576,7 @@ const TEXT = {
     legend_forecast: "prognoză",
     est_mark_start: "pornire ~{time}",
     est_mark_stop: "oprire ~{time}",
-    paused_banner: "Pauză: se trimit doar antiînghețul, temperatura maximă și readucerea forțării TRV la țintă",
+    paused_banner: "Pauză: se trimit doar antiînghețul, temperatura maximă și readucerea TRV-urilor la țintă",
     learn_heat: "Încălzire",
     learn_heat_sub: "acum",
     learn_inertia: "Inerție",
@@ -674,8 +674,8 @@ const TEXT = {
     asks_heat: "Cere căldură",
     auto_short: "Automat",
     device_temp: "Dispozitiv {temp}",
-    trv_boost_chip: "Forțare TRV · {temp}",
-    trv_boost_chip_off: "Forțare TRV {temp} cât încălzește",
+    trv_boost_chip: "Încălzire după senzor · {temp}",
+    trv_boost_chip_off: "După senzor: {temp} cât încălzește",
   },
 };
 

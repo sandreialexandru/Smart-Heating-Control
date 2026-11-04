@@ -34,7 +34,7 @@ de încălzire sunt săriți.
 | **Termostate** | Termostatele camerei (pentru Generic Thermostat și pentru alte termostate / TRV-uri). Mai multe termostate în aceeași cameră primesc toate aceeași comandă, de exemplu două TRV-uri pe două calorifere din sufragerie. |
 | **Comutatoare (relee)** | Releele care încălzesc camera (doar pentru *Comutator*). |
 | **Comandă** | Doar pentru alte termostate / TRV-uri, mai jos. |
-| **Forțează temperatura TRV cât încălzește** | Doar pentru alte termostate / TRV-uri cu comanda *Temperatură* (altfel apare *Forțarea TRV merge doar cu comanda Temperatură*), detalii la pasul 3. |
+| **Încălzește după senzorul camerei** | Doar pentru alte termostate / TRV-uri cu comanda *Temperatură* (altfel apare *Încălzirea după senzorul camerei merge doar cu comanda Temperatură*), detalii la pasul 3. Nu e același lucru cu *Încălzește după senzorii camerelor* de la zona pentru toată casa, care face același lucru pentru un termostat ce încălzește toată casa. |
 | **Se încălzește de la sursa de căldură a casei** | Doar când casa are o *Sursă de căldură* (implicit pornit). Pornit: caloriferele camerei sunt pe centrală; camera pornește centrala când cere căldură și încălzește doar cât merge centrala. Oprit: camera are încălzirea ei (radiator electric, pompă de căldură, aer condiționat); nu pornește centrala, nu contează la *Camere necesare*, nu poate fi *Cameră de referință* și încălzește cât merge propriul dispozitiv. |
 
 Trebuie ales cel puțin un dispozitiv (altfel apare *Alege cel puțin un
@@ -88,43 +88,43 @@ indisponibil la configurare; altfel pagina se sare.
 | --- | --- | --- |
 | Histerezis | 0,3 °C | Apare doar dacă termostatul nu raportează când încălzește (`hvac_action`) sau e indisponibil la configurare. Atunci se consideră că încălzește de la histerezis sub temperatura setată până la histerezis peste ea, ca un releu. Se folosește pentru cererea de căldură, centrală, timpul de încălzire, învățare și ca toleranță a opririi anticipate. |
 
-### *Temperatură* cu forțare: **Forțarea TRV**
+### *Temperatură* după senzorul camerei: **Încălzire după senzorul camerei**
 
-Cu forțarea, pagina *Termostat* nu mai apare: toleranța opririi anticipate nu
+Cu această opțiune, pagina *Termostat* nu mai apare: toleranța opririi anticipate nu
 se folosește, histerezisul îi ține locul.
 
 Un TRV măsoară temperatura lângă calorifer, unde e mai cald decât în cameră, așa
-că se poate închide înainte să se încălzească camera. Cu *Forțează temperatura
-TRV cât încălzește* decide senzorul camerei, iar TRV-ul e ținut deschis cât
+că se poate închide înainte să se încălzească camera. Cu *Încălzește după senzorul
+camerei* decide senzorul camerei, iar TRV-ul e ținut deschis cât
 camera are nevoie de căldură:
 
 - camera **cere căldură** de la ținta − histerezis și se oprește la ținta +
   histerezis, măsurat de **senzorii de temperatură ai camerei** (obligatorii,
   pasul 5);
-- cât cere căldură, TRV-urile primesc **Temperatura de forțare**; în rest
+- cât cere căldură, TRV-urile primesc **Temperatura cât încălzește**; în rest
   primesc **ținta**, așa că TRV-ul se închide singur și ține camera și când Home
   Assistant e oprit.
 
 | Câmp | Implicit | Ce face |
 | --- | --- | --- |
-| Temperatura de forțare | gol = temperatura maximă a casei | Trimisă TRV-urilor cât camera cere căldură. Între antiîngheț și maximul casei; niciodată sub țintă și niciodată peste maximul TRV-urilor. |
+| Temperatura cât încălzește | gol = temperatura maximă a casei | Trimisă TRV-urilor cât camera cere căldură. Între antiîngheț și maximul casei; niciodată sub țintă și niciodată peste maximul TRV-urilor. |
 | Histerezis | 0,3 °C (0,1 – 3) | Banda cererii de căldură, ca la relee. |
-| Folosește inerția învățată | pornit | Ca la relee: după ce s-a învățat, forțarea se termină puțin mai devreme când căldura deja dată ar duce camera la limita de sus a benzii și începe puțin mai devreme când camera ar coborî întâi la limita de jos. |
+| Folosește inerția învățată | pornit | Ca la relee: după ce s-a învățat, încălzirea se termină puțin mai devreme când căldura deja dată ar duce camera la limita de sus a benzii și începe puțin mai devreme când camera ar coborî întâi la limita de jos. |
 
 **Exemplu** (valorile alese în formular): ținta 20 °C, histerezis 0,2 °C,
-maximul casei 25 °C, temperatura de forțare goală. La 20 − 0,2 = 19,8 °C în
+maximul casei 25 °C, temperatura cât încălzește goală. La 20 − 0,2 = 19,8 °C în
 cameră, TRV-urile primesc 25 °C; la 20 + 0,2 = 20,2 °C primesc iar 20 °C. Între
 19,8 și 20,2 °C rămâne cum era sau, cu inerția învățată, se termină ori începe
 mai devreme, după ce a învățat camera.
 
-Forțarea se aplică la orice cerere de căldură, și la antiîngheț. Fără forțare,
-o cameră cu TRV-uri și senzori de temperatură e forțată doar pentru antiîngheț
+Se aplică la orice cerere de căldură, și la antiîngheț. Fără această opțiune,
+o cameră cu TRV-uri și senzori de temperatură primește temperatura mai mare doar pentru antiîngheț
 ([capitolul 9](09-ferestre-manual-siguranta.ro.md#antiînghețul)). La mișcarea
 robinetelor, cu o fereastră deschisă și acțiunea *Oprire* sau în modul Oprit
-cu dispozitive care se pot opri, nu există forțare. În **pauză** nu se trimite
-nimic, doar că o forțare rămasă pe TRV-uri e adusă înapoi la țintă o dată, ca
-niciun TRV să nu rămână forțat cât nu-l reglează nimic. Cardul o arată în
-*Detalii* ca *Forțare TRV*.
+cu dispozitive care se pot opri, nu se trimite temperatura mai mare. În **pauză**
+nu se trimite nimic, doar că o temperatură mai mare rămasă pe TRV-uri e adusă
+înapoi la țintă o dată, ca niciun TRV să nu rămână sus cât nu-l reglează nimic.
+Cardul o arată în *Detalii* ca *După senzorul camerei*.
 
 ### Generic Thermostat
 
@@ -178,7 +178,7 @@ rămân aceleași: „Lucru” e tot nivelul `home`.
 
 | Câmp | Ce se completează |
 | --- | --- |
-| **Senzori de temperatură** | Nu apare la Generic Thermostat: GT-ul ține temperatura după senzorul din propria configurare, iar integrarea îl folosește tot pe acela (alt senzor se schimbă în setările GT-ului). Senzorii din cameră, folosiți în locul senzorului termostatului (mai exacți când termostatul stă lângă calorifer). Gol = senzorul termostatului. **Obligatorii pentru relee**, care nu au senzor (altfel apare *Releele au nevoie de un senzor de temperatură al camerei*), și pentru forțarea TRV (altfel apare *Forțarea TRV are nevoie de un senzor de temperatură al camerei*). Senzorul exterior al unei case e refuzat. Un senzor care nu raportează unitatea e citit în unitatea casei. |
+| **Senzori de temperatură** | Nu apare la Generic Thermostat: GT-ul ține temperatura după senzorul din propria configurare, iar integrarea îl folosește tot pe acela (alt senzor se schimbă în setările GT-ului). Senzorii din cameră, folosiți în locul senzorului termostatului (mai exacți când termostatul stă lângă calorifer). Gol = senzorul termostatului. **Obligatorii pentru relee**, care nu au senzor (altfel apare *Releele au nevoie de un senzor de temperatură al camerei*), și pentru încălzirea după senzorul camerei (altfel apare *Încălzirea după senzorul camerei are nevoie de un senzor de temperatură al camerei*). Senzorul exterior al unei case e refuzat. Un senzor care nu raportează unitatea e citit în unitatea casei. |
 | **Calibrare TRV** | Doar pentru TRV-uri și doar cu un senzor de cameră. *Offset*: corectează senzorul TRV-ului. *Temperatură externă*: scrie temperatura camerei în TRV (dacă TRV-ul are această intrare). *Oprit* altfel. |
 | **Senzori de ocupare** | Senzori de mișcare / prezență ai camerei: dacă camera e goală un timp, trece pe `eco` chiar dacă e cineva acasă. Gol pentru camerele care urmează doar programul. |
 | **Senzor de umiditate** | Doar pentru **alerta de risc de mucegai**: umiditatea camerei, cu temperatura de afară a casei, dă umiditatea la peretele cel mai rece ([capitolul 9](09-ferestre-manual-siguranta.ro.md#riscul-de-mucegai)). Fără el sau fără o temperatură de afară (senzor sau entitate meteo) nu se trimite nicio alertă de mucegai. Apare și la Generic Thermostat. Un senzor de umiditate care măsoară afară e refuzat: unul de pe dispozitivul entității meteo sau de pe dispozitivul senzorului exterior când acel dispozitiv nu are alt senzor de temperatură (un senzor de exterior; un gateway care are și senzori de interior e acceptat). |
@@ -254,7 +254,7 @@ anticipată**:
 | --- | --- | --- |
 | Anticipare maximă | 120 min (10 – 1440, adică până la 24 h) | Pornirea anticipată nu începe niciodată mai devreme de atât. |
 | Oprire anticipată maximă | 30 min (5 – 1440, adică până la 24 h) | Oprirea anticipată nu începe niciodată mai devreme de atât. Până se învață răcirea, nivelul mai jos începe exact atât de devreme. |
-| Toleranța opririi anticipate | 0 (0 – 2 °C) | Doar pentru termostatele care raportează `hvac_action`, nu sunt Generic Thermostat și nu folosesc forțarea TRV: cât poate coborî camera sub nivelul curent înainte de schimbare. 0 = camera nu are voie să scadă sub nivel, deci se oprește mai devreme doar când e mai caldă decât nivelul. |
+| Toleranța opririi anticipate | 0 (0 – 2 °C) | Doar pentru termostatele care raportează `hvac_action`, nu sunt Generic Thermostat și nu folosesc încălzirea după senzorul camerei: cât poate coborî camera sub nivelul curent înainte de schimbare. 0 = camera nu are voie să scadă sub nivel, deci se oprește mai devreme doar când e mai caldă decât nivelul. |
 
 Detalii: [capitolul 4](04-program.ro.md) și
 [capitolul 7](07-anticipare-si-invatare.ro.md).

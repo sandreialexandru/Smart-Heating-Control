@@ -36,13 +36,15 @@ GitHub releases.
   affected. The guide has a new section, *Which setup for my house?*, with
   every kind of home, and the configurator a new case for a thermostat that
   starts the boiler.
-- 🏷️ **Two options that were both called boost now have their own names.** For
-  the whole-house zone, *Boost TRV temperature while heating* is now **Heat by
-  the room sensors** (also for a thermostat, not only for TRVs), with its own
-  page *Heating by the room sensors*. For the heat source the new option is
-  **Start and stop the source by its temperature**. The explanation of each
-  says when to choose the other one. Only the labels and the explanations
-  change.
+- 🏷️ **No more options called boost.** For the whole-house zone, *Boost TRV
+  temperature while heating* is now **Heat by the room sensors** (also for a
+  thermostat, not only for TRVs), with its page *Heating by the room sensors*.
+  For a room it is now **Heat by the room sensor**, with its page *Heating by
+  the room sensor* (was *TRV boost*); *Boost temperature* is now **Temperature
+  while heating** in both. For the heat source the new option is **Start and
+  stop the source by its temperature**. The explanation of each says when to
+  choose the other one. The card shows *By the room sensor* instead of *TRV
+  boost*. Only the labels and the explanations change; the settings are kept.
 
 ### Card
 

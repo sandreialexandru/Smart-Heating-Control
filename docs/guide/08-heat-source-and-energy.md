@@ -27,7 +27,7 @@ for heat (after its own sensor). A TRV room that needs heat while that sensor is
 warm stays cold: the integration cannot start the boiler for it. The way out:
 the boiler relay as *Heat source* instead of on the whole house (with a
 thermostat that also starts the boiler, a relay wired in parallel with it), or
-the thermostat used as *Heat source* (with the boost) instead of on the whole
+the thermostat used as *Heat source* (with *Start and stop the source by its temperature*) instead of on the whole
 house.
 
 ## How the integration controls the heat source
@@ -47,7 +47,7 @@ temperature** (on by default) it stays in its heat mode and gets:
   frost protection it does not heat by its own sensor meanwhile, but still
   protects the house against frost if Home Assistant stops.
 
-**Heat source idle temperature** (optional, only with the boost): a higher value,
+**Heat source idle temperature** (optional, only with *Start and stop the source by its temperature*): a higher value,
 e.g. 17.5 °C, lets the thermostat keep its own area at that temperature by its
 own sensor while no room asks. Useful when it also heats radiators **without
 TRVs** (a hallway thermostat, TRVs only in some rooms): those rooms are then
@@ -56,7 +56,7 @@ It must be below the maximum of the house. Do not raise the house's *Frost
 protection* for this: it is also the temperature of Off mode and of an open
 window, and the lowest any level can go.
 
-A target set on it by hand is taken back. Without the boost, or for a
+A target set on it by hand is taken back. Without *Start and stop the source by its temperature*, or for a
 thermostat without a target temperature, only its mode is switched: `heat` (or
 `auto`, without `heat`) to start and `off` to stop; it then heats by its own
 target, which must be above its sensor.

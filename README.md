@@ -106,8 +106,10 @@ Requires Home Assistant **2026.6.0** or newer.
 <a href="https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/docs/configurator.html"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/configurator.png" alt="The configurator: every choice explained, with what it changes and an example" width="420" align="right"></a>
 
 **Not sure what to pick?** The [interactive configurator](https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/docs/configurator.html)
+starts with what heats your home and fills in the matching answers, then
 walks through every form, in English or Romanian, explains each choice with
-what it changes and an example, and ends with a summary of what to set.
+what it changes and an example, and ends with a summary of what to set and
+the problems it found (such as one device in two roles).
 Download the file and open it in a browser.
 
 <br clear="right">

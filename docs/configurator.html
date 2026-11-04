@@ -77,6 +77,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .chip.where { background: transparent; border: 1px solid var(--line); color: var(--muted); }
 .card h1 { font-size: clamp(1.5rem, 4.4vw, 2.1rem); }
 .intro { color: var(--muted); max-width: 66ch; }
+.why { color: var(--muted); max-width: 66ch; margin-top: -10px; }
+.why summary { cursor: pointer; color: var(--accent); font-weight: 500; width: fit-content; }
+.why p { margin: 6px 0 0; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+.prog .count-sm { display: none; }
+.seg:last-child { flex: 0 0 auto !important; min-width: 5.5em; }
+.box li { overflow-wrap: anywhere; }
 
 .fld { border-top: 1px solid var(--line); padding-top: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .fh { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
@@ -163,6 +170,10 @@ dd pre { margin: 0; white-space: pre-wrap; font-family: var(--font-mono); font-s
 
 @media (max-width: 560px) {
   .card { padding: 18px 16px; border-radius: 14px; }
+  .prog { flex-wrap: wrap; row-gap: 6px; }
+  .seg span { display: none; }
+  .seg:last-child { min-width: 1.5em; }
+  .prog .count-sm { display: block; flex-basis: 100%; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink); font-weight: 600; }
   .row { grid-template-columns: 1fr; }
   .btn { padding: 10px 16px; }
 }
@@ -204,6 +215,7 @@ const T = {
   nothingSet: L('Everything in this group stays on its default.', 'Tot ce e în acest grup rămâne pe valorile implicite.'),
   unitHouse: L('House unit', 'Unitatea casei'),
   locked: L('Not available yet', 'Indisponibil deocamdată'),
+  why: L('Why?', 'De ce?'), pickFirst: L('Pick an answer to go on.', 'Se alege un răspuns ca să se poată merge mai departe.'),
   cardTip: L('After that, add the card: Add card → Smart Heating Control. The integration registers it by itself.', 'Apoi se adaugă cardul: Adaugă card → Smart Heating Control. Integrarea îl înregistrează singură.')
 };
 
@@ -293,7 +305,45 @@ const boostTempHouse = Object.assign({}, boostTemp, {
 const sensorsReq = (d) => ents('temperature_sensors', L('Temperature sensors', 'Senzori de temperatură'), d, 'sensor.living_room_temperature', { req: true });
 
 /* ===== HOUSE STEPS ===== */
+// What a home type fills in. Rooms get it when they are created (and the
+// rooms already there when the type is picked).
+const TRV_ROOM = { source: 'climate', command_mode: 'temperature' };
+const HOME_TYPES = {
+  gt: { house: { source: 'generic_thermostat' } },
+  thermo: { house: { source: 'climate' } },
+  relay: { house: { source: 'switch' } },
+  trv_relay: { house: { source: 'none' }, opts: { boiler_case: 'trv_ha' }, room: TRV_ROOM },
+  trv_thermo: { house: { source: 'none' }, opts: { boiler_case: 'trv_thermo' }, room: TRV_ROOM },
+  trv_some: { house: { source: 'none' }, opts: { boiler_case: 'trv_thermo', boiler_idle_temp: 17.5 }, room: TRV_ROOM },
+  trv_ext: { house: { source: 'none' }, opts: { boiler_case: 'trv_ext' }, room: TRV_ROOM },
+  per_room: { house: { source: 'none' }, opts: { boiler_case: 'relay' } },
+  other: {}
+};
+function applyHomeType(v) {
+  const p = HOME_TYPES[v] || {};
+  Object.assign(S.a.house, p.house || {}); Object.assign(S.a.opts, p.opts || {});
+  if (p.room) S.rooms.forEach((r, i) => { if (!(i === 0 && (S.a.house.source || 'none') !== 'none')) Object.assign(r, p.room); });
+}
+function newRoom() { const p = HOME_TYPES[S.a.house.home_type] || {}; return Object.assign({}, p.room || {}); }
+
 const HOUSE = [
+  {
+    id: 'h_type', sec: 'house', guide: true, where: L('Only a question for you; nothing to set in Home Assistant', 'Doar o întrebare de ghidare; nu se setează nimic în Home Assistant'), title: L('Your home', 'Locuința'),
+    intro: L('Pick what is closest to your home. The guide then fills in the right answers on the next pages (what heats the whole house, the rooms, the heat source); you can still change each of them.', 'Se alege ce seamănă cel mai bine cu locuința. Ghidul completează apoi răspunsurile potrivite în paginile următoare (ce încălzește toată casa, camerele, sursa de căldură); fiecare se poate schimba în continuare.'),
+    fields: [
+      rad('home_type', L('What heats your home?', 'Ce încălzește locuința?'), L('One choice; the details come later.', 'O singură alegere; detaliile vin mai târziu.'), [
+        O('gt', L('A Generic Thermostat switches the boiler, no TRVs', 'Un Generic Thermostat comută centrala, fără TRV-uri'), L('Usually a flat: one thermostat for the whole home.', 'De obicei un apartament: un termostat pentru toată locuința.'), L('Heating of the whole house = Generic Thermostat. No rooms and no heat source are needed.', 'Încălzirea întregii case = Generic Thermostat. Nu sunt necesare camere și nici sursă de căldură.'), L('climate.living_room switches switch.boiler_relay.', 'climate.living_room comută switch.boiler_relay.')),
+        O('thermo', L('One smart thermostat for the whole home, no TRVs', 'Un termostat inteligent pentru toată locuința, fără TRV-uri'), L('Nest, Tado, Hive, Netatmo, a Zigbee thermostat.', 'Nest, Tado, Hive, Netatmo, un termostat Zigbee.'), L('Heating of the whole house = Another thermostat for the whole home. No rooms and no heat source are needed.', 'Încălzirea întregii case = Alt termostat pentru toată casa. Nu sunt necesare camere și nici sursă de căldură.'), L('A Tado in the living room.', 'Un Tado în sufragerie.')),
+        O('relay', L('One relay on the boiler, or a single heater for the whole home', 'Un releu pe centrală sau un singur radiator pentru toată locuința'), L('The integration switches it from a temperature sensor.', 'Integrarea îl comută după un senzor de temperatură.'), L('Heating of the whole house = Switch (relay), with a temperature sensor.', 'Încălzirea întregii case = Comutator (releu), cu un senzor de temperatură.'), L('A Shelly on the boiler and a sensor in the living room.', 'Un Shelly pe centrală și un senzor în sufragerie.')),
+        O('trv_relay', L('TRVs on the radiators, the boiler has a relay in Home Assistant', 'TRV-uri pe calorifere, centrala are un releu în Home Assistant'), L('A switch or input_boolean starts the boiler.', 'Un switch sau input_boolean pornește centrala.'), L('Each room heats separately; one room per room with TRVs; Heat source = the boiler relay.', 'Fiecare cameră se încălzește separat; câte o cameră pentru fiecare cameră cu TRV-uri; Sursa de căldură = releul centralei.'), L('TRVs in every room, switch.boiler_shelly.', 'TRV-uri în toate camerele, switch.boiler_shelly.')),
+        O('trv_thermo', L('TRVs on every radiator, a thermostat in Home Assistant starts the boiler', 'TRV-uri pe toate caloriferele, un termostat din Home Assistant pornește centrala'), L('Hive, Nest, Tado, Netatmo wired to the boiler.', 'Hive, Nest, Tado, Netatmo legat la centrală.'), L('Each room heats separately; one room per room with TRVs; Heat source = that thermostat, started and stopped by its temperature.', 'Fiecare cameră se încălzește separat; câte o cameră pentru fiecare cameră cu TRV-uri; Sursa de căldură = acel termostat, pornit și oprit prin temperatura lui.'), L('A Hive wired to the boiler, TRVs on all radiators.', 'Un Hive legat la centrală, TRV-uri pe toate caloriferele.')),
+        O('trv_some', L('TRVs on only some radiators, a thermostat in Home Assistant starts the boiler', 'TRV-uri doar pe unele calorifere, un termostat din Home Assistant pornește centrala'), L('The radiators without TRVs follow the thermostat.', 'Caloriferele fără TRV urmează termostatul.'), L('Like the choice above, plus a heat source idle temperature (17.5 °C here) that keeps the radiators without TRVs warm.', 'Ca varianta de mai sus, plus o temperatură a sursei în repaus (aici 17,5 °C) care ține caldă zona caloriferelor fără TRV.'), L('A Hive in the hallway, TRVs in three rooms.', 'Un Hive pe hol, TRV-uri în trei camere.')),
+        O('trv_ext', L('TRVs on the radiators, the boiler is started outside Home Assistant', 'TRV-uri pe calorifere, centrala e pornită din afara Home Assistant'), L('An old wall thermostat that Home Assistant cannot see.', 'Un termostat vechi de perete pe care Home Assistant nu îl vede.'), L('Each room heats separately; one room per room with TRVs; no heat source. It works, but the learning is not reliable: bringing the boiler into Home Assistant is better.', 'Fiecare cameră se încălzește separat; câte o cameră pentru fiecare cameră cu TRV-uri; fără sursă de căldură. Funcționează, dar învățarea nu e fiabilă: e mai bine ca centrala să fie adusă în Home Assistant.'), L('A wall thermostat in the hall drives the boiler.', 'Un termostat de perete din hol comandă centrala.')),
+        O('per_room', L('Electric heaters, air conditioners or a heat pump per room', 'Radiatoare electrice, aer condiționat sau pompă de căldură în fiecare cameră'), L('Every room heats by itself.', 'Fiecare cameră se încălzește singură.'), L('Each room heats separately; one room per room, with its relay or thermostat; no heat source.', 'Fiecare cameră se încălzește separat; câte o cameră pentru fiecare cameră, cu releul sau termostatul ei; fără sursă de căldură.'), L('Heaters on smart plugs, each with a sensor.', 'Radiatoare pe prize inteligente, fiecare cu un senzor.')),
+        O('other', L('Something else, I will choose myself', 'Altceva, aleg singur'), L('Nothing is filled in.', 'Nu se completează nimic.'), L('Every page asks without a suggestion.', 'Fiecare pagină întreabă fără sugestie.'), L('A thermostat on the whole house and TRVs in some rooms: see the guide, chapter 2, “Which setup for my house?”.', 'Un termostat pe toată casa și TRV-uri în unele camere: vezi ghidul, capitolul 2, „Ce configurare aleg pentru casa mea?”.'))
+      ], undefined, { helper: true, pick: true, apply: applyHomeType })
+    ]
+  },
   {
     id: 'h_house', sec: 'house', where: P_ADD, title: L('The house', 'Casa'),
     intro: L('The house is the main entry of the integration. It holds what every room shares: people, zones, the global mode, weather and the boiler.', 'Casa este intrarea principală a integrării. Conține ce au în comun toate camerele: persoane, zone, modul global, vremea și centrala.'),
@@ -317,14 +367,15 @@ const HOUSE = [
   },
   {
     id: 'h_heating', sec: 'house', where: P_ADD, title: L('Heating of the whole house', 'Încălzirea întregii case'),
-    intro: L('Pick what heats the whole house. It becomes the zone “Whole house”, which behaves like a room and uses every option. A flat with one thermostat needs nothing else. With TRVs, think first who starts the boiler: the integration then needs its own way to it (the boiler relay, or the thermostat that starts it, as “Heat source”), and a device used by the whole house or by a room cannot also be the heat source. TRVs on the radiators: pick “Each room heats separately” and add the rooms.', 'Se alege ce încălzește toată casa. Devine zona „Toată casa”, care se comportă ca o cameră și folosește toate opțiunile. Un apartament cu un singur termostat nu are nevoie de altceva. Cu TRV-uri, gândiți-vă întâi cine pornește centrala: integrarea are atunci nevoie de o cale proprie spre ea (releul centralei sau termostatul care o pornește, ca „Sursă de căldură”), iar un dispozitiv folosit de toată casa sau de o cameră nu poate fi și sursă. TRV-uri pe calorifere: alegeți „Fiecare cameră se încălzește separat” și adăugați camerele.'),
+    intro: L('Pick what heats the whole house. With TRVs on the radiators, pick “Each room heats separately” and add the rooms.', 'Se alege ce încălzește toată casa. Cu TRV-uri pe calorifere se alege „Fiecare cameră se încălzește separat” și se adaugă camerele.'),
+    why: L('The choice becomes the zone “Whole house”, which behaves like a room and uses every option; a flat with one thermostat needs nothing else. With TRVs, think first who starts the boiler: the integration needs its own way to it (the boiler relay, or the thermostat that starts it, as “Heat source”), and a device used by the whole house or by a room cannot also be the heat source (one device, one role).', 'Alegerea devine zona „Toată casa”, care se comportă ca o cameră și folosește toate opțiunile; un apartament cu un singur termostat nu are nevoie de altceva. Cu TRV-uri, gândiți-vă întâi cine pornește centrala: integrarea are nevoie de o cale proprie spre ea (releul centralei sau termostatul care o pornește, ca „Sursă de căldură”), iar un dispozitiv folosit de toată casa sau de o cameră nu poate fi și sursă (un dispozitiv, un singur rol).'),
     fields: [
       rad('source', L('Heated by', 'Încălzită prin'), L('The kind of device that heats the whole house. This choice decides which questions come next.', 'Tipul de dispozitiv care încălzește toată casa. Alegerea hotărăște ce întrebări urmează.'), [
         O('generic_thermostat', L('Generic Thermostat', 'Generic Thermostat'), L('A Generic Thermostat starts your boiler. The most common case.', 'Un Generic Thermostat pornește centrala. Cazul cel mai des întâlnit.'), L('The integration never changes how it works, it only selects its presets (home, sleep, eco, away…). Temperatures stay in the Generic Thermostat settings. No command settings are asked. Later, leave “Heat source” empty.', 'Integrarea nu schimbă niciodată cum funcționează, doar alege preset-urile (home, sleep, eco, away…). Temperaturile rămân în setările Generic Thermostat. Nu se cer setări de comandă. „Sursa de căldură” nu se oferă: GT-ul pornește deja centrala.'), L('climate.living_room is a Generic Thermostat switching switch.boiler_relay.', 'climate.living_room este un Generic Thermostat care comută switch.boiler_relay.')),
         O('climate', L('Another thermostat for the whole home', 'Alt termostat pentru toată casa'), L('One smart thermostat that is not a Generic Thermostat heats the whole home (Nest, Tado, Hive…).', 'Un singur termostat inteligent, care nu e Generic Thermostat, încălzește toată locuința (Nest, Tado, Hive…).'), L('You pick the thermostat(s) and how to command them (temperature, preset or on/off). The integration keeps the temperatures and unlocks heating by the room sensors, calibration and valve exercise. A thermostat here cannot also be the heat source: if rooms with TRVs are added later, they start the boiler only through a boiler relay picked as “Heat source”.', 'Se aleg termostatele și cum sunt comandate (temperatură, preset sau pornit/oprit). Integrarea ține temperaturile și deblochează încălzirea după senzorii camerelor, calibrarea și mișcarea robinetelor. Un termostat ales aici nu poate fi și sursă de căldură: dacă se adaugă apoi camere cu TRV, ele pornesc centrala doar printr-un releu al centralei ales ca „Sursă de căldură”.'), L('A Zigbee thermostat, Tado, Netatmo.', 'Un termostat Zigbee, Tado, Netatmo.')),
         O('switch', L('Switch (relay)', 'Comutator (releu)'), L('A relay turns the heating on directly.', 'Un releu pornește încălzirea direct.'), L('The integration switches the relay itself from a room temperature sensor (required), using hysteresis and minimum on/off times.', 'Integrarea comută singură releul după un senzor de temperatură din cameră (obligatoriu), cu histerezis și timpi minimi de pornit/oprit.'), L('A Shelly relay on the boiler, or a smart plug with an electric heater.', 'Un releu Shelly pe centrală sau o priză inteligentă cu radiator electric.')),
         O('none', L('Each room heats separately (TRVs, heaters, AC)', 'Fiecare cameră se încălzește separat (TRV-uri, radiatoare, AC)'), L('No single device heats the whole home; every room has its own heating.', 'Niciun dispozitiv nu încălzește singur toată locuința; fiecare cameră are încălzirea ei.'), L('The “Whole house” zone is not created. One room is added for each room with its own heating: TRVs or valves on the radiators, electric heaters, a heat pump or air conditioner, underfloor heating. With TRVs, the boiler is then picked as “Heat source”.', 'Zona „Toată casa” nu se creează. Se adaugă câte o cameră pentru fiecare cameră cu încălzirea ei: TRV-uri sau robinete pe calorifere, radiatoare electrice, pompă de căldură sau aer condiționat, încălzire în pardoseală. Cu TRV-uri, centrala se alege apoi ca „Sursă de căldură”.'), L('TRVs in the bedroom, living room and office, boiler relay in Home Assistant; an electric heater in the bathroom.', 'TRV-uri în dormitor, living și birou, releul centralei în Home Assistant; un radiator electric în baie.'))
-      ], 'generic_thermostat')
+      ], undefined, { pick: true })
     ]
   },
   {
@@ -367,6 +418,8 @@ const HOUSE = [
     ]
   }
 ];
+
+const HSTEP = id => HOUSE.find(s => s.id === id);
 
 /* ===== HOUSE OPTIONS ===== */
 const OPTS = [
@@ -582,7 +635,7 @@ const ROOM = [
     fields: [
       ents('climates', L('Thermostats', 'Termostate'), L('The thermostats of the room. Several thermostats in one room all get the same command.', 'Termostatele camerei. Mai multe termostate din aceeași cameră primesc aceeași comandă.'), 'climate.bedroom_trv', { show: c => c.src() !== 'switch', req: true }),
       ents('switches', L('Switches (relays)', 'Comutatoare (relee)'), L('The relays that heat the room.', 'Releele care încălzesc camera.'), 'switch.bathroom_plug', { show: c => c.src() === 'switch', req: true }),
-      rad('command_mode', L('Command', 'Comandă'), L('How the integration commands thermostats that are not a Generic Thermostat.', 'Cum comandă integrarea termostatele care nu sunt Generic Thermostat.'), HOUSE[2].fields[2].opts, 'preset', { show: c => c.src() === 'climate' }),
+      rad('command_mode', L('Command', 'Comandă'), L('How the integration commands thermostats that are not a Generic Thermostat.', 'Cum comandă integrarea termostatele care nu sunt Generic Thermostat.'), HSTEP('h_devices').fields.find(f => f.k === 'command_mode').opts, 'preset', { show: c => c.src() === 'climate' }),
       boostF,
       bool('use_house_source', L('Heats from the heat source of the house', 'Se încălzește de la sursa de căldură a casei'),
         L('Only when the house has a Heat source. On: the room’s radiators are on the boiler; it starts the boiler when it asks for heat and heats only while the boiler runs. Off: the room has its own heat (electric heater, heat pump, air conditioner); it does not start the boiler, does not count for Rooms needed, cannot be the Reference room, and heats while its own device runs.',
@@ -595,12 +648,12 @@ const ROOM = [
   },
   {
     id: 'r_onoff', sec: 'rooms', where: P_ROOM, title: L('On / off control', 'Comandă pornit / oprit'), show: c => !c.whole && isOnOff(c),
-    intro: HOUSE[3].intro,
+    intro: HSTEP('h_onoff').intro,
     fields: [hystOnOff, minOn, minOff, inertiaCtl]
   },
   {
     id: 'r_thermo', sec: 'rooms', where: P_ROOM, title: L('Thermostat', 'Termostat'), show: c => !c.whole && c.src() === 'climate' && c.cmd() !== 'hvac_mode' && !(c.cmd() === 'temperature' && c.r('trv_boost')),
-    intro: HOUSE[4].intro,
+    intro: HSTEP('h_thermo').intro,
     fields: [reportsQ, hystThermo]
   },
   {
@@ -807,7 +860,7 @@ function ctx(ri, sec) {
 /* ----- flow ----- */
 function flow() {
   if (!S.rooms.length) S.rooms.push({});
-  S.rooms.forEach((r, i) => { r.whole = i === 0 && (S.a.house.source || 'generic_thermostat') !== 'none'; });
+  S.rooms.forEach((r, i) => { r.whole = i === 0 && (S.a.house.source || '') !== 'none'; });
   const out = [];
   const c0 = ctx(0, 'house');
   HOUSE.forEach(s => { if (!s.show || s.show(c0)) out.push({ s, ri: null, id: s.id }); });
@@ -859,7 +912,8 @@ function progressHTML(fl, i) {
     const label = { house: T.secHouse, opts: T.secOpts, rooms: T.secRooms, done: T.secDone }[sc];
     return `<div class="seg${sc === cur ? ' now' : ''}" style="flex:${Math.max(n, 1)}"><div class="bar"><i style="width:${pct}%"></i></div><span>${esc(t(label))}</span></div>`;
   }).join('');
-  return `<nav class="prog" aria-label="progress">${segs}</nav>`;
+  const curLabel = { house: T.secHouse, opts: T.secOpts, rooms: T.secRooms, done: T.secDone }[cur];
+  return `<nav class="prog" aria-label="progress">${segs}<span class="count-sm">${esc(t(curLabel))} · ${i + 1} / ${fl.length}</span></nav>`;
 }
 
 function fieldHTML(f, c, it) {
@@ -924,10 +978,11 @@ function render() {
   else {
     const c = ctx(it.ri, it.s.sec);
     const fields = it.s.fields.filter(f => !f.show || f.show(c)).map(f => fieldHTML(f, c, it)).join('');
-    body = `<article class="card"><div class="eyebrow">${roomChip(it)}<span class="chip where" title="${esc(t(T.inHa))}">${esc(t(T.inHa))}: ${esc(t(it.s.where))}</span></div><h1>${esc(t(it.s.title))}</h1><p class="intro">${esc(t(it.s.intro))}</p>${fields}</article>`;
+    body = `<article class="card"><div class="eyebrow">${roomChip(it)}<span class="chip where" title="${esc(t(T.inHa))}">${it.s.guide ? '' : esc(t(T.inHa)) + ': '}${esc(t(it.s.where))}</span></div><h1>${esc(t(it.s.title))}</h1><p class="intro">${esc(t(it.s.intro))}</p>${it.s.why ? `<details class="why"><summary>${esc(t(T.why))}</summary><p>${esc(t(it.s.why))}</p></details>` : ''}${fields}</article>`;
   }
   const last = fl[i + 1] && fl[i + 1].s.summary;
-  const nav = `<footer class="nav"><span class="count">${esc(t(T.step))} ${i + 1} ${esc(t(T.of))} ${fl.length}</span><div class="btns">${i > 0 ? `<button class="btn" data-act="back">${esc(t(T.back))}</button>` : ''}${it.s.summary ? '' : `<button class="btn primary" data-act="next">${esc(t(last ? T.finish : T.next))}</button>`}</div></footer>`;
+  const blocked = mustPick(it);
+  const nav = `<footer class="nav"><span class="count">${blocked ? esc(t(T.pickFirst)) : `${esc(t(T.step))} ${i + 1} ${esc(t(T.of))} ${fl.length}`}</span><div class="btns">${i > 0 ? `<button class="btn" data-act="back">${esc(t(T.back))}</button>` : ''}${it.s.summary ? '' : `<button class="btn primary" data-act="next"${blocked ? ' disabled' : ''}>${esc(t(last ? T.finish : T.next))}</button>`}</div></footer>`;
   $app.innerHTML = head + progressHTML(fl, i) + `<main>${body}</main>` + nav;
   if (keep) { const el = document.getElementById(keep); if (el) { try { el.focus({ preventScroll: true }); } catch (e) { /* ignore */ } } }
   window.scrollTo(0, keepY);
@@ -981,6 +1036,21 @@ function issues(fl) {
   if (anyTrv && !boiler && bcase === 'trv_ext' && anyOptimal) out.push(['warn', L('TRVs with a boiler started outside Home Assistant make the learning unreliable. Optimal start and stop are not recommended; turn them off or bring the boiler into Home Assistant.', 'TRV-urile cu o centrală pornită din afara Home Assistant fac învățarea nefiabilă. Pornirea și oprirea anticipată nu sunt recomandate; oprește-le sau adu centrala în Home Assistant.')]);
   const wholeDevices = String(c0.h('climates') || '').split(/[\s,]+/).filter(Boolean);
   if (boiler && c0.h('source') === 'climate' && wholeDevices.includes(String(c0.o('boiler_entity')).trim())) out.push(['err', L('The Heat source is also a thermostat of the whole house. One device has one role: pick the boiler relay as Heat source, or use the thermostat as Heat source and choose “Each room heats separately” for the whole house.', 'Sursa de căldură este și un termostat al întregii case. Un dispozitiv are un singur rol: alegeți releul centralei ca Sursă de căldură, sau folosiți termostatul ca Sursă de căldură și alegeți „Fiecare cameră se încălzește separat” pentru toată casa.')]);
+  // One device, one role: the same thermostat or relay in two rooms, or in a room and as the heat source.
+  const owners = {};
+  const own = (list, who) => String(list || '').split(/[\s,;]+/).filter(Boolean).forEach(e => { (owners[e] = owners[e] || []).push(who); });
+  const roomName = (r, i, c) => (r.whole ? t(T.wholeLabel) : (String(c.r('name') || '').trim() || t(T.roomLabel) + ' ' + (i + 1)));
+  rooms.forEach(({ r, i, c }) => {
+    const src = c.src();
+    if (r.whole) own(src === 'switch' ? c0.h('switches') : c0.h('climates'), roomName(r, i, c));
+    else own(src === 'switch' ? c.r('switches') : c.r('climates'), roomName(r, i, c));
+  });
+  const wholeBoilerPair = boiler && c0.h('source') === 'climate' && wholeDevices.includes(String(c0.o('boiler_entity')).trim());
+  if (boiler && !wholeStarts) own(c0.o('boiler_entity'), t(L('Heat source', 'Sursa de căldură')));
+  Object.entries(owners).forEach(([e, who]) => {
+    if (who.length < 2 || (wholeBoilerPair && who.length === 2 && e === String(c0.o('boiler_entity')).trim())) return;
+    out.push(['err', L(`${e} is used by ${who.join(' and ')}. One device has one role: the form refuses it the second time.`, `${e} e folosit de ${who.join(' și ')}. Un dispozitiv are un singur rol: formularul îl refuză a doua oară.`)]);
+  });
   if (wholeStarts && boiler) out.push(['warn', L('A Heat source is filled in although the whole house is heated by a Generic Thermostat or a relay. The form does not offer it then, and saving the Heat source page removes it.', 'E completată o Sursă de căldură deși toată casa e încălzită de un Generic Thermostat sau releu. Formularul nu o oferă atunci, iar salvarea paginii Sursa de căldură o scoate.')]);
   const needSens = (c, hs) => !hasTxt(c.r('temperature_sensors'));
   if (c0.h('source') === 'switch' || (c0.h('source') === 'climate' && c0.h('command_mode') === 'hvac_mode')) { if (c0.h('source') === 'switch' && !hasTxt(c0.h('temperature_sensors'))) out.push(['err', L('Whole house: a relay needs at least one room temperature sensor.', 'Toată casa: un releu cere cel puțin un senzor de temperatură din cameră.')]); }
@@ -1033,10 +1103,17 @@ function summaryText() {
 }
 
 /* ----- navigation ----- */
+// A step with a "pick" question (no default) waits for an answer.
+function mustPick(it) {
+  if (!it || it.s.summary) return false;
+  const c = ctx(it.ri, it.s.sec);
+  return it.s.fields.some(f => f.pick && (!f.show || f.show(c)) && !hasTxt(c.val(f.k)));
+}
 function go(dir) {
   const fl = flow(); const i = fl.findIndex(x => x.id === S.step); const cur = fl[i];
   if (dir > 0) {
-    if (cur.s.more && S.rooms[cur.ri].more === 'yes' && S.rooms.length <= cur.ri + 1) S.rooms.push({});
+    if (mustPick(cur)) return;
+    if (cur.s.more && S.rooms[cur.ri].more === 'yes' && S.rooms.length <= cur.ri + 1) S.rooms.push(newRoom());
     const f2 = flow(); const j = f2.findIndex(x => x.id === cur.id);
     S.step = f2[Math.min(j + 1, f2.length - 1)].id;
   } else S.step = fl[Math.max(i - 1, 0)].id;
@@ -1076,6 +1153,7 @@ document.addEventListener('change', e => {
   const { f, k, sc, ri } = parseVal(el); if (!f) return;
   if (el.type === 'radio') {
     setv(sc, ri, k, f.t === 'bool' ? el.value === '1' : el.value);
+    if (f.apply) { f.apply(el.value); save(); }
     lastSig = sig(); render();
     return;
   }

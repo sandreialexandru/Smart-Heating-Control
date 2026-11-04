@@ -110,8 +110,10 @@ Necesită Home Assistant **2026.6.0** sau mai nou.
 <a href="https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/docs/configurator.html"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/configurator.png" alt="Configuratorul: fiecare alegere explicată, cu ce schimbă și un exemplu" width="420" align="right"></a>
 
 **Nu e clar ce trebuie ales?** [Configuratorul interactiv](https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/docs/configurator.html)
+începe cu ce încălzește locuința și completează răspunsurile potrivite, apoi
 trece prin fiecare formular, în română sau engleză, explică fiecare alegere cu
-ce schimbă și un exemplu și se încheie cu un rezumat a ce trebuie setat.
+ce schimbă și un exemplu și se încheie cu un rezumat a ce trebuie setat și cu
+problemele găsite (de exemplu un dispozitiv cu două roluri).
 Fișierul se descarcă și se deschide într-un browser.
 
 <br clear="right">

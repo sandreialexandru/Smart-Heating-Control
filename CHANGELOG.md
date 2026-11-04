@@ -69,6 +69,20 @@ GitHub releases.
   value is typed, or changed with the arrow keys) and the fields are a little
   wider. The *Set* button looks like the other buttons of the card.
 
+
+### Configurator
+
+- 🏠 **Your home** first: one choice (a Generic Thermostat, a smart
+  thermostat, TRVs with a boiler relay, TRVs with a thermostat that starts the
+  boiler, TRVs on only some radiators, heaters or air conditioners per room…)
+  fills in the matching answers on the next pages; each one can still be
+  changed.
+- *Heated by* is no longer preselected: a page waits until it is answered.
+  Its explanation is shorter, with the details under *Why?*.
+- The summary flags a thermostat or relay used twice (in two rooms, or in a
+  room and as the heat source).
+- On a phone the progress shows the current part and step instead of cut
+  labels.
 ### Development
 
 - 🧪 Tests for what mutation testing found unchecked: the coldest wall below

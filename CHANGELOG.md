@@ -55,6 +55,14 @@ GitHub releases.
   relays, temperature and humidity sensors, windows, occupancy, calibration)
   with its role and its state now; an unavailable, unknown or missing one is
   marked, a tap opens it. New `devices` attribute of the *Decision* sensor.
+- 🐛 **Schedule editor in a dark theme**: the list of levels, the time
+  fields and the time shown while dragging a handle were white on white.
+  They now use the opaque background of the card, and the native pickers
+  follow the dark or light theme.
+- 🐛 **Typing a time in the schedule editor**: the field lost the focus after
+  the first digit. Now the whole time can be typed; the bar follows at once,
+  the rows are sorted again when the field is left, and Save right after
+  typing still saves the new time.
 
 ### Development
 

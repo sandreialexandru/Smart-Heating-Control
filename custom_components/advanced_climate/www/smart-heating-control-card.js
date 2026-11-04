@@ -709,6 +709,11 @@ class SmartHeatingControlCard extends HTMLElement {
     this._error = {};
     this.shadowRoot.addEventListener("click", (ev) => this._onClick(ev));
     this.shadowRoot.addEventListener("change", (ev) => this._onChange(ev));
+    // Whether a mouse button or a finger is down (see _redrawAfterTyping).
+    this._pressing = false;
+    this.shadowRoot.addEventListener("pointerdown", () => (this._pressing = true), true);
+    window.addEventListener("pointerup", () => (this._pressing = false), true);
+    window.addEventListener("pointercancel", () => (this._pressing = false), true);
     this.shadowRoot.addEventListener("toggle", (ev) => this._onToggle(ev), true);
     this.shadowRoot.addEventListener("pointerdown", (ev) => this._pointerDown(ev));
     this.shadowRoot.addEventListener("pointermove", (ev) => this._pointerMove(ev));
@@ -784,7 +789,8 @@ class SmartHeatingControlCard extends HTMLElement {
   set hass(hass) {
     this._hass = hass;
     this._housesMemo = null; // computed once per update
-    this.style.colorScheme = hass?.themes?.darkMode ? "dark" : "light";
+    // The scheme of the card background when known (a dark theme may not set darkMode).
+    this.style.colorScheme = this._scheme || (hass?.themes?.darkMode ? "dark" : "light");
     if (this._editing || this._pan) return;
     const active = this.shadowRoot.activeElement;
     if (active && ["INPUT", "SELECT"].includes(active.tagName)) return;
@@ -1197,6 +1203,14 @@ class SmartHeatingControlCard extends HTMLElement {
     this._tipBase = own;
     const color = this._opaqueColor(this._card) || own;
     this.style.setProperty("--ac-opaque", color);
+    // Native pickers (the list of a select, the time picker) follow the theme:
+    // white text on a white list is unreadable in a dark theme.
+    const rgb = String(color).match(/\d+(\.\d+)?/g)?.slice(0, 3).map(Number);
+    if (rgb && rgb.length === 3) {
+      const light = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2] > 140;
+      this._scheme = light ? "light" : "dark";
+      this.style.colorScheme = this._scheme;
+    }
   }
 
   /** Close the chart window. */
@@ -3874,8 +3888,41 @@ class SmartHeatingControlCard extends HTMLElement {
       this._render();
     } else if (d.field && this._draft?.[d.profile]) {
       this._draft[d.profile][Number(d.index)][d.field] = el.value;
+      if (d.field === "time") {
+        // A time being typed changes with every digit: drawing the editor again
+        // would take the field away after the first one. Only the bar follows
+        // now; the rows (sorted by time) are drawn again when the field is left.
+        const bar = this.shadowRoot.querySelector(`.sbar[data-bar="${CSS.escape(d.profile)}"]`);
+        if (bar) {
+          const stateObj = this._rooms().find((st) => st.attributes.room_id === this._editing);
+          bar.innerHTML = this._barInner(stateObj?.attributes || {}, d.profile, this._draft[d.profile], true);
+        }
+        if (!el.__redrawOnBlur) {
+          el.__redrawOnBlur = true;
+          el.addEventListener("blur", (e) => this._redrawAfterTyping(e), { once: true });
+        }
+        return;
+      }
       this._render();
     }
+  }
+
+  /**
+   * The schedule editor after a time was typed: drawn again (rows sorted by
+   * time) once the click that took the focus away is over, so that click (Save,
+   * a button of the editor) still reaches its button.
+   */
+  _redrawAfterTyping(ev) {
+    const next = ev.relatedTarget;
+    // A button of the card got the focus: its own action draws the editor.
+    if (next && this.shadowRoot.contains(next) && next.closest?.("[data-action]")) return;
+    const draw = () => {
+      const active = this.shadowRoot.activeElement;
+      if (active && ["INPUT", "SELECT"].includes(active.tagName)) return; // typing elsewhere
+      this._render();
+    };
+    if (this._pressing) window.addEventListener("pointerup", () => setTimeout(draw, 0), { once: true });
+    else draw();
   }
 
   /** Temperature and duration entered in the quick manual change. */
@@ -4214,8 +4261,9 @@ const STYLE = `
     outline: 2px solid var(--ac-accent); outline-offset: 2px; }
 
   /* fields */
-  input, select { font: inherit; color: var(--primary-text-color); background: var(--card-background-color);
+  input, select { font: inherit; color: var(--primary-text-color); background: var(--ac-opaque, var(--card-background-color));
     border: 1px solid var(--ac-line); border-radius: 10px; padding: 7px 10px; min-height: 36px; box-sizing: border-box; }
+  option, optgroup { color: var(--primary-text-color); background: var(--ac-opaque, var(--card-background-color, #fff)); }
   input:hover, select:hover { border-color: color-mix(in srgb, var(--primary-text-color) 30%, transparent); }
   input:focus, select:focus { border-color: var(--ac-accent); outline: none; }
   .dates { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
@@ -4462,7 +4510,7 @@ const STYLE = `
   .handle::before { content: ""; width: 6px; border-radius: 3px; background: var(--card-background-color);
     box-shadow: 0 0 0 1.5px var(--primary-text-color), 0 1px 4px rgba(0,0,0,.3); }
   .handle .htime { position: absolute; bottom: calc(100% + 4px); font-size: 0.72em; padding: 2px 6px; border-radius: 6px;
-    background: var(--primary-text-color); color: var(--card-background-color); white-space: nowrap; opacity: 0;
+    background: var(--primary-text-color); color: var(--ac-opaque, var(--card-background-color, #fff)); white-space: nowrap; opacity: 0;
     transition: opacity .12s; pointer-events: none; font-variant-numeric: tabular-nums; }
   .handle:hover .htime, .handle:focus-visible .htime, .handle.dragging .htime { opacity: 1; }
   .handle:focus-visible::before, .handle.dragging::before { box-shadow: 0 0 0 2px var(--ac-accent), 0 1px 6px rgba(0,0,0,.35); }

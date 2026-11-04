@@ -7,6 +7,19 @@ GitHub releases.
 
 ## Unreleased
 
+### Card
+
+- 🔌 **Devices in the Details**: every entity of the room (thermostats,
+  relays, temperature and humidity sensors, windows, occupancy, calibration)
+  with its role and its state now; an unavailable, unknown or missing one is
+  marked, a tap opens it. New `devices` attribute of the *Decision* sensor.
+- 🔥 **Why the heat source runs**: under the house tiles, the line *Heat:
+  asked by Living, Bathroom*, or how many rooms are still needed, the
+  reference room it follows, the rooms in frost protection or with their own
+  heating and the minimum on / off time it waits for. New attributes of the
+  house *Heat demand* sensor: `rooms`, `frost_rooms`, `own_heat_rooms`,
+  `needed`, `reference_room`, `source_configured`, `waiting`.
+
 ### Development
 
 - 🧪 Tests for what mutation testing found unchecked: the coldest wall below

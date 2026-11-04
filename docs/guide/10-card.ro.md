@@ -66,6 +66,11 @@ collapsed: true
   **sezon**, **cererea de căldură** și **timpul de încălzire**: două câte două
   pe un card îngust (trei pe rând fără timpul de încălzire), toate pe un rând
   pe unul lat.
+- Sub ele, linia **Căldură**: ce camere o cer (*cerută de Living, Baie*), câte
+  mai trebuie ca să pornească centrala (*1 din 2 camere necesare*), camera de
+  referință pe care o urmează și dacă aceasta cere, camerele pe antiîngheț sau
+  cu încălzire proprie și timpul minim pornită / oprită pe care îl așteaptă
+  centrala. Fără linie cât nimic nu cere și nimic nu așteaptă.
 - **Modul** (Auto / Vacanță / Oprit / Vară).
 - Un rând de butoane: **Pauză** și **Oaspeți** (pornit / oprit), **Vacanță**
   (deschide datele vacanței), **Reevaluează** și **Automat** (anulează toate
@@ -221,7 +226,12 @@ Pe grupuri:
   **încălzire** (minutele pe grad acum, de exemplu *45 min/°C*), **inerție**
   (de exemplu *30 min*), **curba de temperatură** (de exemplu *+0.050 °C/h
   pentru fiecare °C mai frig afară* sau *fără*), **soare** (după ce s-a
-  învățat) și **pierderea de căldură** (cât de repede scade camera acum).
+  învățat) și **pierderea de căldură** (cât de repede scade camera acum);
+- **Dispozitive**: fiecare entitate a camerei (termostate, relee, senzori de
+  temperatură și umiditate, ferestre, ocupare, calibrare) cu rolul ei și
+  starea de acum (*20.4° → 21.0° încălzește*, *deschisă*, *55 %*); una
+  *indisponibilă*, *necunoscută* sau care *nu există* e marcată. La atingere
+  se deschide fereastra ei.
 
 La o modificare manuală, cardul arată unde a fost făcută (card / serviciu sau pe
 dispozitiv), până când, *se aplică după: …* sau *revine după: …*.

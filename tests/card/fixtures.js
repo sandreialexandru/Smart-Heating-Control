@@ -31,7 +31,7 @@
       forecast: o.noOutdoor ? [] : fc, unit_of_measurement: unit, heating_season: true,
       sun_forecast: o.sun === undefined ? [] : Array.from({ length: 49 }, (_, i) => [iso(Math.floor(now / 60000) * 60000 + i * 900e3), o.sun]) });
     st(he.heating_runtime, 2.5, { unit_of_measurement: "h" });
-    st(he.heating_season, "on"); st(he.outdoor_cutoff, "off"); st(he.heat_demand, "on");
+    st(he.heating_season, "on"); st(he.outdoor_cutoff, "off"); st(he.heat_demand, o.houseDemand === false ? "off" : "on", o.demand || {});
     st(he.pause, o.pause ? "on" : "off"); st(he.guest_mode, "off");
     st(he.vacation_start, "unknown"); st(he.vacation_end, "unknown");
     for (const b of ["clear_overrides", "reevaluate", "clear_vacation"]) st(he[b], "unknown");
@@ -63,7 +63,7 @@
         no_heat_reason: null, hold_until: r.holdUntil || null, alerts: r.alerts || [], optimal_stop_cancelled: false,
         rate_learned: learned, humidity: r.humidity ?? null, surface_humidity: r.wall ?? null, device_levels: [],
         heat_demand: r.demand ?? true, heating: r.heating ?? true, temperature_trend: r.trend ?? 0, day_boundary: 0, source: r.source || "switch",
-        custom_levels: true, house_name: house, entities: e, house_entities: he,
+        custom_levels: true, house_name: house, entities: e, house_entities: he, devices: r.devices || [],
       };
       if (r.dropAttrs) for (const k of r.dropAttrs) delete a[k];
       st(e.decision, r.state || "schedule", a);
@@ -82,6 +82,8 @@
       st(e.child_lock, "off"); st(e.clear_override, "unknown"); st(e.reset_learning, "unknown");
       for (const lv of ["home", "eco", "away", "sleep", "comfort", "activity", "nearby"]) st(e[`level_${lv}`], T(19), { min: T(7), max: T(25), step: 0.5, unit_of_measurement: unit });
     }
+    // Other entities (the devices of a room): [entity_id, state, attributes].
+    for (const [id, state, attributes] of o.extra || []) st(id, state, attributes || {});
     window.calls = window.calls || { ws: [], service: [] };
     return {
       states, user: { name: "Andrei", is_admin: true }, themes: { darkMode: !!o.dark }, language: o.lang || "en",

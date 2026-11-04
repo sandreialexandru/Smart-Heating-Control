@@ -17,8 +17,14 @@ from homeassistant.const import (
 from .const import (
     COMMAND_HVAC,
     CONF_BOILER_MIN_ROOMS,
+    CONF_CALIBRATION_ENTITIES,
+    CONF_HUMIDITY_SENSOR,
     CONF_HYSTERESIS,
+    CONF_LINKED_WINDOW_SENSORS,
+    CONF_OCCUPANCY_SENSORS,
     CONF_REFERENCE_ROOM,
+    CONF_TEMP_SENSORS,
+    CONF_WINDOW_SENSORS,
     PRESETS,
     RULE_PAUSE,
     SOURCE_SWITCH,
@@ -27,6 +33,7 @@ from .engine import (
     KIND_OFF,
 )
 from .util import (
+    as_list,
     delta_from_celsius,
     from_celsius,
     iso,
@@ -98,6 +105,28 @@ class RoomStatus:
         if states and all(st.state == STATE_OFF for st in states):  # type: ignore[union-attr]
             return {"code": "device_off"}
         return {"code": "tolerance"}
+
+    def devices(self) -> list[list[str]]:
+        """The entities the room uses, each with its role: [entity_id, role] (for the card)."""
+        cfg = self.config
+        groups = (
+            ("thermostat", self.climates),
+            ("switch", self.switches),
+            ("temperature", as_list(cfg.get(CONF_TEMP_SENSORS))),
+            ("humidity", as_list(cfg.get(CONF_HUMIDITY_SENSOR))),
+            ("window", as_list(cfg.get(CONF_WINDOW_SENSORS))),
+            ("window_linked", as_list(cfg.get(CONF_LINKED_WINDOW_SENSORS))),
+            ("occupancy", as_list(cfg.get(CONF_OCCUPANCY_SENSORS))),
+            ("calibration", as_list(cfg.get(CONF_CALIBRATION_ENTITIES))),
+        )
+        seen: set[str] = set()
+        result: list[list[str]] = []
+        for role, entity_ids in groups:
+            for entity_id in entity_ids:
+                if entity_id and entity_id not in seen:
+                    seen.add(entity_id)
+                    result.append([entity_id, role])
+        return result
 
     def diagnostics(self) -> dict[str, Any]:
         """Diagnostics for this room."""

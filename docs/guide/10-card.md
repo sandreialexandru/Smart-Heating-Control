@@ -66,6 +66,11 @@ collapsed: true
   **season**, the **heat demand** and the **heating time**: two by two on a
   narrow card (three in a row without the heating time), all in one row on a
   wide one.
+- Under them, the line **Heat**: which rooms ask for it (*asked by Living,
+  Bathroom*), how many more are needed to start the heat source (*1 of 2 rooms
+  needed*), the reference room it follows and whether that room asks, the rooms
+  in frost protection or with their own heating, and the minimum on / off time
+  the heat source waits for. No line while nothing asks and nothing waits.
 - The **mode** (Auto / Vacation / Off / Summer).
 - A row of buttons: **Pause** and **Guests** (on / off), **Vacation** (opens
   the vacation dates), **Reevaluate** and **Automatic** (clears all manual
@@ -221,7 +226,11 @@ In groups:
   (minutes per degree now, e.g. *45 min/°C*), the **inertia** (e.g. *30 min*),
   the **weather curve** (e.g. *+0.050 °C/h for each °C colder outdoors*, or
   *none*), the **sun** (once learned) and the **heat loss** (how fast the room
-  falls now).
+  falls now);
+- **Devices**: every entity of the room (thermostats, relays, temperature and
+  humidity sensors, windows, occupancy, calibration) with its role and its
+  state now (*20.4° → 21.0° heating*, *open*, *55 %*); one that is
+  *unavailable*, *unknown* or *not found* is marked. A tap opens its dialog.
 
 With a manual change, the card shows where it was made (card / service or on the
 device), until when, *applies after: …* or *returns after: …*.

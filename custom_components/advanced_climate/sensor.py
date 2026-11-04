@@ -242,6 +242,7 @@ class DecisionSensor(RoomEntity, SensorEntity):
             "custom_levels",
             "device_levels",
             "plan",
+            "devices",
             "next_estimate",
             "alerts",
         }
@@ -313,6 +314,8 @@ class DecisionSensor(RoomEntity, SensorEntity):
             # Humidity of the room and at the coldest wall (mold risk), with a humidity sensor.
             "humidity": room.humidity,
             "surface_humidity": room.surface_humidity,
+            # The entities of the room with their role, for the Details of the card.
+            "devices": room.devices(),
             "device_levels": room.device_levels,
             "heat_demand": room.heat_demand,
             "heating": room.heating,

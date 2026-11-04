@@ -7,6 +7,21 @@ GitHub releases.
 
 ## Unreleased
 
+### Integration
+
+- 🔥 **Boost the heat source** ([#6](https://github.com/sandreialexandru/Smart-Heating-Control/issues/6)):
+  a thermostat as the heat source of the house (Hive, Nest, Tado, Netatmo, a
+  Generic Thermostat) starts the boiler only by its own target and sensor, so
+  switched to *heat* with a low target it never fired it. Now, like the TRV
+  boost, it stays in its heat mode and gets the *Maximum temperature* of the
+  house to start (not above its own maximum) and the *Frost protection* of the
+  house to stop (not below its minimum): the boiler fires when the rooms ask,
+  and the thermostat still protects against frost if Home Assistant stops. A
+  target set on it by hand is taken back. New option *Boost the heat source*
+  (Heat source and heat demand → Heat source), **on by default**; off keeps the
+  old behaviour (only its mode, heat / off). A thermostat without a target
+  temperature is still switched by its mode.
+
 ### Card
 
 - 🔌 **Devices in the Details**: every entity of the room (thermostats,

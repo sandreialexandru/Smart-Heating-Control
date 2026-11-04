@@ -166,6 +166,9 @@ CONF_BOILER_MIN_ROOMS: Final = "boiler_min_rooms"
 CONF_REFERENCE_ROOM: Final = "reference_room"
 CONF_BOILER_MIN_ON: Final = "boiler_min_on"
 CONF_BOILER_MIN_OFF: Final = "boiler_min_off"
+# A thermostat as the heat source is boosted: the maximum of the house to start
+# it, the frost protection of the house to stop it (like the TRV boost).
+CONF_BOILER_BOOST: Final = "boiler_boost"
 CONF_ROOM_DIFF_ALERT: Final = "room_diff_alert"
 
 CONF_OVERRIDE_MODE: Final = "override_mode"
@@ -239,6 +242,7 @@ HOUSE_DEFAULTS: Final = {
     CONF_BOILER_MIN_ROOMS: 1,
     CONF_BOILER_MIN_ON: 0,
     CONF_BOILER_MIN_OFF: 0,
+    CONF_BOILER_BOOST: True,
     CONF_ROOM_DIFF_ALERT: 0.0,
     CONF_OVERRIDE_MODE: OVERRIDE_FIXED,
     CONF_OVERRIDE_HOURS: 2.0,

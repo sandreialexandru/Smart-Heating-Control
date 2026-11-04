@@ -549,6 +549,8 @@ async def test_heat_source_and_generic_thermostat_relay(hass: HomeAssistant) -> 
     # Rooms needed: at most the number of rooms of the house.
     field = next(k for k in result["data_schema"].schema if str(k) == "boiler_min_rooms")
     assert result["data_schema"].schema[field].config["max"] == 2
+    # The boost is only for a thermostat as the heat source.
+    assert "boiler_boost" not in {str(k) for k in result["data_schema"].schema}
 
     rooms = hass.config_entries.subentries
     for switch, error in (
@@ -563,6 +565,22 @@ async def test_heat_source_and_generic_thermostat_relay(hass: HomeAssistant) -> 
         )
         result = await rooms.async_configure(result["flow_id"], {"switches": [switch]})
         assert result["errors"] == {"switches": error}, switch
+
+    # A thermostat as the heat source: the boost, on by default.
+    hass.states.async_set("climate.hive", "heat", {"hvac_modes": ["heat", "off"]})
+    result = await options.async_init(entry.entry_id)
+    result = await options.async_configure(result["flow_id"], {"next_step_id": "boiler"})
+    result = await options.async_configure(result["flow_id"], {"boiler_entity": "climate.hive"})
+    keys = {str(k): k for k in result["data_schema"].schema}
+    assert "boiler_boost" in keys
+    assert keys["boiler_boost"].default() is True
+    result = await options.async_configure(
+        result["flow_id"],
+        {"boiler_min_rooms": 1, "boiler_min_on": 0, "boiler_min_off": 0, "boiler_boost": False},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options["boiler_boost"] is False
+    await hass.async_block_till_done()
 
 
 def _house_with_zone(

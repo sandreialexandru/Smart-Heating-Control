@@ -24,8 +24,27 @@ cald rămâne rece: integrarea nu poate porni centrala pentru ea.
 ## Cum comandă integrarea sursa de căldură
 
 Sursa poate fi un `switch`, un `input_boolean` sau un `climate` (de exemplu
-termostatul centralei). Un `climate` e pornit cu modul `heat` (sau `auto`, dacă
-nu are `heat`) și oprit cu `off`.
+termostatul centralei). Un `switch` sau un `input_boolean` e pornit și oprit.
+
+Un `climate` (un termostat Hive, Nest, Tado sau Netatmo, un Generic Thermostat)
+pornește centrala doar după ținta și senzorul lui: trecut pe `heat` cu o țintă
+mică, nu o pornește. De aceea, cu **Boost pentru sursa de căldură** (pornit
+implicit, ca boost-ul TRV) rămâne pe încălzire și primește:
+
+- ca să **pornească**: *Temperatura maximă* a casei (implicit 25 °C), nu peste
+  maximul termostatului;
+- ca să se **oprească**: temperatura de *Antiîngheț* a casei (implicit 7 °C),
+  nu sub minimul lui. Între timp nu încălzește după senzorul lui, dar protejează
+  casa la îngheț dacă Home Assistant se oprește.
+
+O țintă pusă manual pe el e readusă. Fără boost, sau pentru un termostat fără
+temperatură țintă, i se schimbă doar modul: `heat` (sau `auto`, dacă nu are
+`heat`) la pornire și `off` la oprire; atunci încălzește după ținta lui, care
+trebuie să fie peste senzorul lui.
+
+> **Exemplu (un Hive pe hol, TRV-uri în camere):** livingul cere căldură, Hive
+> primește 25 °C și pornește centrala deși pe hol sunt 20 °C; când livingul s-a
+> încălzit primește 7 °C și centrala se oprește.
 
 **Pornește** sursa când:
 

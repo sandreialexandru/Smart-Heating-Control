@@ -647,7 +647,7 @@ async def _reevaluate(hass: HomeAssistant) -> None:
 async def test_thermostat_as_the_heat_source(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """A boiler thermostat as the heat source: only its mode is switched, never its target.
+    """Without the boost, a thermostat as the heat source: only its mode is switched.
 
     A TRV room heats only while the thermostat really heats (its hvac_action).
     """
@@ -667,6 +667,7 @@ async def test_thermostat_as_the_heat_source(
             )
         ],
         boiler_entity="climate.hive",
+        boiler_boost=False,
     )
     room = _room(entry, "Office")
     assert modes[-1].data == {"entity_id": "climate.hive", "hvac_mode": "heat"}
@@ -687,6 +688,170 @@ async def test_thermostat_as_the_heat_source(
     )
     await _reevaluate(hass)
     assert modes[-1].data == {"entity_id": "climate.hive", "hvac_mode": "off"}
+    await _unload(hass, entry)
+
+
+HIVE = {
+    "hvac_modes": ["heat", "off"],
+    "current_temperature": 20.3,
+    "min_temp": 5.0,
+    "max_temp": 32.0,
+    "target_temp_step": 0.5,
+    "supported_features": 1,  # target temperature
+}
+
+
+async def _hive_house(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    state: str,
+    target: float,
+    **options: object,
+):
+    """A TRV room and a Hive thermostat (issue #6) as the heat source of the house."""
+    calls = {
+        "temp": async_mock_service(hass, "climate", "set_temperature"),
+        "mode": async_mock_service(hass, "climate", "set_hvac_mode"),
+    }
+    hass.states.async_set(
+        "climate.hive", state, {**HIVE, "temperature": target, "hvac_action": "idle"}
+    )
+    cold = {**TRV, "current_temperature": 18.0, "temperature": 21.0, "hvac_action": "heating"}
+    hass.states.async_set("climate.trv", "heat", cold)
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"},
+            )
+        ],
+        boiler_entity="climate.hive",
+        **options,
+    )
+    return entry, calls, cold
+
+
+def _hive_calls(calls: dict) -> list[tuple[str, dict]]:
+    """The commands the Hive got, in order (service, data without the entity)."""
+    out = [
+        (c.service, {k: v for k, v in c.data.items() if k != "entity_id"})
+        for kind in ("temp", "mode")
+        for c in calls[kind]
+        if c.data.get("entity_id") == "climate.hive"
+    ]
+    return out
+
+
+async def test_thermostat_heat_source_is_boosted(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Issue #6: in heat mode at a low target the Hive never starts the boiler; boosted it does.
+
+    To start: the maximum of the house (25 °C) in its heat mode; to stop: the
+    frost protection of the house (7 °C), still in its heat mode; never "off".
+    """
+    entry, calls, cold = await _hive_house(hass, freezer, "heat", 7.5)
+    # Already in heat mode, but at 7.5 °C: not started, so it gets the maximum.
+    assert _hive_calls(calls) == [("set_temperature", {"temperature": 25.0, "hvac_mode": "heat"})]
+    room = _room(entry, "Office")
+    assert room.heat_demand
+    # At 25 °C it heats: the room heats too.
+    hass.states.async_set(
+        "climate.hive", "heat", {**HIVE, "temperature": 25.0, "hvac_action": "heating"}
+    )
+    await _reevaluate(hass)
+    assert room.heating
+    assert len(_hive_calls(calls)) == 1  # nothing more while it holds 25 °C
+
+    # The room is warm: the Hive gets the frost protection, in its heat mode.
+    hass.states.async_set(
+        "climate.trv", "heat", {**cold, "current_temperature": 21.5, "hvac_action": "idle"}
+    )
+    await _reevaluate(hass)
+    assert _hive_calls(calls)[-1] == ("set_temperature", {"temperature": 7.0, "hvac_mode": "heat"})
+    assert all(service != "set_hvac_mode" for service, _ in _hive_calls(calls))
+    hass.states.async_set(
+        "climate.hive", "heat", {**HIVE, "temperature": 7.0, "hvac_action": "idle"}
+    )
+    await _reevaluate(hass)
+    count = len(_hive_calls(calls))
+
+    # Someone sets the Hive to 22 °C by hand while no room asks: taken back to 7 °C,
+    # so it does not heat the house by its own sensor.
+    hass.states.async_set(
+        "climate.hive", "heat", {**HIVE, "temperature": 22.0, "hvac_action": "heating"}
+    )
+    await _reevaluate(hass)
+    assert _hive_calls(calls)[count:] == [
+        ("set_temperature", {"temperature": 7.0, "hvac_mode": "heat"})
+    ]
+    # Switched off by hand: back to its heat mode at 7 °C (it protects against frost).
+    hass.states.async_set("climate.hive", "off", {**HIVE, "temperature": 7.0, "hvac_action": "off"})
+    await _reevaluate(hass)
+    assert _hive_calls(calls)[-1] == ("set_temperature", {"temperature": 7.0, "hvac_mode": "heat"})
+    await _unload(hass, entry)
+
+
+async def test_boosted_heat_source_limits_and_minimum_times(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The maximum of the device and its step limit the start; the minimum times still apply."""
+    entry, calls, cold = await _hive_house(
+        hass, freezer, "off", 7.0, max_temp=30.0, frost_temp=4.0, boiler_min_on=10
+    )
+    # 30 °C of the house above the 32 °C of the Hive: 30. Started from off.
+    assert _hive_calls(calls) == [("set_temperature", {"temperature": 30.0, "hvac_mode": "heat"})]
+    hass.states.async_set(
+        "climate.hive", "heat", {**HIVE, "temperature": 30.0, "hvac_action": "heating"}
+    )
+    # The room is warm at once: it keeps running for its minimum on time.
+    hass.states.async_set(
+        "climate.trv", "heat", {**cold, "current_temperature": 21.5, "hvac_action": "idle"}
+    )
+    await _reevaluate(hass)
+    assert len(_hive_calls(calls)) == 1
+    assert entry.runtime_data.source_waiting == "min_on"
+    await _tick(hass, freezer, 11 * 60)
+    await _reevaluate(hass)
+    # Frost protection of the house 4 °C below the 5 °C minimum of the Hive: 5.
+    assert _hive_calls(calls)[-1] == ("set_temperature", {"temperature": 5.0, "hvac_mode": "heat"})
+    await _unload(hass, entry)
+
+
+async def test_boosted_heat_source_without_hvac_action_and_without_temperature(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Without hvac_action a boosted source runs at its start temperature, not in any heat mode.
+
+    A thermostat without a target temperature is switched by its mode, as before.
+    """
+    entry, calls, _ = await _hive_house(hass, freezer, "heat", 25.0)
+    house = entry.runtime_data
+    attrs = {k: v for k, v in HIVE.items()}
+    hass.states.async_set("climate.hive", "heat", {**attrs, "temperature": 25.0})
+    assert house.heat_source_state() == (True, True)
+    hass.states.async_set("climate.hive", "heat", {**attrs, "temperature": 7.0})
+    assert house.heat_source_state() == (True, False)
+    await _unload(hass, entry)
+
+    calls["temp"].clear()
+    calls["mode"].clear()
+    no_temp = {"hvac_modes": ["heat", "off"], "supported_features": 0}
+    hass.states.async_set("climate.hive", "off", no_temp)
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"},
+            )
+        ],
+        boiler_entity="climate.hive",
+    )
+    assert _hive_calls(calls) == [("set_hvac_mode", {"hvac_mode": "heat"})]
     await _unload(hass, entry)
 
 
@@ -1345,4 +1510,148 @@ async def test_rooms_that_stay_cold_while_others_are_warm(
     hass.states.async_set("climate.trv2", "heat", {**TRV, "current_temperature": 19.5})
     await _reevaluate(hass)
     assert "room_difference" not in house.active_alerts
+    await _unload(hass, entry)
+
+
+async def test_hive_simulation_heats_the_room_and_stops(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Issue #6 end to end: a Hive that fires the boiler only below its own target.
+
+    The Hive reacts to the commands like the real one (its target, its mode, its
+    hvac_action from the hallway at 20.3 °C); the living room warms only while
+    the boiler runs. Boosted, the room reaches its target and the boiler stops;
+    the Hive is never switched off and is left at the frost protection.
+    """
+    hall = 20.3
+    hive = {"state": "heat", "target": 7.5}
+
+    seen: set[tuple[str, float]] = set()
+
+    def publish() -> None:
+        seen.add((hive["state"], hive["target"]))
+        heating = hive["state"] != "off" and hive["target"] > hall
+        hass.states.async_set(
+            "climate.hive",
+            hive["state"],
+            {
+                **HIVE,
+                "temperature": hive["target"],
+                "hvac_action": "heating" if heating else "idle",
+            },
+        )
+
+    trv_target = {"value": 21.0}
+
+    async def set_temperature(call) -> None:
+        if call.data["entity_id"] == "climate.trv":
+            trv_target["value"] = call.data["temperature"]
+            return
+        hive["target"] = call.data["temperature"]
+        hive["state"] = call.data.get("hvac_mode", hive["state"])
+        publish()
+
+    async def set_hvac_mode(call) -> None:
+        if call.data["entity_id"] == "climate.hive":
+            hive["state"] = call.data["hvac_mode"]
+            publish()
+
+    hass.services.async_register("climate", "set_temperature", set_temperature)
+    hass.services.async_register("climate", "set_hvac_mode", set_hvac_mode)
+    publish()
+    room_temp = 19.0
+    trv = {**TRV, "current_temperature": room_temp, "temperature": 21.0, "hvac_action": "heating"}
+    hass.states.async_set("climate.trv", "heat", trv)
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Living",
+                {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"},
+            )
+        ],
+        boiler_entity="climate.hive",
+    )
+    fired = []
+    for _ in range(40):  # 40 × 3 minutes
+        boiler = hass.states.get("climate.hive").attributes["hvac_action"] == "heating"
+        fired.append(boiler)
+        room_temp += 0.1 if boiler else -0.02
+        # The TRV opens below its target (raised by the boost), closes above it.
+        target = trv_target["value"]
+        hass.states.async_set(
+            "climate.trv",
+            "heat",
+            {
+                **trv,
+                "current_temperature": round(room_temp, 2),
+                "temperature": target,
+                "hvac_action": "heating" if room_temp < target else "idle",
+            },
+        )
+        await _tick(hass, freezer, 180)
+        await _reevaluate(hass)
+    # The boiler fired at once and ran until the room reached its target (about
+    # an hour from 19 °C); then only short runs to hold it (the TRV boost band).
+    assert all(fired[:19])
+    assert sum(fired[25:]) <= len(fired[25:]) // 3
+    assert 20.5 <= room_temp <= 21.5
+    # Never switched off: always in heat, at 25 °C or at the frost protection.
+    # (7.5 °C is where the Hive was before the integration started.)
+    assert seen == {("heat", 7.5), ("heat", 25.0), ("heat", 7.0)}
+    await _unload(hass, entry)
+
+
+async def test_boosted_heat_source_in_fahrenheit(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A Home Assistant in °F: the Hive gets 77 °F to start (25 °C) and 45 °F to stop (7 °C)."""
+    from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    async_mock_service(hass, "climate", "set_hvac_mode")
+    f_hive = {
+        **HIVE,
+        "min_temp": 41.0,
+        "max_temp": 90.0,
+        "target_temp_step": 1.0,
+        "current_temperature": 68.5,
+    }
+    hass.states.async_set(
+        "climate.hive", "heat", {**f_hive, "temperature": 45.0, "hvac_action": "idle"}
+    )
+    cold = {
+        **TRV,
+        "min_temp": 41.0,
+        "max_temp": 86.0,
+        "current_temperature": 64.0,
+        "temperature": 70.0,
+        "hvac_action": "heating",
+    }
+    hass.states.async_set("climate.trv", "heat", cold)
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"},
+            )
+        ],
+        boiler_entity="climate.hive",
+    )
+    sent = [c.data["temperature"] for c in calls if c.data["entity_id"] == "climate.hive"]
+    assert sent == [77.0]
+    hass.states.async_set(
+        "climate.hive", "heat", {**f_hive, "temperature": 77.0, "hvac_action": "heating"}
+    )
+    hass.states.async_set(
+        "climate.trv", "heat", {**cold, "current_temperature": 71.0, "hvac_action": "idle"}
+    )
+    await _reevaluate(hass)
+    sent = [c.data["temperature"] for c in calls if c.data["entity_id"] == "climate.hive"]
+    # 7 °C = 44.6 °F, up to its step: 45.
+    assert sent == [77.0, 45.0]
     await _unload(hass, entry)

@@ -24,8 +24,28 @@ stays cold: the integration cannot start the boiler for it.
 ## How the integration controls the heat source
 
 The source can be a `switch`, an `input_boolean` or a `climate` (e.g. the boiler
-thermostat). A `climate` is started with the mode `heat` (or `auto`, without
-`heat`) and stopped with `off`.
+thermostat). A `switch` or an `input_boolean` is turned on and off.
+
+A `climate` (a Hive, Nest, Tado or Netatmo thermostat, a Generic Thermostat)
+starts the boiler only by its own target and sensor: switched to `heat` with a
+low target it would not fire it. So with **Boost the heat source** (on by
+default, like the TRV boost) it stays in its heat mode and gets:
+
+- to **start**: the *Maximum temperature* of the house (25 °C by default), not
+  above the maximum of the thermostat;
+- to **stop**: the *Frost protection* temperature of the house (7 °C by
+  default), not below its minimum. It does not heat by its own sensor
+  meanwhile, but still protects the house against frost if Home Assistant
+  stops.
+
+A target set on it by hand is taken back. Without the boost, or for a
+thermostat without a target temperature, only its mode is switched: `heat` (or
+`auto`, without `heat`) to start and `off` to stop; it then heats by its own
+target, which must be above its sensor.
+
+> **Example (a Hive in the hallway, TRVs in the rooms):** the living room asks
+> for heat, the Hive gets 25 °C and fires the boiler although the hallway is at
+> 20 °C; once the living room is warm it gets 7 °C and the boiler stops.
 
 It **starts** the source when:
 

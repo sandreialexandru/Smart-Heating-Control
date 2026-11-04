@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 from collections.abc import Callable, Iterable
 from datetime import date, datetime, time, timedelta
 from typing import Any
 
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
@@ -41,6 +43,7 @@ from .const import (
     CONF_ARRIVAL_DISTANCE,
     CONF_ARRIVAL_MINUTES,
     CONF_AUTO_VACATION_HOURS,
+    CONF_BOILER_BOOST,
     CONF_BOILER_ENTITY,
     CONF_BOILER_MIN_OFF,
     CONF_BOILER_MIN_ON,
@@ -57,8 +60,10 @@ from .const import (
     CONF_DEPARTURE_DELAY,
     CONF_FORECAST_ENABLED,
     CONF_FORECAST_HOURS,
+    CONF_FROST_TEMP,
     CONF_GUEST_EXPIRE_HOURS,
     CONF_HOME_RULE,
+    CONF_MAX_TEMP,
     CONF_NEARBY_GEOMETRIC,
     CONF_NEARBY_ZONES,
     CONF_OPTIMAL_START,
@@ -126,6 +131,7 @@ from .util import (
     distance_km,
     float_attr,
     float_state,
+    from_celsius,
     from_iso,
     heat_mode,
     is_fahrenheit,
@@ -1293,10 +1299,14 @@ class House:
         state = self.hass.states.get(boiler)
         if not valid(state):
             return
-        is_on = state.state not in ("off",)  # type: ignore[union-attr]
-        if is_on == want:
+        boost = self._source_boost(state)  # type: ignore[arg-type]
+        is_on = self._source_is_on(state, boost)  # type: ignore[arg-type]
+        if is_on == want and (boost is None or self._source_settled(state, boost, want)):  # type: ignore[arg-type]
             return
-        if self.boiler_changed is not None:
+        # Only the stop temperature of a boosted source is taken back (it was
+        # changed by hand): not a start or a stop, no minimum time to wait for.
+        correction = is_on == want
+        if not correction and self.boiler_changed is not None:
             minimum = timedelta(
                 minutes=float(opts[CONF_BOILER_MIN_ON] if is_on else opts[CONF_BOILER_MIN_OFF])
             )
@@ -1307,7 +1317,22 @@ class House:
         context = self.new_context()
         domain = boiler.split(".", 1)[0]
         try:
-            if domain == "climate":
+            if domain == "climate" and boost is not None:
+                # Boosted: always in its heat mode, at the maximum of the house
+                # to start, at the frost protection of the house to stop.
+                on_mode = heat_mode(state.attributes.get("hvac_modes"))  # type: ignore[union-attr]
+                await self.hass.services.async_call(
+                    "climate",
+                    "set_temperature",
+                    {
+                        "entity_id": boiler,
+                        "temperature": boost[0] if want else boost[1],
+                        "hvac_mode": on_mode,
+                    },
+                    blocking=True,
+                    context=context,
+                )
+            elif domain == "climate":
                 on_mode = heat_mode(state.attributes.get("hvac_modes"))  # type: ignore[union-attr]
                 await self.hass.services.async_call(
                     "climate",
@@ -1328,8 +1353,9 @@ class House:
             _LOGGER.warning("Could not switch the boiler %s: %s", boiler, err)
             return
         self.boiler_on = want
-        self.boiler_changed = now
-        self._frost_started = bool(want and self.paused)
+        if not correction:
+            self.boiler_changed = now
+            self._frost_started = bool(want and self.paused)
 
     def _check_source_available(
         self, now: datetime, configured: bool, source_on: bool | None
@@ -1409,6 +1435,55 @@ class House:
                 },
             )
 
+    def _source_boost(self, state: State) -> tuple[float, float] | None:
+        """(start, stop) temperatures of a boosted thermostat source, in its unit.
+
+        Only for a climate heat source with a target temperature and the boost
+        on: the maximum of the house (not above the maximum of the device) and
+        the frost protection of the house (not below its minimum), on its step.
+        None: switched by its mode (no boost, no temperature, not a thermostat).
+        """
+        if state.domain != "climate" or not self.options.get(CONF_BOILER_BOOST, True):
+            return None
+        attrs = state.attributes
+        features = attrs.get("supported_features")
+        if features is not None:
+            if not int(features) & ClimateEntityFeature.TARGET_TEMPERATURE:
+                return None
+        elif "temperature" not in attrs:
+            return None
+        unit = system_unit(self.hass)
+        start = float(from_celsius(float(self.options[CONF_MAX_TEMP]), unit))
+        stop = float(from_celsius(float(self.options[CONF_FROST_TEMP]), unit))
+        step = float_attr(state, "target_temp_step") or (1.0 if unit == FAHRENHEIT else 0.5)
+        start = math.floor(start / step + 1e-9) * step
+        stop = math.ceil(stop / step - 1e-9) * step
+        if (high := float_attr(state, "max_temp")) is not None:
+            start = min(start, high)
+        if (low := float_attr(state, "min_temp")) is not None:
+            stop = max(stop, low)
+        return round(start, 2), round(min(stop, start), 2)
+
+    @staticmethod
+    def _source_is_on(state: State, boost: tuple[float, float] | None) -> bool:
+        """The heat source is started (boosted: in a heat mode at the start temperature)."""
+        if boost is None:
+            return state.state not in ("off",)
+        target = float_attr(state, "temperature")
+        return state.state != "off" and target is not None and target >= boost[0] - 0.05
+
+    @staticmethod
+    def _source_settled(state: State, boost: tuple[float, float], want: bool) -> bool:
+        """A boosted source holds what it should: on at the start, else at the stop temperature.
+
+        A stopped one switched off by hand or still at another temperature is
+        taken to the frost protection, so it does not heat by its own sensor.
+        """
+        if want:
+            return True
+        target = float_attr(state, "temperature")
+        return state.state != "off" and target is not None and abs(target - boost[1]) < 0.05
+
     def heat_source_state(self) -> tuple[bool, bool | None]:
         """(configured, running) of the heat source of the house (the boiler entity).
 
@@ -1423,7 +1498,8 @@ class House:
         if entity_id.startswith("climate.") and "hvac_action" in state.attributes:  # type: ignore[union-attr]
             # A thermostat in heat mode may be idle: it runs only while heating.
             return True, state.attributes["hvac_action"] == "heating"  # type: ignore[union-attr]
-        return True, state.state != "off"  # type: ignore[union-attr]
+        # A boosted thermostat stays in its heat mode: it runs at the start temperature.
+        return True, self._source_is_on(state, self._source_boost(state))  # type: ignore[arg-type]
 
     def _check_house_events(self, now: datetime) -> None:
         """Tell the season, a planned vacation and its preheating; remind a long pause."""

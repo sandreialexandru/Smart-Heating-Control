@@ -39,6 +39,7 @@ from .const import (
     CONF_ARRIVAL_MINUTES,
     CONF_AUTO_VACATION_HOURS,
     CONF_BATTERY_THRESHOLD,
+    CONF_BOILER_BOOST,
     CONF_BOILER_ENTITY,
     CONF_BOILER_MIN_OFF,
     CONF_BOILER_MIN_ON,
@@ -548,6 +549,9 @@ def _boiler_details(v: dict[str, Any], rooms: list[selector.SelectOptionDict]) -
         fields[_req(CONF_BOILER_MIN_ROOMS, shown, d)] = _number(1, most, 1)
         fields[_req(CONF_BOILER_MIN_ON, v, d)] = _number(0, 60, 1, "min")
         fields[_req(CONF_BOILER_MIN_OFF, v, d)] = _number(0, 60, 1, "min")
+        if str(v[CONF_BOILER_ENTITY]).startswith("climate."):
+            # A thermostat as the heat source: boosted like the TRVs.
+            fields[_req(CONF_BOILER_BOOST, v, d)] = selector.BooleanSelector()
         if len(rooms) > 1:
             fields[_opt(CONF_REFERENCE_ROOM, v)] = selector.SelectSelector(
                 selector.SelectSelectorConfig(

@@ -28,6 +28,66 @@
 The Lovelace card is added to the dashboard resources by itself (see
 [chapter 10](10-card.md)).
 
+## Which setup for my house?
+
+Before creating the house, answer two questions: **what heats it** and **who
+can start the boiler**. The configuration has three pieces:
+
+1. **Heating of the whole house** (the zone *Whole house*): one thermostat or
+   relay that heats the whole home. It gets the schedule of the house, like a
+   room.
+2. **Rooms**: radiators or zones with their own device (TRV, thermostat,
+   relay, electric heater) and, ideally, their own sensor. Each one is a room
+   with its own schedule.
+3. **Heat source**: the boiler (its relay, or the thermostat that starts it)
+   when the rooms cannot start it themselves. Only needed with **TRVs** or zone
+   valves: a TRV only opens or closes its radiator valve; if nobody starts the
+   boiler, the radiator stays cold.
+
+**The rule.** With TRV rooms, the integration needs **its own way to the
+boiler**: a relay of the boiler, or the thermostat that starts it, as *Heat
+source*. A device already used by the *Whole house* zone or by a room cannot
+also be the *Heat source* (one device, one role: two parts of the integration
+would otherwise command the same device).
+
+| Your home | Heating of the whole house | Rooms | Heat source |
+| --- | --- | --- | --- |
+| **One thermostat or relay for the whole home, no TRVs** (e.g. a flat with a Generic Thermostat on the boiler) | Generic Thermostat, Other thermostats or Switch (relay) | – | – (not offered with Generic Thermostat or a relay) |
+| **TRVs on the radiators, the boiler has a relay in Home Assistant** | No heating devices yet | one per room with TRVs | **the boiler relay** |
+| **TRVs on the radiators, the boiler is started by a thermostat in Home Assistant** (Hive, Nest, Tado, Netatmo) | No heating devices yet | one per room with TRVs | **that thermostat**, with *Boost the heat source* on |
+| **TRVs on only some radiators, a thermostat starts the boiler** (e.g. a hallway thermostat) | No heating devices yet | the rooms with TRVs | **that thermostat**, with *Boost* on and a *Heat source idle temperature* (e.g. 17.5 °C) for the radiators without TRVs |
+| **Electric heaters, air conditioners, a heat pump per room** | No heating devices yet | one per room, with its relay or thermostat | – (each room heats by itself) |
+| **A single electric heater or air conditioner for the whole home** | Switch (relay) or Other thermostats | – | – |
+| **A thermostat or relay on the whole house and TRVs in some rooms** | the thermostat or relay | the rooms with TRVs | ⚠️ none possible: see below |
+
+**Why the last case is limited.** The whole-house zone starts the boiler only
+by its own sensor. When that sensor is warm and a TRV room is cold, the TRV
+opens but the boiler does not start, so the radiator stays cold. The device of
+the whole house cannot also be the heat source (it already has a role). The
+ways out: the **boiler relay as *Heat source*** instead of on the whole house
+(with a thermostat that also starts the boiler, a relay wired in parallel with
+it); or the thermostat as *Heat source* instead of on the whole house (the rows
+above), with an idle temperature for the radiators without TRVs.
+
+**With TRVs on every radiator**, the installation must let the water through
+when they all close: an automatic bypass, a boiler with an internal bypass, or
+one radiator without a TRV (often in the bathroom).
+
+**Examples.**
+
+- *A flat, a Generic Thermostat switches the boiler relay, no TRVs*: Heating of
+  the whole house = Generic Thermostat. Nothing else; the *Heat source* page
+  is not even offered.
+- *A house, a Shelly relay on the boiler, TRVs in every room*: No heating
+  devices yet; one room per TRV room (*Other thermostats / TRVs*, with the TRV
+  boost when the room has its own sensor); *Heat source* = the Shelly relay.
+- *A house, a Hive in the hallway wired to the boiler, TRVs in three rooms*: No
+  heating devices yet; three TRV rooms; *Heat source* = the Hive, *Boost the
+  heat source* on, *Heat source idle temperature* 17.5 °C. The Hive keeps the
+  rest of the house at about 17.5 °C and gets the maximum when a TRV room asks.
+- *Electric heaters on smart plugs*: No heating devices yet; one room per room
+  (*Switch (relay)*, with its temperature sensor); no heat source.
+
 ## Creating the house
 
 The forms show only the fields that apply. If a field does not appear, it does

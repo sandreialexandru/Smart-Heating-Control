@@ -29,6 +29,68 @@
 Cardul Lovelace se adaugă singur la resursele dashboard-urilor
 ([capitolul 10](10-card.ro.md)).
 
+## Ce configurare aleg pentru casa mea?
+
+Înainte de a crea casa, răspundeți la două întrebări: **ce o încălzește** și
+**cine poate porni centrala**. Configurarea are trei piese:
+
+1. **Încălzirea întregii case** (zona *Întreaga casă*): un singur termostat sau
+   releu care încălzește toată locuința. Primește programul casei, ca o cameră.
+2. **Camerele**: calorifere sau zone cu dispozitivul lor (TRV, termostat,
+   releu, radiator electric) și, ideal, cu senzorul lor. Fiecare e o cameră cu
+   programul ei.
+3. **Sursa de căldură**: centrala (releul ei sau termostatul care o pornește)
+   atunci când camerele nu o pot porni singure. E necesară doar cu **TRV-uri**
+   sau vane de zonă: un TRV doar deschide sau închide robinetul caloriferului;
+   dacă nimeni nu pornește centrala, caloriferul rămâne rece.
+
+**Regula.** Cu camere cu TRV, integrarea are nevoie de **o cale proprie spre
+centrală**: un releu al centralei sau termostatul care o pornește, ca *Sursă de
+căldură*. Un dispozitiv folosit deja de zona *Întreaga casă* sau de o cameră nu
+poate fi și *Sursă de căldură* (un dispozitiv, un singur rol: altfel două părți
+ale integrării ar comanda același dispozitiv).
+
+| Locuința | Încălzirea întregii case | Camere | Sursa de căldură |
+| --- | --- | --- | --- |
+| **Un termostat sau releu pentru toată locuința, fără TRV-uri** (de exemplu un apartament cu Generic Thermostat pe centrală) | Generic Thermostat, Alte termostate sau Comutator (releu) | – | – (nu se oferă cu Generic Thermostat sau releu) |
+| **TRV-uri pe calorifere, centrala are un releu în Home Assistant** | Încă fără dispozitive | câte una pentru fiecare cameră cu TRV | **releul centralei** |
+| **TRV-uri pe calorifere, centrala e pornită de un termostat din Home Assistant** (Hive, Nest, Tado, Netatmo) | Încă fără dispozitive | câte una pentru fiecare cameră cu TRV | **acel termostat**, cu *Boost pentru sursa de căldură* pornit |
+| **TRV-uri doar pe unele calorifere, un termostat pornește centrala** (de exemplu un termostat pe hol) | Încă fără dispozitive | camerele cu TRV | **acel termostat**, cu *Boost* pornit și o *Temperatura sursei în repaus* (de exemplu 17,5 °C) pentru caloriferele fără TRV |
+| **Radiatoare electrice, aer condiționat, pompă de căldură în fiecare cameră** | Încă fără dispozitive | câte una pentru fiecare cameră, cu releul sau termostatul ei | – (fiecare cameră se încălzește singură) |
+| **Un singur radiator electric sau aer condiționat pentru toată locuința** | Comutator (releu) sau Alte termostate | – | – |
+| **Un termostat sau un releu pe toată casa și TRV-uri în unele camere** | termostatul sau releul | camerele cu TRV | ⚠️ nu se poate: vezi mai jos |
+
+**De ce ultimul caz e limitat.** Zona întregii case pornește centrala doar după
+senzorul ei. Când la acel senzor e cald și o cameră cu TRV e rece, TRV-ul se
+deschide, dar centrala nu pornește, deci caloriferul rămâne rece. Dispozitivul
+întregii case nu poate fi și sursă de căldură (are deja un rol). Soluții:
+**releul centralei ca *Sursă de căldură*** în loc de pe toată casa (cu un
+termostat care pornește și el centrala, un releu legat în paralel cu el); sau
+termostatul folosit ca *Sursă de căldură* în loc de pe toată casa (rândurile de
+mai sus), cu o temperatură de repaus pentru caloriferele fără TRV.
+
+**Cu TRV-uri pe toate caloriferele**, instalația trebuie să lase apa să treacă
+când toate se închid: un bypass automat, o centrală cu bypass intern sau un
+calorifer fără TRV (de obicei în baie).
+
+**Exemple.**
+
+- *Un apartament, un Generic Thermostat comută releul centralei, fără TRV-uri*:
+  Încălzirea întregii case = Generic Thermostat. Nimic altceva; pagina *Sursa
+  de căldură* nici nu apare.
+- *O casă, un releu Shelly pe centrală, TRV-uri în toate camerele*: Încă fără
+  dispozitive; câte o cameră pentru fiecare cameră cu TRV (*Alte termostate /
+  TRV-uri*, cu forțarea TRV când camera are senzorul ei); *Sursa de căldură* =
+  releul Shelly.
+- *O casă, un Hive pe hol legat la centrală, TRV-uri în trei camere*: Încă fără
+  dispozitive; trei camere cu TRV; *Sursa de căldură* = Hive, *Boost pentru
+  sursa de căldură* pornit, *Temperatura sursei în repaus* 17,5 °C. Hive ține
+  restul casei la circa 17,5 °C și primește maximul când o cameră cu TRV cere
+  căldură.
+- *Radiatoare electrice pe prize inteligente*: Încă fără dispozitive; câte o
+  cameră pentru fiecare cameră (*Comutator (releu)*, cu senzorul ei de
+  temperatură); fără sursă de căldură.
+
 ## Crearea casei
 
 Formularele arată doar câmpurile care se aplică. Dacă un câmp nu apare, înseamnă

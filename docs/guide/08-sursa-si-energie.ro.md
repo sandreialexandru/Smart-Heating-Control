@@ -16,10 +16,18 @@ Depinde cine pornește centrala:
 De ce contează: un TRV doar deschide sau închide robinetul caloriferului. Dacă
 centrala nu pornește, caloriferul rămâne rece.
 
-**Generic Thermostat sau releu pe toată casa, plus camere cu TRV-uri.** Centrala
-merge atunci doar când termostatul sau releul întregii case cere căldură (după
-propriul senzor). O cameră cu TRV care are nevoie de căldură cât acel senzor e
-cald rămâne rece: integrarea nu poate porni centrala pentru ea.
+Alegerea completă a configurării, pentru fiecare tip de locuință, e în
+[capitolul 2](02-instalare-si-casa.ro.md#ce-configurare-aleg-pentru-casa-mea).
+Un dispozitiv folosit de zona *Întreaga casă* sau de o cameră nu poate fi și
+*Sursă de căldură* (un dispozitiv, un singur rol).
+
+**Un termostat (Generic Thermostat sau altul) sau un releu pe toată casa, plus
+camere cu TRV-uri.** Centrala merge atunci doar când zona întregii case cere
+căldură (după propriul senzor). O cameră cu TRV care are nevoie de căldură cât
+acel senzor e cald rămâne rece: integrarea nu poate porni centrala pentru ea.
+Soluția: releul centralei ca *Sursă de căldură* în loc de pe toată casa (cu un
+termostat care pornește și el centrala, un releu legat în paralel cu el), sau
+termostatul folosit ca *Sursă de căldură* (cu boost) în loc de pe toată casa.
 
 ## Cum comandă integrarea sursa de căldură
 

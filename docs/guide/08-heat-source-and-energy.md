@@ -16,10 +16,19 @@ It depends on who starts the boiler:
 Why it matters: a TRV only opens or closes the radiator valve. If the boiler
 does not start, the radiator stays cold.
 
-**Generic Thermostat or relay on the whole house, plus rooms with TRVs.** The
-boiler then runs only when the whole-house thermostat or relay asks for heat
-(after its own sensor). A TRV room that needs heat while that sensor is warm
-stays cold: the integration cannot start the boiler for it.
+The full choice of the setup, with every kind of home, is in
+[chapter 2](02-install-and-house.md#which-setup-for-my-house). A device used by
+the *Whole house* zone or by a room cannot also be the *Heat source* (one
+device, one role).
+
+**A thermostat (Generic Thermostat or another) or a relay on the whole house,
+plus rooms with TRVs.** The boiler then runs only when the whole-house zone asks
+for heat (after its own sensor). A TRV room that needs heat while that sensor is
+warm stays cold: the integration cannot start the boiler for it. The way out:
+the boiler relay as *Heat source* instead of on the whole house (with a
+thermostat that also starts the boiler, a relay wired in parallel with it), or
+the thermostat used as *Heat source* (with the boost) instead of on the whole
+house.
 
 ## How the integration controls the heat source
 

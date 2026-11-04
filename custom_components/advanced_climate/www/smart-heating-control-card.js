@@ -4288,8 +4288,11 @@ const STYLE = `
   .quickset { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
   .quickset .btn { min-height: 36px; }
   .quickset .numfield { gap: 4px; white-space: nowrap; }
-  /* Room for "17.5", "100.5" (°F) or "auto" next to the arrows of the field. */
-  .quickset .numfield input { width: 5.8em; padding: 7px 8px; }
+  /* No arrows: they covered the value ("17" for 17.5, "aut" for auto); the
+     value is typed, or changed with the arrow keys. Room for "100.5" (°F). */
+  .quickset .numfield input { width: 4.8em; padding: 7px 8px; text-align: center; -moz-appearance: textfield; appearance: textfield; }
+  .quickset .numfield input::-webkit-inner-spin-button,
+  .quickset .numfield input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   .lockrow { display: flex; align-items: center; background: var(--ac-surface); border-radius: 10px; padding: 4px 10px; }
   .lockrow .toggle { width: 100%; justify-content: space-between; flex-direction: row-reverse; font-size: 0.9em; }
   .lockrow .toggle .knob { background: var(--ac-line); }

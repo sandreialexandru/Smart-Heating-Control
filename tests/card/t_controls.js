@@ -91,14 +91,15 @@ test("set for a while on a narrow card: the values fit their fields, Set is a pl
     const room = (inp, text) => {
       const cs = getComputedStyle(inp);
       ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-      // The arrows of a number field take about 18 px.
-      const free = inp.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 18;
+      const free = inp.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
       return free - ctx.measureText(text).width;
     };
     const q = (k) => card.shadowRoot.querySelector(`input[data-quick="${k}"][data-room="r1"]`);
-    return { temp: room(q("temp"), "100.5"), hours: room(q("hours"), q("hours").placeholder),
+    const arrows = [q("temp"), q("hours")].map((i) => getComputedStyle(i).appearance).join();
+    return { arrows, temp: room(q("temp"), "100.5"), hours: room(q("hours"), q("hours").placeholder),
       btn: card.shadowRoot.querySelector('[data-action="quick-temp"]').className.trim() };
   });
+  eq(r.arrows, "textfield,textfield", "no arrows over the value");
   ok(r.temp >= 0, "temperature cut: " + r.temp);
   ok(r.hours >= 0, "hours cut: " + r.hours);
   eq(r.btn, "btn", "Set like the other buttons");

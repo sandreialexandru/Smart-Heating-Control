@@ -65,8 +65,9 @@ GitHub releases.
   typing still saves the new time.
 - 🐛 **Set for a while on a narrow card** ([#6](https://github.com/sandreialexandru/Smart-Heating-Control/issues/6)):
   the temperature and duration fields cut their values (*17.* for 17.5,
-  *aut* for auto); they are now wide enough. The *Set* button looks like the
-  other buttons of the card.
+  *aut* for auto) under their up / down arrows. The arrows are gone (the
+  value is typed, or changed with the arrow keys) and the fields are a little
+  wider. The *Set* button looks like the other buttons of the card.
 
 ### Development
 

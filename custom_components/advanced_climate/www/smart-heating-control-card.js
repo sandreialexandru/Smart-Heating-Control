@@ -247,17 +247,6 @@ const TEXT = {
     dev_clear: "nobody",
     dev_heating: "heating",
     dev_idle: "idle",
-    dm_label: "Heat",
-    dm_rooms: "asked by {rooms}",
-    dm_none: "no room asks for it",
-    dm_needed: "{count} of {needed} rooms needed to start the heat source",
-    dm_reference: "the heat source follows {room}",
-    dm_reference_on: "{room} asks for heat",
-    dm_reference_off: "{room} does not ask for heat",
-    dm_frost: "frost protection: {rooms}",
-    dm_own: "with their own heating: {rooms}",
-    dm_min_on: "the heat source keeps running for its minimum time",
-    dm_min_off: "the heat source waits for its minimum time off",
     reset: "Reset",
     reset_confirm: "Confirm?",
     eta_help: "Time until the target, from the learned thermal model of the room for the current outdoor temperature.",
@@ -543,17 +532,6 @@ const TEXT = {
     dev_clear: "nimeni",
     dev_heating: "încălzește",
     dev_idle: "în repaus",
-    dm_label: "Căldură",
-    dm_rooms: "cerută de {rooms}",
-    dm_none: "nicio cameră nu cere",
-    dm_needed: "{count} din {needed} camere necesare pentru pornirea centralei",
-    dm_reference: "centrala urmează camera {room}",
-    dm_reference_on: "{room} cere căldură",
-    dm_reference_off: "{room} nu cere căldură",
-    dm_frost: "antiîngheț: {rooms}",
-    dm_own: "cu încălzire proprie: {rooms}",
-    dm_min_on: "centrala rămâne pornită timpul minim",
-    dm_min_off: "centrala așteaptă timpul minim oprită",
     reset: "Resetează",
     reset_confirm: "Confirmi?",
     eta_help: "Timpul până la țintă, după modelul termic învățat al camerei, la temperatura de afară de acum.",
@@ -1745,7 +1723,6 @@ class SmartHeatingControlCard extends HTMLElement {
           ${stat("fire", this._t("demand"), onOff(demand), demand?.state === "on" ? "hot" : "", e.heat_demand)}
           ${runtime ? this._runtimeStat(e.heating_runtime) : ""}
         </div>
-        ${this._demandHtml(demand, e.heat_demand)}
         ${this._cutoffHtml(outdoor, cutoff, e.outdoor_cutoff, mode, season, pause)}
         <div class="hactions" style="--n:${actions.length}">${actions.join("")}</div>
         ${vacPanel}
@@ -1805,38 +1782,6 @@ class SmartHeatingControlCard extends HTMLElement {
       })
       .join("");
     return `<dl class="details devices">${rows}</dl>`;
-  }
-
-  /** Which rooms start the heat source, or what it waits for (under the house tiles). */
-  _demandHtml(demand, entityId) {
-    const a = demand?.attributes;
-    if (!a || !Array.isArray(a.rooms)) return "";
-    const list = (names) => names.join(", ");
-    const parts = [];
-    if (a.reference_room) {
-      parts.push(this._t("dm_reference").replace("{room}", a.reference_room));
-      parts.push(
-        this._t(a.rooms.includes(a.reference_room) ? "dm_reference_on" : "dm_reference_off").replace(
-          "{room}",
-          a.reference_room
-        )
-      );
-    } else if (a.rooms.length) {
-      parts.push(this._t("dm_rooms").replace("{rooms}", list(a.rooms)));
-      const needed = num(a.needed) ?? 1;
-      if (a.source_configured && a.rooms.length < needed) {
-        parts.push(
-          this._t("dm_needed").replace("{count}", String(a.rooms.length)).replace("{needed}", String(needed))
-        );
-      }
-    }
-    if (a.frost_rooms?.length) parts.push(this._t("dm_frost").replace("{rooms}", list(a.frost_rooms)));
-    if (a.own_heat_rooms?.length) parts.push(this._t("dm_own").replace("{rooms}", list(a.own_heat_rooms)));
-    if (a.waiting === "min_on" || a.waiting === "min_off") parts.push(this._t(`dm_${a.waiting}`));
-    // Nothing asks and nothing waits: no line (the tile says Off).
-    if (!parts.length) return "";
-    return `<div class="demandline link ${demand.state === "on" ? "on" : ""}" ${this._more(entityId)}>
-        <b>${esc(this._t("dm_label"))}:</b> ${esc(parts.join(" · "))}</div>`;
   }
 
   /** "Warm outside: on • heating is off until the average falls to 17°", or why the forecast changes it. */
@@ -4321,9 +4266,6 @@ const STYLE = `
     background: color-mix(in srgb, var(--warning-color, #f0ad4e) 18%, transparent);
     border: 1px solid color-mix(in srgb, var(--warning-color, #f0ad4e) 55%, transparent); font-size: 0.9em; }
   .banner ha-icon { --mdc-icon-size: 20px; color: var(--warning-color, #f0ad4e); flex: none; }
-  .demandline { font-size: 0.85em; color: var(--ac-muted); padding: 6px 10px; border-radius: 10px; background: var(--ac-surface); }
-  .demandline b { color: var(--primary-text-color); font-weight: 500; }
-  .demandline.on { background: color-mix(in srgb, var(--ac-hot) 12%, transparent); }
   .details.devices div.dev { display: flex; align-items: center; gap: 10px; padding: 6px 10px; }
   .details.devices div.dev ha-icon { --mdc-icon-size: 20px; color: var(--ac-muted); flex: none; }
   .details.devices .dname { flex: 1; min-width: 0; display: flex; flex-direction: column; }

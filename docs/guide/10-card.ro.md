@@ -66,11 +66,6 @@ collapsed: true
   **sezon**, **cererea de căldură** și **timpul de încălzire**: două câte două
   pe un card îngust (trei pe rând fără timpul de încălzire), toate pe un rând
   pe unul lat.
-- Sub ele, linia **Căldură**: ce camere o cer (*cerută de Living, Baie*), câte
-  mai trebuie ca să pornească centrala (*1 din 2 camere necesare*), camera de
-  referință pe care o urmează și dacă aceasta cere, camerele pe antiîngheț sau
-  cu încălzire proprie și timpul minim pornită / oprită pe care îl așteaptă
-  centrala. Fără linie cât nimic nu cere și nimic nu așteaptă.
 - **Modul** (Auto / Vacanță / Oprit / Vară).
 - Un rând de butoane: **Pauză** și **Oaspeți** (pornit / oprit), **Vacanță**
   (deschide datele vacanței), **Reevaluează** și **Automat** (anulează toate

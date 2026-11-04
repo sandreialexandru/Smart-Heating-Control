@@ -206,8 +206,6 @@ class House:
         self._told: dict[str, Any] = {}
         # Why the heat source waits: "min_on" / "min_off" (minimum times), else None.
         self.source_waiting: str | None = None
-        # Which rooms ask for heat and what the heat source waits for (for the card).
-        self.demand_info: dict[str, Any] = {}
         self._unsubs: list[Callable[[], None]] = []
         self._timer_unsub: Callable[[], None] | None = None
         self._eval_unsub: Callable[[], None] | None = None
@@ -1263,18 +1261,6 @@ class House:
         self.heat_demand = demand or any(
             room.heat_demand for room in self.rooms.values() if not room.uses_house_source
         )
-        self.demand_info = {
-            "rooms": [room.name for room in sourced.values() if room.heat_demand],
-            "frost_rooms": [room.name for room in sourced.values() if room.frost_demand],
-            "own_heat_rooms": [
-                room.name
-                for room in self.rooms.values()
-                if not room.uses_house_source and room.heat_demand
-            ],
-            "needed": None if reference else needed,
-            "reference_room": sourced[reference].name if reference else None,
-            "source_configured": bool(opts.get(CONF_BOILER_ENTITY)),
-        }
         # Heating time of the house: while the heat source runs (its real state),
         # without one while at least one room heats.
         configured, source_on = self.heat_source_state()

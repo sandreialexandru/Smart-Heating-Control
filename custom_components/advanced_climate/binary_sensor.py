@@ -30,7 +30,9 @@ async def async_setup_entry(
         [
             HouseBinarySensor(house, "heating_season", lambda h: h.season_active),
             HouseBinarySensor(house, "outdoor_cutoff", lambda h: h.cutoff_active),
-            HouseHeatDemandSensor(house),
+            HouseBinarySensor(
+                house, "heat_demand", lambda h: h.heat_demand, BinarySensorDeviceClass.HEAT
+            ),
         ]
     )
     for room in house.rooms.values():
@@ -65,33 +67,6 @@ class HouseBinarySensor(HouseEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """State."""
         return self._value(self.house)
-
-
-class HouseHeatDemandSensor(HouseBinarySensor):
-    """The house asks for heat; which rooms ask and what the heat source waits for."""
-
-    _unrecorded_attributes = frozenset(
-        {
-            "rooms",
-            "frost_rooms",
-            "own_heat_rooms",
-            "needed",
-            "reference_room",
-            "source_configured",
-            "waiting",
-        }
-    )
-
-    def __init__(self, house: House) -> None:
-        """Initialize."""
-        super().__init__(
-            house, "heat_demand", lambda h: h.heat_demand, BinarySensorDeviceClass.HEAT
-        )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Which rooms ask for heat (names) and the wait of the heat source."""
-        return {**self.house.demand_info, "waiting": self.house.source_waiting}
 
 
 class RoomBinarySensor(RoomEntity, BinarySensorEntity):

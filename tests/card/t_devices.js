@@ -1,4 +1,4 @@
-// The devices of a room in its Details, and which rooms start the heat source.
+// The devices of a room in its Details.
 const mount = async (p, config, hass) => { await p.evaluate(([c, h]) => mount(c, h), [config, hass]); await p.waitForTimeout(200); };
 const click = (p, sel) => p.evaluate((s) => { const el = card.shadowRoot.querySelector(s); if (!el) throw new Error("no " + s); el.click(); }, sel);
 const text = (p, sel) => p.evaluate((s) => [...card.shadowRoot.querySelectorAll(s)].map((el) => el.innerText.replace(/\s+/g, " ").trim()), sel);
@@ -49,21 +49,4 @@ test("details: no devices group without devices; Romanian labels", async (p) => 
   await mount(p, {}, { lang: "ro", rooms: [{ id: "r1", name: "Bedroom", devices: DEVICES.slice(4, 6) }], extra: EXTRA });
   await click(p, '[data-key="details-r1"]'); await p.waitForTimeout(150);
   eq(await text(p, ".details.devices .dev"), ["Bedroom window Fereastră deschisă", "Bedroom motion Ocupare nimeni"], "in Romanian");
-});
-
-test("heat source: the rooms that ask, the rooms still needed, the minimum time", async (p) => {
-  const R = [{ id: "r1", name: "Bedroom" }];
-  const line = () => text(p, ".demandline");
-  await mount(p, {}, { rooms: R, demand: { rooms: ["Living", "Bathroom"], frost_rooms: [], own_heat_rooms: [], needed: 1, reference_room: null, source_configured: true, waiting: null } });
-  eq(await line(), ["Heat: asked by Living, Bathroom"], "two rooms");
-  await mount(p, {}, { rooms: R, houseDemand: false, demand: { rooms: ["Living"], frost_rooms: [], own_heat_rooms: ["Office"], needed: 2, reference_room: null, source_configured: true, waiting: "min_off" } });
-  eq(await line(), ["Heat: asked by Living · 1 of 2 rooms needed to start the heat source · with their own heating: Office · the heat source waits for its minimum time off"], "fewer rooms than needed");
-  await mount(p, {}, { rooms: R, demand: { rooms: ["Living"], frost_rooms: ["Office"], own_heat_rooms: [], needed: null, reference_room: "Bathroom", source_configured: true, waiting: null } });
-  eq(await line(), ["Heat: the heat source follows Bathroom · Bathroom does not ask for heat · frost protection: Office"], "reference room");
-  // Nothing asks and nothing waits: no line.
-  await mount(p, {}, { rooms: R, houseDemand: false, demand: { rooms: [], frost_rooms: [], own_heat_rooms: [], needed: 1, reference_room: null, source_configured: true, waiting: null } });
-  eq(await line(), [], "no line");
-  // Without a heat source the number of rooms is not told.
-  await mount(p, {}, { rooms: R, demand: { rooms: ["Living"], frost_rooms: [], own_heat_rooms: [], needed: 2, reference_room: null, source_configured: false, waiting: null } });
-  eq(await line(), ["Heat: asked by Living"], "no heat source");
 });

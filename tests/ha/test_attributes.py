@@ -359,7 +359,7 @@ async def test_diagnostics_of_the_learned_model(
     await _unload(hass, entry)
 
 
-# ---------------------------------------------------------------- devices, heat source
+# ---------------------------------------------------------------- devices
 async def test_devices_of_a_room_with_their_role(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -384,33 +384,4 @@ async def test_devices_of_a_room_with_their_role(
         ["binary_sensor.window", "window"],
         ["binary_sensor.motion", "occupancy"],
     ]
-    await _unload(hass, entry)
-
-
-async def test_heat_demand_tells_which_rooms_ask(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """The heat demand of the house names the rooms that ask and the rooms still needed."""
-    entry, room, _ = await _room(
-        hass, freezer, {"boiler_entity": "input_boolean.heater", "boiler_min_rooms": 2}
-    )
-    house = entry.runtime_data
-    room.heat_demand = True
-    house.async_request_evaluate(0)
-    await _tick(hass, freezer, 1)
-    attrs = hass.states.get("binary_sensor.home_heat_demand").attributes
-    assert attrs["rooms"] == ["Bedroom"]
-    assert attrs["needed"] == 2
-    assert attrs["reference_room"] is None
-    assert attrs["source_configured"] is True
-    assert attrs["frost_rooms"] == []
-    assert attrs["own_heat_rooms"] == []
-    assert "waiting" in attrs
-    # With a reference room the number of rooms does not count.
-    house.options = {**house.options, "reference_room": room.id}
-    house.async_request_evaluate(0)
-    await _tick(hass, freezer, 1)
-    attrs = hass.states.get("binary_sensor.home_heat_demand").attributes
-    assert attrs["reference_room"] == "Bedroom"
-    assert attrs["needed"] is None
     await _unload(hass, entry)

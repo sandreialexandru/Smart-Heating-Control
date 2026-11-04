@@ -7,6 +7,15 @@ GitHub releases.
 
 ## Unreleased
 
+## 2.6.2 – 2026-11-04
+
+🔥 A thermostat that starts the boiler (Hive, Nest, Tado, Netatmo) can now be
+the heat source of TRV rooms: it gets the maximum to start the boiler and an
+idle temperature to stop it. 🔌 The room details list every device with its
+state. 🏷️ Clearer setup choices, and a configurator that starts with what
+heats your home. 🐛 Fixes in the card: the schedule editor in a dark theme,
+typing a time, and the *Set for a while* fields on a narrow card.
+
 ### Integration
 
 - 🔥 **Start and stop the source by its temperature** ([#6](https://github.com/sandreialexandru/Smart-Heating-Control/issues/6)):

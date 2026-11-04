@@ -197,7 +197,10 @@ fixă pentru *aproape*. Se schimbă direct din card, între antiîngheț și max
 
 Fiecare profil cu zilele lui și un comutator pornit / oprit:
 
-- **orele de început** se trag pe bara zilei, în pași de 5 minute;
+- **orele de început** se trag pe bara zilei, în pași de 5 minute, sau se scriu
+  (ori se aleg) în câmpul de oră al fiecărui rând: bara se actualizează imediat,
+  iar rândurile se reordonează când ieșiți din câmp;
+- **nivelul** fiecărei ore se alege din lista de lângă ea;
 - **zilele** se aleg în editor (toate, lucrătoare, weekend, zile anume);
 - un profil se poate **copia** peste altul;
 - cardul avertizează înainte ca pornirea sau oprirea unui profil să lase

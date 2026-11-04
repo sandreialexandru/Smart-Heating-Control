@@ -197,7 +197,10 @@ maximum.
 
 Every profile with its days and an on / off switch:
 
-- **start times** are dragged on the day bar, in 5-minute steps;
+- **start times** are dragged on the day bar, in 5-minute steps, or typed (or
+  picked) in the time field of each row: the bar follows at once, and the rows
+  are sorted again when you leave the field;
+- the **level** of each start is picked in the list next to it;
 - the **days** are chosen in the editor (all, workdays, weekend, chosen days);
 - a profile can be **copied** over another;
 - the card warns before turning a profile on or off would leave days without a

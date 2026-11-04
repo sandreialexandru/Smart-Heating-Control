@@ -12,6 +12,9 @@
     "weather",
     "workday"
   ],
+  "categories": [
+    "climate.thermostats_heating"
+  ],
   "codeowners": [
     "@sandreialexandru"
   ],

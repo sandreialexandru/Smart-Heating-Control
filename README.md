@@ -90,14 +90,22 @@ Every part can be hidden; the options are in the [guide](docs/guide/10-card.md).
 
 ## 🚀 Get started
 
-1. **Install** with HACS: ⋮ → **Custom repositories** → add
+[![Open your Home Assistant and add this repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sandreialexandru&repository=Smart-Heating-Control&category=integration)
+
+1. **Install**: the button above opens the repository in HACS (the
+   **Marketplace** from Home Assistant 2026.11) in your own Home Assistant;
+   install **Smart Heating Control** and restart Home Assistant. By hand: ⋮ →
+   **Custom repositories** → add
    `https://github.com/sandreialexandru/Smart-Heating-Control` as
-   **Integration**, install **Smart Heating Control** and restart Home
-   Assistant. Or copy `custom_components/advanced_climate` into
+   **Integration**. Or copy `custom_components/advanced_climate` into
    `config/custom_components` yourself.
 2. **Add the house**: **Settings → Devices & services → Add integration →
-   Smart Heating Control**. Pick the people, the thermostat that heats the
-   house, and you are done for a house with one thermostat.
+   Smart Heating Control**, or this button:
+
+   [![Open your Home Assistant and add Smart Heating Control](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=advanced_climate)
+
+   Pick the people, the thermostat that heats the house, and you are done
+   for a house with one thermostat.
 3. **Add rooms** (optional) with their own valves or thermostats, from the
    integration page, and put the card on a dashboard.
 

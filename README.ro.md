@@ -94,14 +94,22 @@ Orice parte se poate ascunde; opțiunile sunt în [ghid](docs/guide/10-card.ro.m
 
 ## 🚀 Primii pași
 
-1. **Instalare** cu HACS: ⋮ → **Custom repositories** → se adaugă
+[![Deschide Home Assistant și adaugă acest repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sandreialexandru&repository=Smart-Heating-Control&category=integration)
+
+1. **Instalare**: butonul de mai sus deschide repository-ul în HACS
+   (**Marketplace** din Home Assistant 2026.11) în propriul Home Assistant; se
+   instalează **Smart Heating Control** și se repornește Home Assistant. De
+   mână: ⋮ → **Custom repositories** → se adaugă
    `https://github.com/sandreialexandru/Smart-Heating-Control` ca
-   **Integration**, se instalează **Smart Heating Control** și se repornește
-   Home Assistant. Sau se copiază `custom_components/advanced_climate` în
+   **Integration**. Sau se copiază `custom_components/advanced_climate` în
    `config/custom_components`.
 2. **Casa**: **Settings → Devices & services → Add integration → Smart Heating
-   Control**. Se aleg persoanele și termostatul care încălzește casa; pentru o
-   casă cu un singur termostat, asta e tot.
+   Control**, sau acest buton:
+
+   [![Deschide Home Assistant și adaugă Smart Heating Control](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=advanced_climate)
+
+   Se aleg persoanele și termostatul care încălzește casa; pentru o casă cu
+   un singur termostat, asta e tot.
 3. **Camerele** (opțional), cele cu robinete sau termostate proprii, se adaugă
    din pagina integrării, iar cardul se pune pe un dashboard.
 

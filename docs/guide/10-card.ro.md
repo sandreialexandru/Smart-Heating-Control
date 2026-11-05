@@ -184,9 +184,15 @@ senzorii căzuți și *Cald afară* apar așa cum sunt acum, pe toată perioada.
 <p align="center"><img src="../images/card-light.png" alt="O modificare manuală cu Setează temporar deschis, temă deschisă" width="380"></p>
 
 Se pune un nivel sau o temperatură pentru un număr de ore: *[Setează] [21] °C pentru
-[2] h*. Ore goale = regula configurată pentru modificările manuale. O
-modificare manuală cu sfârșit arată cât mai are, de exemplu *până la 15:10 ·
-încă 1 h 30 min* (în pași de 5 minute peste o oră).
+[2] h*. Temperatura se scrie (orice valoare, de exemplu 22,5). Ore goale =
+regula configurată pentru modificările manuale. Doar orele, cu temperatura
+goală, schimbă cât mai ține modificarea manuală de acum, socotit de acum (de
+exemplu încă 3 h); fără o modificare manuală, cardul spune asta. O modificare
+manuală cu sfârșit arată cât mai are, de exemplu *până la 15:10 · încă 1 h 30
+min* (în pași de 5 minute peste o oră). **Automat** o încheie.
+
+Din automatizări se face același lucru cu acțiunea
+[`advanced_climate.set_override`](11-entitati-si-servicii.ro.md#advanced_climateset_override).
 
 ### Niveluri
 

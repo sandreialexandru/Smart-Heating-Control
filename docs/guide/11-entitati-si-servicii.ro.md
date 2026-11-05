@@ -222,10 +222,56 @@ actions:
       duration_hours: 1
 ```
 
+**O cameră de obicei la 16 °C și la 22 °C cât e folosită.** Camera are un
+program cu un singur start la 00:00 pe nivelul *Home*, pus la 16 °C în
+*Niveluri*. Integrarea nu are o entitate climate proprie (comandă
+termostatele existente, nu le înlocuiește): temperatura se schimbă cu
+acțiunile ei. În editorul de automatizări: *Adaugă acțiune* → se caută
+**Smart Heating Control**.
+
+```yaml
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.birou_ocupare
+    to: "on"
+    id: "intra"
+  - trigger: state
+    entity_id: binary_sensor.birou_ocupare
+    to: "off"
+    for: "00:15:00"
+    id: "iese"
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: "intra"
+        sequence:
+          # 22 °C cel mult 4 ore (apoi revine singură la 16 °C)
+          - action: advanced_climate.set_override
+            data:
+              room: Birou
+              temperature: 22
+              duration_hours: 4
+      - conditions:
+          - condition: trigger
+            id: "iese"
+        sequence:
+          # Înapoi la program (16 °C)
+          - action: advanced_climate.clear_override
+            data:
+              room: Birou
+```
+
+Un script cu aceeași acțiune e și el o entitate (`script.*`): se pune pe un
+dashboard ca buton sau se pornește prin voce.
+
 ## Diagnosticul
 
 Pe pagina integrării, **⋮ → Descarcă diagnosticul** dă configurația, învățarea
 fiecărei camere (`thermal_model`: numerele învățate și cei zece candidați de
 inerție cu erorile lor) și ultimele 100 de decizii ale
 fiecărei camere. E util la
-raportarea unei probleme.
+raportarea unei probleme. Datele personale sunt lăsate deoparte (apar ca
+`**REDACTED**`): destinatarii alertelor, persoanele și unde sunt, zonele
+apropiate, senzorii de distanță și de timp de drum și textul evenimentului din
+calendar.

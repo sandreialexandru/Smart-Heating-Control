@@ -104,3 +104,48 @@ test("set for a while on a narrow card: the values fit their fields, Set is a pl
   ok(r.hours >= 0, "hours cut: " + r.hours);
   eq(r.btn, "btn", "Set like the other buttons");
 });
+
+// Set for a while with only the hours: the current manual change lasts that long from now.
+const quickSet = async (p, temp, hours) => {
+  await click(p, '[data-key="quick-r1"]'); await p.waitForTimeout(100);
+  await p.evaluate(([t, h]) => {
+    const q = (k) => card.shadowRoot.querySelector(`input[data-quick="${k}"][data-room="r1"]`);
+    q("temp").value = t; q("hours").value = h;
+  }, [temp, hours]);
+  await click(p, '[data-action="quick-temp"][data-room="r1"]'); await p.waitForTimeout(120);
+};
+const note = (p) => p.evaluate(() => card.shadowRoot.querySelector(".qnote")?.textContent || null);
+
+test("set for a while: only the hours keep the level of the manual change", async (p) => {
+  await mount(p, {}, { rooms: [{ ...R[0], state: "manual_override", override: { origin: "card", until: null, preset: "comfort", temperature: 22 } }] });
+  await quickSet(p, "", "2");
+  eq(await services(p), [{ domain: "advanced_climate", service: "set_override", data: { room: "r1", preset: "comfort", duration_hours: 2 } }], "call");
+  eq(await note(p), null, "no note");
+});
+
+test("set for a while: only the hours keep the temperature of a manual change without a level", async (p) => {
+  await mount(p, {}, { rooms: [{ ...R[0], state: "manual_override", override: { origin: "device", until: null, preset: null, temperature: 23.5 } }] });
+  await quickSet(p, "", "1.5");
+  eq(await services(p), [{ domain: "advanced_climate", service: "set_override", data: { room: "r1", temperature: 23.5, duration_hours: 1.5 } }], "call");
+});
+
+test("set for a while: only the hours without a manual change say so instead of doing nothing", async (p) => {
+  await mount(p, {}, { rooms: R });
+  await quickSet(p, "", "2");
+  eq((await services(p)).length, 0, "no call");
+  eq(await note(p), "No manual change to extend: type a temperature or pick a level.", "note");
+  ok(await p.evaluate(() => card.shadowRoot.querySelector('input[data-quick="hours"][data-room="r1"]').value === "2"), "the hours stay typed");
+});
+
+test("set for a while: nothing typed asks for a temperature", async (p) => {
+  await mount(p, {}, { rooms: [{ ...R[0], state: "manual_override", override: { origin: "card", until: null, preset: "comfort", temperature: 22 } }] });
+  await quickSet(p, "", "");
+  eq((await services(p)).length, 0, "no call");
+  eq(await note(p), "Type a temperature or pick a level.", "note");
+});
+
+test("set for a while: a temperature with hours is sent as before", async (p) => {
+  await mount(p, {}, { rooms: R });
+  await quickSet(p, "22.5", "3");
+  eq(await services(p), [{ domain: "advanced_climate", service: "set_override", data: { room: "r1", temperature: 22.5, duration_hours: 3 } }], "call");
+});

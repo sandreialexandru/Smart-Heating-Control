@@ -7,6 +7,20 @@ GitHub releases.
 
 ## Unreleased
 
+### Card
+
+- ⏱️ **Set for a while with only the hours** ([#7](https://github.com/sandreialexandru/Smart-Heating-Control/issues/7)):
+  with the temperature left empty, *Set* changes how long the current manual
+  change lasts, from now (its level or temperature stays). Without a manual
+  change, or with nothing typed, the card now says what to fill in instead of
+  doing nothing.
+
+### Documentation
+
+- An automation example for a room that is usually 16 °C and 22 °C while it
+  is used, with `set_override` and `clear_override`, and why the integration
+  has no climate entity of its own.
+
 ## 2.6.3 – 2026-11-05
 
 🔒 The diagnostics no longer contain personal data, and HACS is now the first

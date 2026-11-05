@@ -183,9 +183,15 @@ outside* appear as they are now, for the whole period.
 <p align="center"><img src="../images/card-light.png" alt="A manual change with Set for a while open, light theme" width="380"></p>
 
 Set a level or a temperature for a number of hours: *[Set] [21] °C for [2] h*.
-Empty hours = the configured rule for manual changes. A manual change with an
-end shows the time it has left, e.g. *until 15:10 · 1 h 30 min left* (in
-5-minute steps above an hour).
+The temperature is typed (any value, e.g. 22.5). Empty hours = the configured
+rule for manual changes. Only the hours, with the temperature left empty,
+change how long the current manual change lasts, from now (e.g. 3 h more);
+without a manual change the card says so. A manual change with an end shows
+the time it has left, e.g. *until 15:10 · 1 h 30 min left* (in 5-minute steps
+above an hour). **Automatic** ends it.
+
+From automations the same is done with the action
+[`advanced_climate.set_override`](11-entities-and-services.md#advanced_climateset_override).
 
 ### Levels
 

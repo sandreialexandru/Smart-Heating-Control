@@ -223,9 +223,54 @@ actions:
       duration_hours: 1
 ```
 
+**A room that is usually 16 °C, and 22 °C while it is used.** The room has a
+schedule with one start at 00:00 on the level *Home*, set to 16 °C in
+*Levels*. The integration has no climate entity of its own (it commands your
+thermostats, it does not replace them): the temperature is changed with its
+actions. In the automation editor: *Add action* → search **Smart Heating
+Control**.
+
+```yaml
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.office_occupancy
+    to: "on"
+    id: "in"
+  - trigger: state
+    entity_id: binary_sensor.office_occupancy
+    to: "off"
+    for: "00:15:00"
+    id: "out"
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: "in"
+        sequence:
+          # 22 °C for at most 4 hours (it goes back to 16 °C by itself)
+          - action: advanced_climate.set_override
+            data:
+              room: Office
+              temperature: 22
+              duration_hours: 4
+      - conditions:
+          - condition: trigger
+            id: "out"
+        sequence:
+          # Back to the schedule (16 °C)
+          - action: advanced_climate.clear_override
+            data:
+              room: Office
+```
+
+A script with the same action is an entity (`script.*`) too: put it on a
+dashboard as a button, or start it by voice.
+
 ## Diagnostics
 
 On the integration page, **⋮ → Download diagnostics** gives the configuration,
 the learning of every room (`thermal_model`: the learned numbers and the ten
 inertia candidates with their errors) and the last 100 decisions of every room. Useful
-when you report a problem.
+when you report a problem. Personal data is left out (shown as `**REDACTED**`):
+the alert recipients, the people and where they are, the nearby zones, the
+distance and travel-time sensors and the text of the calendar event.

@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.3";
+const CARD_VERSION = "2.6.4b1";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -117,7 +117,9 @@ const TEXT = {
     vacation_none: "not planned",
     vacation_hint: "During the vacation every room uses away. A few hours before the end the schedule applies again, so the house is warm when you return. Without a start date the vacation starts now.",
     today: "Today",
-    quick_hint: "Keeps a level or a temperature as a manual change. Empty duration = the rule from the options.",
+    quick_hint: "Keeps a level or a temperature as a manual change. Empty duration = the rule from the options. Only the hours: changes how long the current manual change lasts.",
+    quick_need_temp: "Type a temperature or pick a level.",
+    quick_nothing_to_extend: "No manual change to extend: type a temperature or pick a level.",
     days_workday: "Monday–Friday, except holidays",
     days_weekend: "Saturday, Sunday and holidays",
     days_all: "All days",
@@ -402,7 +404,9 @@ const TEXT = {
     vacation_none: "neplanificată",
     vacation_hint: "În vacanță toate camerele folosesc away. Cu câteva ore înainte de sfârșit se aplică iar programul, ca să găsești casa caldă. Fără dată de început, vacanța începe acum.",
     today: "Azi",
-    quick_hint: "Păstrează un nivel sau o temperatură ca modificare manuală. Durată goală = regula din opțiuni.",
+    quick_hint: "Păstrează un nivel sau o temperatură ca modificare manuală. Durată goală = regula din opțiuni. Doar orele: schimbă cât mai ține modificarea manuală de acum.",
+    quick_need_temp: "Scrie o temperatură sau alege un nivel.",
+    quick_nothing_to_extend: "Nu e nicio modificare manuală de prelungit: scrie o temperatură sau alege un nivel.",
     days_workday: "Luni–vineri, fără sărbători",
     days_weekend: "Sâmbătă, duminică și sărbători",
     days_all: "Toate zilele",
@@ -3924,6 +3928,23 @@ class SmartHeatingControlCard extends HTMLElement {
     else draw();
   }
 
+  /** A short note under the quick manual change, without drawing the card again
+   * (the fields keep what was typed); it goes away after a few seconds. */
+  _quickNote(room, key) {
+    const set = this.shadowRoot.querySelector(`input[data-quick="temp"][data-room="${CSS.escape(room)}"]`)?.closest(".quickset");
+    if (!set) return;
+    let note = set.parentElement.querySelector(".qnote");
+    if (!note) {
+      note = document.createElement("p");
+      note.className = "hint qnote";
+      note.setAttribute("role", "status");
+      set.after(note);
+    }
+    note.textContent = this._t(key);
+    clearTimeout(this._quickNoteTimer);
+    this._quickNoteTimer = setTimeout(() => note.remove(), 5000);
+  }
+
   /** Temperature and duration entered in the quick manual change. */
   _quickValues(room) {
     const temp = this.shadowRoot.querySelector(`input[data-quick="temp"][data-room="${CSS.escape(room)}"]`);
@@ -4045,8 +4066,19 @@ class SmartHeatingControlCard extends HTMLElement {
       }
       case "quick-temp": {
         const { temp, data } = this._quickValues(room);
-        if (temp === null) return;
-        await this._call("advanced_climate", "set_override", { room, temperature: temp, ...data });
+        if (temp !== null) {
+          await this._call("advanced_climate", "set_override", { room, temperature: temp, ...data });
+          return;
+        }
+        // Only the hours: the manual change now lasts that long from now
+        // (with what it holds: its level, else its temperature).
+        const held = this._rooms().find((s) => s.attributes.room_id === room)?.attributes?.override;
+        const keep = held?.preset ? { preset: held.preset } : num(held?.temperature) !== null ? { temperature: num(held.temperature) } : null;
+        if (data.duration_hours === undefined || !keep) {
+          this._quickNote(room, data.duration_hours === undefined ? "quick_need_temp" : "quick_nothing_to_extend");
+          return;
+        }
+        await this._call("advanced_climate", "set_override", { room, ...keep, ...data });
         return;
       }
       case "edit": {
@@ -4286,6 +4318,7 @@ const STYLE = `
   .chev.open { transform: rotate(45deg); }
   .toggle.sm { font-size: 0.85em; margin-left: auto; }
   .quickset { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .qnote { margin: 6px 0 0; color: color-mix(in srgb, var(--warning-color, #f0ad4e) 75%, var(--primary-text-color)); }
   .quickset .btn { min-height: 36px; }
   .quickset .numfield { gap: 4px; white-space: nowrap; }
   /* No arrows: they covered the value ("17" for 17.5, "aut" for auto); the

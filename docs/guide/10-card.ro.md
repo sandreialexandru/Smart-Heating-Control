@@ -5,7 +5,7 @@
 Integrarea are un card Lovelace cu toate comenzile: casa, camerele, graficul,
 programul editabil și detaliile.
 
-<p align="center"><img src="../images/card-demo.gif" alt="Cardul în folosire" width="400"><br><sub>▶️ <a href="../images/card-demo.mp4">Tot videoclipul (30 s, MP4)</a> · date inventate</sub></p>
+<p align="center"><img src="../images/card-demo.gif" alt="Cardul în folosire" width="400"><br><sub>▶️ <a href="https://github.com/user-attachments/assets/31181198-e0fa-4510-bbfa-af9f790a19c7">Tot videoclipul (30 s, MP4)</a> · date inventate</sub></p>
 
 ## Adăugarea cardului
 

@@ -96,13 +96,13 @@ Orice parte se poate ascunde; opțiunile sunt în [ghid](docs/guide/10-card.ro.m
 
 [![Deschide Home Assistant și adaugă acest repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sandreialexandru&repository=Smart-Heating-Control&category=integration)
 
-1. **Instalare**: butonul de mai sus deschide repository-ul în HACS
-   (**Marketplace** din Home Assistant 2026.11) în propriul Home Assistant; se
-   instalează **Smart Heating Control** și se repornește Home Assistant. De
-   mână: ⋮ → **Custom repositories** → se adaugă
+1. **Instalare** din HACS (**Marketplace** din Home Assistant 2026.11): se
+   caută **Smart Heating Control**, se instalează și se repornește Home
+   Assistant. Nu apare la căutare? Se deschide cu butonul de mai sus sau se
+   adaugă de mână: ⋮ → **Custom repositories** →
    `https://github.com/sandreialexandru/Smart-Heating-Control` ca
-   **Integration**. Sau se copiază `custom_components/advanced_climate` în
-   `config/custom_components`.
+   **Integration**. Fără HACS, se copiază `custom_components/advanced_climate`
+   în `config/custom_components`.
 2. **Casa**: **Settings → Devices & services → Add integration → Smart Heating
    Control**, sau acest buton:
 

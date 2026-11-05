@@ -15,11 +15,11 @@
 
 **Cu HACS (recomandat):**
 
-1. HACS → meniul ⋮ → **Custom repositories**: se adaugă
-   `https://github.com/sandreialexandru/Smart-Heating-Control`, tipul
-   **Integration**.
-2. Se caută **Smart Heating Control**, se instalează și se repornește Home
-   Assistant.
+1. În HACS (**Marketplace** din Home Assistant 2026.11) se caută **Smart
+   Heating Control**, se instalează și se repornește Home Assistant.
+2. Nu apare la căutare? Se adaugă ca repository custom: meniul ⋮ →
+   **Custom repositories** → `https://github.com/sandreialexandru/Smart-Heating-Control`,
+   tipul **Integration**, apoi se instalează ca mai sus.
 3. **Setări → Dispozitive și servicii → Adaugă integrare → Smart Heating
    Control**.
 

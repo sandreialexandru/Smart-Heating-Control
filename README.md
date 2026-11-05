@@ -92,13 +92,13 @@ Every part can be hidden; the options are in the [guide](docs/guide/10-card.md).
 
 [![Open your Home Assistant and add this repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sandreialexandru&repository=Smart-Heating-Control&category=integration)
 
-1. **Install**: the button above opens the repository in HACS (the
-   **Marketplace** from Home Assistant 2026.11) in your own Home Assistant;
-   install **Smart Heating Control** and restart Home Assistant. By hand: ⋮ →
-   **Custom repositories** → add
+1. **Install** from HACS (the **Marketplace** from Home Assistant 2026.11):
+   search for **Smart Heating Control**, install it and restart Home
+   Assistant. Not found in the search? Open it with the button above, or add
+   it by hand: ⋮ → **Custom repositories** →
    `https://github.com/sandreialexandru/Smart-Heating-Control` as
-   **Integration**. Or copy `custom_components/advanced_climate` into
-   `config/custom_components` yourself.
+   **Integration**. Without HACS, copy `custom_components/advanced_climate`
+   into `config/custom_components`.
 2. **Add the house**: **Settings → Devices & services → Add integration →
    Smart Heating Control**, or this button:
 

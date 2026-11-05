@@ -15,10 +15,11 @@
 
 **With HACS (recommended):**
 
-1. HACS → ⋮ menu → **Custom repositories** → add
-   `https://github.com/sandreialexandru/Smart-Heating-Control`, type
-   **Integration**.
-2. Search **Smart Heating Control**, install it and restart Home Assistant.
+1. In HACS (the **Marketplace** from Home Assistant 2026.11) search
+   **Smart Heating Control**, install it and restart Home Assistant.
+2. Not found in the search? Add it as a custom repository: ⋮ menu →
+   **Custom repositories** → `https://github.com/sandreialexandru/Smart-Heating-Control`,
+   type **Integration**, then install it as above.
 3. **Settings → Devices & services → Add integration → Smart Heating
    Control**.
 

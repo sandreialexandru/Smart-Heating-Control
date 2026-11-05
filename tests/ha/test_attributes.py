@@ -322,6 +322,47 @@ async def test_no_heat_reason_waits_for_the_rooms_needed_or_the_reference_room(
 
 
 # ---------------------------------------------------------------- diagnostics
+async def test_diagnostics_leave_out_the_people_and_the_recipients(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Diagnostics get attached to public issues: no names, places or addresses."""
+    house = {
+        "notify_critical": "notify.me_gmail_com: ana@example.com",
+        "notify_warning": "notify.mobile_app_ana",
+        "notify_info": "notify.mobile_app_ion",
+        "notify_service": "notify.mobile_app_old",
+        "nearby_zones": ["zone.bucharest"],
+        "proximity_distance": "sensor.home_ana_distance",
+        "proximity_direction": "sensor.home_ana_direction",
+        "travel_time": "sensor.waze_ana",
+    }
+    entry, room, _ = await _room(hass, freezer, house)
+    entry.runtime_data.calendar_message = "Holiday at grandma's"
+    data = await async_get_config_entry_diagnostics(hass, entry)
+    text = repr(data)
+    for secret in (
+        "andrei",
+        "ana@example.com",
+        "mobile_app",
+        "bucharest",
+        "waze",
+        "_ana_",
+        "grandma",
+    ):
+        assert secret not in text, secret
+    opts = data["options"]
+    for key in house:
+        assert opts[key] == "**REDACTED**", key
+    assert opts["persons"] == "**REDACTED**"
+    assert data["state"]["person_classes"] == "**REDACTED**"
+    assert data["state"]["calendar_message"] == "**REDACTED**"
+    # What helps to find a problem is still there.
+    assert data["state"]["presence"] == "home"
+    assert data["state"]["rooms"][room.name]["id"] == room.id
+    assert next(iter(data["rooms"].values()))["data"]["source"] == "switch"
+    await _unload(hass, entry)
+
+
 async def test_diagnostics_of_the_learned_model(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:

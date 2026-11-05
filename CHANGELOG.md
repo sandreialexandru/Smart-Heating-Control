@@ -7,6 +7,28 @@ GitHub releases.
 
 ## Unreleased
 
+## 2.6.3 – 2026-11-05
+
+🔒 The diagnostics no longer contain personal data, and HACS is now the first
+way to install.
+
+### Integration
+
+- 🔒 **Diagnostics without personal data**: the alert recipients (phones,
+  e-mail addresses), the people and where each of them is, the nearby zones,
+  the distance and travel-time sensors and the text of the calendar event are
+  replaced by `**REDACTED**`, since diagnostics are often attached to public
+  issues.
+- 🏷️ The integration has a category in Home Assistant (*Climate →
+  Thermostats & heating*).
+
+### Documentation
+
+- The install steps start with searching *Smart Heating Control* in HACS (the
+  Marketplace from Home Assistant 2026.11); the custom repository is the
+  fallback. New buttons in the README add the repository and start the setup.
+- A new demo of the card, with invented people.
+
 ## 2.6.2 – 2026-11-04
 
 🔥 A thermostat that starts the boiler (Hive, Nest, Tado, Netatmo) can now be

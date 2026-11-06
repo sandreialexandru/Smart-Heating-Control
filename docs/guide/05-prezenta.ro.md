@@ -98,7 +98,8 @@ sau pleacă: aplicația Waze sau Google nu transmite unde navighezi. Singuri,
 funcționează ca o prezență măsurată în minute de drum („cineva e la mai puțin
 de 10 minute de casă”), deci și cine stă la un birou sau la magazin atât de
 aproape ține casa caldă. Se pun minutele sub drumurile până la locurile unde
-stați des, sau se adaugă senzorul de direcție Proximity.
+stați des, sau se adaugă senzorul de direcție Proximity. **E recomandat
+Proximity în loc, pentru că poate afla direcția.**
 
 Cineva e **pe drum spre casă** (*arriving*) când e mai aproape decât
 *Preîncălzește sub distanța* (implicit 10 km) **sau** la mai puțin decât

@@ -99,7 +99,8 @@ going: the Waze or Google app does not share where you navigate to. On their
 own they work like presence measured in driving time ("someone is less than 10
 minutes from home"), so sitting at an office or at the shop that close keeps
 the house warm. Set the minutes below the trips to the places where you spend
-time, or add the Proximity direction sensor.
+time, or add the Proximity direction sensor. **Proximity is recommended
+instead, because it can tell the direction.**
 
 Someone is **on the way home** (*arriving*) when closer than *Preheat below
 distance* (10 km by default) **or** less than *Preheat below travel time* (20

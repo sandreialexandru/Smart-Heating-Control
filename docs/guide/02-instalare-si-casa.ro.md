@@ -201,9 +201,9 @@ schimbă ca la orice cameră: pe pagina integrării, la zona *Whole house*,
 | Întârziere la sosire | 0 min | De obicei 0: încălzirea revine imediat ce vine cineva. Se mărește doar dacă GPS-ul raportează uneori greșit „acasă”. |
 | Senzori de prezență | niciunul | Țin starea casei *acasă* cât sunt pornite (mmWave, mișcare, un comutator pentru cine nu are telefon). |
 | Modul oaspeți se oprește după | 0 h | Modul oaspeți ține starea casei *acasă*; se oprește singur după atâtea ore. 0 = doar manual. |
-| Senzor de distanță (Proximity) | – | Pentru preîncălzirea pe drum spre casă. |
+| Senzor de distanță (Proximity) | – | Pentru preîncălzirea pe drum spre casă (recomandat, cu senzorul de direcție). |
 | Senzor de direcție (Proximity) | – | Ca preîncălzirea să pornească doar când cineva vine spre casă, nu când stă la un birou aproape de casă. |
-| Senzori de timp de deplasare | – | Timpul până acasă (Waze, Google Travel Time), câte un senzor pentru fiecare persoană: contează drumul cel mai scurt. |
+| Senzori de timp de deplasare | – | Timpul până acasă (Waze, Google Travel Time), câte un senzor pentru fiecare persoană: contează drumul cel mai scurt. Fără senzorul de direcție arată doar cât de aproape e cineva, nu dacă vine acasă. |
 
 Cu un senzor de distanță sau de timp, apare al doilea formular,
 **Preîncălzire pe drum spre casă**:

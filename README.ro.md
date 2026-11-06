@@ -23,9 +23,9 @@ https://github.com/user-attachments/assets/31181198-e0fa-4510-bbfa-af9f790a19c7
 
 🏠 **Știe cine e acasă.** Fiecare persoană e *acasă*, *aproape* (undeva în
 oraș) sau *departe*. Casa încălzește pentru cine e acolo, ține *eco* cât
-cineva e doar aproape, trece pe *away* când toți sunt departe și, cu un senzor
-Proximity sau de timp de drum, pornește din nou încălzirea când cineva e pe
-drum spre casă.
+cineva e doar aproape, trece pe *away* când toți sunt departe și, cu Proximity
+(recomandat, cu direcția) sau cu un senzor de timp de drum, pornește din nou
+încălzirea când cineva e pe drum spre casă.
 
 🧠 **Învață singură fiecare cameră.** Fiecare cameră învață cât de repede se
 încălzește, cum se răcește, cât de încet reacționează caloriferele sau

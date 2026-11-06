@@ -78,24 +78,33 @@ uitate nu schimbă nimic.
 ## Preîncălzirea pe drum spre casă
 
 Când starea casei e *aproape* sau *departe*, poate începe să se încălzească **cât
-cineva e pe drum spre casă**, ca să fie cald la sosire. E nevoie de unul dintre:
+cineva e pe drum spre casă**, ca să fie cald la sosire.
 
-- integrarea **Proximity** din Home Assistant, cu senzorul de distanță (și
-  opțional cel de direcție);
-- senzori de **timp de deplasare** (Waze Travel Time, Google Travel Time),
-  câte unul pentru fiecare persoană: contează drumul cel mai scurt, deci casa
-  se preîncălzește pentru cine e cel mai aproape de casă (un senzor
-  indisponibil e lăsat deoparte).
+**Recomandat: integrarea Proximity din Home Assistant**, cu senzorii de
+distanță **și** de direcție. Proximity urmărește telefoanele (aplicația Home
+Assistant Companion, cu locația permisă în fundal) și află direcția din cum se
+schimbă distanța: `towards` (spre casă), `away_from` (dinspre casă) sau
+`stationary`. Doar direcția arată că cineva chiar **vine acasă**. Cu mai multe
+persoane, se urmăresc toate într-un singur Proximity și se aleg senzorii lui
+*nearest distance* și *nearest direction of travel*: urmăresc persoana cea mai
+apropiată de casă, cu direcția aceleiași persoane. O *toleranță* de 50–100 m în
+Proximity împiedică micile salturi ale GPS-ului să schimbe direcția.
 
-Cu mai multe persoane și Proximity se folosesc senzorii lui *nearest
-distance* și *nearest direction of travel*: urmăresc persoana cea mai apropiată
-de casă, cu direcția aceleiași persoane.
+Sunt acceptați și **senzorii de timp de deplasare** (Waze Travel Time, Google
+Travel Time), câte unul pentru fiecare persoană, cu persoana ca origine și
+casa ca destinație: contează drumul cel mai scurt (un senzor indisponibil e
+lăsat deoparte). Ei spun doar **la câte minute de casă** e cineva, nu dacă vine
+sau pleacă: aplicația Waze sau Google nu transmite unde navighezi. Singuri,
+funcționează ca o prezență măsurată în minute de drum („cineva e la mai puțin
+de 10 minute de casă”), deci și cine stă la un birou sau la magazin atât de
+aproape ține casa caldă. Se pun minutele sub drumurile până la locurile unde
+stați des, sau se adaugă senzorul de direcție Proximity.
 
 Cineva e **pe drum spre casă** (*arriving*) când e mai aproape decât
 *Preîncălzește sub distanța* (implicit 10 km) **sau** la mai puțin decât
 *Preîncălzește sub timpul* (implicit 20 minute). Cu senzorul de direcție setat,
-mai trebuie să se și apropie (direcția `towards`), ca să nu pornească
-preîncălzirea pentru cineva care stă la un birou aproape de casă.
+mai trebuie să se și apropie (direcția `towards`), oricare dintre cele două l-a
+făcut „aproape”.
 
 Cât timp cineva e pe drum spre casă, regulile de prezență nu se aplică:
 camerele urmează programul, ca și cum cineva ar fi deja acasă.

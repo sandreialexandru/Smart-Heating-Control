@@ -78,23 +78,33 @@ happens.
 ## Preheating on the way home
 
 While you are *nearby* or *far*, the house can start to warm up **while you are
-on the way home**, so it is warm when you arrive. You need one of:
+on the way home**, so it is warm when you arrive.
 
-- the Home Assistant **Proximity** integration, with its distance sensor (and
-  optionally the direction sensor);
-- **travel time** sensors (Waze Travel Time, Google Travel Time), one per
-  person: the shortest trip counts, so the house preheats for whoever is
-  closest to home (a sensor that is unavailable is left out).
+**Recommended: the Home Assistant Proximity integration**, with its distance
+**and** direction sensors. Proximity follows the phones (Home Assistant
+Companion app with location allowed in the background) and works out the
+direction from how the distance changes: `towards` home, `away_from` it or
+`stationary`. Only the direction tells that someone is really **coming
+home**. With several people, track them all in one Proximity and pick its
+*nearest distance* and *nearest direction of travel* sensors: they follow
+whoever is closest to home, with the direction of that same person. A
+*tolerance* of 50–100 m in Proximity keeps small GPS jumps from changing the
+direction.
 
-With several people and Proximity, use its *nearest distance* and *nearest
-direction of travel* sensors: they follow whoever is closest to home, with the
-direction of that same person.
+**Travel time sensors** (Waze Travel Time, Google Travel Time), one per person
+with the person as origin and home as destination, are also accepted: the
+shortest trip counts (a sensor that is unavailable is left out). They only
+tell **how far away in minutes** someone is, not whether they are coming or
+going: the Waze or Google app does not share where you navigate to. On their
+own they work like presence measured in driving time ("someone is less than 10
+minutes from home"), so sitting at an office or at the shop that close keeps
+the house warm. Set the minutes below the trips to the places where you spend
+time, or add the Proximity direction sensor.
 
 Someone is **on the way home** (*arriving*) when closer than *Preheat below
 distance* (10 km by default) **or** less than *Preheat below travel time* (20
 minutes by default) away. With the direction sensor set, they must also be
-coming closer (direction `towards`), so preheating does not start while sitting
-at an office near home.
+coming closer (direction `towards`), whichever of the two made them close.
 
 While someone is on the way home, the presence rules do not apply: the rooms
 follow the schedule, as if you were already home.

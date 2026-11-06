@@ -14,6 +14,10 @@ GitHub releases.
   house preheats for whoever is closest to home (an unavailable sensor is left
   out). A single sensor chosen before keeps working. With Proximity, its
   *nearest* sensors already follow the closest person.
+- The guide and the option texts now say plainly that a travel time sensor
+  only tells how close someone is, not whether they are coming home, and
+  recommend Proximity with its direction sensor for preheating on the way
+  home.
 
 ### Card
 

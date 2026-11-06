@@ -152,9 +152,9 @@
           "arrival_delay": "Usually 0: the heating returns as soon as someone is home. Raise it only if GPS sometimes reports 'home' by mistake.",
           "presence_sensors": "Keep the house state 'home' while on (mmWave, motion, a switch for people without a phone). Leave empty if everybody has the companion app.",
           "guest_expire_hours": "Guest mode keeps the house state 'home'; it turns off by itself after this many hours. 0 = only manually.",
-          "proximity_distance": "Proximity integration distance sensor, for preheating on the way home. Leave empty without Proximity.",
-          "proximity_direction": "Proximity direction sensor. Set it so that sitting at an office near home does not start the preheating.",
-          "travel_time": "Travel time to home (Waze, Google Travel Time) for preheating, one sensor per person: the shortest trip counts. Leave empty if you do not have one."
+          "proximity_distance": "Distance sensor of the Proximity integration, for preheating on the way home (recommended, with the direction sensor). With several people, its nearest distance sensor. Leave empty without Proximity.",
+          "proximity_direction": "Direction sensor of Proximity (with several people, its nearest direction of travel). Only the direction tells that someone is coming home: it also applies to the travel time.",
+          "travel_time": "Travel time to home (Waze, Google Travel Time), one sensor per person: the shortest trip counts. It tells how close someone is, not whether they are coming home: add the Proximity direction sensor for that. Leave empty if you do not have one."
         }
       },
       "calendar": {

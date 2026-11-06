@@ -23,8 +23,9 @@ https://github.com/user-attachments/assets/31181198-e0fa-4510-bbfa-af9f790a19c7
 
 🏠 **Knows who is home.** Every person is *home*, *nearby* (somewhere in your
 town) or *far*. The house heats for whoever is there, keeps *eco* while you
-are only nearby, goes to *away* when everyone is far, and, with a Proximity
-or travel time sensor, starts heating again when someone is on the way back.
+are only nearby, goes to *away* when everyone is far, and, with Proximity
+(recommended, with its direction) or a travel time sensor, starts heating
+again when someone is on the way back.
 
 🧠 **Learns every room by itself.** Each room learns how fast it warms, how it
 cools, how slowly its radiators or floor react, how a boiler with a weather

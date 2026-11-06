@@ -15,6 +15,13 @@ GitHub releases.
   change, or with nothing typed, the card now says what to fill in instead of
   doing nothing.
 
+- 📈 **Smoother chart on a phone**: a line with many points (a sensor that
+  reports every minute, over 7 days) is drawn with only the points that change
+  its shape, and while a finger or the mouse moves the chart it is drawn once
+  per frame. Zooming and moving through the week no longer makes the card hang
+  on a slower phone. A pan that ends outside the card (outside the window, for
+  example) now ends properly, so the card keeps following Home Assistant.
+
 ### Alerts
 
 - The mold risk alert says the coldest wall *reached* its humidity (the value

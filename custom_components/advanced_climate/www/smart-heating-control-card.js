@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.4b1";
+const CARD_VERSION = "2.6.4b2";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -696,6 +696,42 @@ const toMinutes = (hhmm) => {
 const hhmm = (minutes) =>
   `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 
+/**
+ * The points of a line worth drawing: per unit of the chart width (1000
+ * units, about one pixel on most screens) the first, the lowest, the highest
+ * and the last, in time order. The line looks the same, but 7 days of a sensor
+ * that reports every minute become a few thousand points instead of 10 000+,
+ * which keeps zooming and moving the chart smooth on a phone.
+ */
+const thinPoints = (points, xOf) => {
+  if (points.length < 400) return points;
+  const out = [];
+  let column = null;
+  let group = [];
+  const flush = () => {
+    if (!group.length) return;
+    let lo = group[0];
+    let hi = group[0];
+    for (const p of group) {
+      if (p[1] < lo[1]) lo = p;
+      if (p[1] > hi[1]) hi = p;
+    }
+    const keep = new Set([group[0], lo, hi, group[group.length - 1]]);
+    out.push(...[...keep].sort((a, b) => a[0] - b[0]));
+    group = [];
+  };
+  for (const p of points) {
+    const c = Math.round(xOf(p[0]));
+    if (c !== column) {
+      flush();
+      column = c;
+    }
+    group.push(p);
+  }
+  flush();
+  return out;
+};
+
 const num = (value) => {
   const n = parseFloat(value);
   return Number.isFinite(n) ? n : null;
@@ -723,6 +759,10 @@ class SmartHeatingControlCard extends HTMLElement {
     this.shadowRoot.addEventListener("pointermove", (ev) => this._pointerMove(ev));
     this.shadowRoot.addEventListener("pointerup", (ev) => this._pointerUp(ev));
     this.shadowRoot.addEventListener("pointercancel", (ev) => this._pointerUp(ev));
+    // A finger or the mouse let go outside the card (e.g. outside the window)
+    // still ends a pan, else the card would stop following Home Assistant.
+    window.addEventListener("pointerup", (ev) => (this._pan || this._nav) && this._pointerUp(ev));
+    window.addEventListener("pointercancel", (ev) => (this._pan || this._nav) && this._pointerUp(ev));
     this.shadowRoot.addEventListener("wheel", (ev) => this._chartWheel(ev), { passive: false });
     this.shadowRoot.addEventListener("dblclick", (ev) => this._chartDblClick(ev));
     this.shadowRoot.addEventListener("pointerleave", (ev) => this._chartHover(ev), true);
@@ -2491,7 +2531,8 @@ class SmartHeatingControlCard extends HTMLElement {
   }
 
   /** Show the time window v0 … v1 (within the 7 days and the next 12 hours); the default one follows the time again. */
-  _setView(room, v0, v1) {
+  /** Show ``v0`` … ``v1`` of the chart; ``perFrame`` (a finger, a drag, the wheel) draws once per frame. */
+  _setView(room, v0, v1, perFrame = false) {
     const d = this._charts?.[room];
     if (!d) return;
     this._view = this._view || {};
@@ -2503,16 +2544,33 @@ class SmartHeatingControlCard extends HTMLElement {
     } else {
       this._view[room] = { v0: start, v1: start + span };
     }
-    this._redrawChart(room);
+    // What is shown now, for the next move. While a finger or the mouse moves,
+    // the chart is drawn once per frame, so a phone that is slower than the
+    // finger does not fall behind.
+    d.v0 = start;
+    d.v1 = start + span;
+    if (!perFrame) {
+      this._redrawChart(room);
+      return;
+    }
+    this._redrawRooms = this._redrawRooms || new Set();
+    if (!this._redrawRooms.size) {
+      requestAnimationFrame(() => {
+        const rooms = [...this._redrawRooms];
+        this._redrawRooms.clear();
+        rooms.forEach((r) => this._redrawChart(r));
+      });
+    }
+    this._redrawRooms.add(room);
   }
 
   /** Zoom by ``factor`` (< 1 = closer) keeping ``center`` in place. */
-  _zoom(room, factor, center) {
+  _zoom(room, factor, center, perFrame = false) {
     const d = this._charts?.[room];
     if (!d) return;
     const { v0, v1 } = this._viewOf(room, d);
     const c = center ?? (Math.min(Math.max(d.now, v0), v1) === d.now ? d.now : (v0 + v1) / 2);
-    this._setView(room, c - (c - v0) * factor, c + (v1 - c) * factor);
+    this._setView(room, c - (c - v0) * factor, c + (v1 - c) * factor, perFrame);
   }
 
   /** The series hidden from the charts by a tap on the legend (kept in this browser). */
@@ -2654,7 +2712,10 @@ class SmartHeatingControlCard extends HTMLElement {
     // Only what is visible (and a point on each side), so 7 days draw fast.
     const first = d.temp.findIndex(([t]) => t >= view.v0);
     const lastIn = d.temp.findLastIndex(([t]) => t <= view.v1);
-    const shown = first < 0 ? [] : d.temp.slice(Math.max(0, first - 1), Math.min(d.temp.length, lastIn + 2));
+    const shown = thinPoints(
+      first < 0 ? [] : d.temp.slice(Math.max(0, first - 1), Math.min(d.temp.length, lastIn + 2)),
+      (t) => x(Math.max(t, d.t0))
+    );
     if (shown.length > 1 && shows("temp")) {
       const pts = shown.map(([t, v]) => `${x(Math.max(t, d.t0)).toFixed(1)} ${y(v).toFixed(1)}`);
       tempPath = `M${pts.join(" L")}`;
@@ -2676,7 +2737,7 @@ class SmartHeatingControlCard extends HTMLElement {
       const oy = (v) => OBOT - ((v - d.olo) / (d.ohi - d.olo)) * (OBOT - OTOP);
       const path = (pts) =>
         pts.length > 1 ? `M${pts.map(([t, v]) => `${x(Math.max(t, d.t0)).toFixed(1)} ${oy(v).toFixed(1)}`).join(" L")}` : "";
-      const measured = path(d.outdoor);
+      const measured = path(thinPoints(d.outdoor, (t) => x(Math.max(t, d.t0))));
       const steps = [];
       const start = d.outdoor.length ? d.outdoor[d.outdoor.length - 1] : null;
       if (start) steps.push(start);
@@ -3549,7 +3610,7 @@ class SmartHeatingControlCard extends HTMLElement {
       const factor = p.dist / Math.max(dist, 10);
       const center = p.v0 + ((p.startX - rect.left) / rect.width) * span;
       p.moved = true;
-      this._setView(p.room, center - (center - p.v0) * factor, center + (p.v1 - center) * factor);
+      this._setView(p.room, center - (center - p.v0) * factor, center + (p.v1 - center) * factor, true);
       return true;
     }
     // One finger or the mouse moves the values cursor (the bar under the chart pans).
@@ -3590,7 +3651,7 @@ class SmartHeatingControlCard extends HTMLElement {
     if (!d || !nav) return true;
     const rect = nav.getBoundingClientRect();
     const at = d.t0 + ((ev.clientX - rect.left) / rect.width) * (d.t1 - d.t0);
-    this._setView(n.room, at - n.grab, at - n.grab + n.span);
+    this._setView(n.room, at - n.grab, at - n.grab + n.span, true);
     return true;
   }
 
@@ -3645,7 +3706,7 @@ class SmartHeatingControlCard extends HTMLElement {
       const d = this._charts?.[chart.dataset.chart];
       if (!d) return;
       const shift = (sideways / chart.getBoundingClientRect().width) * (d.v1 - d.v0);
-      this._setView(chart.dataset.chart, d.v0 + shift, d.v1 + shift);
+      this._setView(chart.dataset.chart, d.v0 + shift, d.v1 + shift, true);
       return;
     }
     // Only pinch on a touchpad or Ctrl + wheel zoom, so the page still scrolls normally.
@@ -3654,7 +3715,7 @@ class SmartHeatingControlCard extends HTMLElement {
     if (!d) return;
     const rect = chart.getBoundingClientRect();
     const center = d.v0 + ((ev.clientX - rect.left) / rect.width) * (d.v1 - d.v0);
-    this._zoom(chart.dataset.chart, ev.deltaY > 0 ? 1.25 : 0.8, center);
+    this._zoom(chart.dataset.chart, ev.deltaY > 0 ? 1.25 : 0.8, center, true);
   }
 
   /** Double click zooms in around the pointer. */

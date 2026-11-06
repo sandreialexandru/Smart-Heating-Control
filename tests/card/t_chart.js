@@ -245,3 +245,18 @@ test("expected sun: a faint area in the outdoor band, only with a learned gain",
   await p.evaluate(() => card.shadowRoot.querySelector('[data-key="chart-r1"]').click()); await p.waitForTimeout(400);
   eq(await p.evaluate(() => card.shadowRoot.querySelectorAll(".sunarea").length), 0, "no sun area without a gain");
 });
+
+test("a week of a sensor that reports every 30 s is drawn with far fewer points, keeping its peaks", async (p) => {
+  const r = await p.evaluate(() => {
+    const t0 = Date.UTC(2026, 10, 1), pts = [];
+    for (let i = 0; i < 7 * 24 * 120; i++) pts.push([t0 + i * 30000, 20 + Math.sin(i / 50) + (i === 12345 ? 3 : 0)]);
+    const span = pts.at(-1)[0] - t0;
+    const thin = thinPoints(pts, (t) => ((t - t0) / span) * 1000);
+    return { n: thin.length, max: Math.max(...thin.map((q) => q[1])), min: Math.min(...thin.map((q) => q[1])),
+      first: thin[0] === pts[0], last: thin.at(-1) === pts.at(-1), sorted: thin.every((q, i) => !i || q[0] > thin[i - 1][0]) };
+  });
+  ok(r.n <= 4004 && r.n < 20160 / 4, "points: " + r.n);
+  ok(Math.abs(r.max - 23 - Math.sin(12345 / 50)) < 1e-9, "the spike is kept: " + r.max);
+  ok(r.min < 19.0001, "the lowest is kept: " + r.min);
+  ok(r.first && r.last && r.sorted, "first, last, in order");
+});

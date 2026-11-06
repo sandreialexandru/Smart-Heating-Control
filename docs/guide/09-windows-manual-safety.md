@@ -259,7 +259,7 @@ as the recipient of the important alerts and of the warnings.
 | Rooms needed to start the heat source is … | more rooms needed than the house has (rooms were removed): the heat source starts only for frost protection |
 | The room is …°, below the frost protection temperature | the room is 0.5° or more below it: the heating cannot keep it (its end is told when it is back) |
 | The heating has been paused for more than … h | the pause is on longer than *Remind when the pause lasts longer than* (12 h by default), then once a day |
-| Mold risk: the coldest wall is at about …% humidity | only for a room with a *Humidity sensor* and a house with an outdoor temperature: see *Mold risk* below |
+| Mold risk: the coldest wall reached about …% humidity | only for a room with a *Humidity sensor* and a house with an outdoor temperature: see *Mold risk* below |
 
 
 ### Mold risk

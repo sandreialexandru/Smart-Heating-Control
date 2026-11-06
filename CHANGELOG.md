@@ -15,6 +15,12 @@ GitHub releases.
   change, or with nothing typed, the card now says what to fill in instead of
   doing nothing.
 
+### Alerts
+
+- The mold risk alert says the coldest wall *reached* its humidity (the value
+  when the alert started; the card's humidity row shows the value now), and
+  that airing and a warmer room lower *the risk*.
+
 ### Documentation
 
 - An automation example for a room that is usually 16 °C and 22 °C while it

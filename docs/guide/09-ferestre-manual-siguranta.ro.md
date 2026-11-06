@@ -260,7 +260,7 @@ pentru avertizări.
 | Camere necesare pentru pornirea sursei de căldură: … | mai multe camere necesare decât are casa (au fost șterse camere): sursa pornește doar pentru antiîngheț |
 | Camera are …°, sub temperatura de antiîngheț | camera e cu 0,5° sau mai mult sub ea: încălzirea nu o poate menține (se anunță și când revine) |
 | Încălzirea e în pauză de peste … h | pauza e pornită mai mult de *Amintește când pauza durează mai mult de* (implicit 12 h), apoi o dată pe zi |
-| Risc de mucegai: peretele cel mai rece are circa …% umiditate | doar pentru o cameră cu *Senzor de umiditate* și o casă cu temperatură de afară: vezi *Riscul de mucegai* mai jos |
+| Risc de mucegai: umiditatea la peretele cel mai rece a ajuns la circa …% | doar pentru o cameră cu *Senzor de umiditate* și o casă cu temperatură de afară: vezi *Riscul de mucegai* mai jos |
 
 ### Riscul de mucegai
 

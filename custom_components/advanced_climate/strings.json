@@ -141,7 +141,7 @@
           "guest_expire_hours": "Guest mode turns off after",
           "proximity_distance": "Proximity distance sensor",
           "proximity_direction": "Proximity direction sensor",
-          "travel_time": "Travel time sensor"
+          "travel_time": "Travel time sensors"
         },
         "data_description": {
           "persons": "People whose location decides home / nearby / far. Leave empty only if presence should not matter: the house state is then always 'home' and only the schedule decides.",
@@ -154,7 +154,7 @@
           "guest_expire_hours": "Guest mode keeps the house state 'home'; it turns off by itself after this many hours. 0 = only manually.",
           "proximity_distance": "Proximity integration distance sensor, for preheating on the way home. Leave empty without Proximity.",
           "proximity_direction": "Proximity direction sensor. Set it so that sitting at an office near home does not start the preheating.",
-          "travel_time": "Travel time to home (Waze, Google Travel Time) for preheating. Leave empty if you do not have one."
+          "travel_time": "Travel time to home (Waze, Google Travel Time) for preheating, one sensor per person: the shortest trip counts. Leave empty if you do not have one."
         }
       },
       "calendar": {

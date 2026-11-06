@@ -1112,3 +1112,33 @@ async def test_humidity_sensor_of_a_gateway_or_a_weather_service(hass: HomeAssis
         {"temperature_sensors": ["sensor.room"], "humidity_sensor": indoor_humidity},
     )
     assert result["step_id"] != "sensors"
+
+
+async def test_options_travel_time_takes_one_sensor_per_person(hass: HomeAssistant) -> None:
+    """Several travel time sensors can be chosen; a single one saved before is shown in the list."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        options={"persons": ["person.andrei"], "travel_time": "sensor.waze"},
+    )
+    entry.add_to_hass(hass)
+    flow = hass.config_entries.options
+    result = await flow.async_init(entry.entry_id)
+    result = await flow.async_configure(result["flow_id"], {"next_step_id": "presence"})
+    field = next(k for k in result["data_schema"].schema if str(k) == "travel_time")
+    assert field.description["suggested_value"] == ["sensor.waze"]
+    assert result["data_schema"].schema[field].config["multiple"] is True
+    result = await flow.async_configure(
+        result["flow_id"], {"travel_time": ["sensor.waze_andrei", "sensor.waze_laura"]}
+    )
+    assert result["step_id"] == "presence_details"
+    assert "arrival_minutes" in _keys(result)
+    result = await flow.async_configure(result["flow_id"], {"arrival_minutes": 25})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options["travel_time"] == ["sensor.waze_andrei", "sensor.waze_laura"]
+    assert entry.options["arrival_minutes"] == 25
+    # Cleared: no travel time any more, and no question about its minutes.
+    result = await flow.async_init(entry.entry_id)
+    result = await flow.async_configure(result["flow_id"], {"next_step_id": "presence"})
+    result = await flow.async_configure(result["flow_id"], {"travel_time": []})
+    assert result["type"] is FlowResultType.CREATE_ENTRY or "arrival_minutes" not in _keys(result)

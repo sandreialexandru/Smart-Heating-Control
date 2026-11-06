@@ -141,7 +141,7 @@
           "guest_expire_hours": "Modul oaspeți se oprește după",
           "proximity_distance": "Senzor de distanță (Proximity)",
           "proximity_direction": "Senzor de direcție (Proximity)",
-          "travel_time": "Senzor de timp de deplasare"
+          "travel_time": "Senzori de timp de deplasare"
         },
         "data_description": {
           "persons": "Persoanele a căror locație decide acasă / aproape / departe. Lasă gol doar dacă prezența nu contează: starea casei e atunci mereu „acasă” și decide doar programul.",
@@ -154,7 +154,7 @@
           "guest_expire_hours": "Modul oaspeți ține starea casei „acasă”; se oprește singur după atâtea ore. 0 = doar manual.",
           "proximity_distance": "Senzorul de distanță al integrării Proximity, pentru preîncălzire pe drumul spre casă. Lasă gol fără Proximity.",
           "proximity_direction": "Senzorul de direcție Proximity. Setează-l ca să nu pornească preîncălzirea când stai la un birou aproape de casă.",
-          "travel_time": "Timpul până acasă (Waze, Google Travel Time), pentru preîncălzire. Lasă gol dacă nu ai."
+          "travel_time": "Timpul până acasă (Waze, Google Travel Time), pentru preîncălzire, câte un senzor pentru fiecare persoană: contează drumul cel mai scurt. Lasă gol dacă nu ai."
         }
       },
       "calendar": {

@@ -401,7 +401,11 @@ def _presence_schema(v: dict[str, Any]) -> vol.Schema:
             _req(CONF_GUEST_EXPIRE_HOURS, v, d): _number(0, 720, 1, "h"),
             _opt(CONF_PROXIMITY_DISTANCE, v): _entity("sensor"),
             _opt(CONF_PROXIMITY_DIRECTION, v): _entity("sensor"),
-            _opt(CONF_TRAVEL_TIME, v): _entity("sensor"),
+            # One travel time sensor per person (Waze, Google): the shortest counts.
+            vol.Optional(
+                CONF_TRAVEL_TIME,
+                description={"suggested_value": as_list(v.get(CONF_TRAVEL_TIME)) or None},
+            ): _entity("sensor", multiple=True),
         }
     )
 

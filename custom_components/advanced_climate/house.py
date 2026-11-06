@@ -326,10 +326,10 @@ class House:
         entities: list[str] = []
         entities += as_list(opts.get(CONF_PERSONS))
         entities += as_list(opts.get(CONF_PRESENCE_SENSORS))
+        entities += as_list(opts.get(CONF_TRAVEL_TIME))
         for key in (
             CONF_PROXIMITY_DISTANCE,
             CONF_PROXIMITY_DIRECTION,
-            CONF_TRAVEL_TIME,
             CONF_WORKDAY_SENSOR,
             CONF_CALENDAR,
             CONF_OUTDOOR_SENSOR,
@@ -592,9 +592,13 @@ class House:
             if opts.get(CONF_PROXIMITY_DIRECTION):
                 dstate = self.hass.states.get(opts[CONF_PROXIMITY_DIRECTION])
                 direction = dstate.state if valid(dstate) else None
-            travel = None
-            if opts.get(CONF_TRAVEL_TIME):
-                travel = minutes_value(self.hass.states.get(opts[CONF_TRAVEL_TIME]))
+            # One travel time per person: whoever is closest to home counts
+            # (a sensor that is unavailable is left out).
+            trips = [
+                minutes_value(self.hass.states.get(e)) for e in as_list(opts.get(CONF_TRAVEL_TIME))
+            ]
+            known = [t for t in trips if t is not None]
+            travel = min(known) if known else None
             if distance is not None or travel is not None:
                 self.arriving = is_arriving(
                     distance,

@@ -82,7 +82,13 @@ on the way home**, so it is warm when you arrive. You need one of:
 
 - the Home Assistant **Proximity** integration, with its distance sensor (and
   optionally the direction sensor);
-- a **travel time** sensor (Waze Travel Time, Google Travel Time).
+- **travel time** sensors (Waze Travel Time, Google Travel Time), one per
+  person: the shortest trip counts, so the house preheats for whoever is
+  closest to home (a sensor that is unavailable is left out).
+
+With several people and Proximity, use its *nearest distance* and *nearest
+direction of travel* sensors: they follow whoever is closest to home, with the
+direction of that same person.
 
 Someone is **on the way home** (*arriving*) when closer than *Preheat below
 distance* (10 km by default) **or** less than *Preheat below travel time* (20

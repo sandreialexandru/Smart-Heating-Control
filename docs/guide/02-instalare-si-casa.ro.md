@@ -203,7 +203,7 @@ schimbă ca la orice cameră: pe pagina integrării, la zona *Whole house*,
 | Modul oaspeți se oprește după | 0 h | Modul oaspeți ține starea casei *acasă*; se oprește singur după atâtea ore. 0 = doar manual. |
 | Senzor de distanță (Proximity) | – | Pentru preîncălzirea pe drum spre casă. |
 | Senzor de direcție (Proximity) | – | Ca preîncălzirea să pornească doar când cineva vine spre casă, nu când stă la un birou aproape de casă. |
-| Senzor de timp de deplasare | – | Timpul până acasă (Waze, Google Travel Time). |
+| Senzori de timp de deplasare | – | Timpul până acasă (Waze, Google Travel Time), câte un senzor pentru fiecare persoană: contează drumul cel mai scurt. |
 
 Cu un senzor de distanță sau de timp, apare al doilea formular,
 **Preîncălzire pe drum spre casă**:

@@ -203,7 +203,7 @@ house* zone, **⋮ → Reconfigure** (see [chapter 3](03-rooms.md)).
 | Guest mode turns off after | 0 h | Guest mode keeps the house state *home*; it turns off after this many hours. 0 = only by hand. |
 | Proximity distance sensor | – | For preheating on the way home. |
 | Proximity direction sensor | – | So preheating starts only when someone comes towards home, not when sitting at an office near home. |
-| Travel time sensor | – | Travel time to home (Waze, Google Travel Time). |
+| Travel time sensors | – | Travel time to home (Waze, Google Travel Time), one sensor per person: the shortest trip counts. |
 
 With a distance or travel time sensor, a second form appears, **Preheating on
 the way home**:

@@ -1048,6 +1048,65 @@ async def test_arriving_ends_the_automatic_vacation(
     await hass.async_block_till_done()
 
 
+async def test_travel_time_of_several_people_the_shortest_counts(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """One travel time sensor per person: whoever is closest to home starts the preheating."""
+    mins = {"unit_of_measurement": "min"}
+    hass.states.async_set("sensor.waze_andrei", "45", mins)
+    hass.states.async_set("sensor.waze_laura", "unavailable", mins)
+    entry = await _setup(
+        hass,
+        freezer,
+        house_options={"travel_time": ["sensor.waze_andrei", "sensor.waze_laura"]},
+    )
+    house = entry.runtime_data
+    hass.states.async_set("person.andrei", "not_home")
+    await _tick(hass, freezer, 11 * 60)
+    assert hass.states.get("sensor.home_presence").state == "far"
+    assert not house.arriving  # 45 min, the other one unknown
+
+    # The other person is 15 min away (under the 20 min default): arriving,
+    # as soon as her sensor changes.
+    hass.states.async_set("sensor.waze_laura", "15", mins)
+    await _tick(hass, freezer, 1)
+    assert house.arriving
+
+    # In hours it counts the same (0.2 h = 12 min).
+    hass.states.async_set("sensor.waze_laura", "0.2", {"unit_of_measurement": "h"})
+    await _tick(hass, freezer, 1)
+    assert house.arriving
+
+    # Both far: not arriving any more.
+    hass.states.async_set("sensor.waze_laura", "60", mins)
+    await _tick(hass, freezer, 1)
+    assert not house.arriving
+
+    # The first one gets close.
+    hass.states.async_set("sensor.waze_andrei", "10", mins)
+    await _tick(hass, freezer, 1)
+    assert house.arriving
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_travel_time_saved_before_as_one_sensor_still_works(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Houses set up before keep a single sensor (a text, not a list)."""
+    hass.states.async_set("sensor.waze", "50", {"unit_of_measurement": "min"})
+    entry = await _setup(hass, freezer, house_options={"travel_time": "sensor.waze"})
+    house = entry.runtime_data
+    hass.states.async_set("person.andrei", "not_home")
+    await _tick(hass, freezer, 11 * 60)
+    assert not house.arriving
+    hass.states.async_set("sensor.waze", "8", {"unit_of_measurement": "min"})
+    await _tick(hass, freezer, 1)
+    assert house.arriving
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_calendar_profile_of_tomorrow(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:

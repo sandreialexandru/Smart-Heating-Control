@@ -82,7 +82,14 @@ cineva e pe drum spre casă**, ca să fie cald la sosire. E nevoie de unul dintr
 
 - integrarea **Proximity** din Home Assistant, cu senzorul de distanță (și
   opțional cel de direcție);
-- un senzor de **timp de deplasare** (Waze Travel Time, Google Travel Time).
+- senzori de **timp de deplasare** (Waze Travel Time, Google Travel Time),
+  câte unul pentru fiecare persoană: contează drumul cel mai scurt, deci casa
+  se preîncălzește pentru cine e cel mai aproape de casă (un senzor
+  indisponibil e lăsat deoparte).
+
+Cu mai multe persoane și Proximity se folosesc senzorii lui *nearest
+distance* și *nearest direction of travel*: urmăresc persoana cea mai apropiată
+de casă, cu direcția aceleiași persoane.
 
 Cineva e **pe drum spre casă** (*arriving*) când e mai aproape decât
 *Preîncălzește sub distanța* (implicit 10 km) **sau** la mai puțin decât

@@ -7,6 +7,14 @@ GitHub releases.
 
 ## Unreleased
 
+### Integration
+
+- 🚗 **Travel time for several people**: *Travel time sensors* takes one Waze
+  or Google Travel Time sensor per person; the shortest trip counts, so the
+  house preheats for whoever is closest to home (an unavailable sensor is left
+  out). A single sensor chosen before keeps working. With Proximity, its
+  *nearest* sensors already follow the closest person.
+
 ### Card
 
 - ⏱️ **Set for a while with only the hours** ([#7](https://github.com/sandreialexandru/Smart-Heating-Control/issues/7)):
@@ -14,7 +22,6 @@ GitHub releases.
   change lasts, from now (its level or temperature stays). Without a manual
   change, or with nothing typed, the card now says what to fill in instead of
   doing nothing.
-
 - 📈 **Smoother chart on a phone**: a line with many points (a sensor that
   reports every minute, over 7 days) is drawn with only the points that change
   its shape, and while a finger or the mouse moves the chart it is drawn once

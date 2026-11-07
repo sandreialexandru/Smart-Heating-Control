@@ -176,7 +176,7 @@ roles stay the same: "Work" is still the `home` level.
 | Field | What to do |
 | --- | --- |
 | **Temperature sensors** | Not shown with Generic Thermostat: GT keeps the temperature by the sensor of its own configuration, and the integration uses that one too (another sensor is changed in the GT settings). Sensors in the room, used instead of the thermostat sensor (more accurate when the thermostat sits next to the radiator). Empty = the thermostat sensor. **Required for relays**, which have no sensor (otherwise *Relays need a temperature sensor of the room*), and for heating by the room sensor (otherwise *Heating by the room sensor needs a temperature sensor of the room*). The outdoor sensor of a house is refused. A sensor that reports no unit is read in the unit of the house. |
-| **TRV calibration** | Only for TRVs and only with a room sensor. *Offset*: corrects the TRV sensor. *External temperature input*: writes the room temperature into the TRV (if it has that input). *Off* otherwise. |
+| **TRV calibration** | Only for TRVs and only with a room sensor (otherwise *TRV calibration writes the room temperature into the TRV, so it needs a temperature sensor of the room*). *Offset*: corrects the TRV sensor. *External temperature input*: writes the room temperature into the TRV (if it has that input). *Off* otherwise. |
 | **Occupancy sensors** | Motion / presence sensors of the room: when the room is empty for a while it goes to `eco` even if someone is home. Empty for rooms that should only follow the schedule. |
 | **Humidity sensor** | Only for the **mold risk alert**: the humidity of the room, with the outdoor temperature of the house, gives the humidity at the coldest wall (see [chapter 9](09-windows-manual-safety.md#mold-risk)). Without it, or without an outdoor temperature (sensor or weather entity), no mold alert is sent. Also shown with Generic Thermostat. A humidity sensor that measures outdoors is refused: one of the device of the weather entity, or of the device of the outdoor sensor when that device has no other temperature sensor (an outdoor sensor; a gateway with indoor sensors too is accepted). |
 
@@ -185,7 +185,7 @@ The second form, **Sensors: details**, appears only when needed:
 | Field | Default | When | What it does |
 | --- | --- | --- | --- |
 | Several sensors | Average | with several temperature sensors | *Average*, *Minimum* (the coldest) or *Median*. |
-| Calibration entities | – | with calibration | The TRV number entities (offset or external temperature). The integration finds the TRV of every entity by itself (same device). |
+| Calibration entities | – | with calibration | The TRV number entities (offset or external temperature). The integration finds the TRV of every entity by itself (same device). Required: without them the calibration would do nothing. |
 | Eco after no occupancy for | 30 min (1 – 720) | with occupancy sensors | How long the room must be empty before `eco`. |
 | Back from eco after presence of | 0 min (0 – 60) | with occupancy sensors | How long someone must be present without a break before a room in `eco` for no occupancy follows the schedule again. 0 = at once. A shorter visit keeps the room in `eco` and the count starts again at the next presence. |
 
@@ -199,6 +199,16 @@ the entity (usually 0.1 °C). The external temperature is also written again,
 unchanged, every 30 minutes: some TRVs (the Sonoff TRVZB after about 120
 minutes) go back to their own sensor when no value comes, so 30 minutes leave
 room for a few lost writes.
+
+**Which entity to pick.** With *Offset*, the TRV's temperature calibration
+entity (e.g. `number.bedroom_trv_local_temperature_calibration`). With
+*External temperature input*, the TRV's external temperature entity (e.g.
+`number.bedroom_trv_external_temperature_input`), **and** the TRV must be set
+to use it: the integration only writes the temperature, it does not switch the
+TRV's own setting. On a Sonoff TRVZB (Zigbee2MQTT) that is the
+*temperature_sensor_select* setting, which must be on the external option; on
+its own sensor the TRV ignores the value written. *Offset* needs nothing set on
+the TRV, so it is the simpler choice.
 
 **Room occupancy.** It works only when the schedule asks for a level warmer than
 `eco`: an empty room never gets warmer than the schedule would make it.

@@ -735,7 +735,9 @@
         "boost_sensor_required": "Încălzirea după senzorul camerei are nevoie de un senzor de temperatură al camerei.",
         "boost_temperature_only": "Încălzirea după senzorul camerei merge doar cu comanda Temperatură.",
         "invalid_level_name": "Numele de nivel „{name}” nu poate fi folosit în program: folosește litere, cifre, spații, „_” sau „-” (fără „,” „:” „#”).",
-        "level_name_is_key": "Numele „{name}” e numele intern al altui nivel în program (home, sleep, eco, away, comfort, activity, frost): alege altul."
+        "level_name_is_key": "Numele „{name}” e numele intern al altui nivel în program (home, sleep, eco, away, comfort, activity, frost): alege altul.",
+        "calibration_sensor_required": "Calibrarea TRV scrie temperatura camerei în TRV, deci are nevoie de un senzor de temperatură al camerei. Adaugă unul sau pune calibrarea pe Oprit.",
+        "calibration_entities_required": "Alege entitățile number ale TRV-ului în care scrie calibrarea (offset-ul sau intrarea de temperatură externă), sau pune calibrarea pe Oprit în pagina anterioară."
       }
     }
   },

@@ -1793,6 +1793,13 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                 errors[CONF_TEMP_SENSORS] = "sensor_required"
             elif _boost_on(self._data) and not user_input.get(CONF_TEMP_SENSORS):
                 errors[CONF_TEMP_SENSORS] = "boost_sensor_required"
+            elif (
+                trv
+                and user_input.get(CONF_CALIBRATION_MODE, CALIBRATION_OFF) != CALIBRATION_OFF
+                and not user_input.get(CONF_TEMP_SENSORS)
+            ):
+                # The calibration writes the room temperature into the TRV.
+                errors[CONF_CALIBRATION_MODE] = "calibration_sensor_required"
             elif error := _outdoor_error(
                 self.hass, list(user_input.get(CONF_TEMP_SENSORS) or []), placeholders
             ):
@@ -1882,10 +1889,17 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
         schema = vol.Schema(fields)
         if not fields:
             return await self.async_step_windows()
+        errors: dict[str, str] = {}
         if user_input is not None:
-            self._data = _merge(self._data, schema, self._kept(user_input))
-            return await self.async_step_windows()
-        return self.async_show_form(step_id="sensors_details", data_schema=schema)
+            if CONF_CALIBRATION_ENTITIES in schema.schema and not as_list(
+                user_input.get(CONF_CALIBRATION_ENTITIES)
+            ):
+                # Without them the calibration chosen before does nothing.
+                errors[CONF_CALIBRATION_ENTITIES] = "calibration_entities_required"
+            else:
+                self._data = _merge(self._data, schema, self._kept(user_input))
+                return await self.async_step_windows()
+        return self.async_show_form(step_id="sensors_details", data_schema=schema, errors=errors)
 
     async def async_step_windows(
         self, user_input: dict[str, Any] | None = None

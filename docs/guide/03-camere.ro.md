@@ -179,7 +179,7 @@ rămân aceleași: „Lucru” e tot nivelul `home`.
 | Câmp | Ce se completează |
 | --- | --- |
 | **Senzori de temperatură** | Nu apare la Generic Thermostat: GT-ul ține temperatura după senzorul din propria configurare, iar integrarea îl folosește tot pe acela (alt senzor se schimbă în setările GT-ului). Senzorii din cameră, folosiți în locul senzorului termostatului (mai exacți când termostatul stă lângă calorifer). Gol = senzorul termostatului. **Obligatorii pentru relee**, care nu au senzor (altfel apare *Releele au nevoie de un senzor de temperatură al camerei*), și pentru încălzirea după senzorul camerei (altfel apare *Încălzirea după senzorul camerei are nevoie de un senzor de temperatură al camerei*). Senzorul exterior al unei case e refuzat. Un senzor care nu raportează unitatea e citit în unitatea casei. |
-| **Calibrare TRV** | Doar pentru TRV-uri și doar cu un senzor de cameră. *Offset*: corectează senzorul TRV-ului. *Temperatură externă*: scrie temperatura camerei în TRV (dacă TRV-ul are această intrare). *Oprit* altfel. |
+| **Calibrare TRV** | Doar pentru TRV-uri și doar cu un senzor de cameră (altfel *Calibrarea TRV scrie temperatura camerei în TRV, deci are nevoie de un senzor de temperatură al camerei*). *Offset*: corectează senzorul TRV-ului. *Temperatură externă*: scrie temperatura camerei în TRV (dacă TRV-ul are această intrare). *Oprit* altfel. |
 | **Senzori de ocupare** | Senzori de mișcare / prezență ai camerei: dacă camera e goală un timp, trece pe `eco` chiar dacă e cineva acasă. Gol pentru camerele care urmează doar programul. |
 | **Senzor de umiditate** | Doar pentru **alerta de risc de mucegai**: umiditatea camerei, cu temperatura de afară a casei, dă umiditatea la peretele cel mai rece ([capitolul 9](09-ferestre-manual-siguranta.ro.md#riscul-de-mucegai)). Fără el sau fără o temperatură de afară (senzor sau entitate meteo) nu se trimite nicio alertă de mucegai. Apare și la Generic Thermostat. Un senzor de umiditate care măsoară afară e refuzat: unul de pe dispozitivul entității meteo sau de pe dispozitivul senzorului exterior când acel dispozitiv nu are alt senzor de temperatură (un senzor de exterior; un gateway care are și senzori de interior e acceptat). |
 
@@ -188,7 +188,7 @@ Al doilea formular, **Senzori: detalii**, apare doar când e nevoie:
 | Câmp | Implicit | Când apare | Ce face |
 | --- | --- | --- | --- |
 | Mai mulți senzori | Medie | cu mai mulți senzori de temperatură | *Medie*, *Minim* (cel mai rece) sau *Mediană*. |
-| Entități de calibrare | – | cu calibrare | Entitățile număr ale TRV-urilor (offset sau temperatură externă). Integrarea găsește singură TRV-ul fiecărei entități (același dispozitiv). |
+| Entități de calibrare | – | cu calibrare | Entitățile număr ale TRV-urilor (offset sau temperatură externă). Integrarea găsește singură TRV-ul fiecărei entități (același dispozitiv). Obligatorii: fără ele calibrarea n-ar face nimic. |
 | Eco după lipsă de ocupare de | 30 min (1 – 720) | cu senzori de ocupare | Cât trebuie să fie goală camera până trece pe `eco`. |
 | Revenire din eco după prezență de | 0 min (0 – 60) | cu senzori de ocupare | Cât trebuie să fie cineva prezent fără întrerupere până când o cameră aflată pe `eco` din lipsă de ocupare revine la program. 0 = imediat. O vizită mai scurtă lasă camera pe `eco`, iar numărătoarea reîncepe la următoarea prezență. |
 
@@ -202,6 +202,16 @@ la 5 minute, și nimic în pauză. O schimbare se scrie de la un pas al entită�
 fiecare 30 de minute: unele TRV-uri (Sonoff TRVZB după circa 120 de minute)
 revin la senzorul lor când nu primesc nicio valoare, deci 30 de minute lasă loc
 pentru câteva scrieri pierdute.
+
+**Ce entitate se alege.** Cu *Offset*, entitatea de calibrare a temperaturii
+TRV-ului (de exemplu `number.dormitor_trv_local_temperature_calibration`). Cu
+*Temperatură externă*, entitatea de temperatură externă a TRV-ului (de exemplu
+`number.dormitor_trv_external_temperature_input`), **și** TRV-ul trebuie setat
+s-o folosească: integrarea doar scrie temperatura, nu schimbă setarea proprie a
+TRV-ului. La un Sonoff TRVZB (Zigbee2MQTT) e setarea *temperature_sensor_select*,
+care trebuie pusă pe varianta externă; pe senzorul propriu, TRV-ul ignoră
+valoarea scrisă. *Offset* nu cere nimic setat pe TRV, deci e varianta mai
+simplă.
 
 **Ocuparea camerei.** Funcționează doar când programul cere un nivel mai cald
 decât `eco`: o cameră goală nu ajunge niciodată mai caldă decât ar fi după

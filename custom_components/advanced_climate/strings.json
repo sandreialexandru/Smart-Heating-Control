@@ -735,7 +735,9 @@
         "boost_sensor_required": "Heating by the room sensor needs a temperature sensor of the room.",
         "boost_temperature_only": "Heating by the room sensor works only with the Temperature command.",
         "invalid_level_name": "The level name “{name}” cannot be used in the schedule: use letters, digits, spaces, “_” or “-” (no “,” “:” “#”).",
-        "level_name_is_key": "The name “{name}” is the name of another level inside the schedule (home, sleep, eco, away, comfort, activity, frost): choose another one."
+        "level_name_is_key": "The name “{name}” is the name of another level inside the schedule (home, sleep, eco, away, comfort, activity, frost): choose another one.",
+        "calibration_sensor_required": "TRV calibration writes the room temperature into the TRV, so it needs a temperature sensor of the room. Add one, or set the calibration to Off.",
+        "calibration_entities_required": "Pick the TRV number entities the calibration writes to (the offset or the external temperature input), or set the calibration to Off on the previous page."
       }
     }
   },

@@ -18,6 +18,12 @@ GitHub releases.
   only tells how close someone is, not whether they are coming home, and
   recommend Proximity with its direction sensor for preheating on the way
   home.
+- 🛠️ **TRV calibration that cannot work is refused** ([#6](https://github.com/sandreialexandru/Smart-Heating-Control/issues/6)):
+  *Offset* or *External temperature input* without a room temperature sensor,
+  or without the calibration entities, did nothing and said nothing; the room
+  form now asks for them. The guide says which entity to pick and that the
+  external input must also be selected on the TRV (Sonoff TRVZB:
+  *temperature_sensor_select*).
 
 ### Card
 

@@ -1142,3 +1142,69 @@ async def test_options_travel_time_takes_one_sensor_per_person(hass: HomeAssista
     result = await flow.async_configure(result["flow_id"], {"next_step_id": "presence"})
     result = await flow.async_configure(result["flow_id"], {"travel_time": []})
     assert result["type"] is FlowResultType.CREATE_ENTRY or "arrival_minutes" not in _keys(result)
+
+
+async def test_trv_calibration_needs_a_room_sensor_and_its_entities(hass: HomeAssistant) -> None:
+    """A calibration without a room sensor or without entities would do nothing: it is refused."""
+    hass.states.async_set(
+        "climate.trv", "heat", {"hvac_modes": ["heat", "off"], "hvac_action": "idle"}
+    )
+    entry = _house_with_rooms(hass)
+    rooms = hass.config_entries.subentries
+    result = await rooms.async_init(
+        (entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER}
+    )
+    result = await rooms.async_configure(
+        result["flow_id"], {"name": "Bedroom", "source": "climate"}
+    )
+    result = await rooms.async_configure(
+        result["flow_id"], {"climates": ["climate.trv"], "command_mode": "temperature"}
+    )
+    result = await _until(hass, result, rooms, stop={"sensors"})
+    # Offset without a room sensor.
+    result = await rooms.async_configure(
+        result["flow_id"], {"temperature_sensors": [], "calibration_mode": "offset"}
+    )
+    assert result["step_id"] == "sensors"
+    assert result["errors"] == {"calibration_mode": "calibration_sensor_required"}
+    # With a sensor: the entities are asked, and an empty choice is refused.
+    result = await rooms.async_configure(
+        result["flow_id"], {"temperature_sensors": ["sensor.bedroom"], "calibration_mode": "offset"}
+    )
+    assert result["step_id"] == "sensors_details"
+    result = await rooms.async_configure(
+        result["flow_id"], {"calibration_entities": [], "hysteresis": 0.3}
+    )
+    assert result["step_id"] == "sensors_details"
+    assert result["errors"] == {"calibration_entities": "calibration_entities_required"}
+    result = await rooms.async_configure(
+        result["flow_id"],
+        {"calibration_entities": ["number.bedroom_trv_calibration"], "hysteresis": 0.3},
+    )
+    assert result["step_id"] == "windows"
+    result = await _until(hass, result, rooms, stop=set())
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    data = next(sub for sub in entry.subentries.values() if sub.title == "Bedroom").data
+    assert data["calibration_mode"] == "offset"
+    assert data["calibration_entities"] == ["number.bedroom_trv_calibration"]
+
+
+async def test_trv_calibration_off_needs_nothing(hass: HomeAssistant) -> None:
+    """Without calibration a TRV room needs no room sensor and no entities."""
+    hass.states.async_set(
+        "climate.trv", "heat", {"hvac_modes": ["heat", "off"], "hvac_action": "idle"}
+    )
+    entry = _house_with_rooms(hass)
+    rooms = hass.config_entries.subentries
+    result = await rooms.async_init(
+        (entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER}
+    )
+    result = await rooms.async_configure(result["flow_id"], {"name": "Hall", "source": "climate"})
+    result = await rooms.async_configure(
+        result["flow_id"], {"climates": ["climate.trv"], "command_mode": "temperature"}
+    )
+    result = await _until(hass, result, rooms, stop={"sensors"})
+    result = await rooms.async_configure(
+        result["flow_id"], {"temperature_sensors": [], "calibration_mode": "off"}
+    )
+    assert result["step_id"] == "windows"

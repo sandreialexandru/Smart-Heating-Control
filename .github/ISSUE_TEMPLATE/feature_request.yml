@@ -2,6 +2,14 @@ name: Idea
 description: A new function or a change
 labels: [enhancement]
 body:
+  - type: checkboxes
+    id: guide
+    attributes:
+      label: Before you ask
+      description: Many requests turn out to exist already, sometimes under another name (rooms as zones, the calendar for custom modes, manual changes for a while).
+      options:
+        - label: I have read the [guide](https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/docs/guide/README.md) and did not find a way to do this.
+          required: true
   - type: textarea
     id: idea
     attributes:

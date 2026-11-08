@@ -183,6 +183,18 @@ test("optimal start ahead: shaded, prediction heats from its start", async (p) =
     return { band: !!card.shadowRoot.querySelector(".optband"), heatAfter, opt: d.segs.some((x) => x.opt) };
   }, est.starts_at);
   ok(r.band && r.opt && r.heatAfter, JSON.stringify(r));
+  // The line and the band start at the level (22°), not at the top of the chart;
+  // the label sits right above the top of the line.
+  const g = await p.evaluate(() => {
+    const sr = card.shadowRoot, line = sr.querySelector(".optline"), band = sr.querySelector(".optband");
+    const lab = sr.querySelector(".optlab"), svg = sr.querySelector(".hchart svg").getBoundingClientRect();
+    const level = [...sr.querySelectorAll(".tline.future")].map((l) => +l.getAttribute("y1")).reduce((a, b) => Math.min(a, b));
+    const lineTop = +line.getAttribute("y1");
+    const lb = lab.getBoundingClientRect(), topPx = svg.top + (lineTop / 100) * svg.height;
+    return { lineTop, bandTop: +band.getAttribute("y"), level, labBottom: lb.bottom, topPx };
+  });
+  ok(Math.abs(g.lineTop - g.level) < 0.01 && Math.abs(g.bandTop - g.level) < 0.01 && g.lineTop > 6, "line top " + JSON.stringify(g));
+  ok(g.labBottom <= g.topPx + 0.5 && g.labBottom > g.topPx - 12, "label above the line " + JSON.stringify(g));
 });
 
 test("time zone of New York: midnight lines follow the card clock", async (p) => {

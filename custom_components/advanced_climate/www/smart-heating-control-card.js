@@ -2775,6 +2775,8 @@ class SmartHeatingControlCard extends HTMLElement {
     // The next optimal start / stop: from when it begins to the change.
     let optimal = "";
     let optimalLabel = "";
+    // Where that label is ([x, y, width]): no level label over it.
+    let optimalPlace = null;
     const est = a.next_estimate;
     if (est && (est.started_at || num(est.minutes))) {
       const s0 = Date.parse(est.started_at || est.starts_at);
@@ -2783,16 +2785,25 @@ class SmartHeatingControlCard extends HTMLElement {
         const c = PRESET_COLORS[est.preset] || TEMP_COLOR;
         const xa = Math.max(0, x(s0));
         const xb = Math.min(W, x(s1));
-        optimal = `<rect x="${xa}" y="${TOP}" width="${Math.max(1, xb - xa)}" height="${BOTTOM - TOP}" fill="${c}" class="optband"></rect>
-          <line x1="${x(s0)}" x2="${x(s0)}" y1="${TOP}" y2="${BOTTOM}" stroke="${c}" class="optline"></line>`;
+        // From the higher of the two levels (the next one for a start, the
+        // one of now for a stop) down to the bottom, like the steps of the plan.
+        const before = d.segs.find((sg) => sg.s <= s0 - 1 && s0 - 1 < sg.e);
+        const levels = [num(est.temperature), before ? before.v : null].filter((v) => v !== null);
+        const yTop = levels.length ? Math.min(BOTTOM, Math.max(TOP, y(Math.max(...levels)))) : TOP;
+        optimal = `<rect x="${xa}" y="${yTop}" width="${Math.max(1, xb - xa)}" height="${BOTTOM - yTop}" fill="${c}" class="optband"></rect>
+          <line x1="${x(s0)}" x2="${x(s0)}" y1="${yTop}" y2="${BOTTOM}" stroke="${c}" class="optline"></line>`;
         const text = this._t(est.kind === "optimal_start" ? "est_mark_start" : "est_mark_stop").replace(
           "{time}",
           this._fmtTime(est.started_at || est.starts_at)
         );
         if (x(s0) >= 0 && x(s0) <= W) {
-          optimalLabel = `<span class="optlab ${x(s0) > W * 0.7 ? "end" : ""}" style="left:${(x(s0) / W) * 100}%;--c:${c}">${esc(
-            text
-          )}</span>`;
+          // Right above the top of the line; below it when there is no room above.
+          const end = x(s0) > W * 0.7;
+          const below = yTop < TOP + 4;
+          optimalLabel = `<span class="optlab ${end ? "end" : ""} ${below ? "below" : ""}" style="left:${(x(s0) / W) * 100}%;top:${
+            (yTop / H) * 100
+          }%;--c:${c}">${esc(text)}</span>`;
+          optimalPlace = [end ? x(s0) - 170 : x(s0), yTop, 170];
         }
       }
     }
@@ -2800,7 +2811,7 @@ class SmartHeatingControlCard extends HTMLElement {
     // Labels of the levels (HTML, so the text is not stretched).
     const visible = (sg) => [Math.max(0, x(sg.s)), Math.min(W, x(sg.e))];
     // A label for each level wide enough, not over another label.
-    const placed = [];
+    const placed = optimalPlace ? [optimalPlace] : [];
     const labels = (shows("target") ? d.segs : [])
       .filter((sg, i) => {
         // The rest of the same level after an optimal start / stop has no second label.
@@ -4462,9 +4473,11 @@ const STYLE = `
   .hchart .ocut { stroke: var(--ac-hot); stroke-width: 1; stroke-dasharray: 2 3; opacity: 0.6; vector-effect: non-scaling-stroke; }
   .hchart .optband { opacity: 0.08; }
   .hchart .optline { stroke-width: 1.5; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
-  .optlab { position: absolute; top: 2px; transform: translateX(4px); font-size: 0.68em; white-space: nowrap; padding: 1px 6px;
+  .optlab { position: absolute; transform: translate(4px, calc(-100% - 4px)); font-size: 0.68em; white-space: nowrap; padding: 1px 6px;
     border-radius: 6px; color: var(--primary-text-color); background: color-mix(in srgb, var(--c) 18%, var(--card-background-color)); }
-  .optlab.end { transform: translateX(calc(-100% - 4px)); }
+  .optlab.end { transform: translate(calc(-100% - 4px), calc(-100% - 4px)); }
+  .optlab.below { transform: translate(4px, 4px); }
+  .optlab.end.below { transform: translate(calc(-100% - 4px), 4px); }
   .ylabels .olab { color: var(--ac-out); }
   .lg-out { background: var(--ac-out); }
   .hchart .heatlane { fill: var(--primary-text-color); opacity: 0.05; }

@@ -38,6 +38,9 @@ GitHub releases.
   per frame. Zooming and moving through the week no longer makes the card hang
   on a slower phone. A pan that ends outside the card (outside the window, for
   example) now ends properly, so the card keeps following Home Assistant.
+- 📈 **Optimal start / stop in the chart**: its line and shaded band start at
+  the level, like the other changes of the plan, instead of at the top of the
+  chart, and the "start ~…" label sits right above the line.
 
 ### Alerts
 

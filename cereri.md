@@ -14,7 +14,7 @@ Stare: **de decis** · **mai târziu** · **există deja** · **nu facem** · **
 | Pauză când pompa de căldură face apă caldă (Ecodan DHW) | Discord (callumt) | mai târziu | Rezolvat acum cu `switch.home_pause` dintr-o automatizare. Idee: o intrare „sursa e ocupată”. |
 | Listă „Tested with” (dispozitive testate) în README | noi | mai târziu | |
 
-## Idei de-ale noastre
+## Idei
 
 | Idee | Stare | Note |
 |---|---|---|

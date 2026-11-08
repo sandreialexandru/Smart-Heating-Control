@@ -250,6 +250,8 @@ pentru avertizări.
 | Nicio temperatură de afară de la … | nicio sursă configurată (senzor, meteo) nu dă temperatura mai mult de pragul de alertă |
 | Pornite, dar nu funcționează fără senzor de temperatură exterioară sau entitate meteo | funcții de vreme pornite fără sursa de care au nevoie |
 | Senzorii de temperatură sunt indisponibili | se folosește senzorul dispozitivului sau `eco` |
+| … nu a mai trimis temperatura de peste … h | un senzor de temperatură al camerei rămâne disponibil, dar nu a trimis nicio valoare (nici aceeași) cât *Alertă când un senzor de temperatură nu trimite nimic* (implicit 4 h), cât încălzirea e pornită (nu oprită, vară sau pauză); se încheie când senzorul trimite din nou |
+| Încălzește de … h, dar temperatura a crescut doar cu …° | vezi *Încălzire fără efect* mai jos |
 | Baterie descărcată la … | sub *Baterie descărcată sub* (implicit 20 %) |
 | … nu a acceptat … | verificarea comenzilor a eșuat de două ori |
 | … acceptă cel mult / cel puțin … | TRV-ul ține propria limită *Max / Min temperature* de pe dispozitiv (mai sus, *Limitele dispozitivului*) |
@@ -294,6 +296,29 @@ se trimite după o oră. Cu 50 % în cameră: circa 73 %, nicio alertă. Senzoru
 
 Ce ajută: aerisirea scurtă și des, rufele uscate în altă parte, camera nu prea
 rece, mobila la câțiva centimetri de pereții exteriori.
+
+### Încălzire fără efect
+
+O cameră e urmărită cât încălzește fără oprire, cu cel puțin 0,5° sub țintă (un
+TRV care ține ținta raportează încălzire în continuu, și e în regulă), fără
+fereastră deschisă, în afara antiînghețului și a pauzei. După *Alertă când
+încălzirea nu are efect* (implicit 2 h), creșterea ei e comparată cu cât ar
+trebui să fie:
+
+- **camera învățată**: creșterea pe care o așteaptă modelul învățat de la
+  același început, la aceeași temperatură de afară. Alerta se trimite sub o
+  treime din ea. O cameră cu încălzirea prea slabă pentru frigul de afară
+  așteaptă puțin (sub 0,3°) și nu primește alertă: nu are nimic stricat;
+- **înainte de învățare**: o creștere mai mică de 0,3°.
+
+Cauzele obișnuite: un ventil blocat sau un TRV care crede că e cald în cameră,
+o sursă de căldură care nu pornește, o fereastră deschisă fără senzor, un
+calorifer plin de aer. Alerta se încheie când camera se încălzește (0,3° peste
+temperatura de la alertă, sau aproape de țintă).
+
+**Exemplu**: o cameră învățată la 18 °C, care ar trebui să crească cu
+aproximativ 1,4° în 2 ore, a crescut cu 0,2°: se trimite alerta. Dacă ar fi
+crescut cu 0,8°, nu.
 
 ## Repornirea Home Assistant
 

@@ -196,6 +196,10 @@ CONF_QUIET_END: Final = "quiet_end"
 CONF_PAUSE_REMIND_HOURS: Final = "pause_remind_hours"
 CONF_ALERT_WINDOW_MINUTES: Final = "alert_window_minutes"
 CONF_ALERT_UNAVAILABLE_MINUTES: Final = "alert_unavailable_minutes"
+# A room temperature sensor that has sent nothing for this long (h; 0 = off).
+CONF_ALERT_SILENT_HOURS: Final = "alert_silent_hours"
+# A room that heats this long without the temperature rising (h; 0 = off).
+CONF_ALERT_NO_EFFECT_HOURS: Final = "alert_no_effect_hours"
 CONF_BATTERY_THRESHOLD: Final = "battery_threshold"
 CONF_VERIFY_COMMANDS: Final = "verify_commands"
 
@@ -254,6 +258,8 @@ HOUSE_DEFAULTS: Final = {
     CONF_AUTO_VACATION_HOURS: 0.0,
     CONF_ALERT_WINDOW_MINUTES: 30,
     CONF_ALERT_UNAVAILABLE_MINUTES: 15,
+    CONF_ALERT_SILENT_HOURS: 4.0,
+    CONF_ALERT_NO_EFFECT_HOURS: 2.0,
     CONF_BATTERY_THRESHOLD: 20,
     CONF_VERIFY_COMMANDS: True,
     CONF_NOTIFY_RESOLVED: True,

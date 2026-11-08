@@ -332,6 +332,8 @@ Detalii: [capitolul 9](09-ferestre-manual-siguranta.ro.md) și
 | Ore de liniște de la / până la | – | În acest interval doar alertele importante; celelalte se trimit la sfârșitul lui, dacă mai sunt valabile. |
 | Alertă când o fereastră e deschisă mai mult de | 30 min | Cât timp încălzirea e necesară. |
 | Alertă când un dispozitiv e indisponibil mai mult de | 15 min | Termostat sau senzor. |
+| Alertă când un senzor de temperatură nu trimite nimic | 4 h | Un senzor de temperatură al camerei care rămâne disponibil, dar nu mai trimite nicio valoare (o baterie descărcată sau semnalul pierdut păstrează ultima valoare). 0 = oprit; mărește-l pentru senzorii care raportează doar când se schimbă temperatura. |
+| Alertă când încălzirea nu are efect | 2 h | O cameră care încălzește atât timp, clar sub țintă, iar temperatura crește mult mai puțin decât a învățat (ventil blocat, sursă care nu pornește, fereastră deschisă fără senzor). 0 = oprit. |
 | Baterie descărcată sub | 20 % | Dispozitivele camerei (TRV, senzori). |
 | Verifică comenzile | pornit | După 2 minute verifică dacă dispozitivul a acceptat comanda, reîncearcă o dată, apoi dă alertă. |
 | Alertă când o cameră rămâne mai rece cu | 0 (oprit) | Alertă când o cameră rămâne cu atâtea grade sub țintă în timp ce altele sunt calde (robinet blocat, fereastră deschisă). Apare doar cu mai multe camere. |

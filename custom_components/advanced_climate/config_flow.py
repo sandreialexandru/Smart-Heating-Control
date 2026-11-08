@@ -31,6 +31,8 @@ from .const import (
     COMMAND_HVAC,
     COMMAND_PRESET,
     COMMAND_TEMPERATURE,
+    CONF_ALERT_NO_EFFECT_HOURS,
+    CONF_ALERT_SILENT_HOURS,
     CONF_ALERT_UNAVAILABLE_MINUTES,
     CONF_ALERT_WINDOW_MINUTES,
     CONF_AREA,
@@ -645,6 +647,8 @@ def _alerts_schema(v: dict[str, Any], rooms: int, targets: list[str] | None = No
         _req(CONF_PAUSE_REMIND_HOURS, v, d): _number(0, 168, 1, "h"),
         _req(CONF_ALERT_WINDOW_MINUTES, v, d): _number(1, 720, 1, "min"),
         _req(CONF_ALERT_UNAVAILABLE_MINUTES, v, d): _number(1, 720, 1, "min"),
+        _req(CONF_ALERT_SILENT_HOURS, v, d): _number(0, 48, 0.5, "h"),
+        _req(CONF_ALERT_NO_EFFECT_HOURS, v, d): _number(0, 12, 0.5, "h"),
         _req(CONF_BATTERY_THRESHOLD, v, d): _number(1, 100, 1, "%"),
         _req(CONF_VERIFY_COMMANDS, v, d): _bool(),
     }

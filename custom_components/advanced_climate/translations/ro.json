@@ -245,6 +245,8 @@
           "pause_remind_hours": "Amintește când pauza durează mai mult de",
           "alert_window_minutes": "Alertă când o fereastră e deschisă mai mult de",
           "alert_unavailable_minutes": "Alertă când un dispozitiv e indisponibil mai mult de",
+          "alert_silent_hours": "Alertă când un senzor de temperatură nu trimite nimic",
+          "alert_no_effect_hours": "Alertă când încălzirea nu are efect",
           "battery_threshold": "Baterie descărcată sub",
           "verify_commands": "Verifică comenzile",
           "room_diff_alert": "Alertă când o cameră rămâne mai rece cu"
@@ -259,6 +261,8 @@
           "pause_remind_hours": "O avertizare când încălzirea rămâne în pauză atât timp, apoi o dată pe zi (o pauză uitată înseamnă o casă rece). 0 = niciodată.",
           "alert_window_minutes": "Alertă când o fereastră rămâne deschisă atât, cât e nevoie de încălzire.",
           "alert_unavailable_minutes": "Alertă când un termostat sau senzor e indisponibil atât timp.",
+          "alert_silent_hours": "Alertă când un senzor de temperatură al camerei rămâne disponibil, dar nu a trimis nicio valoare (nici aceeași) atât timp: o baterie descărcată sau semnalul pierdut păstrează des ultima valoare. 0 = oprit. Mărește-l pentru senzorii care raportează doar când se schimbă temperatura.",
+          "alert_no_effect_hours": "Alertă când o cameră încălzește atât timp, clar sub țintă, și temperatura crește mult mai puțin decât a învățat (sau aproape deloc, înainte de învățare): un ventil blocat, o sursă de căldură care nu pornește, o fereastră deschisă fără senzor. 0 = oprit.",
           "battery_threshold": "Alertă când bateria unui dispozitiv din cameră (TRV, senzor) scade sub această valoare.",
           "verify_commands": "După 2 minute verifică dacă dispozitivul a preluat comanda, retrimite o dată, apoi alertă. Dezactivează doar dacă un dispozitiv își raportează starea greu.",
           "room_diff_alert": "Alertă când o cameră rămâne cu atâtea grade sub țintă în timp ce altele sunt calde (robinet blocat, fereastră deschisă). 0 = oprit; util doar cu mai multe camere."

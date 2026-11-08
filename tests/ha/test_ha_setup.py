@@ -2849,6 +2849,8 @@ async def test_long_pause_is_reminded(hass: HomeAssistant, freezer: FrozenDateTi
     for _ in range(24):
         await _tick(hass, freezer, 3600)
     assert len(phone) == 2  # once a day
+    # The room sensor still reports (else, a day and a half later, it is silent).
+    hass.states.async_set("sensor.room_temp", "18.0", {"unit_of_measurement": "°C"})
     await house.async_set_pause(False)
     await _tick(hass, freezer, 60)
     assert len(phone) == 2

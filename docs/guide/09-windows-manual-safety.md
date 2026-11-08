@@ -249,6 +249,8 @@ as the recipient of the important alerts and of the warnings.
 | No outdoor temperature from … | no configured source (sensor, weather) gives a temperature for longer than the alert threshold |
 | On but not working without an outdoor temperature sensor or a weather entity | weather functions on without the source they need |
 | The temperature sensors are unavailable | the device sensor or `eco` is used |
+| … has sent no temperature for more than … h | a room temperature sensor stays available but has sent no value at all (not even the same one) for *Alert when a temperature sensor sends nothing for* (4 h by default), while the heating is on (not off, summer or paused); it ends when the sensor reports again |
+| Heating for … h, but the temperature rose by only …° | see *Heating without effect* below |
 | Low battery on … | below *Low battery below* (20 % by default) |
 | … did not accept … | the command check failed twice |
 | … accepts at most / at least … | the TRV keeps its own *Max / Min temperature* set on the device (above, *Limits of the device*) |
@@ -294,6 +296,27 @@ sensor shows the value in `surface_humidity`.
 
 What helps: airing briefly and often, not drying laundry in the room, not
 letting the room get too cold, furniture a few centimetres from outer walls.
+
+### Heating without effect
+
+A room is watched while it heats without a stop, at least 0.5° below its target
+(a TRV that holds the target keeps reporting heating, and that is fine), with no
+window open, outside frost protection and the pause. After *Alert when heating
+has no effect for* (2 h by default) its rise is compared with what it should be:
+
+- **learned room**: the rise the learned model expects from the same start, at
+  the same outdoor temperature. The alert is sent below a third of it. A room
+  whose heating is too weak for the cold outside expects little (under 0.3°)
+  and gets no alert: there is nothing wrong with it;
+- **before learning**: a rise of less than 0.3°.
+
+The usual causes: a stuck valve or a TRV that thinks the room is warm, a heat
+source that does not start, a window open without a sensor, a radiator full of
+air. The alert ends when the room warms up (0.3° above where it was told, or
+close to its target).
+
+**Example**: a learned room at 18 °C that should warm about 1.4° in 2 hours
+rose by 0.2°: the alert is sent. Had it risen 0.8°, no alert.
 
 ## Restart of Home Assistant
 

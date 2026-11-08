@@ -44,6 +44,17 @@ GitHub releases.
 
 ### Alerts
 
+- 🔇 **Silent temperature sensor**: a room temperature sensor that stays
+  available but sends nothing at all (not even the same value) for 4 hours is
+  told: a flat battery or a lost signal often keeps the last value, and the room
+  was heated by an old one. A steady temperature is not silence. Off with 0,
+  longer for sensors that report only on a change (*Alerts* options).
+- 🧯 **Heating without effect**: a room that heats for 2 hours, clearly below its
+  target, while its temperature rises much less than the learned model expects
+  (a third of it; before learning, less than 0.3°) is told: a stuck valve, a heat
+  source that does not start, a window open without a sensor. Not with a window
+  open, in frost protection or paused; a heating too weak for the cold outside
+  expects little and is not told. Off with 0.
 - The mold risk alert says the coldest wall *reached* its humidity (the value
   when the alert started; the card's humidity row shows the value now), and
   that airing and a warmer room lower *the risk*.

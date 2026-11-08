@@ -279,6 +279,12 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self._stopped = False
         self._verify_attempts = 0
         self._unavailable_since: dict[str, datetime] = {}
+        # Temperature sensors told as silent (no report for long).
+        self._silent: set[str] = set()
+        # Heating without effect: the heating watched now (start, temperature,
+        # the model then), and the temperature when it was told.
+        self._no_effect_run: dict[str, Any] | None = None
+        self._no_effect_told: float | None = None
         # Mold risk: since when the wall surface is humid enough, and its humidity now.
         self._mold_since: datetime | None = None
         self.humidity: float | None = None

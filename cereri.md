@@ -1,8 +1,5 @@
 # Cereri și idei
 
-Ce cer utilizatorii și ce ne-a venit nouă, cu ce am decis. Se completează pe
-parcurs.
-
 Stare: **de decis** · **mai târziu** · **există deja** · **nu facem** · **făcut**
 
 ## De la utilizatori

@@ -165,9 +165,9 @@ async def test_silent_trv_of_a_room_without_its_own_sensor(
     for _ in range(3):
         await _tick(hass, freezer, 600)
     assert house.active_alerts["silent_climate.trv"]["code"] == "sensor_silent"
-    # It reports again: over.
+    # It reports again (the same values): over at the next evaluation.
     hass.states.async_set("climate.trv", "heat", {**TRV_AUTO, "temperature": 21.0})
-    await _tick(hass, freezer, 5)
+    await _tick(hass, freezer, 310)
     assert "silent_climate.trv" not in house.active_alerts
     await _unload(hass, entry)
 

@@ -27,7 +27,7 @@ funcționeze exact ca înainte; integrarea doar îi alege presetul potrivit
 Configurarea are două niveluri:
 
 - **Casa** este o singură intrare a integrării. Ea ține lucrurile comune:
-  persoanele, zonele, modul global (Auto / Vacanță / Oprit / Vară), vremea,
+  persoanele, zonele, modul global (Auto / Plecat / Vacanță / Oprit / Vară), vremea,
   centrala, alertele.
 - **Camerele** sunt adăugate în casă. Fiecare cameră are dispozitivele ei,
   senzorii ei, ferestrele ei și programul ei.

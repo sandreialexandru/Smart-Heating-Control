@@ -71,6 +71,39 @@ oprirea unui profil să lase zile fără profil.
 `home_office` (doar miercuri). Miercuri se folosește `home_office`, în celelalte
 zile lucrătoare `workday`, sâmbăta, duminica și sărbătorile `weekend`.
 
+## Selectul de profil
+
+Fiecare cameră cu programul ei are un select **Profil de program**, de exemplu
+`select.bedroom_schedule_profile`. Opțiunile sunt profilurile camerei și arată
+**profilul folosit azi**.
+
+Alegerea unui profil face exact ce face pornirea lui din card: devine activ,
+profilurile active pentru aceleași zile se opresc și **rămâne așa până alegi
+alt profil**. Zilele pe care nu le acoperă își păstrează profilul lor.
+
+**Exemplu.** `workday` și `home_office` sunt amândouă pentru zile lucrătoare,
+`weekend` pentru weekend. Alegi `home_office` luni: de acum zilele lucrătoare
+folosesc `home_office`, sâmbăta și duminica tot `weekend` (selectul arată atunci
+`weekend`), iar lunea următoare din nou `home_office`, până alegi `workday`.
+
+Fiind un select obișnuit, îl poate schimba o automatizare, un script sau un
+buton din dashboard. Pentru mai multe camere odată, setează selecturile lor
+într-o singură acțiune; profilurile trebuie atunci să aibă același nume în acele
+camere:
+
+```yaml
+action: select.select_option
+target:
+  entity_id:
+    - select.bedroom_schedule_profile
+    - select.office_schedule_profile
+data:
+  option: home_office
+```
+
+Un eveniment din calendar cu numele unui profil are în continuare prioritate în
+ziua lui. Selectul arată atunci acel profil, dar nu schimbă care e pornit.
+
 ## Zile lucrătoare și sărbători
 
 Fără senzor Workday, luni–vineri sunt zile lucrătoare. Cu senzorul integrării

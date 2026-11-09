@@ -136,6 +136,22 @@ The presence counts **without a break**: a motion sensor that turns off between
 movements (someone sitting still) starts the count again. A presence sensor
 (mmWave) or a motion sensor with a long clear time suits this option better.
 
+## The away mode
+
+**Away** in the house's *Mode* select tells the house that nobody is home, by
+hand: every room goes to `away`, as when everybody is far, but without people
+or location tracking. It stays until you choose another mode (usually *Auto*).
+
+- It is below a manual change of a room and the vacation, and above the
+  presence and the schedule.
+- Guest mode wins over it: the rooms follow the schedule.
+- Unlike the presence, it does not know when you come back, so it does not
+  preheat: back on *Auto*, the rooms start from the away temperature. For
+  absences with a known return, a schedule profile with `away` during those
+  hours (see [the profile select](04-schedule.md#the-profile-select)) or the
+  vacation dates preheat in time.
+- It suits an automation, a button or a tablet: one change for the whole house.
+
 ## Vacation
 
 Vacation sets every room to `away`. It can start in three ways:

@@ -17,14 +17,14 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.4b7";
+const CARD_VERSION = "2.6.4b8";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
 // Decisions that hold until something changes: the plan keeps them.
 const FLAT_RULES = [
   "mode_off", "summer", "out_of_season", "pause", "presence_far", "presence_nearby",
-  "sensor_fallback", "outdoor_cutoff", "vacation",
+  "sensor_fallback", "outdoor_cutoff", "vacation", "house_away",
 ];
 // A target that is only a temperature (no level): neutral.
 const TEMP_COLOR = "var(--ac-fixed)";
@@ -360,6 +360,7 @@ const TEXT = {
     r_window_frost: "Window open: frost protection",
     r_override: "Manual change is respected",
     r_vacation: "Vacation",
+    r_house_away: "Mode away: nobody home",
     r_far: "Everyone is far (outside the nearby zones)",
     r_nearby: "Nobody home, someone nearby",
     r_nearby_temperature: "Nobody home, someone nearby: {temperature}",
@@ -650,6 +651,7 @@ const TEXT = {
     r_window_frost: "Fereastră deschisă: antiîngheț",
     r_override: "Modificarea manuală e respectată",
     r_vacation: "Vacanță",
+    r_house_away: "Mod plecat: nu e nimeni acasă",
     r_far: "Toți sunt departe (în afara zonelor apropiate)",
     r_nearby: "Nimeni acasă, cineva în apropiere",
     r_nearby_temperature: "Nimeni acasă, cineva în apropiere: {temperature}",
@@ -1479,6 +1481,7 @@ class SmartHeatingControlCard extends HTMLElement {
       optimal_stop: "calendar-clock",
       room_unoccupied: "calendar-clock",
       vacation: "airplane",
+      house_away: "home-export-outline",
       presence_far: "map-marker-distance",
       presence_nearby: "map-marker-radius-outline",
       pause: "pause",
@@ -1664,7 +1667,9 @@ class SmartHeatingControlCard extends HTMLElement {
     const overlap = persons.length > 3 ? "overlap" : "";
     const who = persons.map((p) => `${p.name} ${String(this._label(presence, p.cls)).toLowerCase()}`).join(" · ");
 
-    const modes = (mode?.attributes?.options || ["auto", "vacation", "off", "summer"])
+    const modeOptions = mode?.attributes?.options || ["auto", "away", "vacation", "off", "summer"];
+    const modeCount = modeOptions.length;
+    const modes = modeOptions
       .map(
         (opt) => `<button class="seg ${mode?.state === opt ? "active" : ""}" data-action="mode"
           data-entity="${esc(e.mode)}" data-option="${esc(opt)}">${esc(this._label(mode, opt))}</button>`
@@ -1772,7 +1777,7 @@ class SmartHeatingControlCard extends HTMLElement {
             ${presence?.attributes?.arriving ? `<span class="pill">${this._t("arriving")}</span>` : ""}
             ${demand?.state === "on" ? this._flame(this._houseHeating(house), e.heat_demand) : ""}
           </div>
-          <div class="segmented" role="group" aria-label="${esc(this._t("mode"))}">${modes}</div>
+          <div class="segmented ${modeCount > 4 ? "many" : ""}" style="--n:${modeCount}" role="group" aria-label="${esc(this._t("mode"))}">${modes}</div>
         </div>
         ${
           avatars
@@ -4354,10 +4359,11 @@ const STYLE = `
   .btn.icon-only { padding: 6px; }
   .btn.icon-only .x { display: none; }
   .btn.icon-only ha-icon:not(:defined) + .x { display: inline; }
-  .segmented { display: grid; grid-template-columns: repeat(4, 1fr); padding: 3px; gap: 3px; border-radius: 12px;
-    background: var(--ac-surface-2); }
-  .seg { border: none; background: none; padding: 8px 6px; border-radius: 9px; font: inherit; font-size: 0.9em;
-    color: var(--primary-text-color); cursor: pointer; }
+  .segmented { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); padding: 3px; gap: 3px;
+    border-radius: 12px; background: var(--ac-surface-2); }
+  .seg { border: none; background: none; padding: 8px 2px; border-radius: 9px; font: inherit; font-size: 0.9em;
+    color: var(--primary-text-color); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .segmented.many .seg { font-size: 0.8em; padding: 8px 0; }
   .seg.active { background: var(--card-background-color); box-shadow: 0 1px 2px rgba(0,0,0,.18); font-weight: 600; color: var(--ac-accent); }
   .toggle { display: inline-flex; align-items: center; gap: 8px; background: none; border: none; font: inherit;
     color: var(--primary-text-color); cursor: pointer; padding: 4px 0; }

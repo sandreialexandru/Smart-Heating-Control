@@ -9,7 +9,7 @@ the house or the room, e.g. `sensor.bedroom_decision`.
 
 | Entity | Shows / does |
 | --- | --- |
-| *Mode* (select) | The mode: `auto`, `vacation`, `off`, `summer`. |
+| *Mode* (select) | The mode: `auto`, `away`, `vacation`, `off`, `summer`. |
 | *Presence* (sensor) | `home`, `nearby`, `far`; attributes: the people, `arriving`, `guest_mode`, `vacation_active`, `vacation_suspended`, `vacation_preheating`, `pending`, `pending_since`. |
 | *Pause* (switch) | The pause. |
 | *Guest mode* (switch) | Guest mode (the house state stays *home*). |
@@ -40,6 +40,7 @@ the house or the room, e.g. `sensor.bedroom_decision`.
 | *Child lock* (switch) | The child lock. |
 | *Clear manual change* (button) | Clears the room's manual change. |
 | *Reset learning* (button) | Forgets the room's learning; the room learns again within about a day. |
+| *Schedule profile* (select) | The profile used today; choosing one turns it on (see [chapter 4](04-schedule.md#the-profile-select)). Only for rooms with their own schedule. |
 | *Level Home* … *Level Activity*, *Nearby temperature* (numbers) | The level temperatures, only for rooms without Generic Thermostat. A level with its own name appears as *Level "name"*. |
 
 ### States of the *Decision* sensor
@@ -57,6 +58,7 @@ the house or the room, e.g. `sensor.bedroom_decision`.
 | `window_open` | Window open |
 | `manual_override` | Manual change |
 | `vacation` | Vacation |
+| `house_away` | Mode away |
 | `presence_far` | Everybody is far |
 | `presence_nearby` | Nobody home, someone nearby |
 | `room_unoccupied` | Room unoccupied |

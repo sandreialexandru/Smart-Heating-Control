@@ -66,7 +66,7 @@ collapsed: true
   **sezon**, **cererea de căldură** și **timpul de încălzire**: două câte două
   pe un card îngust (trei pe rând fără timpul de încălzire), toate pe un rând
   pe unul lat.
-- **Modul** (Auto / Vacanță / Oprit / Vară).
+- **Modul** (Auto / Plecat / Vacanță / Oprit / Vară).
 - Un rând de butoane: **Pauză** și **Oaspeți** (pornit / oprit), **Vacanță**
   (deschide datele vacanței), **Reevaluează** și **Automat** (anulează toate
   modificările manuale). Un buton rămâne colorat cât modul lui e pornit.

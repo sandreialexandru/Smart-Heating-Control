@@ -69,6 +69,39 @@ warns before turning a profile on or off would leave days without a profile.
 `home_office` (only Wednesday). On Wednesday `home_office` is used, on the other
 workdays `workday`, on Saturday, Sunday and holidays `weekend`.
 
+## The profile select
+
+Every room with its own schedule has a **Schedule profile** select, e.g.
+`select.bedroom_schedule_profile`. Its options are the profiles of the room, and
+it shows **the profile used today**.
+
+Choosing a profile does exactly what turning it on in the card does: it becomes
+active, the active profiles of the same days are turned off, and it **stays so
+until another profile is chosen**. The days it does not cover keep their own
+profile.
+
+**Example.** `workday` and `home_office` are both for workdays, `weekend` for
+the weekend. Choosing `home_office` on Monday: the workdays use `home_office`
+from now on, Saturday and Sunday still `weekend` (the select then shows
+`weekend`), and the next Monday `home_office` again, until you choose `workday`.
+
+Since it is a normal select, an automation, a script or a dashboard button can
+set it. To switch several rooms at once, set their selects in one action; the
+profiles then need the same name in those rooms:
+
+```yaml
+action: select.select_option
+target:
+  entity_id:
+    - select.bedroom_schedule_profile
+    - select.office_schedule_profile
+data:
+  option: home_office
+```
+
+A calendar event titled with a profile name still wins for its day. The select
+then shows that profile, but does not change which one is on.
+
 ## Workdays and holidays
 
 Without a Workday sensor, Monday–Friday are workdays. With the sensor of the

@@ -189,11 +189,12 @@ the integration takes control again.
 
 ## 8. Global modes
 
-One select for the house: **Auto / Vacation / Off / Summer**.
+One select for the house: **Auto / Away / Vacation / Off / Summer**.
 
 | Mode | What it does | Options |
 | --- | --- | --- |
 | Auto | Schedule + presence + every rule | – |
+| Away | Nobody home, set by hand: `away` in every room until changed (no people needed; guest mode wins; no preheating) | – |
 | Vacation | `away` in every room | Start and end dates (only an end: from now), preheat X hours before the end (default 4 h; the schedule applies even while everyone is far), automatic vacation after Y hours far away (offered only when the house has people; the preheating before the end of a planned vacation wins over it; it ends when someone is arriving and comes back only after another Y hours far away) |
 | Off | Frost protection only (`min_temp` of GT) | – |
 | Summer | Heating off | Automatic switch with the season (section 6) |
@@ -241,6 +242,7 @@ One select for the house: **Auto / Vacation / Off / Summer**.
 | `binary_sensor.<room>_heat_demand` | Whether the room asks for heat; the `heating` attribute tells if its heat source runs |
 | `sensor.<house>_presence` | home / nearby / far |
 | `select.<house>_mode` | Global mode |
+| `select.<room>_schedule_profile` | The profile used today; choosing one turns it on as in the card (rooms with their own schedule) |
 | `number.*`, `button.*`, `switch.*` | Levels, clear overrides, reset learning (per room), guest mode, pause, child lock |
 | Services | `set_override`, `clear_override`, `set_vacation`, `reevaluate`, `set_schedule` |
 | Events | `advanced_climate_decision_changed` with room, old and new target and reason |
@@ -261,8 +263,9 @@ applies sets the level.
 5. **Window open**
 6. **Manual change**
 7. **Vacation** (a day without an active profile: frost protection, above `away`)
-8. **Presence** – far → `away` (a day without an active profile: frost protection), nearby → `eco` (or the fixed temperature; with *Not above the schedule* the lower of it and the schedule), home → schedule
-9. **Schedule** – with optimal start / stop and room occupancy
+8. **Mode Away** – `away` (a day without an active profile: frost protection)
+9. **Presence** – far → `away` (a day without an active profile: frost protection), nearby → `eco` (or the fixed temperature; with *Not above the schedule* the lower of it and the schedule), home → schedule
+10. **Schedule** – with optimal start / stop and room occupancy
 
 Final adjustments (outdoor cutoff, compensation, tariff, PV, solar gain) only
 correct a heating target by a few tenths of a degree (never a frost protection:
@@ -281,7 +284,7 @@ winning rule.
 | Fereastră deschisă | window open |
 | Intervenție manuală | manual override |
 | Durată fixă / până la următoarea reevaluare | fixed duration / until next reevaluation |
-| Mod global: Auto / Vacanță / Oprit / Vară | global mode: auto / vacation / off / summer |
+| Mod global: Auto / Plecat / Vacanță / Oprit / Vară | global mode: auto / away / vacation / off / summer |
 | Pauză | pause |
 | Antiîngheț | frost protection |
 | Pornire / oprire anticipată | optimal start / optimal stop |

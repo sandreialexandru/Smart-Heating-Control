@@ -775,6 +775,7 @@
           "window_open": "Fereastră deschisă",
           "manual_override": "Modificare manuală",
           "vacation": "Vacanță",
+          "house_away": "Mod plecat",
           "presence_far": "Departe",
           "presence_nearby": "Aproape",
           "room_unoccupied": "Cameră neocupată",
@@ -823,10 +824,14 @@
         "name": "Mod",
         "state": {
           "auto": "Auto",
+          "away": "Plecat",
           "vacation": "Vacanță",
           "off": "Oprit",
           "summer": "Vară"
         }
+      },
+      "schedule_profile": {
+        "name": "Profil de program"
       }
     },
     "switch": {

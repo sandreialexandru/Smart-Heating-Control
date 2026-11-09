@@ -14,8 +14,9 @@ Rule order:
  5. window open
  6. manual override
  7. vacation
- 8. presence (far -> away, nearby -> eco or a fixed temperature)
- 9. schedule (with optimal start / stop and room occupancy)
+ 8. mode away (nobody home, set by hand)
+ 9. presence (far -> away, nearby -> eco or a fixed temperature)
+10. schedule (with optimal start / stop and room occupancy)
  Adjustments: outdoor cutoff, compensation, tariff, PV, solar gain.
 """
 
@@ -26,6 +27,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
 from .const import (
+    MODE_AWAY,
     MODE_OFF,
     MODE_SUMMER,
     MODE_VACATION,
@@ -37,6 +39,7 @@ from .const import (
     PRESET_FROST,
     RULE_CUTOFF,
     RULE_FAR,
+    RULE_HOUSE_AWAY,
     RULE_MAX,
     RULE_MODE_OFF,
     RULE_NEARBY,
@@ -235,6 +238,16 @@ def base_decision(inputs: RoomInputs) -> Decision:
             return _no_profile(inputs)
         return Decision(
             RULE_VACATION, Target(KIND_PRESET, preset=PRESET_AWAY), "Vacation", key="vacation"
+        )
+    if inputs.mode == MODE_AWAY:
+        # Nobody home, set by hand: like everyone far away, without the persons.
+        if inputs.schedule_preset == PRESET_FROST:
+            return _no_profile(inputs)
+        return Decision(
+            RULE_HOUSE_AWAY,
+            Target(KIND_PRESET, preset=PRESET_AWAY),
+            "Mode away: nobody home",
+            key="house_away",
         )
     if not inputs.arriving and not inputs.vacation_preheat:
         if inputs.presence == PRESENCE_FAR:

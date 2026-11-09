@@ -66,7 +66,7 @@ collapsed: true
   **season**, the **heat demand** and the **heating time**: two by two on a
   narrow card (three in a row without the heating time), all in one row on a
   wide one.
-- The **mode** (Auto / Vacation / Off / Summer).
+- The **mode** (Auto / Away / Vacation / Off / Summer).
 - A row of buttons: **Pause** and **Guests** (on / off), **Vacation** (opens
   the vacation dates), **Reevaluate** and **Automatic** (clears all manual
   changes). A button stays coloured while its mode is on.

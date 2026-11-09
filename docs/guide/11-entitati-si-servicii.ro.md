@@ -9,7 +9,7 @@ Numele entităților sunt date ca în interfața în română. ID-urile încep c
 
 | Entitate | Ce arată / face |
 | --- | --- |
-| *Mod* (select) | Modul: `auto`, `vacation`, `off`, `summer`. |
+| *Mod* (select) | Modul: `auto`, `away`, `vacation`, `off`, `summer`. |
 | *Prezență* (senzor) | `home`, `nearby`, `far`; atribute: persoanele, `arriving`, `guest_mode`, `vacation_active`, `vacation_suspended`, `vacation_preheating`, `pending`, `pending_since`. |
 | *Pauză* (comutator) | Pauza. |
 | *Mod oaspeți* (comutator) | Modul oaspeți (starea casei rămâne *acasă*). |
@@ -40,6 +40,7 @@ Numele entităților sunt date ca în interfața în română. ID-urile încep c
 | *Blocare modificări* (comutator) | Blocarea pentru copii. |
 | *Anulează modificarea manuală* (buton) | Anulează modificarea manuală a camerei. |
 | *Resetează învățarea* (buton) | Uită învățarea camerei; camera învață din nou în circa o zi. |
+| *Profil de program* (select) | Profilul folosit azi; alegerea unuia îl pornește (vezi [capitolul 4](04-program.ro.md#selectul-de-profil)). Doar pentru camerele cu programul lor. |
 | *Nivel Home* … *Nivel Activity*, *Temperatură „aproape”* (numere) | Temperaturile nivelurilor, doar la camerele fără Generic Thermostat. Un nivel cu nume propriu apare ca *Level „nume”*. |
 
 ### Stările senzorului *Decizie*
@@ -57,6 +58,7 @@ Numele entităților sunt date ca în interfața în română. ID-urile încep c
 | `window_open` | Fereastră deschisă |
 | `manual_override` | Modificare manuală |
 | `vacation` | Vacanță |
+| `house_away` | Mod plecat |
 | `presence_far` | Toți sunt departe |
 | `presence_nearby` | Nimeni acasă, cineva aproape |
 | `room_unoccupied` | Camera neocupată |

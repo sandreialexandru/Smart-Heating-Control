@@ -134,6 +134,7 @@ The house's *Mode* select:
 | Mode | What it does |
 | --- | --- |
 | **Auto** | Every rule: schedule, presence, windows, weather… |
+| **Away** | Nobody home, set by hand: `away` in every room, until changed (see [chapter 5](05-presence.md#the-away-mode)) |
 | **Vacation** | `away` in every room (see [chapter 5](05-presence.md#vacation)) |
 | **Off** | Only frost protection |
 | **Summer** | Heating off (frost protection stays as safety). With the automatic or between-dates season, heating stops by itself outside the season. |

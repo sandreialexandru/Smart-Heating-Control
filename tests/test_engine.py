@@ -78,6 +78,16 @@ class RuleOrderTest(unittest.TestCase):
     def test_override_over_vacation(self) -> None:
         self.check(const.RULE_OVERRIDE, "none", override_active=True, vacation_active=True)
 
+    def test_mode_away(self) -> None:
+        # Nobody home, set by hand: the away level, over the presence.
+        self.check(const.RULE_HOUSE_AWAY, "preset", "away", mode=const.MODE_AWAY)
+        self.check(const.RULE_HOUSE_AWAY, "preset", "away", mode=const.MODE_AWAY, presence="home")
+        # A manual change, a window and the vacation stay above it.
+        self.check(const.RULE_OVERRIDE, "none", override_active=True, mode=const.MODE_AWAY)
+        self.check(
+            const.RULE_VACATION, "preset", "away", vacation_active=True, mode=const.MODE_AWAY
+        )
+
     def test_window_over_override(self) -> None:
         self.check(
             const.RULE_WINDOW,

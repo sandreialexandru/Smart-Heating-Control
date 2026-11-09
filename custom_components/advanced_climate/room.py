@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import Event, EventStateChangedData, State, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
 )
@@ -79,6 +80,7 @@ from .const import (
     GT_PRESET_KEYS,
     MAX_DECISION_LOG,
     MODE_AUTO,
+    MODE_AWAY,
     MODE_OFF,
     MODE_SUMMER,
     MODE_VACATION,
@@ -130,6 +132,7 @@ from .schedule import (
     ScheduleError,
     ScheduleState,
     Slot,
+    overlap,
     parse_schedule,
 )
 from .trend import TemperatureTrend
@@ -324,6 +327,29 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self.config[CONF_PROFILE_DAYS] = profile_days
         self.schedule_error = None
         self.schedule = self._build_schedule(text)
+
+    async def async_activate_profile(self, name: str) -> None:
+        """Turn a profile on, as in the card: the active ones of the same days go off.
+
+        Saved in the room like the days chosen in the card (the update listener
+        applies them without a reload).
+        """
+        names = self.schedule.profile_names
+        if name not in names:
+            raise HomeAssistantError(f"Unknown profile {name}")
+        days = {n: dict(item) for n, item in self.schedule.profile_days.items()}
+        chosen = days[name]["days"]
+        for other, item in days.items():
+            if other != name and item["enabled"] and overlap(chosen, item["days"]):
+                item["enabled"] = False
+        days[name]["enabled"] = True
+        if days == self.schedule.profile_days:
+            return
+        entry = self.house.entry
+        subentry = entry.subentries[self.id]
+        self.hass.config_entries.async_update_subentry(
+            entry, subentry, data={**subentry.data, CONF_PROFILE_DAYS: days}
+        )
 
     def _build_schedule(self, text: str) -> Schedule:
         """Parse the schedule text; the default schedule is used when it is invalid."""
@@ -994,8 +1020,10 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
 
         return RoomInputs(
             now=now,
-            # Guests win over the vacation mode too: the rooms follow the schedule.
-            mode=MODE_AUTO if house.mode == MODE_VACATION and house.guest else house.mode,
+            # Guests win over the vacation and away modes: the rooms follow the schedule.
+            mode=MODE_AUTO
+            if house.mode in (MODE_VACATION, MODE_AWAY) and house.guest
+            else house.mode,
             paused=house.paused,
             season_active=house.season_active,
             cutoff_active=house.cutoff_active,

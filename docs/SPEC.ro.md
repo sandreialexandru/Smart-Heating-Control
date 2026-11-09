@@ -193,11 +193,12 @@ definit; apoi integrarea preia din nou controlul.
 
 ## 8. Moduri globale
 
-Un select pentru casă: **Auto / Vacanță / Oprit / Vară**.
+Un select pentru casă: **Auto / Plecat / Vacanță / Oprit / Vară**.
 
 | Mod | Ce face | Opțiuni |
 | --- | --- | --- |
 | Auto | Program + prezență + toate regulile | – |
+| Plecat | Nu e nimeni acasă, setat de mână: `away` în toate camerele până se schimbă (fără persoane; modul oaspeți are prioritate; fără preîncălzire) | – |
 | Vacanță | `away` în toate camerele | Date de început și sfârșit (doar sfârșit: de acum), preîncălzire cu X ore înainte de sfârșit (implicit 4 h; programul se aplică chiar dacă toată lumea e departe), vacanță automată după Y ore departe (se oferă doar când casa are persoane; preîncălzirea dinaintea sfârșitului unei vacanțe planificate are prioritate; se termină când cineva e pe drum spre casă și revine doar după alte Y ore departe) |
 | Oprit | Doar antiîngheț (`min_temp` al GT) | – |
 | Vară | Încălzire oprită | Comutare automată cu sezonul (secțiunea 6) |
@@ -245,6 +246,7 @@ Un select pentru casă: **Auto / Vacanță / Oprit / Vară**.
 | `binary_sensor.<room>_heat_demand` | Dacă camera cere căldură; atributul `heating` arată dacă sursa ei merge |
 | `sensor.<house>_presence` | acasă / aproape / departe |
 | `select.<house>_mode` | Modul global |
+| `select.<room>_schedule_profile` | Profilul folosit azi; alegerea unuia îl pornește ca în card (camerele cu programul lor) |
 | `number.*`, `button.*`, `switch.*` | Niveluri, anularea modificărilor manuale, resetarea învățării (pe cameră), mod oaspeți, pauză, blocare pentru copii |
 | Servicii | `set_override`, `clear_override`, `set_vacation`, `reevaluate`, `set_schedule` |
 | Evenimente | `advanced_climate_decision_changed` cu camera, ținta veche și nouă și motivul |
@@ -265,8 +267,9 @@ aplică stabilește nivelul.
 5. **Fereastră deschisă**
 6. **Modificare manuală**
 7. **Vacanță** (o zi fără profil activ: antiîngheț, peste `away`)
-8. **Prezență** – departe → `away` (o zi fără profil activ: antiîngheț), aproape → `eco` (sau temperatura fixă; cu *Nu peste program* cea mai mică dintre ea și program), acasă → program
-9. **Program** – cu pornire / oprire anticipată și ocuparea camerei
+8. **Modul Plecat** – `away` (o zi fără profil activ: antiîngheț)
+9. **Prezență** – departe → `away` (o zi fără profil activ: antiîngheț), aproape → `eco` (sau temperatura fixă; cu *Nu peste program* cea mai mică dintre ea și program), acasă → program
+10. **Program** – cu pornire / oprire anticipată și ocuparea camerei
 
 Ajustările finale (prag de temperatură exterioară, compensare, tarif,
 fotovoltaic, câștig solar) corectează o țintă de încălzire doar cu câteva zecimi
@@ -286,7 +289,7 @@ de senzorul de decizie este regula câștigătoare.
 | Fereastră deschisă | window open |
 | Intervenție manuală | manual override |
 | Durată fixă / până la următoarea reevaluare | fixed duration / until next reevaluation |
-| Mod global: Auto / Vacanță / Oprit / Vară | global mode: auto / vacation / off / summer |
+| Mod global: Auto / Plecat / Vacanță / Oprit / Vară | global mode: auto / away / vacation / off / summer |
 | Pauză | pause |
 | Antiîngheț | frost protection |
 | Pornire / oprire anticipată | optimal start / optimal stop |

@@ -137,6 +137,23 @@ Prezența se numără **fără întrerupere**: un senzor de mișcare care se sti
 se potrivește mai bine un senzor de prezență (mmWave) sau unul de mișcare cu
 timp lung de stingere.
 
+## Modul plecat
+
+**Plecat** (*Away*) în selectul *Mod* al casei spune casei că nu e nimeni acasă,
+de mână: toate camerele trec pe `away`, ca atunci când toți sunt departe, dar
+fără persoane sau localizare. Rămâne așa până alegi alt mod (de obicei *Auto*).
+
+- E sub schimbarea manuală a unei camere și sub vacanță, și peste prezență și
+  program.
+- Modul oaspeți are prioritate: camerele urmează programul.
+- Spre deosebire de prezență, nu știe când te întorci, deci nu preîncălzește:
+  înapoi pe *Auto*, camerele pleacă de la temperatura `away`. Pentru plecări cu
+  întoarcerea știută, un profil cu `away` în acele ore (vezi [selectul de
+  profil](04-program.ro.md#selectul-de-profil)) sau datele vacanței încălzesc la
+  timp.
+- E potrivit pentru o automatizare, un buton sau o tabletă: o singură schimbare
+  pentru toată casa.
+
 ## Vacanța
 
 Vacanța pune toate camerele pe `away`. Se poate porni în trei feluri:

@@ -27,7 +27,7 @@ exactly as before; the integration only picks the right preset ("home",
 The setup has two levels:
 
 - **The house** is one entry of the integration. It holds what is shared: the
-  people, the zones, the global mode (Auto / Vacation / Off / Summer), the
+  people, the zones, the global mode (Auto / Away / Vacation / Off / Summer), the
   weather, the boiler, the alerts.
 - **Rooms** are added to the house. Every room has its own devices, sensors,
   windows and schedule.

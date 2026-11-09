@@ -775,6 +775,7 @@
           "window_open": "Window open",
           "manual_override": "Manual change",
           "vacation": "Vacation",
+          "house_away": "Mode away",
           "presence_far": "Far",
           "presence_nearby": "Nearby",
           "room_unoccupied": "Room unoccupied",
@@ -823,10 +824,14 @@
         "name": "Mode",
         "state": {
           "auto": "Auto",
+          "away": "Away",
           "vacation": "Vacation",
           "off": "Off",
           "summer": "Summer"
         }
+      },
+      "schedule_profile": {
+        "name": "Schedule profile"
       }
     },
     "switch": {

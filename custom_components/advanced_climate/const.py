@@ -63,10 +63,12 @@ HOME_RULE_ALL: Final = "all"
 # Global modes
 # ---------------------------------------------------------------------------
 MODE_AUTO: Final = "auto"
+# Nobody home, set by hand (no persons needed): the away level, until changed.
+MODE_AWAY: Final = "away"
 MODE_VACATION: Final = "vacation"
 MODE_OFF: Final = "off"
 MODE_SUMMER: Final = "summer"
-MODES: Final = (MODE_AUTO, MODE_VACATION, MODE_OFF, MODE_SUMMER)
+MODES: Final = (MODE_AUTO, MODE_AWAY, MODE_VACATION, MODE_OFF, MODE_SUMMER)
 
 # ---------------------------------------------------------------------------
 # Decision rules (state of the decision sensor)
@@ -82,6 +84,7 @@ RULE_VALVE_EXERCISE: Final = "valve_exercise"
 RULE_WINDOW: Final = "window_open"
 RULE_OVERRIDE: Final = "manual_override"
 RULE_VACATION: Final = "vacation"
+RULE_HOUSE_AWAY: Final = "house_away"
 RULE_FAR: Final = "presence_far"
 RULE_NEARBY: Final = "presence_nearby"
 RULE_UNOCCUPIED: Final = "room_unoccupied"
@@ -103,6 +106,7 @@ RULES: Final = (
     RULE_WINDOW,
     RULE_OVERRIDE,
     RULE_VACATION,
+    RULE_HOUSE_AWAY,
     RULE_FAR,
     RULE_NEARBY,
     RULE_UNOCCUPIED,

@@ -136,6 +136,7 @@ Selectul *Mod* al casei:
 | Mod | Ce face |
 | --- | --- |
 | **Auto** | Toate regulile: program, prezență, ferestre, vreme… |
+| **Plecat** | Nu e nimeni acasă, setat de mână: `away` în toate camerele, până se schimbă (vezi [capitolul 5](05-prezenta.ro.md#modul-plecat)) |
 | **Vacanță** | `away` în toate camerele ([capitolul 5](05-prezenta.ro.md#vacanța)) |
 | **Oprit** | Doar antiîngheț |
 | **Vară** | Încălzire oprită (antiînghețul rămâne ca siguranță). Cu sezonul automat sau între date, încălzirea se oprește singură în afara sezonului. |

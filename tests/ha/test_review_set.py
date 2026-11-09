@@ -55,6 +55,10 @@ async def test_trv_switched_to_auto_by_hand_is_a_manual_change(
     """Auto on the TRV (its own schedule) chosen by a person: a manual change, respected."""
     entry, calls = await _trv(hass, freezer)
     assert calls["set_temperature"][-1].data["temperature"] == 21.0
+    # The TRV confirms the temperature sent, then a person chooses auto.
+    hass.states.async_set("climate.trv", "heat", {**TRV_AUTO, "temperature": 21.0}, Context())
+    await _tick(hass, freezer, 5)
+    assert hass.states.get("sensor.office_decision").state != "manual_override"
     hass.states.async_set("climate.trv", "auto", {**TRV_AUTO, "temperature": 21.0}, Context())
     await _tick(hass, freezer, 5)
     decision = hass.states.get("sensor.office_decision")
@@ -152,6 +156,9 @@ async def test_silent_trv_of_a_room_without_its_own_sensor(
     house = entry.runtime_data
     house.options["alert_silent_hours"] = 1
     house.options["alert_no_effect_hours"] = 0
+    # Its last report now (the test clock was moved after it was first set).
+    hass.states.async_set("climate.trv", "heat", {**TRV_AUTO, "temperature": 21.0})
+    await _tick(hass, freezer, 5)
     for _ in range(5):
         await _tick(hass, freezer, 600)
     assert "silent_climate.trv" not in house.active_alerts

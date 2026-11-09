@@ -871,7 +871,12 @@
         "name": "Scenariu"
       },
       "schedule_profile": {
-        "name": "Profil de program"
+        "name": "Profil de program",
+        "state_attributes": {
+          "today": {
+            "name": "Folosit azi"
+          }
+        }
       }
     },
     "switch": {

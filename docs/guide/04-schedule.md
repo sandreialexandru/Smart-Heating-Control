@@ -73,7 +73,10 @@ workdays `workday`, on Saturday, Sunday and holidays `weekend`.
 
 Every room with its own schedule has a **Schedule profile** select, e.g.
 `select.bedroom_schedule_profile`. Its options are the profiles of the room, and
-it shows **the profile used today**.
+it shows **the profile chosen last**, as long as it is on, also on the days it
+does not cover. Its **Used today** attribute (`today`) is the profile used
+today. Until a profile is chosen, or once the chosen one is turned off in the
+card, the select shows the profile used today.
 
 Choosing a profile does exactly what turning it on in the card does: it becomes
 active, the active profiles of the same days are turned off, and it **stays so
@@ -82,8 +85,9 @@ profile.
 
 **Example.** `workday` and `home_office` are both for workdays, `weekend` for
 the weekend. Choosing `home_office` on Monday: the workdays use `home_office`
-from now on, Saturday and Sunday still `weekend` (the select then shows
-`weekend`), and the next Monday `home_office` again, until you choose `workday`.
+from now on, Saturday and Sunday still `weekend` (the select still shows
+`home_office`, its *Used today* attribute `weekend`), and the next Monday
+`home_office` again, until you choose `workday`.
 
 Since it is a normal select, an automation, a script or a dashboard button can
 set it. To switch several rooms at once, set their selects in one action; the

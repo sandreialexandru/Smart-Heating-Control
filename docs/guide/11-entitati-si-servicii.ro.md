@@ -41,7 +41,7 @@ Numele entităților sunt date ca în interfața în română. ID-urile încep c
 | *Blocare modificări* (comutator) | Blocarea pentru copii. |
 | *Anulează modificarea manuală* (buton) | Anulează modificarea manuală a camerei. |
 | *Resetează învățarea* (buton) | Uită învățarea camerei; camera învață din nou în circa o zi. |
-| *Profil de program* (select) | Profilul folosit azi; alegerea unuia îl pornește (vezi [capitolul 4](04-program.ro.md#selectul-de-profil)). Doar pentru camerele cu programul lor. |
+| *Profil de program* (select) | Ultimul profil ales cât timp e pornit, altfel cel folosit azi (atributul *Folosit azi*: profilul folosit azi); alegerea unuia îl pornește (vezi [capitolul 4](04-program.ro.md#selectul-de-profil)). Doar pentru camerele cu programul lor. |
 | *Nivel Home* … *Nivel Activity*, *Temperatură „aproape”* (numere) | Temperaturile nivelurilor, doar la camerele fără Generic Thermostat. Un nivel cu nume propriu apare ca *Level „nume”*. |
 
 ### Stările senzorului *Decizie*

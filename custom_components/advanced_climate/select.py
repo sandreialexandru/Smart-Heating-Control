@@ -77,12 +77,14 @@ class ScenarioSelect(HouseEntity, SelectEntity):
 
 
 class ProfileSelect(RoomEntity, SelectEntity):
-    """The schedule profile of a room: shows the one used today, activates the one chosen.
+    """The schedule profile of a room: shows the one chosen, activates it.
 
     Choosing a profile turns it on, as in the card, and turns off the active
     profiles of the same days; it stays until another one is chosen. The days
-    it does not cover keep their own profile, so the one shown is always the
-    profile of today.
+    it does not cover keep their own profile: the select shows the profile
+    chosen while it is on (on a Saturday too, for a workday profile), and its
+    ``today`` attribute the profile used today. Once the chosen profile is off
+    (from the card), the select shows today's.
     """
 
     def __init__(self, room: Room) -> None:
@@ -96,10 +98,23 @@ class ProfileSelect(RoomEntity, SelectEntity):
 
     @property
     def current_option(self) -> str | None:
+        """The profile chosen last while it is on, else the one used today."""
+        chosen = self.room.chosen_profile
+        days = self.room.schedule.profile_days
+        if chosen in self.options and days.get(chosen, {}).get("enabled"):
+            return chosen
+        return self._today()
+
+    def _today(self) -> str | None:
         """The profile used today (none on a day without an active profile)."""
         state = self.room.schedule_state
         profile = state.profile if state else None
         return profile if profile in self.options else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str | None]:
+        """The profile used today, which can differ from the one chosen."""
+        return {"today": self._today()}
 
     async def async_select_option(self, option: str) -> None:
         """Turn the profile on (and those of the same days off)."""

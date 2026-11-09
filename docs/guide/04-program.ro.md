@@ -75,7 +75,10 @@ zile lucrătoare `workday`, sâmbăta, duminica și sărbătorile `weekend`.
 
 Fiecare cameră cu programul ei are un select **Profil de program**, de exemplu
 `select.bedroom_schedule_profile`. Opțiunile sunt profilurile camerei și arată
-**profilul folosit azi**.
+**ultimul profil ales**, cât timp e pornit, și în zilele pe care nu le acoperă.
+Atributul **Folosit azi** (`today`) e profilul folosit azi. Până se alege un
+profil, sau după ce cel ales e oprit din card, selectul arată profilul folosit
+azi.
 
 Alegerea unui profil face exact ce face pornirea lui din card: devine activ,
 profilurile active pentru aceleași zile se opresc și **rămâne așa până alegi
@@ -83,8 +86,9 @@ alt profil**. Zilele pe care nu le acoperă își păstrează profilul lor.
 
 **Exemplu.** `workday` și `home_office` sunt amândouă pentru zile lucrătoare,
 `weekend` pentru weekend. Alegi `home_office` luni: de acum zilele lucrătoare
-folosesc `home_office`, sâmbăta și duminica tot `weekend` (selectul arată atunci
-`weekend`), iar lunea următoare din nou `home_office`, până alegi `workday`.
+folosesc `home_office`, sâmbăta și duminica tot `weekend` (selectul arată tot
+`home_office`, iar atributul *Folosit azi* `weekend`), iar lunea următoare din nou
+`home_office`, până alegi `workday`.
 
 Fiind un select obișnuit, îl poate schimba o automatizare, un script sau un
 buton din dashboard. Pentru mai multe camere odată, setează selecturile lor

@@ -250,6 +250,8 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             stored.get("decisions", []), maxlen=MAX_DECISION_LOG
         )
         self.last_exercise: str | None = stored.get("last_exercise")
+        # The profile chosen last from its select (shown while it is on).
+        self.chosen_profile: str | None = stored.get("chosen_profile")
 
         # Runtime state
         self.decision: Decision | None = None
@@ -335,6 +337,16 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self.activate_profiles([name])
 
     def activate_profiles(self, names: list[str]) -> None:
+        """Turn profiles on (see ``_activate_profiles``); one profile is noted as chosen.
+
+        The profile select shows the one chosen while it stays on, also on the
+        days it does not cover; several (a scenario) leave it to today's profile.
+        """
+        self.chosen_profile = names[0] if len(names) == 1 else None
+        self.house.async_save()
+        self._activate_profiles(names)
+
+    def _activate_profiles(self, names: list[str]) -> None:
         """Turn profiles on; the active ones sharing days with them go off.
 
         Saved in the room like the days chosen in the card (the update listener
@@ -349,6 +361,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
                     item["enabled"] = False
             days[name]["enabled"] = True
         if days == self.schedule.profile_days:
+            self.house.async_notify_listeners()
             return
         entry = self.house.entry
         subentry = entry.subentries[self.id]
@@ -426,6 +439,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             "observed_temps": self.observed_temps,
             "decisions": list(self.decisions),
             "last_exercise": self.last_exercise,
+            "chosen_profile": self.chosen_profile,
             "relay_changed": iso(self._relay_changed),
         }
 

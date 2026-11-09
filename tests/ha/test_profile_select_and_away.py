@@ -49,9 +49,15 @@ async def test_profile_select(hass: HomeAssistant, freezer: FrozenDateTimeFactor
     assert days["weekend"]["enabled"] is True
     assert decision["profile_days"]["workday"]["enabled"] is False
 
-    # Saturday: the weekend profile, which the choice did not touch.
+    assert hass.states.get("select.bedroom_schedule_profile").attributes["today"] == "home_office"
+
+    # Saturday: the weekend profile is used (the choice did not touch it); the
+    # select still shows the profile chosen, its attribute the one of today.
     await _tick(hass, freezer, 5 * 86400)
-    assert hass.states.get("select.bedroom_schedule_profile").state == "weekend"
+    select = hass.states.get("select.bedroom_schedule_profile")
+    assert select.state == "home_office"
+    assert select.attributes["today"] == "weekend"
+    assert hass.states.get("sensor.bedroom_decision").attributes["profile"] == "weekend"
     # The next Monday: home office still.
     await _tick(hass, freezer, 2 * 86400)
     assert hass.states.get("select.bedroom_schedule_profile").state == "home_office"
@@ -173,4 +179,33 @@ async def test_profile_select_leaving_days_without_profile_is_told(
     assert saved["workday"]["enabled"] is False
     alert = house.active_alerts[f"schedule_gap_{room.id}"]
     assert alert["code"] == "schedule_gap"
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_profile_select_chosen_kept_and_dropped(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The profile chosen is kept over a restart; once it is off, today's is shown."""
+    entry = await _setup(hass, freezer, schedule=SCHEDULE, profile_days=DAYS)
+    await _tick(hass, freezer, 15)
+    # Before any choice: the profile of today (Monday).
+    assert hass.states.get("select.bedroom_schedule_profile").state == "workday"
+    await _select(hass, "select.bedroom_schedule_profile", "weekend")
+    await _tick(hass, freezer, 15)
+    select = hass.states.get("select.bedroom_schedule_profile")
+    assert select.state == "weekend"
+    assert select.attributes["today"] == "workday"
+    # Kept over a restart.
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    await _tick(hass, freezer, 15)
+    assert hass.states.get("select.bedroom_schedule_profile").state == "weekend"
+    # Turned off elsewhere (as from the card): the select shows today's profile.
+    sub = next(iter(entry.subentries.values()))
+    days = {n: dict(m) for n, m in sub.data["profile_days"].items()}
+    days["weekend"]["enabled"] = False
+    hass.config_entries.async_update_subentry(entry, sub, data={**sub.data, "profile_days": days})
+    await hass.async_block_till_done()
+    await _tick(hass, freezer, 15)
+    assert hass.states.get("select.bedroom_schedule_profile").state == "workday"
     assert await hass.config_entries.async_unload(entry.entry_id)

@@ -15,8 +15,10 @@ GitHub releases.
   above the presence and the schedule; guest mode wins over it. One change for
   the whole house, from an automation, a button or a tablet.
 - 📅 **Schedule profile select** (#9) for every room with its own schedule: it shows
-  the profile used today, and choosing one does what turning it on in the card
-  does (the active profiles of the same days go off), until another is chosen.
+  the profile chosen last while it is on (a workday profile on a Saturday too),
+  and its *Used today* attribute the profile used today; choosing one does what
+  turning it on in the card does (the active profiles of the same days go off),
+  until another is chosen.
   An easy way to switch e.g. between `workday` and `home_office` from an
   automation. (Not the select of versions before 2.2, which was removed.)
 - 🎬 **Scenarios** (#9): *Add scenario*, next to *Add room*: a name and, for every

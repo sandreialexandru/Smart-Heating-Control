@@ -871,7 +871,12 @@
         "name": "Scenario"
       },
       "schedule_profile": {
-        "name": "Schedule profile"
+        "name": "Schedule profile",
+        "state_attributes": {
+          "today": {
+            "name": "Used today"
+          }
+        }
       }
     },
     "switch": {

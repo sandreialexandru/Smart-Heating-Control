@@ -22,7 +22,7 @@ Stare: **de decis** · **mai târziu** · **există deja** · **nu facem** · **
 |---|---|---|
 | Alertă pentru senzor înghețat (aceeași valoare mult timp) | făcut | 2.6.4: *senzor tăcut*, după `last_reported` (nu a trimis nimic, nici aceeași valoare), implicit 12 h. O temperatură constantă nu e tăcere. Senzorii template / de grup scriu doar la o schimbare: limita se mărește pentru ei. |
 | Alertă „încălzește mult fără să crească temperatura” | făcut | 2.6.4: *încălzire fără efect*, implicit 2 h, sub o treime din creșterea așteptată de model. Doar cu modelul învățat (o pardoseală lentă nu se deosebește de un ventil blocat). După ce camera se încălzește, urmărirea începe din nou. |
-| „Coop start”: o cameră încălzește doar când sursa merge deja | de decis | Din PiHome. Economie, pentru case cu TRV-uri. |
+| „Coop start”: o cameră încălzește doar când sursa merge deja | există deja | *Rooms needed to start the heat source*: sursa pornește doar când cer căldură atâtea camere; o cameră singură primește căldură doar când sursa merge pentru altele. |
 | Ține „pe drum spre casă” 15–20 min, ca să nu sară | de decis | |
 | Perechi Proximity pe persoană | de decis | Timpul de drum ia deja câte un senzor pe persoană (2.6.4, contează cel mai scurt); Proximity are deja *nearest* pentru cea mai apropiată persoană. |
 | Direcția din tendința timpului de drum (Waze / Maps) | de decis | |

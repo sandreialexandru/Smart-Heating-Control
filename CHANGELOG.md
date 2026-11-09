@@ -35,6 +35,12 @@ GitHub releases.
 
 ### Integration
 
+- 🌡️ **A TRV left in auto is put in heat** (Temperature command): in *auto* a
+  TRV follows its own schedule (e.g. the one stored in Zigbee2MQTT) and changes
+  its target by itself, which came back as manual changes. Now it is put in
+  *heat* and keeps the temperature sent. A device with only *auto* stays in it,
+  and the Preset command leaves the mode alone. *Auto* chosen by hand is still
+  a manual change; with the child lock it is undone at once.
 - 🚗 **Travel time for several people**: *Travel time sensors* takes one Waze
   or Google Travel Time sensor per person; the shortest trip counts, so the
   house preheats for whoever is closest to home (an unavailable sensor is left

@@ -51,8 +51,8 @@ camere care trimit comenzi opuse aceluiași dispozitiv s-ar contrazice. Senzorii
 
 | Comandă | Ce face integrarea | Potrivit pentru |
 | --- | --- | --- |
-| **Temperatură** | Trimite temperatura fiecărui nivel (de exemplu 21 °C pentru `home`). Termostatul o menține. | Cele mai multe TRV-uri |
-| **Preset** | Fiecare nivel folosește un preset al termostatului, cu temperatura setată în termostat. | Termostate cu preseturi bine configurate |
+| **Temperatură** | Trimite temperatura fiecărui nivel (de exemplu 21 °C pentru `home`). Termostatul o menține. Un TRV găsit pe *auto* (programul lui, de exemplu cel salvat în Zigbee2MQTT) e trecut pe *heat*, ca programul lui să nu mai schimbe ținta; un dispozitiv care are doar *auto* rămâne pe el. | Cele mai multe TRV-uri |
+| **Preset** | Fiecare nivel folosește un preset al termostatului, cu temperatura setată în termostat. Modul termostatului rămâne cum e (unele preseturi cer *auto*). | Termostate cu preseturi bine configurate |
 | **Pornit / oprit (hvac mode)** | Termostatul doar e pornit și oprit; temperatura o ține integrarea, după senzorul camerei. | Termostate simple sau cu senzor prost așezat |
 
 ## Pasul 3: setările comenzii

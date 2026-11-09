@@ -80,8 +80,8 @@ settings depend on the command:
 
 | Command | Levels in the room settings |
 | --- | --- |
-| Preset | Each level picks one of the **thermostat's own presets** (read from the device). The thermostat keeps that temperature; the integration learns it for display. A level without a preset is reached by sending its temperature. |
-| Temperature | Configurable **names** and a **temperature** per level; the temperature is sent to the device. |
+| Preset | Each level picks one of the **thermostat's own presets** (read from the device). The thermostat keeps that temperature; the integration learns it for display. A level without a preset is reached by sending its temperature. The hvac mode is not changed (presets may need `auto`). |
+| Temperature | Configurable **names** and a **temperature** per level; the temperature is sent to the device. A device in `auto` (its own schedule) that has `heat` is put in `heat`; one with only `auto` stays in it. |
 | On / off (`hvac_mode`) | Configurable **names** and a **temperature** per level; the device presets are not used, the integration switches it on and off around the level temperature. |
 
 The temperatures set in the room settings can also be changed later from the
@@ -243,7 +243,7 @@ One select for the house: **Auto / Away / Vacation / Off / Summer**.
 | `sensor.<house>_presence` | home / nearby / far |
 | `select.<house>_mode` | Global mode |
 | `select.<house>_scenario` | Scenarios (subentries: a name and the profiles to turn on in each of its rooms): shows the one whose profiles are all on, chooses one; problems told in Repairs |
-| `select.<room>_schedule_profile` | The profile used today; choosing one turns it on as in the card (rooms with their own schedule) |
+| `select.<room>_schedule_profile` | The profile chosen last while it is on, else the one used today (attribute `today`); choosing one turns it on as in the card (rooms with their own schedule) |
 | `number.*`, `button.*`, `switch.*` | Levels, clear overrides, reset learning (per room), guest mode, pause, child lock |
 | Services | `set_override`, `clear_override`, `set_vacation`, `reevaluate`, `set_schedule` |
 | Events | `advanced_climate_decision_changed` with room, old and new target and reason |

@@ -108,7 +108,10 @@ card, butonul casei pentru toate camerele, sau serviciul `clear_override`.
 
 Comutatorul *Blocare modificări* al camerei (și în card, la *Setează temporar*): orice
 modificare manuală pe dispozitiv e anulată imediat, iar camera revine la decizia
-integrării. Util pentru un TRV la îndemâna copiilor.
+integrării. Util pentru un TRV la îndemâna copiilor. Cu comanda *Temperatură*, un
+TRV trecut pe *auto* (programul lui) e adus înapoi pe *heat*; fără blocare, *auto*
+ales de mână e o modificare manuală ca oricare alta, păstrată cât ține
+modificarea manuală.
 
 ## Pauza
 

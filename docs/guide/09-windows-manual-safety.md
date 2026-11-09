@@ -107,7 +107,10 @@ the card, the house button for every room, or the `clear_override` service.
 
 The room's *Child lock* switch (also in the card, under *Set for a while*): any
 manual change on the device is undone at once, and the room returns to the
-integration's decision. Useful for a TRV within reach of children.
+integration's decision. Useful for a TRV within reach of children. With the
+*Temperature* command this also takes a TRV switched to *auto* (its own
+schedule) back to *heat*; without the child lock, *auto* chosen by hand is a
+manual change like any other, kept as long as the manual change lasts.
 
 ## Pause
 

@@ -37,6 +37,7 @@ from .const import (
     CALIBRATION_REFRESH_MINUTES,
     COMMAND_HVAC,
     COMMAND_PRESET,
+    COMMAND_TEMPERATURE,
     CONF_CALIBRATION_ENTITIES,
     CONF_CALIBRATION_MODE,
     CONF_HYSTERESIS,
@@ -361,13 +362,28 @@ class RoomDevices:
                 return candidate
         return None
 
+    def _own_schedule_mode(self, state: State) -> bool:
+        """A thermostat driven by temperature, left in auto (its own schedule) while it has heat.
+
+        In auto a TRV follows the schedule stored in it and changes its target
+        by itself; with the Temperature command it is put in heat, so it keeps
+        the temperature sent. A device with only auto keeps it (that is its
+        heating mode), and the Preset command leaves the mode alone (presets
+        may need auto).
+        """
+        return (
+            self.command_mode == COMMAND_TEMPERATURE
+            and state.state == "auto"
+            and "heat" in (state.attributes.get("hvac_modes") or [])
+        )
+
     def _matches(self, state: State, target: Target) -> bool:
         """Return True if the climate state already matches the target."""
         if target.kind == KIND_OFF:
             if STATE_OFF in (state.attributes.get("hvac_modes") or []):
                 return state.state == STATE_OFF
             return float_attr(state, ATTR_TEMPERATURE) == float_attr(state, "min_temp")
-        if state.state == STATE_OFF:
+        if state.state == STATE_OFF or self._own_schedule_mode(state):
             return False
         if target.kind == KIND_PRESET and self.command_mode == COMMAND_PRESET:
             name = self._device_preset(
@@ -406,8 +422,8 @@ class RoomDevices:
                 return False
             return await self._send(entity_id, "set_temperature", ATTR_TEMPERATURE, minimum)
 
-        if state.state == STATE_OFF and on_mode:
-            await self._send(entity_id, "set_hvac_mode", "hvac_mode", on_mode, "state")
+        if (state.state == STATE_OFF and on_mode) or self._own_schedule_mode(state):
+            await self._send(entity_id, "set_hvac_mode", "hvac_mode", on_mode or "heat", "state")
 
         if target.kind == KIND_PRESET and self.command_mode == COMMAND_PRESET:
             available = list(state.attributes.get("preset_modes") or [])

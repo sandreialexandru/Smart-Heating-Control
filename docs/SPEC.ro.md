@@ -84,8 +84,8 @@ depind de comandă:
 
 | Comandă | Nivelurile în setările camerei |
 | --- | --- |
-| Preset | Fiecare nivel alege unul dintre **preseturile termostatului** (citite de pe dispozitiv). Termostatul păstrează acea temperatură; integrarea o învață pentru afișare. Un nivel fără preset e atins trimițând temperatura lui. |
-| Temperatură | **Nume** configurabile și o **temperatură** pentru fiecare nivel; temperatura e trimisă dispozitivului. |
+| Preset | Fiecare nivel alege unul dintre **preseturile termostatului** (citite de pe dispozitiv). Termostatul păstrează acea temperatură; integrarea o învață pentru afișare. Un nivel fără preset e atins trimițând temperatura lui. Modul hvac nu se schimbă (preseturile pot cere `auto`). |
+| Temperatură | **Nume** configurabile și o **temperatură** pentru fiecare nivel; temperatura e trimisă dispozitivului. Un dispozitiv pe `auto` (programul lui) care are `heat` e trecut pe `heat`; unul care are doar `auto` rămâne pe el. |
 | Pornit / oprit (`hvac_mode`) | **Nume** configurabile și o **temperatură** pentru fiecare nivel; preseturile dispozitivului nu se folosesc, integrarea îl pornește și îl oprește în jurul temperaturii nivelului. |
 
 Temperaturile din setările camerei se pot schimba și mai târziu din card sau din
@@ -247,7 +247,7 @@ Un select pentru casă: **Auto / Plecat / Vacanță / Oprit / Vară**.
 | `sensor.<house>_presence` | acasă / aproape / departe |
 | `select.<house>_mode` | Modul global |
 | `select.<house>_scenario` | Scenarii (subintrări: un nume și profilurile de pornit în fiecare cameră a lui): arată pe cel ale cărui profiluri sunt toate pornite, alege unul; problemele apar la Reparații |
-| `select.<room>_schedule_profile` | Profilul folosit azi; alegerea unuia îl pornește ca în card (camerele cu programul lor) |
+| `select.<room>_schedule_profile` | Ultimul profil ales cât timp e pornit, altfel cel folosit azi (atributul `today`); alegerea unuia îl pornește ca în card (camerele cu programul lor) |
 | `number.*`, `button.*`, `switch.*` | Niveluri, anularea modificărilor manuale, resetarea învățării (pe cameră), mod oaspeți, pauză, blocare pentru copii |
 | Servicii | `set_override`, `clear_override`, `set_vacation`, `reevaluate`, `set_schedule` |
 | Evenimente | `advanced_climate_decision_changed` cu camera, ținta veche și nouă și motivul |

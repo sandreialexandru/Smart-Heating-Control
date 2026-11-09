@@ -82,16 +82,74 @@ async def test_trv_turned_off_by_hand_comes_back_with_the_child_lock(
     await _unload(hass, entry)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="A TRV left in auto keeps its own schedule: only a TRV that is off is turned on.",
-)
 async def test_trv_left_in_auto_is_put_in_heat(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """A TRV found in auto would follow its own schedule over the integration."""
+    """With the Temperature command a TRV found in auto (its own schedule) is put in heat."""
     entry, calls = await _trv(hass, freezer, state="auto")
-    assert any(c.data.get("hvac_mode") == "heat" for c in calls["set_hvac_mode"])
+    assert calls["set_hvac_mode"][-1].data == {"entity_id": "climate.trv", "hvac_mode": "heat"}
+    assert calls["set_temperature"][-1].data == {"entity_id": "climate.trv", "temperature": 21.0}
+    # It reports heat: nothing more to send, and not a manual change.
+    sent = len(calls["set_hvac_mode"])
+    hass.states.async_set("climate.trv", "heat", {**TRV_AUTO, "temperature": 21.0})
+    await _tick(hass, freezer, 310)
+    assert len(calls["set_hvac_mode"]) == sent
+    assert hass.states.get("sensor.office_decision").state != "manual_override"
+    await _unload(hass, entry)
+
+
+async def test_auto_chosen_by_hand_is_put_back_in_heat_with_the_child_lock(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """With the child lock, auto chosen on the TRV is undone at once."""
+    entry, calls = await _trv(hass, freezer)
+    await _room(entry, "Office").async_set_child_lock(True)
+    hass.states.async_set("climate.trv", "heat", {**TRV_AUTO, "temperature": 21.0}, Context())
+    await _tick(hass, freezer, 5)
+    hass.states.async_set("climate.trv", "auto", {**TRV_AUTO, "temperature": 21.0}, Context())
+    await _tick(hass, freezer, 5)
+    assert hass.states.get("sensor.office_decision").state != "manual_override"
+    assert calls["set_hvac_mode"][-1].data == {"entity_id": "climate.trv", "hvac_mode": "heat"}
+    await _unload(hass, entry)
+
+
+async def test_auto_is_kept_with_the_preset_command_or_without_heat(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Presets may need auto, and a device with only auto heats in it: both left in auto."""
+    calls = async_mock_service(hass, "climate", "set_hvac_mode")
+    async_mock_service(hass, "climate", "set_temperature")
+    async_mock_service(hass, "climate", "set_preset_mode")
+    hass.states.async_set(
+        "climate.netatmo",
+        "auto",
+        {
+            **TRV_AUTO,
+            "preset_modes": ["away", "frost_guard", "schedule"],
+            "preset_mode": "schedule",
+        },
+    )
+    hass.states.async_set("climate.only_auto", "auto", {**TRV_AUTO, "hvac_modes": ["auto", "off"]})
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Hall",
+                {"source": "climate", "climates": ["climate.netatmo"], "command_mode": "preset"},
+            ),
+            (
+                "Attic",
+                {
+                    "source": "climate",
+                    "climates": ["climate.only_auto"],
+                    "command_mode": "temperature",
+                },
+            ),
+        ],
+    )
+    await _tick(hass, freezer, 310)
+    assert not any(c.data.get("hvac_mode") == "heat" for c in calls)
     await _unload(hass, entry)
 
 

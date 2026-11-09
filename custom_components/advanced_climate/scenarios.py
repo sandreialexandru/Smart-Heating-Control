@@ -99,7 +99,12 @@ def problems(house: House, sub: ConfigSubentry) -> list[tuple[str, dict[str, str
 
 
 def active_scenario(house: House) -> str | None:
-    """The first scenario whose profiles are all on (none when no one matches)."""
+    """The scenario whose profiles are all on (none when no one matches).
+
+    When several match (one is part of another), the one that sets the most
+    profiles; between equals, the first added.
+    """
+    best: tuple[int, str] | None = None
     for sub in scenario_subentries(house):
         rooms = scenario_rooms(sub)
         if not rooms:
@@ -114,9 +119,10 @@ def active_scenario(house: House) -> str | None:
             if not all(days[p]["enabled"] for p in profiles):
                 ok = False
                 break
-        if ok:
-            return sub.title
-    return None
+        size = sum(len(p) for p in rooms.values())
+        if ok and (best is None or size > best[0]):
+            best = (size, sub.title)
+    return best[1] if best else None
 
 
 def activate(house: House, title: str) -> list[str]:

@@ -270,3 +270,24 @@ async def test_scenario_empty(hass: HomeAssistant, freezer: FrozenDateTimeFactor
     assert issue is not None
     assert issue.translation_placeholders["details"] == "it has no rooms"
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_most_specific_scenario_is_shown(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Of two matching scenarios (one part of the other), the one setting more is shown."""
+    entry = await _setup(
+        hass,
+        freezer,
+        [
+            {"title": "Office", "rooms": {"Office": ["home_office"]}},
+            {
+                "title": "Home office",
+                "rooms": {"Bedroom": ["workday"], "Office": ["home_office"]},
+            },
+        ],
+    )
+    await _choose(hass, "Home office")
+    await _tick(hass, freezer, 15)
+    assert hass.states.get("select.home_scenario").state == "Home office"
+    assert await hass.config_entries.async_unload(entry.entry_id)

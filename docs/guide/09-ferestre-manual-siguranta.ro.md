@@ -312,10 +312,13 @@ trebui să fie:
   așteaptă puțin (sub 0,3°) și nu primește alertă: nu are nimic stricat;
 - **înainte de învățare**: o creștere mai mică de 0,3°.
 
-Cauzele obișnuite: un ventil blocat sau un TRV care crede că e cald în cameră,
+Cauzele obișnuite: un ventil blocat,
 o sursă de căldură care nu pornește, o fereastră deschisă fără senzor, un
 calorifer plin de aer. Alerta se încheie când camera se încălzește (0,3° peste
-temperatura de la alertă, sau aproape de țintă).
+temperatura de la alertă, sau aproape de țintă). Un TRV care raportează că nu
+încălzește (măsoară un loc cald al lui) nu contează ca încălzire, deci nu e
+semnalat aici: un senzor extern cu calibrare ([capitolul 3](03-camere.ro.md))
+rezolvă asta.
 
 **Exemplu**: o cameră învățată la 18 °C, care ar trebui să crească cu
 aproximativ 1,4° în 2 ore, a crescut cu 0,2°: se trimite alerta. Dacă ar fi

@@ -311,10 +311,12 @@ has no effect for* (2 h by default) its rise is compared with what it should be:
   and gets no alert: there is nothing wrong with it;
 - **before learning**: a rise of less than 0.3°.
 
-The usual causes: a stuck valve or a TRV that thinks the room is warm, a heat
+The usual causes: a stuck valve, a heat
 source that does not start, a window open without a sensor, a radiator full of
 air. The alert ends when the room warms up (0.3° above where it was told, or
-close to its target).
+close to its target). A TRV that reports it is not heating (it measures a warm
+spot of its own) does not count as heating, so it is not told here: an
+external sensor with calibration ([chapter 3](03-rooms.md)) fixes that.
 
 **Example**: a learned room at 18 °C that should warm about 1.4° in 2 hours
 rose by 0.2°: the alert is sent. Had it risen 0.8°, no alert.

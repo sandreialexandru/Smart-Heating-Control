@@ -26,6 +26,9 @@ GitHub releases.
   room what its profile select does, and shows the scenario whose profiles are
   all on. A deleted room leaves the scenarios; a missing profile, overlapping
   days or a room without its own schedule is skipped and told in Repairs.
+  When two scenarios match (one part of the other), the one setting more
+  profiles is shown. A room switched to a schedule helper loses its profile
+  select.
 
 ### Integration
 

@@ -18,7 +18,15 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_PROFILE_DAYS, CONF_SCHEDULE, DEFAULT_SCHEDULE, DOMAIN, SUBENTRY_ROOM
+from .const import (
+    CONF_PROFILE_DAYS,
+    CONF_SCHEDULE,
+    CONF_SCHEDULE_SOURCE,
+    DEFAULT_SCHEDULE,
+    DOMAIN,
+    SCHEDULE_INTERNAL,
+    SUBENTRY_ROOM,
+)
 from .frontend import async_register_card, async_remove_lovelace_resource
 from .house import House
 from .scenarios import check as check_scenarios
@@ -89,7 +97,8 @@ def _remove_old_entities(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove entities of earlier versions.
 
     The profile select of the rooms (2.2), the two reset buttons of the
-    learning (2.6: one *Reset learning* button now).
+    learning (2.6: one *Reset learning* button now); and the schedule profile
+    select of a room that now follows a schedule helper (no profiles of its own).
     """
     registry = er.async_get(hass)
     rooms = {sid for sid, sub in entry.subentries.items() if sub.subentry_type == SUBENTRY_ROOM}
@@ -97,6 +106,12 @@ def _remove_old_entities(hass: HomeAssistant, entry: ConfigEntry) -> None:
         ("button", f"{rid}_{key}")
         for rid in rooms
         for key in ("reset_heating_learning", "reset_cooling_learning")
+    }
+    old |= {
+        ("select", f"{sid}_schedule_profile")
+        for sid, sub in entry.subentries.items()
+        if sub.subentry_type == SUBENTRY_ROOM
+        and sub.data.get(CONF_SCHEDULE_SOURCE, SCHEDULE_INTERNAL) != SCHEDULE_INTERNAL
     }
     for item in er.async_entries_for_config_entry(registry, entry.entry_id):
         if (item.domain, item.unique_id) in old:

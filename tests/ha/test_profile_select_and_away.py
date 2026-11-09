@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.ha.test_ha_setup import _setup, _tick
 
@@ -112,4 +113,40 @@ async def test_mode_away(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
     await _select(hass, "select.home_mode", "auto")
     await _tick(hass, freezer, 15)
     assert hass.states.get("sensor.bedroom_decision").state == "schedule"
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_mode_away_survives_a_restart(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The away mode is kept over a reload."""
+    entry = await _setup(hass, freezer)
+    await _select(hass, "select.home_mode", "away")
+    await _tick(hass, freezer, 15)
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    await _tick(hass, freezer, 15)
+    assert hass.states.get("select.home_mode").state == "away"
+    assert hass.states.get("sensor.bedroom_decision").state == "house_away"
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_profile_select_removed_for_a_helper_schedule(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A room switched to a schedule helper has no profiles: its select goes away."""
+    entry = await _setup(hass, freezer)
+    await _tick(hass, freezer, 15)
+    assert hass.states.get("select.bedroom_schedule_profile") is not None
+    sub = next(iter(entry.subentries.values()))
+    hass.states.async_set("schedule.x", "off")
+    hass.config_entries.async_update_subentry(
+        entry,
+        sub,
+        data={**sub.data, "schedule_source": "helper", "schedule_helper": "schedule.x"},
+    )
+    await hass.async_block_till_done()
+    await _tick(hass, freezer, 15)
+    assert er.async_get(hass).async_get("select.bedroom_schedule_profile") is None
+    assert hass.states.get("select.bedroom_schedule_profile") is None
     assert await hass.config_entries.async_unload(entry.entry_id)

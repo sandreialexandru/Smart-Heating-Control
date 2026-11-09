@@ -117,8 +117,10 @@ async def test_no_effect_only_once_learned(
     await _minutes(hass, freezer, 30, "18.2")
     alert = house.active_alerts[key]
     assert alert["code"] == "no_effect"
-    # It warms up: over.
+    # It warms up: over, and not told again at once (a new watch starts).
     await _minutes(hass, freezer, 10, "18.6")
+    assert key not in house.active_alerts
+    await _minutes(hass, freezer, 60, "18.6")
     assert key not in house.active_alerts
 
 

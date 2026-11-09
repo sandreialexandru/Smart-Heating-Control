@@ -85,7 +85,8 @@ GitHub releases.
   window open without a sensor. Only once the room has learned its model: before
   that, a slow heating (a floor) could not be told from a stuck one. Not with a
   window open, in frost protection or paused; a heating too weak for the cold
-  outside expects little and is not told. Off with 0.
+  outside expects little and is not told. Once the room warms up the alert
+  ends and a new watch starts. Off with 0.
 - The mold risk alert says the coldest wall *reached* its humidity (the value
   when the alert started; the card's humidity row shows the value now), and
   that airing and a warmer room lower *the risk*.

@@ -199,6 +199,9 @@ class RoomAlerts:
             or (target is not None and temp >= target - NO_EFFECT_CLEAR)
         ):
             self._no_effect_told = None
+            # A new watch from now: else the same run, still well below the
+            # expected rise since its start, would tell it again at once.
+            self._no_effect_run = None
             house.clear_alert(key)
         watching = (
             hours > 0

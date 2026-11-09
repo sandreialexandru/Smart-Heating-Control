@@ -9,17 +9,17 @@ GitHub releases.
 
 ### New
 
-- 🏠 **Mode away**: a fifth mode of the house, *Away*: nobody home, set by
+- 🏠 **Mode away** (#9): a fifth mode of the house, *Away*: nobody home, set by
   hand, without people or location tracking. Every room goes to `away` until
   another mode is chosen. Below a manual change of a room and the vacation,
   above the presence and the schedule; guest mode wins over it. One change for
   the whole house, from an automation, a button or a tablet.
-- 📅 **Schedule profile select** for every room with its own schedule: it shows
+- 📅 **Schedule profile select** (#9) for every room with its own schedule: it shows
   the profile used today, and choosing one does what turning it on in the card
   does (the active profiles of the same days go off), until another is chosen.
   An easy way to switch e.g. between `workday` and `home_office` from an
   automation. (Not the select of versions before 2.2, which was removed.)
-- 🎬 **Scenarios**: *Add scenario*, next to *Add room*: a name and, for every
+- 🎬 **Scenarios** (#9): *Add scenario*, next to *Add room*: a name and, for every
   room in it, the profiles to turn on (several per room when they cover
   different days; profiles that share days are refused). The house's
   **Scenario** select and the buttons on the card choose one: it does in every

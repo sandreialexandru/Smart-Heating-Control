@@ -7,6 +7,7 @@
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/)
 [![Validate](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml/badge.svg)](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml)
 [![Tests](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/tests.yml/badge.svg)](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/tests.yml)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support-FF5E5B.svg?logo=ko-fi&logoColor=white)](https://ko-fi.com/sandreialexandru)
 
 **Heating for Home Assistant that knows who is home, learns how every room
 heats and tells you why it does what it does.**
@@ -135,6 +136,11 @@ Download the file and open it in a browser.
 ## 🌍 Translations
 
 English and Romanian: the integration, the card and the documentation.
+
+## ☕ Support
+
+If Smart Heating Control is useful to you, you can buy me a coffee on
+[Ko-fi](https://ko-fi.com/sandreialexandru). Thank you!
 
 ## License
 

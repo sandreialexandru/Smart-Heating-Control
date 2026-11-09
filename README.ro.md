@@ -7,6 +7,7 @@
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/)
 [![Validate](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml/badge.svg)](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml)
 [![Tests](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/tests.yml/badge.svg)](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/tests.yml)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support-FF5E5B.svg?logo=ko-fi&logoColor=white)](https://ko-fi.com/sandreialexandru)
 
 **Încălzire pentru Home Assistant care știe cine e acasă, învață cum se
 încălzește fiecare cameră și spune de ce face ce face.**
@@ -139,6 +140,11 @@ Fișierul se descarcă și se deschide într-un browser.
 ## 🌍 Traduceri
 
 Română și engleză: integrarea, cardul și documentația.
+
+## ☕ Susținere
+
+Dacă Smart Heating Control e de folos, proiectul poate fi susținut cu o cafea
+pe [Ko-fi](https://ko-fi.com/sandreialexandru). Mulțumesc!
 
 ## Licență
 

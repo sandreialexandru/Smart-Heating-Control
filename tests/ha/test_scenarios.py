@@ -291,3 +291,39 @@ async def test_most_specific_scenario_is_shown(
     await _tick(hass, freezer, 15)
     assert hass.states.get("select.home_scenario").state == "Home office"
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_scenario_with_a_room_skipped_is_shown(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A room that cannot take its profiles is skipped when choosing and when showing."""
+    entry = await _setup(
+        hass,
+        freezer,
+        [
+            {"title": "Home office", "rooms": {"Bedroom": ["no_such"], "Office": ["home_office"]}},
+            {"title": "Broken", "rooms": {"Bedroom": ["no_such"]}},
+        ],
+    )
+    await _tick(hass, freezer, 15)
+    assert hass.states.get("select.home_scenario").state not in ("Home office", "Broken")
+    await _choose(hass, "Home office")
+    await _tick(hass, freezer, 15)
+    # Applied without the bedroom, and shown.
+    assert _days(entry, "Office")["home_office"]["enabled"] is True
+    assert hass.states.get("select.home_scenario").state == "Home office"
+    # A scenario with no room that can take it is never shown.
+    await _choose(hass, "Broken")
+    await _tick(hass, freezer, 15)
+    assert hass.states.get("select.home_scenario").state == "Home office"
+    # The office changed by hand: no scenario matches any more.
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": "select.office_schedule_profile", "option": "workday"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    await _tick(hass, freezer, 15)
+    assert hass.states.get("select.home_scenario").state not in ("Home office", "Broken")
+    assert await hass.config_entries.async_unload(entry.entry_id)

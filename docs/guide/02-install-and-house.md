@@ -333,8 +333,8 @@ Details: [chapter 9](09-windows-manual-safety.md) and
 | Quiet hours from / until | – | Only the important alerts in this time; the others are sent when it ends, if they still apply. |
 | Alert when a window is open longer than | 30 min | While heating is needed. |
 | Alert when a device is unavailable longer than | 15 min | Thermostat or sensor. |
-| Alert when a temperature sensor sends nothing for | 4 h | A room temperature sensor that stays available but sends no value at all (a flat battery or a lost signal keeps the last one). 0 = off; raise it for sensors that report only when the temperature changes. |
-| Alert when heating has no effect for | 2 h | A room that heats this long, clearly below its target, while its temperature rises much less than learned (stuck valve, heat source that does not start, window open without a sensor). 0 = off. |
+| Alert when a temperature sensor sends nothing for | 12 h | A room temperature sensor that stays available but sends no value at all (a flat battery or a lost signal keeps the last one). 0 = off; raise it for sensors that report only when the temperature changes, and for a template or group sensor (an average), which writes a value only when one of its sensors changes. |
+| Alert when heating has no effect for | 2 h | A room that heats this long, clearly below its target, while its temperature rises much less than its learned model expects, only once the room has learned it (stuck valve, heat source that does not start, window open without a sensor). 0 = off. |
 | Low battery below | 20 % | The room devices (TRV, sensors). |
 | Verify commands | on | After 2 minutes checks that the device accepted the command, retries once, then alerts. |
 | Alert when a room stays colder than | 0 (off) | Alert when a room stays this many degrees below its target while others are warm (stuck valve, open window). Shown only with more than one room. |

@@ -60,8 +60,8 @@ is a manual change.
 
 **Limits of the device.** Some TRVs have their own *Max temperature* /
 *Min temperature* on the device, narrower than the range of their entity (e.g.
-25 °C on a Tuya TRV whose entity goes to 35 °C). When a TRV reports less than a
-boost or the valve exercise sent (but at least the target), or more than frost
+25 °C on a Tuya TRV whose entity goes to 35 °C). When a TRV reports less than the
+temperature while heating or the valve exercise sent (but at least the target), or more than frost
 protection / off sent (but below the lowest level), that is its limit, not a
 manual change: the next commands stay within it, and an alert tells it. A limit
 is learned only within 5 minutes of the command and only while the TRV has not
@@ -250,7 +250,7 @@ as the recipient of the important alerts and of the warnings.
 | No outdoor temperature from … | no configured source (sensor, weather) gives a temperature for longer than the alert threshold |
 | On but not working without an outdoor temperature sensor or a weather entity | weather functions on without the source they need |
 | The temperature sensors are unavailable | the device sensor or `eco` is used |
-| … has sent no temperature for more than … h | a room temperature sensor stays available but has sent no value at all (not even the same one) for *Alert when a temperature sensor sends nothing for* (4 h by default), while the heating is on (not off, summer or paused); it ends when the sensor reports again |
+| … has sent no temperature for more than … h | a room temperature sensor stays available but has sent no value at all (not even the same one) for *Alert when a temperature sensor sends nothing for* (12 h by default), while the heating is on (not off, summer or paused); it ends when the sensor reports again |
 | Heating for … h, but the temperature rose by only …° | see *Heating without effect* below |
 | Low battery on … | below *Low battery below* (20 % by default) |
 | … did not accept … | the command check failed twice |
@@ -303,13 +303,13 @@ letting the room get too cold, furniture a few centimetres from outer walls.
 A room is watched while it heats without a stop, at least 0.5° below its target
 (a TRV that holds the target keeps reporting heating, and that is fine), with no
 window open, outside frost protection and the pause. After *Alert when heating
-has no effect for* (2 h by default) its rise is compared with what it should be:
-
-- **learned room**: the rise the learned model expects from the same start, at
-  the same outdoor temperature. The alert is sent below a third of it. A room
-  whose heating is too weak for the cold outside expects little (under 0.3°)
-  and gets no alert: there is nothing wrong with it;
-- **before learning**: a rise of less than 0.3°.
+has no effect for* (2 h by default) its rise is compared with the rise the
+learned model expects from the same start, at the same outdoor temperature. The
+alert is sent below a third of it. A room whose heating is too weak for the
+cold outside expects little (under 0.3°) and gets no alert: there is nothing
+wrong with it. **Before the room has learned its model there is no alert**: a
+slow heating, such as a floor, can rise very little in the first hours, and
+could not be told from a stuck one.
 
 The usual causes: a stuck valve, a heat
 source that does not start, a window open without a sensor, a radiator full of

@@ -76,7 +76,8 @@ collapsed: true
   ([capitolul 6](06-vreme.ro.md)). Nu apare unde nu are efect: modul Oprit sau
   Vară, în afara sezonului, în pauză.
 - O **bandă de pauză** sus cât casa e în pauză și o **bandă de oaspeți** cât
-  modul oaspeți e pornit (cu sfârșitul lui, când are unul).
+  modul oaspeți e pornit (cu sfârșitul lui, când are unul; spune și când o
+  vacanță sau modul Plecat așteaptă după oaspeți).
 - În cardul compact, rândul pliat al casei arată persoanele, prezența
   (Acasă / Aproape / Departe), modul, temperatura de afară și o flacără cât
   există cerere de căldură.

@@ -188,3 +188,13 @@ test("manual change shows the time left; compact line: time to target while heat
   ok(lines[0].includes("~35 min"), lines[0]);
   ok(!lines[1].includes("~35 min") && /\d\d:\d\d/.test(lines[1]), lines[1]);
 });
+
+test("guest band: says when the away mode or a vacation waits for the guests", async (p) => {
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom" }], guest: true, mode: "away" });
+  ok((await text(p)).includes("Guest mode: the away mode is suspended, the rooms follow the schedule"), "away suspended");
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom" }], guest: true });
+  const t = await text(p);
+  ok(t.includes("Guest mode: the house state is Home") && !t.includes("suspended"), "plain guest band in auto");
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom" }], mode: "away" });
+  ok(!(await text(p)).includes("Guest mode"), "no band without guests");
+});

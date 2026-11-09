@@ -61,7 +61,7 @@ după aceea orice altă valoare e o modificare manuală.
 **Limitele dispozitivului.** Unele TRV-uri au pe dispozitiv propriile *Max
 temperature* / *Min temperature*, mai înguste decât intervalul entității (de
 exemplu 25 °C pe un TRV Tuya a cărui entitate merge până la 35 °C). Când un TRV
-raportează mai puțin decât a trimis forțarea sau mișcarea robinetelor (dar cel
+raportează mai puțin decât a trimis temperatura cât încălzește sau mișcarea robinetelor (dar cel
 puțin ținta), sau mai mult decât a trimis antiînghețul / oprirea (dar sub cel mai
 jos nivel), aceea e limita lui, nu o modificare manuală: comenzile următoare
 rămân în ea, iar o alertă o spune. O limită se învață doar în 5 minute de la
@@ -251,7 +251,7 @@ pentru avertizări.
 | Nicio temperatură de afară de la … | nicio sursă configurată (senzor, meteo) nu dă temperatura mai mult de pragul de alertă |
 | Pornite, dar nu funcționează fără senzor de temperatură exterioară sau entitate meteo | funcții de vreme pornite fără sursa de care au nevoie |
 | Senzorii de temperatură sunt indisponibili | se folosește senzorul dispozitivului sau `eco` |
-| … nu a mai trimis temperatura de peste … h | un senzor de temperatură al camerei rămâne disponibil, dar nu a trimis nicio valoare (nici aceeași) cât *Alertă când un senzor de temperatură nu trimite nimic* (implicit 4 h), cât încălzirea e pornită (nu oprită, vară sau pauză); se încheie când senzorul trimite din nou |
+| … nu a mai trimis temperatura de peste … h | un senzor de temperatură al camerei rămâne disponibil, dar nu a trimis nicio valoare (nici aceeași) cât *Alertă când un senzor de temperatură nu trimite nimic* (implicit 12 h), cât încălzirea e pornită (nu oprită, vară sau pauză); se încheie când senzorul trimite din nou |
 | Încălzește de … h, dar temperatura a crescut doar cu …° | vezi *Încălzire fără efect* mai jos |
 | Baterie descărcată la … | sub *Baterie descărcată sub* (implicit 20 %) |
 | … nu a acceptat … | verificarea comenzilor a eșuat de două ori |
@@ -303,14 +303,13 @@ rece, mobila la câțiva centimetri de pereții exteriori.
 O cameră e urmărită cât încălzește fără oprire, cu cel puțin 0,5° sub țintă (un
 TRV care ține ținta raportează încălzire în continuu, și e în regulă), fără
 fereastră deschisă, în afara antiînghețului și a pauzei. După *Alertă când
-încălzirea nu are efect* (implicit 2 h), creșterea ei e comparată cu cât ar
-trebui să fie:
-
-- **camera învățată**: creșterea pe care o așteaptă modelul învățat de la
-  același început, la aceeași temperatură de afară. Alerta se trimite sub o
-  treime din ea. O cameră cu încălzirea prea slabă pentru frigul de afară
-  așteaptă puțin (sub 0,3°) și nu primește alertă: nu are nimic stricat;
-- **înainte de învățare**: o creștere mai mică de 0,3°.
+încălzirea nu are efect* (implicit 2 h), creșterea ei e comparată cu creșterea
+pe care o așteaptă modelul învățat de la același început, la aceeași
+temperatură de afară. Alerta se trimite sub o treime din ea. O cameră cu
+încălzirea prea slabă pentru frigul de afară așteaptă puțin (sub 0,3°) și nu
+primește alertă: nu are nimic stricat. **Înainte ca o cameră să-și învețe
+modelul nu există alertă**: o încălzire lentă, de exemplu în pardoseală, poate
+crește foarte puțin în primele ore și nu s-ar deosebi de una blocată.
 
 Cauzele obișnuite: un ventil blocat,
 o sursă de căldură care nu pornește, o fereastră deschisă fără senzor, un

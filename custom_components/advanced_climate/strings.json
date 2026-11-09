@@ -261,8 +261,8 @@
           "pause_remind_hours": "A warning when the heating stays paused this long, then once a day (a pause left on means a cold house). 0 = never.",
           "alert_window_minutes": "Alert when a window stays open this long while heating is needed.",
           "alert_unavailable_minutes": "Alert when a thermostat or sensor is unavailable this long.",
-          "alert_silent_hours": "Alert when a room temperature sensor stays available but has sent no value (not even the same one) for this long: a flat battery or a lost signal often keeps the last value. 0 = off. Raise it for sensors that report only when the temperature changes.",
-          "alert_no_effect_hours": "Alert when a room heats this long, clearly below its target, and its temperature rises much less than learned (or barely, before learning): a stuck valve, a heat source that does not start, a window open without a sensor. 0 = off.",
+          "alert_silent_hours": "Alert when a room temperature sensor stays available but has sent no value (not even the same one) for this long: a flat battery or a lost signal often keeps the last value. 0 = off. Raise it for sensors that report only when the temperature changes, and for a template or group sensor (an average), which writes a value only when one of its sensors changes.",
+          "alert_no_effect_hours": "Alert when a room heats this long, clearly below its target, and its temperature rises much less than its learned model expects: a stuck valve, a heat source that does not start, a window open without a sensor. Only once the room has learned its model (a slow floor heating could not be told from a stuck one before). 0 = off.",
           "battery_threshold": "Alert when the battery of a room device (TRV, sensor) drops below this.",
           "verify_commands": "After 2 minutes checks that the device accepted the command, retries once, then alerts. Turn off only if a device reports its state slowly.",
           "room_diff_alert": "Alert when one room stays this much below its target while others are warm (stuck valve, open window). 0 = off; useful only with several rooms."

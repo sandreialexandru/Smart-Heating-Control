@@ -101,25 +101,25 @@ def problems(house: House, sub: ConfigSubentry) -> list[tuple[str, dict[str, str
 def active_scenario(house: House) -> str | None:
     """The scenario whose profiles are all on (none when no one matches).
 
-    When several match (one is part of another), the one that sets the most
-    profiles; between equals, the first added.
+    A room that cannot take its profiles is left out, as when the scenario is
+    chosen (``activate``): a scenario applied without it is shown; one with no
+    room left is not. When several match (one is part of another), the one
+    that sets the most profiles; between equals, the first added.
     """
     best: tuple[int, str] | None = None
     for sub in scenario_subentries(house):
-        rooms = scenario_rooms(sub)
-        if not rooms:
-            continue
-        ok = True
-        for rid, profiles in rooms.items():
+        ok = False
+        size = 0
+        for rid, profiles in scenario_rooms(sub).items():
             room = house.rooms.get(rid)
             if room is None or room_problems(room, profiles):
-                ok = False
-                break
+                continue
             days = room.schedule.profile_days
             if not all(days[p]["enabled"] for p in profiles):
                 ok = False
                 break
-        size = sum(len(p) for p in rooms.values())
+            ok = True
+            size += len(profiles)
         if ok and (best is None or size > best[0]):
             best = (size, sub.title)
     return best[1] if best else None

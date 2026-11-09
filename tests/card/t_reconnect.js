@@ -18,3 +18,24 @@ test("a card moved to another column keeps the chart open and modal", async (p) 
   });
   eq(r, true, "chart kept and modal");
 });
+
+test("a pan let go outside the card ends once; a card taken off the page no longer listens", async (p) => {
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom" }] });
+  const r = await p.evaluate(async () => {
+    let calls = 0;
+    card._pointerUp = () => { calls += 1; card._pan = null; };
+    const up = (target) => target.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, composed: true }));
+    // Outside the card: the window ends the pan.
+    card._pan = {}; up(document.body); const outside = calls;
+    // Inside the card: only the card's own listener, not a second time from the window.
+    card._pan = {}; up(card.shadowRoot.querySelector("ha-card, div") || card.shadowRoot.firstElementChild); const inside = calls - outside;
+    // Taken off the page: the window no longer reaches it.
+    const host = card.parentNode; host.removeChild(card);
+    card._pan = {}; up(document.body); const removed = calls - outside - inside;
+    host.appendChild(card);
+    card._pan = {}; up(document.body); const back = calls - outside - inside - removed;
+    card._pan = null;
+    return { outside, inside, removed, back };
+  });
+  eq(r, { outside: 1, inside: 1, removed: 0, back: 1 }, "pointerup handling");
+});

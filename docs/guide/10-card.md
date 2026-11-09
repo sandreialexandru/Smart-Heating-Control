@@ -76,7 +76,8 @@ collapsed: true
   [chapter 6](06-weather.md)). Not shown where it cannot act: mode Off or Summer,
   outside the season, in a pause.
 - A **pause band** at the top while the house is paused, and a **guest band**
-  while guest mode is on (with its end, when it has one).
+  while guest mode is on (with its end, when it has one; it also says when a
+  vacation or the Away mode waits for the guests).
 - In the compact card the folded house row shows the people, the presence
   (Home / Nearby / Away), the mode, the outdoor temperature and a flame while
   there is heat demand.

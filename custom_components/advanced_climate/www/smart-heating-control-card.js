@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.4rc1";
+const CARD_VERSION = "2.6.4rc2";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -336,7 +336,6 @@ const TEXT = {
     al_sensor_unavailable_eco: "The temperature sensors are unavailable; eco is used.",
     al_sensor_silent: "{entity} has sent no temperature for more than {hours} h; the room is controlled by an old value. Check its battery and its signal.",
     al_no_effect: "Heating for {hours} h, but the temperature rose by only {rise}° (about {expected}° expected). Check the valve, the heat source and the windows.",
-    al_no_effect_unlearned: "Heating for {hours} h, but the temperature rose by only {rise}°. Check the valve, the heat source and the windows.",
     al_schedule_invalid: "The schedule is invalid ({error}); the default schedule is used.",
     al_schedule_gap: "No active schedule profile: {days}; the room keeps its frost protection on those days.",
     al_battery_low: "Low battery on {device} ({level}%).",
@@ -392,6 +391,7 @@ const TEXT = {
     off_solar_gain: "solar gain",
     guests_banner: "Guest mode: the house state is Home even if none of the people is home",
     guests_banner_vacation: "Guest mode: the vacation is suspended, the rooms follow the schedule",
+    guests_banner_away: "Guest mode: the away mode is suspended, the rooms follow the schedule",
     guests_chip: "Guest mode on: the house state is Home",
     asks_heat: "Asks for heat",
     auto_short: "Automatic",
@@ -628,7 +628,6 @@ const TEXT = {
     al_sensor_unavailable_eco: "Senzorii de temperatură sunt indisponibili; se folosește eco.",
     al_sensor_silent: "{entity} nu a mai trimis temperatura de peste {hours} h; camera e controlată după o valoare veche. Verifică bateria și semnalul.",
     al_no_effect: "Încălzește de {hours} h, dar temperatura a crescut doar cu {rise}° (așteptat aproximativ {expected}°). Verifică ventilul, sursa de căldură și ferestrele.",
-    al_no_effect_unlearned: "Încălzește de {hours} h, dar temperatura a crescut doar cu {rise}°. Verifică ventilul, sursa de căldură și ferestrele.",
     al_schedule_invalid: "Programul e invalid ({error}); se folosește programul implicit.",
     al_schedule_gap: "Fără profil activ în program: {days}; în acele zile camera rămâne pe antiîngheț.",
     al_battery_low: "Baterie descărcată la {device} ({level}%).",
@@ -684,6 +683,7 @@ const TEXT = {
     off_solar_gain: "câștig solar",
     guests_banner: "Mod oaspeți: starea casei e Acasă chiar dacă nu e acasă nimeni dintre persoane",
     guests_banner_vacation: "Mod oaspeți: vacanța e suspendată, camerele urmează programul",
+    guests_banner_away: "Mod oaspeți: modul plecat e suspendat, camerele urmează programul",
     guests_chip: "Mod oaspeți pornit: starea casei e Acasă",
     asks_heat: "Cere căldură",
     auto_short: "Automat",
@@ -762,17 +762,19 @@ class SmartHeatingControlCard extends HTMLElement {
     // Whether a mouse button or a finger is down (see _redrawAfterTyping).
     this._pressing = false;
     this.shadowRoot.addEventListener("pointerdown", () => (this._pressing = true), true);
-    window.addEventListener("pointerup", () => (this._pressing = false), true);
-    window.addEventListener("pointercancel", () => (this._pressing = false), true);
+    // On the window (a finger let go outside the card counts too); added while
+    // the card is on the page (connectedCallback), so a removed card is freed.
+    this._onWindowUp = (ev) => {
+      this._pressing = false;
+      // A pan let go outside the card (e.g. outside the window) still ends,
+      // else the card would stop following Home Assistant.
+      if ((this._pan || this._nav) && !ev.composedPath().includes(this)) this._pointerUp(ev);
+    };
     this.shadowRoot.addEventListener("toggle", (ev) => this._onToggle(ev), true);
     this.shadowRoot.addEventListener("pointerdown", (ev) => this._pointerDown(ev));
     this.shadowRoot.addEventListener("pointermove", (ev) => this._pointerMove(ev));
     this.shadowRoot.addEventListener("pointerup", (ev) => this._pointerUp(ev));
     this.shadowRoot.addEventListener("pointercancel", (ev) => this._pointerUp(ev));
-    // A finger or the mouse let go outside the card (e.g. outside the window)
-    // still ends a pan, else the card would stop following Home Assistant.
-    window.addEventListener("pointerup", (ev) => (this._pan || this._nav) && this._pointerUp(ev));
-    window.addEventListener("pointercancel", (ev) => (this._pan || this._nav) && this._pointerUp(ev));
     this.shadowRoot.addEventListener("wheel", (ev) => this._chartWheel(ev), { passive: false });
     this.shadowRoot.addEventListener("dblclick", (ev) => this._chartDblClick(ev));
     this.shadowRoot.addEventListener("pointerleave", (ev) => this._chartHover(ev), true);
@@ -781,6 +783,8 @@ class SmartHeatingControlCard extends HTMLElement {
 
   /** The animations (flame, pulse) stop while the card is not on the screen. */
   connectedCallback() {
+    window.addEventListener("pointerup", this._onWindowUp, true);
+    window.addEventListener("pointercancel", this._onWindowUp, true);
     if (!this._io && "IntersectionObserver" in window) {
       this._io = new IntersectionObserver((entries) => {
         for (const entry of entries) this.toggleAttribute("offscreen", !entry.isIntersecting);
@@ -794,6 +798,8 @@ class SmartHeatingControlCard extends HTMLElement {
 
   disconnectedCallback() {
     this._io?.disconnect();
+    window.removeEventListener("pointerup", this._onWindowUp, true);
+    window.removeEventListener("pointercancel", this._onWindowUp, true);
     // Leaving the dashboard closes the chart window, so it does not pop up
     // again later. A card only moved (the columns laid out again, e.g. a phone
     // turned) is back at once and keeps it.
@@ -1899,10 +1905,12 @@ class SmartHeatingControlCard extends HTMLElement {
     if (guest?.state !== "on") return "";
     const name = this._houses().length > 1 && house.name ? `${house.name}: ` : "";
     const until = guest.attributes?.until ? ` (${this._t("until")} ${this._fmtTime(guest.attributes.until)})` : "";
-    // While a vacation waits for the guests, the band says so.
+    // While a vacation or the away mode waits for the guests, the band says so.
     const suspended = this._state(house.entities?.presence)?.attributes?.vacation_suspended;
+    const away = this._state(house.entities?.mode)?.state === "away";
+    const key = suspended ? "guests_banner_vacation" : away ? "guests_banner_away" : "guests_banner";
     return `<div class="banner teal link" ${this._more(house.entities.guest_mode)}>${this._icon("account-group-outline")}<span>${esc(
-      name + this._t(suspended ? "guests_banner_vacation" : "guests_banner") + until
+      name + this._t(key) + until
     )}</span></div>`;
   }
 

@@ -150,3 +150,27 @@ async def test_profile_select_removed_for_a_helper_schedule(
     assert er.async_get(hass).async_get("select.bedroom_schedule_profile") is None
     assert hass.states.get("select.bedroom_schedule_profile") is None
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_profile_select_leaving_days_without_profile_is_told(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A workday profile chosen over an all-days one leaves the weekend without a
+    profile: the schedule gap alert tells it (as when it is done in the card)."""
+    days = {
+        "workday": {"days": "all", "enabled": True},
+        "weekend": {"days": "weekend", "enabled": False},
+        "home_office": {"days": "workday", "enabled": False},
+    }
+    entry = await _setup(hass, freezer, schedule=SCHEDULE, profile_days=days)
+    house = entry.runtime_data
+    room = next(iter(house.rooms.values()))
+    await _tick(hass, freezer, 15)
+    assert f"schedule_gap_{room.id}" not in house.active_alerts
+    await _select(hass, "select.bedroom_schedule_profile", "home_office")
+    await _tick(hass, freezer, 15)
+    saved = next(iter(entry.subentries.values())).data["profile_days"]
+    assert saved["workday"]["enabled"] is False
+    alert = house.active_alerts[f"schedule_gap_{room.id}"]
+    assert alert["code"] == "schedule_gap"
+    assert await hass.config_entries.async_unload(entry.entry_id)

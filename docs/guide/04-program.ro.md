@@ -134,7 +134,9 @@ Alegerea unui scenariu face în fiecare cameră a lui ce face selectul ei de
 profil: profilurile lui pornesc, cele active pe aceleași zile se opresc și
 rămân așa până se schimbă. Selectul arată scenariul ale cărui profiluri sunt
 toate pornite; după ce o cameră e schimbată de mână și nu se mai potrivește
-niciunul, nu arată niciunul.
+niciunul, nu arată niciunul. O cameră din scenariu care nu-și poate primi
+profilurile (vezi mai jos) e sărită, și când se alege scenariul, și când
+selectul verifică care e pornit.
 
 Modurile casei (Plecat, Vacanță, Oprit), prezența, ferestrele și schimbările
 manuale trec în continuare peste program, ca întotdeauna; un eveniment din

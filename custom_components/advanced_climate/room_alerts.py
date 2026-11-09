@@ -58,8 +58,9 @@ if TYPE_CHECKING:
 # The sensor of a Generic Thermostat, in its config entry.
 GT_TARGET_SENSOR = "target_sensor"
 # Heating without effect: watched from this far below the target (°C), until
-# this close to it; alerted below this share of the expected rise, or below the
-# minimum rise without a learned model (and only when the model expects it).
+# this close to it; alerted below this share of the rise the learned model
+# expects, when it expects at least the minimum rise. Only with a learned model:
+# without it a slow heating (a floor) cannot be told from a stuck one.
 NO_EFFECT_BELOW = 0.5
 NO_EFFECT_CLEAR = 0.3
 NO_EFFECT_SHARE = 1 / 3
@@ -177,7 +178,8 @@ class RoomAlerts:
         (a TRV that holds the target keeps reporting heating), with no window
         open, outside frost protection. After the set time the rise is compared
         with what the learned model expects from the same start (less than a
-        third of it); before the model is learned, with a fixed rise. A room
+        third of it). Before the model is learned nothing is told: a slow
+        heating, such as a floor, could not be told from a stuck one. A room
         whose heating is too weak for the cold outside expects little and is
         not alerted. A stop of the heating ends the watch; the alert itself ends
         when the room warms up.
@@ -200,6 +202,7 @@ class RoomAlerts:
             house.clear_alert(key)
         watching = (
             hours > 0
+            and self.learner.model.learned
             and self.heating
             and temp is not None
             and target is not None
@@ -212,13 +215,12 @@ class RoomAlerts:
             self._no_effect_run = None
             return
         if run is None:
-            model = self.learner.model
             self._no_effect_run = {
                 "since": now,
                 "temp": temp,
                 "outdoor": house.outdoor_now,
                 "q": self.learner.q,
-                "model": model if model.learned else None,
+                "model": self.learner.model,
                 "sun": house.sun_ahead(now),
             }
             return
@@ -226,41 +228,25 @@ class RoomAlerts:
         if minutes < hours * 60 or self._no_effect_told is not None:
             return
         rise = temp - run["temp"]  # type: ignore[operator]
-        model = run["model"]
-        if model is not None:
-            expected = (
-                model.simulate(run["temp"], run["outdoor"], run["q"], True, minutes, run["sun"])
-                - run["temp"]
-            )
-            weak = expected >= NO_EFFECT_MIN_RISE and rise < expected * NO_EFFECT_SHARE
-        else:
-            expected = None
-            weak = rise < NO_EFFECT_MIN_RISE
-        if not weak:
+        expected = (
+            run["model"].simulate(run["temp"], run["outdoor"], run["q"], True, minutes, run["sun"])
+            - run["temp"]
+        )
+        if expected < NO_EFFECT_MIN_RISE or rise >= expected * NO_EFFECT_SHARE:
             return
         self._no_effect_told = temp
         unit = house.unit
         scale = 1.8 if unit == "°F" else 1.0
         rise_text = f"{max(0.0, rise) * scale:.1f}"
         hours_text = f"{minutes / 60:.1f}"
-        if expected is None:
-            message = (
-                f"{self.name}: heating for {hours_text} h, but the temperature rose by only "
-                f"{rise_text}°. Check the valve, the heat source and the windows."
-            )
-            params = {"hours": hours_text, "rise": rise_text}
-        else:
-            message = (
-                f"{self.name}: heating for {hours_text} h, but the temperature rose by only "
-                f"{rise_text}° (about {expected * scale:.1f}° expected). Check the valve, "
-                "the heat source and the windows."
-            )
-            params = {"hours": hours_text, "rise": rise_text, "expected": f"{expected * scale:.1f}"}
+        expected_text = f"{expected * scale:.1f}"
         house.notify(
             key,
-            message,
-            code="no_effect" if expected is not None else "no_effect_unlearned",
-            params=params,
+            f"{self.name}: heating for {hours_text} h, but the temperature rose by only "
+            f"{rise_text}° (about {expected_text}° expected). Check the valve, the heat source "
+            "and the windows.",
+            code="no_effect",
+            params={"hours": hours_text, "rise": rise_text, "expected": expected_text},
             room=self.id,
         )
 

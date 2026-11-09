@@ -27,8 +27,9 @@ GitHub releases.
   all on. A deleted room leaves the scenarios; a missing profile, overlapping
   days or a room without its own schedule is skipped and told in Repairs.
   When two scenarios match (one part of the other), the one setting more
-  profiles is shown. A room switched to a schedule helper loses its profile
-  select.
+  profiles is shown. A room that cannot take its profiles is skipped both when
+  a scenario is chosen and when the select shows which one is on. A room
+  switched to a schedule helper loses its profile select.
 
 ### Integration
 
@@ -60,7 +61,11 @@ GitHub releases.
   its shape, and while a finger or the mouse moves the chart it is drawn once
   per frame. Zooming and moving through the week no longer makes the card hang
   on a slower phone. A pan that ends outside the card (outside the window, for
-  example) now ends properly, so the card keeps following Home Assistant.
+  example) now ends properly, so the card keeps following Home Assistant. A
+  card removed from the page (e.g. while editing the dashboard) no longer stays
+  in memory.
+- 👥 **Guest band with the Away mode**: it says the away mode is suspended and
+  the rooms follow the schedule, as it does for a vacation.
 - 📈 **Optimal start / stop in the chart**: its line and shaded band start at
   the level, like the other changes of the plan, instead of at the top of the
   chart, and the "start ~…" label sits right above the line.
@@ -68,16 +73,19 @@ GitHub releases.
 ### Alerts
 
 - 🔇 **Silent temperature sensor**: a room temperature sensor that stays
-  available but sends nothing at all (not even the same value) for 4 hours is
+  available but sends nothing at all (not even the same value) for 12 hours is
   told: a flat battery or a lost signal often keeps the last value, and the room
   was heated by an old one. A steady temperature is not silence. Off with 0,
-  longer for sensors that report only on a change (*Alerts* options).
+  longer for sensors that report only on a change and for a template or group
+  sensor (an average), which writes only when one of its sensors changes
+  (*Alerts* options).
 - 🧯 **Heating without effect**: a room that heats for 2 hours, clearly below its
   target, while its temperature rises much less than the learned model expects
-  (a third of it; before learning, less than 0.3°) is told: a stuck valve, a heat
-  source that does not start, a window open without a sensor. Not with a window
-  open, in frost protection or paused; a heating too weak for the cold outside
-  expects little and is not told. Off with 0.
+  (a third of it) is told: a stuck valve, a heat source that does not start, a
+  window open without a sensor. Only once the room has learned its model: before
+  that, a slow heating (a floor) could not be told from a stuck one. Not with a
+  window open, in frost protection or paused; a heating too weak for the cold
+  outside expects little and is not told. Off with 0.
 - The mold risk alert says the coldest wall *reached* its humidity (the value
   when the alert started; the card's humidity row shows the value now), and
   that airing and a warmer room lower *the risk*.

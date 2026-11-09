@@ -131,7 +131,9 @@ data:
 Choosing a scenario does in every room of it what its profile select does: its
 profiles go on, the active profiles of the same days go off, and they stay
 until changed. The select shows the scenario whose profiles are all on; after a
-room is changed by hand so that none matches, it shows none.
+room is changed by hand so that none matches, it shows none. A room of the
+scenario that cannot take its profiles (see below) is skipped, both when the
+scenario is chosen and when the select checks which one is on.
 
 The modes of the house (Away, Vacation, Off), the presence, the windows and the
 manual changes still win over the schedule, as always; a calendar event still

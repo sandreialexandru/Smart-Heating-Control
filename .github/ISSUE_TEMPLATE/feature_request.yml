@@ -2,6 +2,12 @@ name: Idea
 description: A new function or a change
 labels: [enhancement]
 body:
+  - type: markdown
+    attributes:
+      value: >-
+        Smart Heating Control aims to automate heating in a way that fits most
+        homes. Ideas that help many setups are the most likely to be added; very
+        specific needs are often better solved with an automation around it.
   - type: checkboxes
     id: guide
     attributes:
@@ -17,3 +23,10 @@ body:
       description: What you want to do and why; your heating setup helps.
     validations:
       required: true
+  - type: textarea
+    id: others
+    attributes:
+      label: Who else would it help?
+      description: In what other homes or setups would this be useful? (Optional, but it helps decide.)
+    validations:
+      required: false

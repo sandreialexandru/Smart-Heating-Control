@@ -1,4 +1,4 @@
-"""Config flow for Smart Heating Control: the house entry and room subentries."""
+"""Config flow for Smart Heating Control: the house entry, room and scenario subentries."""
 
 from __future__ import annotations
 
@@ -117,6 +117,7 @@ from .const import (
     CONF_REEVAL_MINUTES,
     CONF_REFERENCE_ROOM,
     CONF_ROOM_DIFF_ALERT,
+    CONF_SCENARIO_ROOMS,
     CONF_SCHEDULE,
     CONF_SCHEDULE_HELPER,
     CONF_SCHEDULE_SOURCE,
@@ -178,11 +179,13 @@ from .const import (
     SOURCE_GT,
     SOURCE_SWITCH,
     SUBENTRY_ROOM,
+    SUBENTRY_SCENARIO,
     WEEKDAYS,
     WINDOW_ACTION_FROST,
     WINDOW_ACTION_OFF,
 )
 from .outdoor import parse_month_day
+from .scenarios import overlapping, own_schedule
 from .schedule import NAME_RE, ScheduleError, parse_schedule
 from .util import (
     as_list,
@@ -1145,8 +1148,8 @@ class AdvancedClimateConfigFlow(_UnitForms, _HouseHeatingSteps, ConfigFlow, doma
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
-        """Rooms are subentries."""
-        return {SUBENTRY_ROOM: RoomSubentryFlow}
+        """Rooms and scenarios are subentries."""
+        return {SUBENTRY_ROOM: RoomSubentryFlow, SUBENTRY_SCENARIO: ScenarioSubentryFlow}
 
 
 class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
@@ -2108,3 +2111,156 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                 self._get_entry(), self._get_reconfigure_subentry(), title=title, data=data
             )
         return self.async_create_entry(title=title, data=data)
+
+
+# ---------------------------------------------------------------------------
+# Scenarios
+# ---------------------------------------------------------------------------
+
+
+class ScenarioSubentryFlow(ConfigSubentryFlow):
+    """Add or reconfigure a scenario: a name, its rooms, then their profiles."""
+
+    def __init__(self) -> None:
+        """Initialize."""
+        self._name = ""
+        self._rooms: dict[str, list[str]] = {}
+        self._reconfigure = False
+
+    def _house(self) -> Any:
+        """The running house (its rooms and their profiles), or None."""
+        return getattr(self._get_entry(), "runtime_data", None)
+
+    def _choices(self) -> dict[str, Any]:
+        """The rooms that can be in a scenario (own schedule), by id."""
+        house = self._house()
+        return {rid: room for rid, room in house.rooms.items() if own_schedule(room)}
+
+    def _labels(self, rids: list[str]) -> dict[str, str]:
+        """A field name for every room: its name (made unique)."""
+        rooms = self._choices()
+        labels: dict[str, str] = {}
+        used: set[str] = set()
+        for rid in rids:
+            label = rooms[rid].name
+            n = 2
+            while label in used:
+                label = f"{rooms[rid].name} ({n})"
+                n += 1
+            used.add(label)
+            labels[rid] = label
+        return labels
+
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> SubentryFlowResult:
+        """Start a new scenario."""
+        if self._house() is None:
+            return self.async_abort(reason="house_not_loaded")
+        return await self.async_step_rooms(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Edit a scenario."""
+        if self._house() is None:
+            return self.async_abort(reason="house_not_loaded")
+        sub = self._get_reconfigure_subentry()
+        self._name = sub.title
+        self._rooms = {
+            rid: list(p) for rid, p in dict(sub.data.get(CONF_SCENARIO_ROOMS) or {}).items()
+        }
+        self._reconfigure = True
+        return await self.async_step_rooms()
+
+    async def async_step_rooms(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """The name of the scenario and its rooms."""
+        rooms = self._choices()
+        if not rooms:
+            return self.async_abort(reason="no_rooms")
+        options = [
+            selector.SelectOptionDict(value=rid, label=room.name) for rid, room in rooms.items()
+        ]
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_NAME, default=self._name): _text(),
+                vol.Required(
+                    CONF_SCENARIO_ROOMS, default=[r for r in self._rooms if r in rooms]
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=options, multiple=True, mode=selector.SelectSelectorMode.LIST
+                    )
+                ),
+            }
+        )
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            name = str(user_input.get(CONF_NAME, "")).strip()
+            chosen = [r for r in user_input.get(CONF_SCENARIO_ROOMS) or [] if r in rooms]
+            others = {
+                sub.title
+                for sub in self._get_entry().subentries.values()
+                if sub.subentry_type == SUBENTRY_SCENARIO
+                and not (
+                    self._reconfigure
+                    and sub.subentry_id == self._get_reconfigure_subentry().subentry_id
+                )
+            }
+            if not name:
+                errors[CONF_NAME] = "name_required"
+            elif name in others:
+                errors[CONF_NAME] = "name_taken"
+            if not chosen:
+                errors[CONF_SCENARIO_ROOMS] = "rooms_required"
+            if not errors:
+                self._name = name
+                self._rooms = {rid: self._rooms.get(rid, []) for rid in chosen}
+                return await self.async_step_profiles()
+            schema = self.add_suggested_values_to_schema(schema, user_input)
+        return self.async_show_form(step_id="rooms", data_schema=schema, errors=errors)
+
+    async def async_step_profiles(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """The profiles to turn on in every room; those of a room must not share days."""
+        rooms = self._choices()
+        rids = [rid for rid in self._rooms if rid in rooms]
+        labels = self._labels(rids)
+        fields: dict[Any, Any] = {}
+        for rid in rids:
+            names = rooms[rid].schedule.profile_names
+            fields[
+                vol.Required(labels[rid], default=[p for p in self._rooms[rid] if p in names])
+            ] = selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=list(names), multiple=True, mode=selector.SelectSelectorMode.LIST
+                )
+            )
+        schema = vol.Schema(fields)
+        errors: dict[str, str] = {}
+        placeholders = {"overlap": ""}
+        if user_input is not None:
+            chosen = {rid: list(user_input.get(labels[rid]) or []) for rid in rids}
+            for rid, profiles in chosen.items():
+                if not profiles:
+                    errors[labels[rid]] = "profiles_required"
+                elif shared := overlapping(rooms[rid], profiles):
+                    errors[labels[rid]] = "profiles_overlap"
+                    placeholders["overlap"] = ", ".join(shared)
+            if not errors:
+                data = {CONF_SCENARIO_ROOMS: chosen}
+                if self._reconfigure:
+                    return self.async_update_and_abort(
+                        self._get_entry(),
+                        self._get_reconfigure_subentry(),
+                        title=self._name,
+                        data=data,
+                    )
+                return self.async_create_entry(title=self._name, data=data)
+            schema = self.add_suggested_values_to_schema(schema, user_input)
+        return self.async_show_form(
+            step_id="profiles",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={"scenario": self._name, **placeholders},
+        )

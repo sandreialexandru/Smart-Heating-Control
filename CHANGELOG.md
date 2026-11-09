@@ -19,6 +19,13 @@ GitHub releases.
   does (the active profiles of the same days go off), until another is chosen.
   An easy way to switch e.g. between `workday` and `home_office` from an
   automation. (Not the select of versions before 2.2, which was removed.)
+- 🎬 **Scenarios**: *Add scenario*, next to *Add room*: a name and, for every
+  room in it, the profiles to turn on (several per room when they cover
+  different days; profiles that share days are refused). The house's
+  **Scenario** select and the buttons on the card choose one: it does in every
+  room what its profile select does, and shows the scenario whose profiles are
+  all on. A deleted room leaves the scenarios; a missing profile, overlapping
+  days or a room without its own schedule is skipped and told in Repairs.
 
 ### Integration
 

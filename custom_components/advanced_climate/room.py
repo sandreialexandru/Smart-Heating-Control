@@ -329,20 +329,25 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self.schedule = self._build_schedule(text)
 
     async def async_activate_profile(self, name: str) -> None:
-        """Turn a profile on, as in the card: the active ones of the same days go off.
+        """Turn a profile on, as in the card: the active ones of the same days go off."""
+        if name not in self.schedule.profile_names:
+            raise HomeAssistantError(f"Unknown profile {name}")
+        self.activate_profiles([name])
+
+    def activate_profiles(self, names: list[str]) -> None:
+        """Turn profiles on; the active ones sharing days with them go off.
 
         Saved in the room like the days chosen in the card (the update listener
-        applies them without a reload).
+        applies them without a reload). The profiles must not share days among
+        themselves (the scenarios check it).
         """
-        names = self.schedule.profile_names
-        if name not in names:
-            raise HomeAssistantError(f"Unknown profile {name}")
         days = {n: dict(item) for n, item in self.schedule.profile_days.items()}
-        chosen = days[name]["days"]
-        for other, item in days.items():
-            if other != name and item["enabled"] and overlap(chosen, item["days"]):
-                item["enabled"] = False
-        days[name]["enabled"] = True
+        for name in names:
+            chosen = days[name]["days"]
+            for other, item in days.items():
+                if other not in names and item["enabled"] and overlap(chosen, item["days"]):
+                    item["enabled"] = False
+            days[name]["enabled"] = True
         if days == self.schedule.profile_days:
             return
         entry = self.house.entry

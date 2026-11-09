@@ -67,6 +67,7 @@ collapsed: true
   narrow card (three in a row without the heating time), all in one row on a
   wide one.
 - The **mode** (Auto / Away / Vacation / Off / Summer).
+- The **scenarios**, one button each, the active one marked (when the house has any, see [chapter 4](04-schedule.md#scenarios)).
 - A row of buttons: **Pause** and **Guests** (on / off), **Vacation** (opens
   the vacation dates), **Reevaluate** and **Automatic** (clears all manual
   changes). A button stays coloured while its mode is on.

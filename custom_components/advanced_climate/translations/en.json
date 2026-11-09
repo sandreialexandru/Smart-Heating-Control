@@ -743,6 +743,43 @@
         "calibration_sensor_required": "TRV calibration writes the room temperature into the TRV, so it needs a temperature sensor of the room. Add one, or set the calibration to Off.",
         "calibration_entities_required": "Pick the TRV number entities the calibration writes to (the offset or the external temperature input), or set the calibration to Off on the previous page."
       }
+    },
+    "scenario": {
+      "entry_type": "Scenario",
+      "initiate_flow": {
+        "user": "Add scenario",
+        "reconfigure": "Reconfigure scenario"
+      },
+      "step": {
+        "rooms": {
+          "title": "Scenario",
+          "description": "A scenario turns on chosen profiles in several rooms at once, from the house's *Scenario* select (or an automation). It adds nothing of its own: choosing it does in every room what its profile select does.",
+          "data": {
+            "name": "Name",
+            "rooms": "Rooms"
+          },
+          "data_description": {
+            "name": "Shown in the house's Scenario select, e.g. Home office.",
+            "rooms": "Only rooms with their own schedule. Rooms left out keep their profiles."
+          }
+        },
+        "profiles": {
+          "title": "Profiles of {scenario}",
+          "description": "For every room, the profiles to turn on. The active profiles of the same days are turned off, as when you turn one on in the card. The profiles of a room must not share days."
+        }
+      },
+      "error": {
+        "name_required": "Enter a name.",
+        "name_taken": "Another scenario of this house has this name.",
+        "rooms_required": "Choose at least one room.",
+        "profiles_required": "Choose at least one profile.",
+        "profiles_overlap": "These profiles share days: {overlap}. Choose profiles for different days."
+      },
+      "abort": {
+        "reconfigure_successful": "The scenario was saved.",
+        "house_not_loaded": "The house is not running; scenarios can be edited once it has started.",
+        "no_rooms": "There is no room with its own schedule in this house."
+      }
     }
   },
   "entity": {
@@ -829,6 +866,9 @@
           "off": "Off",
           "summer": "Summer"
         }
+      },
+      "scenario": {
+        "name": "Scenario"
       },
       "schedule_profile": {
         "name": "Schedule profile"
@@ -1134,6 +1174,12 @@
     },
     "duration_invalid": {
       "message": "The duration must be between {min} and {max} hours."
+    }
+  },
+  "issues": {
+    "scenario_problem": {
+      "title": "Scenario {scenario} cannot be fully applied",
+      "description": "In the house {house}, the scenario **{scenario}** has rooms that are skipped when it is chosen: {details}.\n\nReconfigure the scenario (Settings → Devices & services → Smart Heating Control) or delete it. This message goes away by itself once it is fixed."
     }
   }
 }

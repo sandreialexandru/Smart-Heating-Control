@@ -87,6 +87,7 @@ class RoomEntity(Entity):
 
 HOUSE_ENTITY_KEYS: dict[str, str] = {
     "mode": "select",
+    "scenario": "select",
     "presence": "sensor",
     "outdoor_average": "sensor",
     "heating_runtime": "sensor",
@@ -116,6 +117,7 @@ ROOM_ENTITY_KEYS: dict[str, str] = {
     "child_lock": "switch",
     "clear_override": "button",
     "reset_learning": "button",
+    "schedule_profile": "select",
     **{f"level_{preset}": "number" for preset in (*PRESETS, "nearby")},
 }
 

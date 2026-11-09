@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.4b8";
+const CARD_VERSION = "2.6.4b9";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -152,6 +152,7 @@ const TEXT = {
     demand: "Heat demand",
     runtime: "Heating time",
     mode: "Mode",
+    scenario: "Scenario",
     pause: "Pause",
     guests: "Guests",
     vacation: "Vacation",
@@ -443,6 +444,7 @@ const TEXT = {
     demand: "Cerere de căldură",
     runtime: "Timp de încălzire",
     mode: "Mod",
+    scenario: "Scenariu",
     pause: "Pauză",
     guests: "Oaspeți",
     vacation: "Vacanță",
@@ -1634,6 +1636,7 @@ class SmartHeatingControlCard extends HTMLElement {
     const e = house.entities;
     const presence = this._state(e.presence);
     const mode = this._state(e.mode);
+    const scenario = this._state(e.scenario);
     const outdoor = this._state(e.outdoor_average);
     const season = this._state(e.heating_season);
     const cutoff = this._state(e.outdoor_cutoff);
@@ -1675,6 +1678,19 @@ class SmartHeatingControlCard extends HTMLElement {
           data-entity="${esc(e.mode)}" data-option="${esc(opt)}">${esc(this._label(mode, opt))}</button>`
       )
       .join("");
+    // The scenarios of the house: one button each, the active one marked.
+    const scenarioOptions = scenario?.attributes?.options || [];
+    const scenarios = scenarioOptions.length
+      ? `<div class="scenarios" role="group" aria-label="${esc(this._t("scenario"))}">
+          <span class="sclabel">${this._icon("playlist-check")}<span>${esc(this._t("scenario"))}</span></span>
+          ${scenarioOptions
+            .map(
+              (opt) => `<button class="scen ${scenario.state === opt ? "active" : ""}" data-action="mode"
+                data-entity="${esc(e.scenario)}" data-option="${esc(opt)}">${esc(opt)}</button>`
+            )
+            .join("")}
+        </div>`
+      : "";
 
     const stat = (icon, label, value, extra = "", entityId = null) =>
       `<div class="stat ${extra} ${entityId ? "link" : ""}" ${this._more(entityId)}><span class="k">${this._icon(icon)}<span>${esc(
@@ -1778,6 +1794,7 @@ class SmartHeatingControlCard extends HTMLElement {
             ${demand?.state === "on" ? this._flame(this._houseHeating(house), e.heat_demand) : ""}
           </div>
           <div class="segmented ${modeCount > 4 ? "many" : ""}" style="--n:${modeCount}" role="group" aria-label="${esc(this._t("mode"))}">${modes}</div>
+          ${scenarios}
         </div>
         ${
           avatars
@@ -4363,6 +4380,13 @@ const STYLE = `
     border-radius: 12px; background: var(--ac-surface-2); }
   .seg { border: none; background: none; padding: 8px 2px; border-radius: 9px; font: inherit; font-size: 0.9em;
     color: var(--primary-text-color); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .scenarios { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+  .scenarios .sclabel { display: inline-flex; align-items: center; gap: 5px; font-size: 0.85em;
+    color: var(--secondary-text-color); margin-right: 2px; }
+  .scenarios .sclabel ha-icon { --mdc-icon-size: 16px; }
+  .scen { border: 1px solid var(--divider-color); background: none; padding: 5px 11px; border-radius: 999px; font: inherit;
+    font-size: 0.85em; color: var(--primary-text-color); cursor: pointer; }
+  .scen.active { background: var(--ac-surface-2); border-color: var(--ac-accent); color: var(--ac-accent); font-weight: 600; }
   .segmented.many .seg { font-size: 0.8em; padding: 8px 0; }
   .seg.active { background: var(--card-background-color); box-shadow: 0 1px 2px rgba(0,0,0,.18); font-weight: 600; color: var(--ac-accent); }
   .toggle { display: inline-flex; align-items: center; gap: 8px; background: none; border: none; font: inherit;

@@ -67,6 +67,7 @@ collapsed: true
   pe un card îngust (trei pe rând fără timpul de încălzire), toate pe un rând
   pe unul lat.
 - **Modul** (Auto / Plecat / Vacanță / Oprit / Vară).
+- **Scenariile**, câte un buton, cel activ marcat (când casa are, vezi [capitolul 4](04-program.ro.md#scenarii)).
 - Un rând de butoane: **Pauză** și **Oaspeți** (pornit / oprit), **Vacanță**
   (deschide datele vacanței), **Reevaluează** și **Automat** (anulează toate
   modificările manuale). Un buton rămâne colorat cât modul lui e pornit.

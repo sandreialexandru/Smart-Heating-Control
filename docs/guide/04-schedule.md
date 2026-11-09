@@ -102,6 +102,52 @@ data:
 A calendar event titled with a profile name still wins for its day. The select
 then shows that profile, but does not change which one is on.
 
+## Scenarios
+
+A **scenario** turns on chosen profiles in several rooms at once: e.g. *Home
+office* = `home_office` in the office and the living room, `workday` in the
+bedroom. It is a shortcut for setting their profile selects one by one; it
+adds no state and no rules of its own.
+
+**Add one**: *Settings → Devices & services → Smart Heating Control →
+Add scenario* (next to *Add room*). Give it a name, tick its rooms (only rooms
+with their own schedule), then choose for every room the profiles to turn on.
+Several profiles of a room are fine when they cover different days (e.g.
+`home_office` for workdays and `weekend` for the weekend); profiles that share
+days are refused. Rooms left out of the scenario are not touched. The ⋮ menu of
+a scenario reconfigures or deletes it.
+
+**Use it**: the house's **Scenario** select (`select.home_scenario`), the
+scenario buttons on the card, or an automation:
+
+```yaml
+action: select.select_option
+target:
+  entity_id: select.home_scenario
+data:
+  option: Home office
+```
+
+Choosing a scenario does in every room of it what its profile select does: its
+profiles go on, the active profiles of the same days go off, and they stay
+until changed. The select shows the scenario whose profiles are all on; after a
+room is changed by hand so that none matches, it shows none.
+
+The modes of the house (Away, Vacation, Off), the presence, the windows and the
+manual changes still win over the schedule, as always; a calendar event still
+wins for its day.
+
+**When something changes later**:
+
+- a room is renamed: nothing to do, the scenario follows it;
+- a room is deleted: it leaves the scenarios; a scenario left without rooms
+  stays, and is told in *Settings → Repairs*;
+- a profile of a scenario is deleted or renamed, or its days now overlap
+  another profile of the same scenario, or the room switched to a schedule
+  helper: that room is skipped when the scenario is chosen, and it is told in
+  *Repairs* until the scenario is reconfigured (the message then goes away by
+  itself).
+
 ## Workdays and holidays
 
 Without a Workday sensor, Monday–Friday are workdays. With the sensor of the

@@ -161,3 +161,15 @@ test("vacation: the dates as typed, in the time zone of the card (Bucharest)", a
   eq([new Date(s.data.start).toISOString(), new Date(s.data.end).toISOString(), s.data.config_entry_id],
     ["2026-12-20T06:00:00.000Z", "2026-12-27T16:30:00.000Z", "e1"], "dates");
 });
+
+test("house scenarios: a button each, the active one marked, a click chooses it", async (p) => {
+  await mount(p, {}, { rooms: R, scenarios: ["Home office", "Holidays"], scenario: "Holidays" });
+  const btns = await p.evaluate(() =>
+    [...card.shadowRoot.querySelectorAll(".scen")].map((b) => [b.textContent.trim(), b.classList.contains("active")]));
+  eq(btns, [["Home office", false], ["Holidays", true]], "buttons");
+  await click(p, '.scen[data-option="Home office"]'); await p.waitForTimeout(50);
+  eq(await last(p), { domain: "select", service: "select_option", data: { entity_id: "select.home_scenario", option: "Home office" } }, "choose");
+  // No scenarios: no row.
+  await mount(p, {}, { rooms: R });
+  ok(!(await p.evaluate(() => !!card.shadowRoot.querySelector(".scenarios"))), "no row without scenarios");
+});

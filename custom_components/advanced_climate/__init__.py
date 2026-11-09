@@ -18,9 +18,11 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_PROFILE_DAYS, CONF_SCHEDULE, DEFAULT_SCHEDULE, DOMAIN
+from .const import CONF_PROFILE_DAYS, CONF_SCHEDULE, DEFAULT_SCHEDULE, DOMAIN, SUBENTRY_ROOM
 from .frontend import async_register_card, async_remove_lovelace_resource
 from .house import House
+from .scenarios import check as check_scenarios
+from .scenarios import remove_issues as remove_scenario_issues
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,6 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdvancedClimateConfigEnt
         # The house listens to its entities already: stop it, then fail.
         await house.async_unload()
         raise
+    check_scenarios(house)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 
@@ -89,7 +92,7 @@ def _remove_old_entities(hass: HomeAssistant, entry: ConfigEntry) -> None:
     learning (2.6: one *Reset learning* button now).
     """
     registry = er.async_get(hass)
-    rooms = set(entry.subentries)
+    rooms = {sid for sid, sub in entry.subentries.items() if sub.subentry_type == SUBENTRY_ROOM}
     old = {("select", f"{rid}_{key}") for rid in rooms for key in ("profile",)} | {
         ("button", f"{rid}_{key}")
         for rid in rooms
@@ -104,7 +107,7 @@ _SCHEDULE_KEYS = (CONF_SCHEDULE, CONF_PROFILE_DAYS)
 
 
 def _snapshot(entry: ConfigEntry) -> tuple:
-    """Settings of the house and rooms, without the schedules."""
+    """Settings of the house and rooms, without the schedules (nor the scenarios)."""
     rooms = {
         sid: (
             sub.title,
@@ -112,15 +115,16 @@ def _snapshot(entry: ConfigEntry) -> tuple:
             {k: v for k, v in sub.data.items() if k not in _SCHEDULE_KEYS},
         )
         for sid, sub in entry.subentries.items()
+        if sub.subentry_type == SUBENTRY_ROOM
     }
     return (dict(entry.options), entry.title, rooms)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Reload when options or rooms change; a new schedule is applied in place.
+    """Reload when options or rooms change; schedules and scenarios apply in place.
 
-    Saving a schedule (e.g. from the card) does not reload the integration, so
-    the entities do not become unavailable for a moment.
+    Saving a schedule (e.g. from the card) or a scenario does not reload the
+    integration, so the entities do not become unavailable for a moment.
     """
     house = getattr(entry, "runtime_data", None)
     if house is not None and _snapshot(entry) == getattr(house, "config_snapshot", None):
@@ -133,6 +137,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
                     sub.data.get(CONF_SCHEDULE) or DEFAULT_SCHEDULE,
                     sub.data.get(CONF_PROFILE_DAYS),
                 )
+        check_scenarios(house)
         house.async_save()
         house.async_request_evaluate(0)
         return
@@ -148,7 +153,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: AdvancedClimateConfigEn
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Remove the dashboard resource when the last house is deleted."""
+    """Remove the Repairs issues of the house; the dashboard resource with the last house."""
+    remove_scenario_issues(hass, entry.entry_id)
     if hass.config_entries.async_entries(DOMAIN):
         return
     await async_remove_lovelace_resource(hass)

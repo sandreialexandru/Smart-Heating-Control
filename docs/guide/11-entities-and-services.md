@@ -10,6 +10,7 @@ the house or the room, e.g. `sensor.bedroom_decision`.
 | Entity | Shows / does |
 | --- | --- |
 | *Mode* (select) | The mode: `auto`, `away`, `vacation`, `off`, `summer`. |
+| *Scenario* (select) | The scenarios of the house: shows the one whose profiles are all on, chooses one (see [chapter 4](04-schedule.md#scenarios)). |
 | *Presence* (sensor) | `home`, `nearby`, `far`; attributes: the people, `arriving`, `guest_mode`, `vacation_active`, `vacation_suspended`, `vacation_preheating`, `pending`, `pending_since`. |
 | *Pause* (switch) | The pause. |
 | *Guest mode* (switch) | Guest mode (the house state stays *home*). |

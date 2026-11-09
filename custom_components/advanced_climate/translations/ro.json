@@ -743,6 +743,43 @@
         "calibration_sensor_required": "Calibrarea TRV scrie temperatura camerei în TRV, deci are nevoie de un senzor de temperatură al camerei. Adaugă unul sau pune calibrarea pe Oprit.",
         "calibration_entities_required": "Alege entitățile number ale TRV-ului în care scrie calibrarea (offset-ul sau intrarea de temperatură externă), sau pune calibrarea pe Oprit în pagina anterioară."
       }
+    },
+    "scenario": {
+      "entry_type": "Scenariu",
+      "initiate_flow": {
+        "user": "Adaugă scenariu",
+        "reconfigure": "Reconfigurează scenariul"
+      },
+      "step": {
+        "rooms": {
+          "title": "Scenariu",
+          "description": "Un scenariu pornește profiluri alese în mai multe camere odată, din selectul *Scenariu* al casei (sau dintr-o automatizare). Nu adaugă nimic al lui: alegerea lui face în fiecare cameră ce face selectul ei de profil.",
+          "data": {
+            "name": "Nume",
+            "rooms": "Camere"
+          },
+          "data_description": {
+            "name": "Apare în selectul Scenariu al casei, de exemplu Lucru de acasă.",
+            "rooms": "Doar camerele cu programul lor. Camerele lăsate afară își păstrează profilurile."
+          }
+        },
+        "profiles": {
+          "title": "Profilurile pentru {scenario}",
+          "description": "Pentru fiecare cameră, profilurile de pornit. Profilurile active pe aceleași zile se opresc, ca atunci când pornești unul din card. Profilurile unei camere nu au voie să aibă zile comune."
+        }
+      },
+      "error": {
+        "name_required": "Introdu un nume.",
+        "name_taken": "Alt scenariu al acestei case are acest nume.",
+        "rooms_required": "Alege cel puțin o cameră.",
+        "profiles_required": "Alege cel puțin un profil.",
+        "profiles_overlap": "Aceste profiluri au zile comune: {overlap}. Alege profiluri pentru zile diferite."
+      },
+      "abort": {
+        "reconfigure_successful": "Scenariul a fost salvat.",
+        "house_not_loaded": "Casa nu rulează; scenariile se pot edita după ce pornește.",
+        "no_rooms": "Nu există nicio cameră cu program propriu în această casă."
+      }
     }
   },
   "entity": {
@@ -829,6 +866,9 @@
           "off": "Oprit",
           "summer": "Vară"
         }
+      },
+      "scenario": {
+        "name": "Scenariu"
       },
       "schedule_profile": {
         "name": "Profil de program"
@@ -1134,6 +1174,12 @@
     },
     "duration_invalid": {
       "message": "Durata trebuie să fie între {min} și {max} ore."
+    }
+  },
+  "issues": {
+    "scenario_problem": {
+      "title": "Scenariul {scenario} nu poate fi aplicat complet",
+      "description": "În casa {house}, scenariul **{scenario}** are camere care sunt sărite când e ales: {details}.\n\nReconfigurează scenariul (Setări → Dispozitive și servicii → Smart Heating Control) sau șterge-l. Mesajul dispare singur după ce problema e rezolvată."
     }
   }
 }

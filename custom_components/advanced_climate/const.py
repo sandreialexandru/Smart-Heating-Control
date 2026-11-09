@@ -6,6 +6,10 @@ from typing import Final
 
 DOMAIN: Final = "advanced_climate"
 SUBENTRY_ROOM: Final = "room"
+# A choice of profiles for several rooms, chosen from the house.
+SUBENTRY_SCENARIO: Final = "scenario"
+# Room id → the profiles to turn on in it.
+CONF_SCENARIO_ROOMS: Final = "rooms"
 
 STORAGE_VERSION: Final = 1
 SIGNAL_UPDATE: Final = f"{DOMAIN}_update_{{}}"

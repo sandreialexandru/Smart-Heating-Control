@@ -246,6 +246,7 @@ Un select pentru casă: **Auto / Plecat / Vacanță / Oprit / Vară**.
 | `binary_sensor.<room>_heat_demand` | Dacă camera cere căldură; atributul `heating` arată dacă sursa ei merge |
 | `sensor.<house>_presence` | acasă / aproape / departe |
 | `select.<house>_mode` | Modul global |
+| `select.<house>_scenario` | Scenarii (subintrări: un nume și profilurile de pornit în fiecare cameră a lui): arată pe cel ale cărui profiluri sunt toate pornite, alege unul; problemele apar la Reparații |
 | `select.<room>_schedule_profile` | Profilul folosit azi; alegerea unuia îl pornește ca în card (camerele cu programul lor) |
 | `number.*`, `button.*`, `switch.*` | Niveluri, anularea modificărilor manuale, resetarea învățării (pe cameră), mod oaspeți, pauză, blocare pentru copii |
 | Servicii | `set_override`, `clear_override`, `set_vacation`, `reevaluate`, `set_schedule` |

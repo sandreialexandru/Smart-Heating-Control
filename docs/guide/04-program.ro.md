@@ -104,6 +104,52 @@ data:
 Un eveniment din calendar cu numele unui profil are în continuare prioritate în
 ziua lui. Selectul arată atunci acel profil, dar nu schimbă care e pornit.
 
+## Scenarii
+
+Un **scenariu** pornește profiluri alese în mai multe camere odată: de exemplu
+*Lucru de acasă* = `home_office` în birou și în living, `workday` în
+dormitor. E o scurtătură pentru setarea selecturilor lor de profil una câte
+una; nu adaugă nicio stare și nicio regulă a lui.
+
+**Adăugare**: *Setări → Dispozitive și servicii → Smart Heating Control →
+Adaugă scenariu* (lângă *Adaugă cameră*). Îi dai un nume, bifezi camerele (doar
+cele cu programul lor), apoi alegi pentru fiecare cameră profilurile de pornit.
+Mai multe profiluri ale unei camere sunt în regulă când acoperă zile diferite
+(de exemplu `home_office` pentru zilele lucrătoare și `weekend` pentru
+weekend); profilurile cu zile comune sunt refuzate. Camerele lăsate afară nu
+sunt atinse. Meniul ⋮ al unui scenariu îl reconfigurează sau îl șterge.
+
+**Folosire**: selectul **Scenariu** al casei (`select.home_scenario`), butoanele
+de scenariu din card sau o automatizare:
+
+```yaml
+action: select.select_option
+target:
+  entity_id: select.home_scenario
+data:
+  option: Lucru de acasă
+```
+
+Alegerea unui scenariu face în fiecare cameră a lui ce face selectul ei de
+profil: profilurile lui pornesc, cele active pe aceleași zile se opresc și
+rămân așa până se schimbă. Selectul arată scenariul ale cărui profiluri sunt
+toate pornite; după ce o cameră e schimbată de mână și nu se mai potrivește
+niciunul, nu arată niciunul.
+
+Modurile casei (Plecat, Vacanță, Oprit), prezența, ferestrele și schimbările
+manuale trec în continuare peste program, ca întotdeauna; un eveniment din
+calendar câștigă în ziua lui.
+
+**Când se schimbă ceva mai târziu**:
+
+- o cameră e redenumită: nimic de făcut, scenariul o urmează;
+- o cameră e ștearsă: dispare din scenarii; un scenariu rămas fără camere
+  rămâne și e semnalat în *Setări → Reparații*;
+- un profil al unui scenariu e șters sau redenumit, zilele lui se suprapun acum
+  cu alt profil din același scenariu, sau camera a trecut pe un schedule
+  helper: camera e sărită când e ales scenariul și e semnalată în *Reparații*
+  până când scenariul e reconfigurat (mesajul dispare apoi singur).
+
 ## Zile lucrătoare și sărbători
 
 Fără senzor Workday, luni–vineri sunt zile lucrătoare. Cu senzorul integrării

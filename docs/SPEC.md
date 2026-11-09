@@ -242,6 +242,7 @@ One select for the house: **Auto / Away / Vacation / Off / Summer**.
 | `binary_sensor.<room>_heat_demand` | Whether the room asks for heat; the `heating` attribute tells if its heat source runs |
 | `sensor.<house>_presence` | home / nearby / far |
 | `select.<house>_mode` | Global mode |
+| `select.<house>_scenario` | Scenarios (subentries: a name and the profiles to turn on in each of its rooms): shows the one whose profiles are all on, chooses one; problems told in Repairs |
 | `select.<room>_schedule_profile` | The profile used today; choosing one turns it on as in the card (rooms with their own schedule) |
 | `number.*`, `button.*`, `switch.*` | Levels, clear overrides, reset learning (per room), guest mode, pause, child lock |
 | Services | `set_override`, `clear_override`, `set_vacation`, `reevaluate`, `set_schedule` |

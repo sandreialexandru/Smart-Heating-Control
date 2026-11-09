@@ -18,6 +18,8 @@ from .const import (
     CONF_PROXIMITY_DIRECTION,
     CONF_PROXIMITY_DISTANCE,
     CONF_TRAVEL_TIME,
+    SUBENTRY_ROOM,
+    SUBENTRY_SCENARIO,
 )
 
 # Diagnostics end up attached to public issues: leave out who lives in the
@@ -51,6 +53,12 @@ async def async_get_config_entry_diagnostics(
             "rooms": {
                 sub.subentry_id: {"title": sub.title, "data": dict(sub.data)}
                 for sub in entry.subentries.values()
+                if sub.subentry_type == SUBENTRY_ROOM
+            },
+            "scenarios": {
+                sub.subentry_id: {"title": sub.title, "data": dict(sub.data)}
+                for sub in entry.subentries.values()
+                if sub.subentry_type == SUBENTRY_SCENARIO
             },
             "state": house.diagnostics(),
         },

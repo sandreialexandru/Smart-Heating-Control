@@ -8,7 +8,7 @@ Stare: **de decis** · **mai târziu** · **există deja** · **nu facem** · **
 
 | Cerere | De unde | Stare | Note |
 |---|---|---|---|
-| Moduri proprii pentru toată casa (ex. „Work - Home” / „Work - Office”), fără prezență pe telefon | GitHub #9 | există deja | Calendarul: eveniment cu numele unui profil = acel profil toată ziua în toate camerele care îl au; eveniment cu numele unui nivel (ex. `away` 9–17) = nivelul cât ține evenimentul. Răspuns dat, cu recomandarea să citească ghidul. |
+| Moduri proprii pentru toată casa (ex. „Work - Home” / „Work - Office”), fără prezență pe telefon | GitHub #9 | făcut | 2.6.4: modul *Away* al casei (setat de mână), selectul *Schedule profile* pe fiecare cameră (arată profilul ales, atributul `today` pe cel de azi) și **scenariile** (profile pentru mai multe camere, alese din casă). Exista deja și calendarul: eveniment cu numele unui profil = acel profil toată ziua; cu numele unui nivel = nivelul cât ține evenimentul. |
 | Mai multe zone (sus / jos) cu o centrală și ventile de zonă | GitHub | există deja | Fiecare zonă = o „cameră” cu releul ventilului și senzorii etajului (Minimum / Average), centrala ca sursă a casei. Două case nu: aceeași centrală nu poate fi sursă în două case. |
 | TRV dintr-o cameră care deschide ventilul zonei lui | GitHub (aceeași cerere cu zonele) | de decis | Nu există. Întrebat dacă are TRV-uri pe camere. |
 | A doua sursă electrică pe cameră (pompă aer-aer, AC) folosită când curentul e ieftin, TRV-ul ca rezervă | GitHub | nu facem | În afara principiului. Alte integrări aleg sursa (TRV principal, AC secundar, după diferență și temperatura de afară), fără tarif. Soluție: două camere cu același senzor (TRV la ținta normală, pompa cu +0,5–1 °C, fără sursa casei), oprită / pornită prin `set_override` / `clear_override` după senzorul lui de „curent ieftin”. |
@@ -20,12 +20,13 @@ Stare: **de decis** · **mai târziu** · **există deja** · **nu facem** · **
 
 | Idee | Stare | Note |
 |---|---|---|
-| Alertă pentru senzor înghețat (aceeași valoare mult timp) | de decis | Din PiHome. Siguranță, utilă oricui. |
-| Alertă „încălzește mult fără să crească temperatura” | de decis | Din PiHome. Siguranță. |
+| Alertă pentru senzor înghețat (aceeași valoare mult timp) | făcut | 2.6.4: *senzor tăcut*, după `last_reported` (nu a trimis nimic, nici aceeași valoare), implicit 12 h. O temperatură constantă nu e tăcere. Senzorii template / de grup scriu doar la o schimbare: limita se mărește pentru ei. |
+| Alertă „încălzește mult fără să crească temperatura” | făcut | 2.6.4: *încălzire fără efect*, implicit 2 h, sub o treime din creșterea așteptată de model. Doar cu modelul învățat (o pardoseală lentă nu se deosebește de un ventil blocat). După ce camera se încălzește, urmărirea începe din nou. |
 | „Coop start”: o cameră încălzește doar când sursa merge deja | de decis | Din PiHome. Economie, pentru case cu TRV-uri. |
 | Ține „pe drum spre casă” 15–20 min, ca să nu sară | de decis | |
-| Perechi Proximity pe persoană | de decis | |
+| Perechi Proximity pe persoană | de decis | Timpul de drum ia deja câte un senzor pe persoană (2.6.4, contează cel mai scurt); Proximity are deja *nearest* pentru cea mai apropiată persoană. |
 | Direcția din tendința timpului de drum (Waze / Maps) | de decis | |
 | Card: −/+ la temperatură, mai puține butoane de secțiuni, rândul „ce urmează”, aranjare pe tabletă | de decis | |
 | Început de zi: între 00:00 și primul interval, motorul ia ultimul interval al zilei de dinainte, cardul arată ultimul interval al aceleiași zile | mai târziu | Găsit 2026-11-08. Ocolire: interval la 00:00 în fiecare profil. Variantă de reparat: motorul ca în card. |
 | Învățare după o schimbare voită (curba centralei, calorifere): reset doar al puterii încălzirii, păstrând pierderea | de decis | Simulat 2026-11-07: resetul complet reînvață în ~1,5 zile; 5 zile de înjumătățire ajută puțin. Cel puțin o propoziție în ghid. |
+| Selectul de profil sau un scenariu care lasă zile fără profil (ex. `home_office` pe zile lucrătoare oprește un profil pe toate zilele, weekendul rămâne gol) | există deja | Alerta „Fără profil activ” o spune, ca în card. Decis 2026-11-09: nu se schimbă. |

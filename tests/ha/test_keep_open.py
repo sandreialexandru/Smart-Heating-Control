@@ -29,18 +29,6 @@ class Trvs:
         self.hass = hass
         self.temperature = async_mock_service(hass, "climate", "set_temperature")
         async_mock_service(hass, "climate", "set_hvac_mode")
-        # The boiler relay, in the order it is switched (its state follows).
-        self.boiler: list[str] = []
-
-        def switch(state: str):
-            async def handler(_call) -> None:
-                self.boiler.append(state)
-                hass.states.async_set("switch.boiler", state)
-
-            return handler
-
-        hass.services.async_register("switch", "turn_on", switch("on"))
-        hass.services.async_register("switch", "turn_off", switch("off"))
 
     def sent(self, entity_id: str) -> float | None:
         """The last temperature sent to a TRV."""
@@ -119,14 +107,12 @@ async def test_the_last_room_stays_open_and_asks_for_no_heat(
     decision = hass.states.get("sensor.bedroom_decision")
     assert decision.attributes["reason_key"] == "keep_open"
     assert decision.attributes["target_temperature"] == 21.0
-    # The TRV opens and says heating: the room still asks for no heat, the boiler stays off.
+    # The TRV opens and says heating: the room still asks for no heat, the house neither.
     observed.clear()
     trvs.report("climate.bedroom", "heating", 21.2)
     await _tick(hass, freezer, 5)
     assert not bedroom.heat_demand
     assert not house.heat_demand
-    assert trvs.boiler[-1] == "off"
-    assert hass.states.get("switch.boiler").state == "off"
     # Its learning skips that time.
     assert observed and all(observed)
     patcher.stop()
@@ -140,6 +126,9 @@ async def test_another_room_asks_and_the_last_one_closes(
     await _bedroom_heats_then_stops(hass, freezer, trvs)
     house = entry.runtime_data
     assert house.keep_open_room == _room(entry, "Bedroom").id
+    # The TRV holds the maximum it got, then the office asks for heat.
+    trvs.report("climate.bedroom", "heating", 21.2)
+    await _tick(hass, freezer, 5)
     trvs.report("climate.office", "heating", 19.0)
     await _tick(hass, freezer, 5)
     await _tick(hass, freezer, 2)

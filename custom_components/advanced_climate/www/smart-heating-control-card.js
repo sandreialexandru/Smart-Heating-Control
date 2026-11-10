@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.4rc5";
+const CARD_VERSION = "2.6.4rc6";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -335,6 +335,7 @@ const TEXT = {
     al_sensor_unavailable_device: "The temperature sensors are unavailable; the device sensor is used.",
     al_sensor_unavailable_eco: "The temperature sensors are unavailable; eco is used.",
     al_sensor_silent: "{entity} has sent no temperature for more than {hours} h; the room is controlled by an old value. Check its battery and its signal.",
+    al_sensor_silent_left_out: "{entity} has sent no temperature for more than {hours} h; it is left out until it reports again. Check its battery and its signal.",
     al_no_effect: "Heating for {hours} h, but the temperature rose by only {rise}° (about {expected}° expected). Check the valve, the heat source and the windows.",
     al_schedule_invalid: "The schedule is invalid ({error}); the default schedule is used.",
     al_schedule_gap: "No active schedule profile: {days}; the room keeps its frost protection on those days.",
@@ -627,6 +628,7 @@ const TEXT = {
     al_sensor_unavailable_device: "Senzorii de temperatură sunt indisponibili; se folosește senzorul dispozitivului.",
     al_sensor_unavailable_eco: "Senzorii de temperatură sunt indisponibili; se folosește eco.",
     al_sensor_silent: "{entity} nu a mai trimis temperatura de peste {hours} h; camera e controlată după o valoare veche. Verifică bateria și semnalul.",
+    al_sensor_silent_left_out: "{entity} nu a mai trimis temperatura de peste {hours} h; e lăsat deoparte până trimite din nou. Verifică bateria și semnalul.",
     al_no_effect: "Încălzește de {hours} h, dar temperatura a crescut doar cu {rise}° (așteptat aproximativ {expected}°). Verifică ventilul, sursa de căldură și ferestrele.",
     al_schedule_invalid: "Programul e invalid ({error}); se folosește programul implicit.",
     al_schedule_gap: "Fără profil activ în program: {days}; în acele zile camera rămâne pe antiîngheț.",
@@ -3323,7 +3325,12 @@ class SmartHeatingControlCard extends HTMLElement {
   /** Text of one alert in the language of the card. */
   _alertText(al) {
     const p = al.params || {};
-    const code = al.code === "sensor_unavailable" ? `sensor_unavailable_${p.fallback || "device"}` : al.code;
+    const code =
+      al.code === "sensor_unavailable"
+        ? `sensor_unavailable_${p.fallback || "device"}`
+        : al.code === "sensor_silent" && p.left_out
+          ? "sensor_silent_left_out"
+          : al.code;
     let text = code ? this._t(`al_${code}`) : "";
     if (!text || text === `al_${code}`) text = al.message || "";
     const values = {

@@ -203,7 +203,7 @@ house* zone, **⋮ → Reconfigure** (see [chapter 3](03-rooms.md)).
 | Guest mode turns off after | 0 h | Guest mode keeps the house state *home*; it turns off after this many hours. 0 = only by hand. |
 | Proximity distance sensor | – | For preheating on the way home (recommended, with the direction sensor). |
 | Proximity direction sensor | – | So preheating starts only when someone comes towards home, not when sitting at an office near home. |
-| Travel time sensors | – | Travel time to home (Waze, Google Travel Time), one sensor per person: the shortest trip counts. It only tells how close someone is, not whether they are coming home: someone staying nearby keeps the house warm. Proximity is recommended instead, because it can tell the direction. |
+| Travel time sensors | – | Travel time to home (Waze, Google Travel Time), one sensor per person: the shortest trip counts (not the one of a person who is home, about 0 minutes). It only tells how close someone is, not whether they are coming home: someone staying nearby keeps the house warm. Proximity is recommended instead, because it can tell the direction. |
 
 With a distance or travel time sensor, a second form appears, **Preheating on
 the way home**:
@@ -333,7 +333,7 @@ Details: [chapter 9](09-windows-manual-safety.md) and
 | Quiet hours from / until | – | Only the important alerts in this time; the others are sent when it ends, if they still apply. |
 | Alert when a window is open longer than | 30 min | While heating is needed. |
 | Alert when a device is unavailable longer than | 15 min | Thermostat or sensor. |
-| Alert when a temperature sensor sends nothing for | 12 h | A room temperature sensor that stays available but sends no value at all (a flat battery or a lost signal keeps the last one). 0 = off; raise it for sensors that report only when the temperature changes, and for a template or group sensor (an average), which writes a value only when one of its sensors changes. |
+| Alert when a temperature sensor sends nothing for | 12 h | A room temperature sensor that stays available but sends no value at all (a flat battery or a lost signal keeps the last one). A silent sensor of the room is left out until it reports again, like an unavailable one. 0 = off; raise it for sensors that report only when the temperature changes, and for a template or group sensor (an average), which writes a value only when one of its sensors changes. |
 | Alert when heating has no effect for | 2 h | A room that heats this long, clearly below its target, while its temperature rises much less than its learned model expects, only once the room has learned it (stuck valve, heat source that does not start, window open without a sensor). 0 = off. |
 | Low battery below | 20 % | The room devices (TRV, sensors). |
 | Verify commands | on | After 2 minutes checks that the device accepted the command, retries once, then alerts. |

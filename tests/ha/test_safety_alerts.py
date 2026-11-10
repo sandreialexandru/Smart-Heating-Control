@@ -64,13 +64,51 @@ async def test_silent_sensor(hass: HomeAssistant, freezer: FrozenDateTimeFactory
     await _minutes(hass, freezer, 20)
     alert = house.active_alerts["silent_sensor.room_temp"]
     assert alert["code"] == "sensor_silent"
-    assert alert["params"] == {"entity": "sensor.room_temp", "hours": "4"}
+    assert alert["params"] == {"entity": "sensor.room_temp", "hours": "4", "left_out": True}
     attrs = hass.states.get("sensor.bedroom_decision").attributes
     assert any(a["code"] == "sensor_silent" for a in attrs["alerts"])
-    # It reports again (even the same value): over.
+    # Its old value is no longer used, as when a sensor is unavailable: the only
+    # sensor of the room, so no temperature and the fallback.
+    room = next(iter(house.rooms.values()))
+    await _tick(hass, freezer, 310)
+    assert room.current_temp is None
+    assert house.active_alerts[f"sensor_{room.id}"]["code"] == "sensor_unavailable"
+    assert hass.states.get("sensor.bedroom_decision").state == "sensor_fallback"
+    # It reports again (even the same value): over, and used again.
     _report(hass, "18.0")
     await _tick(hass, freezer, 310)
     assert "silent_sensor.room_temp" not in house.active_alerts
+    assert room.current_temp == 18.0
+    await _tick(hass, freezer, 310)
+    assert f"sensor_{room.id}" not in house.active_alerts
+    assert hass.states.get("sensor.bedroom_decision").state != "sensor_fallback"
+
+
+async def test_silent_sensor_of_two_the_other_is_used(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """One of two room sensors goes silent: the room follows the other one."""
+    hass.states.async_set("sensor.room_temp_2", "20.0", TEMP)
+    entry = await _setup(
+        hass,
+        freezer,
+        house_options={"alert_no_effect_hours": 0, "alert_silent_hours": 4},
+        temperature_sensors=["sensor.room_temp", "sensor.room_temp_2"],
+    )
+    house = entry.runtime_data
+    room = next(iter(house.rooms.values()))
+    await _tick(hass, freezer, 15)
+    assert room.current_temp == 19.0
+    # The second keeps reporting, the first does not.
+    for _ in range(25):
+        hass.states.async_set("sensor.room_temp_2", "20.0", TEMP, force_update=True)
+        await _tick(hass, freezer, 600)
+    assert house.active_alerts["silent_sensor.room_temp"]["params"]["left_out"] is True
+    assert "silent_sensor.room_temp_2" not in house.active_alerts
+    hass.states.async_set("sensor.room_temp_2", "20.0", TEMP, force_update=True)
+    await _tick(hass, freezer, 310)
+    assert room.current_temp == 20.0
+    assert f"sensor_{room.id}" not in house.active_alerts
 
 
 async def test_silent_sensor_off_and_summer(

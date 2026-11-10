@@ -149,3 +149,14 @@ test("set for a while: a temperature with hours is sent as before", async (p) =>
   await quickSet(p, "22.5", "3");
   eq(await services(p), [{ domain: "advanced_climate", service: "set_override", data: { room: "r1", temperature: 22.5, duration_hours: 3 } }], "call");
 });
+
+test("alerts: a silent sensor says whether it is left out or still controls the room", async (p) => {
+  await mount(p, {}, { rooms: [R[0]] });
+  const texts = await p.evaluate(() =>
+    [true, false].map((left_out) =>
+      card._alertText({ code: "sensor_silent", params: { entity: "sensor.room_temp", hours: "12", left_out }, message: "m" })
+    )
+  );
+  ok(texts[0].includes("sensor.room_temp has sent no temperature for more than 12 h; it is left out until it reports again."), "left out: " + texts[0]);
+  ok(texts[1].includes("sensor.room_temp has sent no temperature for more than 12 h; the room is controlled by an old value."), "still controls: " + texts[1]);
+});

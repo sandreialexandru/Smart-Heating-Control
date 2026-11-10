@@ -149,6 +149,8 @@ _LOGGER = logging.getLogger(__name__)
 
 # Days of calendar events read ahead: today and the next 7, like the Workday days.
 CALENDAR_DAYS = 8
+# A travel time of at most this many minutes is of a person already at home.
+AT_HOME_MINUTES = 1.0
 
 
 class House:
@@ -593,12 +595,19 @@ class House:
                 dstate = self.hass.states.get(opts[CONF_PROXIMITY_DIRECTION])
                 direction = dstate.state if valid(dstate) else None
             # One travel time per person: whoever is closest to home counts
-            # (a sensor that is unavailable is left out).
+            # (a sensor that is unavailable is left out). A person at home (the
+            # rule Everybody: the house is not home while someone is away) has a
+            # trip of about 0 minutes and is not on the way home: as many such
+            # trips as there are people at home are left out.
             trips = [
                 minutes_value(self.hass.states.get(e)) for e in as_list(opts.get(CONF_TRAVEL_TIME))
             ]
-            known = [t for t in trips if t is not None]
-            travel = min(known) if known else None
+            known = sorted(t for t in trips if t is not None)
+            at_home = sum(1 for c in classes.values() if c == PRESENCE_HOME)
+            while at_home and known and known[0] <= AT_HOME_MINUTES:
+                known.pop(0)
+                at_home -= 1
+            travel = known[0] if known else None
             if distance is not None or travel is not None:
                 self.arriving = is_arriving(
                     distance,

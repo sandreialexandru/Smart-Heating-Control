@@ -203,7 +203,7 @@ schimbă ca la orice cameră: pe pagina integrării, la zona *Whole house*,
 | Modul oaspeți se oprește după | 0 h | Modul oaspeți ține starea casei *acasă*; se oprește singur după atâtea ore. 0 = doar manual. |
 | Senzor de distanță (Proximity) | – | Pentru preîncălzirea pe drum spre casă (recomandat, cu senzorul de direcție). |
 | Senzor de direcție (Proximity) | – | Ca preîncălzirea să pornească doar când cineva vine spre casă, nu când stă la un birou aproape de casă. |
-| Senzori de timp de deplasare | – | Timpul până acasă (Waze, Google Travel Time), câte un senzor pentru fiecare persoană: contează drumul cel mai scurt. Arată doar cât de aproape e cineva, nu dacă vine acasă: cine stă în apropiere ține casa caldă. E recomandat Proximity în loc, pentru că poate afla direcția. |
+| Senzori de timp de deplasare | – | Timpul până acasă (Waze, Google Travel Time), câte un senzor pentru fiecare persoană: contează drumul cel mai scurt (nu al unei persoane care e acasă, de aproximativ 0 minute). Arată doar cât de aproape e cineva, nu dacă vine acasă: cine stă în apropiere ține casa caldă. E recomandat Proximity în loc, pentru că poate afla direcția. |
 
 Cu un senzor de distanță sau de timp, apare al doilea formular,
 **Preîncălzire pe drum spre casă**:
@@ -332,7 +332,7 @@ Detalii: [capitolul 9](09-ferestre-manual-siguranta.ro.md) și
 | Ore de liniște de la / până la | – | În acest interval doar alertele importante; celelalte se trimit la sfârșitul lui, dacă mai sunt valabile. |
 | Alertă când o fereastră e deschisă mai mult de | 30 min | Cât timp încălzirea e necesară. |
 | Alertă când un dispozitiv e indisponibil mai mult de | 15 min | Termostat sau senzor. |
-| Alertă când un senzor de temperatură nu trimite nimic | 12 h | Un senzor de temperatură al camerei care rămâne disponibil, dar nu mai trimite nicio valoare (o baterie descărcată sau semnalul pierdut păstrează ultima valoare). 0 = oprit; se mărește pentru senzorii care raportează doar când se schimbă temperatura și pentru un senzor template sau de grup (o medie), care scrie o valoare doar când se schimbă unul dintre senzorii lui. |
+| Alertă când un senzor de temperatură nu trimite nimic | 12 h | Un senzor de temperatură al camerei care rămâne disponibil, dar nu mai trimite nicio valoare (o baterie descărcată sau semnalul pierdut păstrează ultima valoare). Un senzor tăcut al camerei e lăsat deoparte până trimite din nou, ca unul indisponibil. 0 = oprit; se mărește pentru senzorii care raportează doar când se schimbă temperatura și pentru un senzor template sau de grup (o medie), care scrie o valoare doar când se schimbă unul dintre senzorii lui. |
 | Alertă când încălzirea nu are efect | 2 h | O cameră care încălzește atât timp, clar sub țintă, iar temperatura crește mult mai puțin decât așteaptă modelul învățat, doar după ce camera și l-a învățat (ventil blocat, sursă care nu pornește, fereastră deschisă fără senzor). 0 = oprit. |
 | Baterie descărcată sub | 20 % | Dispozitivele camerei (TRV, senzori). |
 | Verifică comenzile | pornit | După 2 minute verifică dacă dispozitivul a acceptat comanda, reîncearcă o dată, apoi dă alertă. |

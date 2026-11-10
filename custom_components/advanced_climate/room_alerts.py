@@ -119,16 +119,33 @@ class RoomAlerts:
             self._mold_since = None
             house.clear_alert(key)
 
-    def _temperature_sources(self) -> list[str]:
-        """The entities that give the room temperature: its sensors, else the sensor
-        of its Generic Thermostat, else its thermostats."""
-        sensors = as_list(self.config.get(CONF_TEMP_SENSORS))
-        if sensors:
-            return sensors
+    def _temperature_sources(self) -> dict[str, bool]:
+        """The entities the heating of the room depends on for its temperature.
+
+        The sensors of the room (True: left out of the room temperature while
+        silent, as when unavailable); the sensor of its Generic Thermostat,
+        which switches the heating whatever the room sensors say; without room
+        sensors, its thermostats. The last two cannot be left out: they are
+        only told.
+        """
+        sources = dict.fromkeys(as_list(self.config.get(CONF_TEMP_SENSORS)), True)
         if self.source == SOURCE_GT:
-            sensor = self._gt_options().get(GT_TARGET_SENSOR)
-            return [sensor] if sensor else []
-        return list(self.climates)
+            if sensor := self._gt_options().get(GT_TARGET_SENSOR):
+                sources.setdefault(sensor, False)
+        elif not sources:
+            sources.update(dict.fromkeys(self.climates, False))
+        return sources
+
+    def _no_report_for(self, entity_id: str, now: datetime) -> bool:
+        """An available entity that has reported nothing for the hours of the alert."""
+        hours = float(self.house.options[CONF_ALERT_SILENT_HOURS] or 0)
+        state = self.hass.states.get(entity_id)
+        reported = getattr(state, "last_reported", None) if valid(state) else None
+        return hours > 0 and reported is not None and now - reported >= timedelta(hours=hours)
+
+    def _left_out(self, entity_id: str, now: datetime) -> bool:
+        """A room sensor told silent that still has not reported: not used for the room."""
+        return entity_id in self._silent and self._no_report_for(entity_id, now)
 
     def _check_silent_sensors(self, now: datetime) -> None:
         """Alert for a temperature sensor that stays available but has sent nothing for long.
@@ -137,6 +154,9 @@ class RoomAlerts:
         did not change: a room at a steady temperature is not a silent sensor.
         A sensor with a flat battery or out of radio range often keeps its last
         value as if it worked, and the room is then heated by an old value.
+        A silent sensor of the room is left out of the room temperature until
+        it reports again (``_update_temperature``), like an unavailable one: the
+        other sensors are used, else the thermostats, else eco.
         """
         house = self.house
         hours = float(house.options[CONF_ALERT_SILENT_HOURS] or 0)
@@ -144,26 +164,24 @@ class RoomAlerts:
         relevant = (
             house.mode not in (MODE_OFF, MODE_SUMMER) and house.season_active and not house.paused
         )
-        sources = set(self._temperature_sources())
-        for entity_id in sources | set(self._silent):
+        sources = self._temperature_sources()
+        for entity_id in set(sources) | set(self._silent):
             key = f"silent_{entity_id}"
-            state = self.hass.states.get(entity_id)
-            reported = getattr(state, "last_reported", None) if valid(state) else None
-            silent = (
-                entity_id in sources
-                and hours > 0
-                and reported is not None
-                and now - reported >= timedelta(hours=hours)
-            )
+            silent = entity_id in sources and self._no_report_for(entity_id, now)
             if silent and relevant:
                 self._silent.add(entity_id)
+                left_out = sources[entity_id]
+                effect = (
+                    "it is left out until it reports again"
+                    if left_out
+                    else "the room is controlled by an old value"
+                )
                 house.notify(
                     key,
                     f"{self.name}: {entity_id} has sent no temperature for more than "
-                    f"{hours:g} h; the room is controlled by an old value. Check its battery and "
-                    "its signal.",
+                    f"{hours:g} h; {effect}. Check its battery and its signal.",
                     code="sensor_silent",
-                    params={"entity": entity_id, "hours": f"{hours:g}"},
+                    params={"entity": entity_id, "hours": f"{hours:g}", "left_out": left_out},
                     room=self.id,
                 )
             elif not silent and entity_id in self._silent:

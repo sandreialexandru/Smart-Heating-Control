@@ -93,7 +93,9 @@ Proximity împiedică micile salturi ale GPS-ului să schimbe direcția.
 Sunt acceptați și **senzorii de timp de deplasare** (Waze Travel Time, Google
 Travel Time), câte unul pentru fiecare persoană, cu persoana ca origine și
 casa ca destinație: contează drumul cel mai scurt (un senzor indisponibil e
-lăsat deoparte). Ei spun doar **la câte minute de casă** e cineva, nu dacă vine
+lăsat deoparte, la fel și drumul de aproximativ 0 minute al unei persoane care e
+acasă, lucru care contează la regula *Toată lumea*: cine a rămas acasă nu e „pe
+drum spre casă”). Ei spun doar **la câte minute de casă** e cineva, nu dacă vine
 sau pleacă: aplicația Waze sau Google nu transmite unde navighezi. Singuri,
 funcționează ca o prezență măsurată în minute de drum („cineva e la mai puțin
 de 10 minute de casă”), deci și cine stă la un birou sau la magazin atât de
@@ -150,7 +152,8 @@ fără persoane sau localizare. Rămâne așa până alegi alt mod (de obicei *A
   înapoi pe *Auto*, camerele pleacă de la temperatura `away`. Pentru plecări cu
   întoarcerea știută, un profil cu `away` în acele ore (vezi [selectul de
   profil](04-program.ro.md#selectul-de-profil)) sau datele vacanței încălzesc la
-  timp.
+  timp. Datele vacanței preîncălzesc doar cu modul pe *Auto*: cu *Plecat* lăsat
+  pornit, camerele rămân pe `away` până e schimbat.
 - E potrivit pentru o automatizare, un buton sau o tabletă: o singură schimbare
   pentru toată casa.
 

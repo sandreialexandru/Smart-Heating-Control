@@ -253,7 +253,7 @@ as the recipient of the important alerts and of the warnings.
 | No outdoor temperature from … | no configured source (sensor, weather) gives a temperature for longer than the alert threshold |
 | On but not working without an outdoor temperature sensor or a weather entity | weather functions on without the source they need |
 | The temperature sensors are unavailable | the device sensor or `eco` is used |
-| … has sent no temperature for more than … h | a room temperature sensor stays available but has sent no value at all (not even the same one) for *Alert when a temperature sensor sends nothing for* (12 h by default), while the heating is on (not off, summer or paused); it ends when the sensor reports again |
+| … has sent no temperature for more than … h | a room temperature sensor stays available but has sent no value at all (not even the same one) for *Alert when a temperature sensor sends nothing for* (12 h by default), while the heating is on (not off, summer or paused). A silent sensor of the room is left out until it reports again, like an unavailable one: the other sensors are used, else the thermostat, else `eco`. The sensor of a Generic Thermostat and a thermostat without a room sensor are only told (the room still follows them). It ends when the sensor reports again |
 | Heating for … h, but the temperature rose by only …° | see *Heating without effect* below |
 | Low battery on … | below *Low battery below* (20 % by default) |
 | … did not accept … | the command check failed twice |

@@ -254,7 +254,7 @@ pentru avertizări.
 | Nicio temperatură de afară de la … | nicio sursă configurată (senzor, meteo) nu dă temperatura mai mult de pragul de alertă |
 | Pornite, dar nu funcționează fără senzor de temperatură exterioară sau entitate meteo | funcții de vreme pornite fără sursa de care au nevoie |
 | Senzorii de temperatură sunt indisponibili | se folosește senzorul dispozitivului sau `eco` |
-| … nu a mai trimis temperatura de peste … h | un senzor de temperatură al camerei rămâne disponibil, dar nu a trimis nicio valoare (nici aceeași) cât *Alertă când un senzor de temperatură nu trimite nimic* (implicit 12 h), cât încălzirea e pornită (nu oprită, vară sau pauză); se încheie când senzorul trimite din nou |
+| … nu a mai trimis temperatura de peste … h | un senzor de temperatură al camerei rămâne disponibil, dar nu a trimis nicio valoare (nici aceeași) cât *Alertă când un senzor de temperatură nu trimite nimic* (implicit 12 h), cât încălzirea e pornită (nu oprită, vară sau pauză). Un senzor tăcut al camerei e lăsat deoparte până trimite din nou, ca unul indisponibil: se folosesc ceilalți senzori, altfel termostatul, altfel `eco`. Senzorul unui Generic Thermostat și un termostat fără senzor de cameră sunt doar anunțate (camera le urmează în continuare). Se încheie când senzorul trimite din nou |
 | Încălzește de … h, dar temperatura a crescut doar cu …° | vezi *Încălzire fără efect* mai jos |
 | Baterie descărcată la … | sub *Baterie descărcată sub* (implicit 20 %) |
 | … nu a acceptat … | verificarea comenzilor a eșuat de două ori |

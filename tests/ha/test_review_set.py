@@ -295,13 +295,88 @@ async def test_everybody_rule_person_at_home_is_not_on_the_way(
     hass.states.async_set("person.laura", "not_home")
     await _tick(hass, freezer, 11 * 60)
     assert hass.states.get("sensor.home_presence").state == "nearby"
-    assert hass.states.get("sensor.bedroom_decision").state != "presence_far"
-    arriving = house.arriving
+    # The 0 minutes of the person at home are not someone on the way home.
+    assert not house.arriving
+    assert hass.states.get("sensor.bedroom_decision").state == "presence_nearby"
+    # The other one comes within the arrival time: on the way home.
+    hass.states.async_set("sensor.waze_laura", "10", MINUTES)
+    await _tick(hass, freezer, 15)
+    assert house.arriving
+    # One minute from home, still on the way (only one trip is left out: one person is home).
+    hass.states.async_set("sensor.waze_laura", "1", MINUTES)
+    await _tick(hass, freezer, 15)
+    assert house.arriving
     assert await hass.config_entries.async_unload(entry.entry_id)
-    if arriving:
-        # Known gap: the travel time of the person at home (0 min) counts as
-        # someone on the way home, so the heating is not lowered.
-        pytest.xfail("the person at home counts as on the way home (rule Everybody)")
+
+
+async def test_nobody_home_a_short_trip_is_on_the_way(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """With nobody home, a trip of one minute is someone almost home, not left out."""
+    hass.states.async_set("sensor.waze_andrei", "60", MINUTES)
+    entry = await _setup(hass, freezer, house_options={"travel_time": ["sensor.waze_andrei"]})
+    house = entry.runtime_data
+    hass.states.async_set("person.andrei", "not_home")
+    await _tick(hass, freezer, 11 * 60)
+    assert not house.arriving
+    hass.states.async_set("sensor.waze_andrei", "1", MINUTES)
+    await _tick(hass, freezer, 15)
+    assert house.arriving
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_silent_sensor_of_a_generic_thermostat_is_told(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The sensor of the Generic Thermostat switches the heating: watched besides the
+    room sensors of an older configuration, and only told (it cannot be left out)."""
+    from homeassistant.helpers import entity_registry as er
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    gt = MockConfigEntry(
+        domain="generic_thermostat",
+        options={"heater": "switch.gt_relay", "target_sensor": "sensor.gt_temp"},
+    )
+    gt.add_to_hass(hass)
+    climate = (
+        er.async_get(hass)
+        .async_get_or_create("climate", "generic_thermostat", gt.entry_id, config_entry=gt)
+        .entity_id
+    )
+    for service in ("set_temperature", "set_hvac_mode", "set_preset_mode"):
+        async_mock_service(hass, "climate", service)
+    temp = {"unit_of_measurement": "°C"}
+    gt_state = {"hvac_modes": ["heat", "off"], "current_temperature": 19.0, "temperature": 21.0}
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Living",
+                {
+                    "source": "generic_thermostat",
+                    "climates": [climate],
+                    "switches": [],
+                    "temperature_sensors": ["sensor.living"],
+                },
+            )
+        ],
+        alert_silent_hours=1,
+        alert_no_effect_hours=0,
+    )
+    house = entry.runtime_data
+    hass.states.async_set(climate, "heat", gt_state)
+    hass.states.async_set("sensor.gt_temp", "19.0", temp)
+    # The room sensor keeps reporting, the one of the Generic Thermostat does not.
+    for _ in range(8):
+        hass.states.async_set("sensor.living", "19.0", temp, force_update=True)
+        await _tick(hass, freezer, 600)
+    alert = house.active_alerts["silent_sensor.gt_temp"]
+    assert alert["code"] == "sensor_silent"
+    assert alert["params"]["left_out"] is False
+    assert "silent_sensor.living" not in house.active_alerts
+    assert _room(entry, "Living").current_temp == 19.0
+    await _unload(hass, entry)
 
 
 async def test_two_profiles_chosen_one_after_the_other_both_stay(

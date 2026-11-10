@@ -664,6 +664,10 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         values = []
         reporting = []
         for entity_id in sensors:
+            # A sensor told silent (no report for long) holds an old value: it is
+            # left out until it reports again, like an unavailable one.
+            if self._left_out(entity_id, now):
+                continue
             value = temp_state(self.hass, entity_id, self.house.unit)
             if value is not None:
                 values.append(value)
@@ -702,7 +706,8 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         values = [
             v
             for entity_id in as_list(self.config.get(CONF_TEMP_SENSORS))
-            if (v := temp_state(self.hass, entity_id, self.house.unit)) is not None
+            if not self._left_out(entity_id, dt_util.utcnow())
+            and (v := temp_state(self.hass, entity_id, self.house.unit)) is not None
         ]
         return aggregate(values, self.config[CONF_TEMP_AGGREGATION])
 

@@ -75,6 +75,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "sensor_unavailable_device": "The temperature sensors are unavailable; the device sensor is used.",
         "sensor_unavailable_eco": "The temperature sensors are unavailable; eco is used.",
         "sensor_silent": "{entity} has sent no temperature for more than {hours} h; the room is controlled by an old value. Check its battery and its signal.",
+        "sensor_silent_left_out": "{entity} has sent no temperature for more than {hours} h; it is left out until it reports again. Check its battery and its signal.",
         "no_effect": "Heating for {hours} h, but the temperature rose by only {rise}° (about {expected}° expected). Check the valve, the heat source and the windows.",
         "schedule_invalid": "The schedule is invalid ({error}); the default schedule is used.",
         "schedule_gap": "No active schedule profile: {days}; the room keeps its frost protection on those days.",
@@ -125,6 +126,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "sensor_unavailable_device": "Senzorii de temperatură sunt indisponibili; se folosește senzorul dispozitivului.",
         "sensor_unavailable_eco": "Senzorii de temperatură sunt indisponibili; se folosește eco.",
         "sensor_silent": "{entity} nu a mai trimis temperatura de peste {hours} h; camera e controlată după o valoare veche. Verifică bateria și semnalul.",
+        "sensor_silent_left_out": "{entity} nu a mai trimis temperatura de peste {hours} h; e lăsat deoparte până trimite din nou. Verifică bateria și semnalul.",
         "no_effect": "Încălzește de {hours} h, dar temperatura a crescut doar cu {rise}° (așteptat aproximativ {expected}°). Verifică ventilul, sursa de căldură și ferestrele.",
         "schedule_invalid": "Programul e invalid ({error}); se folosește programul implicit.",
         "schedule_gap": "Fără profil activ în program: {days}; în acele zile camera rămâne pe antiîngheț.",
@@ -224,6 +226,8 @@ def alert_text(
     key = code
     if code == "sensor_unavailable" and not resolved:
         key = f"sensor_unavailable_{params.get('fallback') or 'device'}"
+    if code == "sensor_silent" and params.get("left_out"):
+        key = "sensor_silent_left_out"
     if resolved:
         key = f"resolved_{code}"
     template = TEXTS[lang].get(key)

@@ -154,7 +154,7 @@
           "guest_expire_hours": "Guest mode keeps the house state 'home'; it turns off by itself after this many hours. 0 = only manually.",
           "proximity_distance": "Distance sensor of the Proximity integration, for preheating on the way home (recommended, with the direction sensor). With several people, its nearest distance sensor. Leave empty without Proximity.",
           "proximity_direction": "Direction sensor of Proximity (with several people, its nearest direction of travel). Only the direction tells that someone is coming home: it also applies to the travel time.",
-          "travel_time": "Travel time to home (Waze, Google Travel Time), one sensor per person: the shortest trip counts. It only tells how close someone is, not whether they are coming home: someone staying nearby keeps the house warm. Proximity is recommended instead, because it can tell the direction."
+          "travel_time": "Travel time to home (Waze, Google Travel Time), one sensor per person: the shortest trip counts (not the one of a person who is home, about 0 minutes). It only tells how close someone is, not whether they are coming home: someone staying nearby keeps the house warm. Proximity is recommended instead, because it can tell the direction."
         }
       },
       "calendar": {
@@ -261,7 +261,7 @@
           "pause_remind_hours": "A warning when the heating stays paused this long, then once a day (a pause left on means a cold house). 0 = never.",
           "alert_window_minutes": "Alert when a window stays open this long while heating is needed.",
           "alert_unavailable_minutes": "Alert when a thermostat or sensor is unavailable this long.",
-          "alert_silent_hours": "Alert when a room temperature sensor stays available but has sent no value (not even the same one) for this long: a flat battery or a lost signal often keeps the last value. 0 = off. Raise it for sensors that report only when the temperature changes, and for a template or group sensor (an average), which writes a value only when one of its sensors changes.",
+          "alert_silent_hours": "Alert when a room temperature sensor stays available but has sent no value (not even the same one) for this long: a flat battery or a lost signal often keeps the last value. A silent sensor of the room is left out until it reports again, like an unavailable one (the other sensors are used, else the thermostat, else eco). 0 = off. Raise it for sensors that report only when the temperature changes, and for a template or group sensor (an average), which writes a value only when one of its sensors changes.",
           "alert_no_effect_hours": "Alert when a room heats this long, clearly below its target, and its temperature rises much less than its learned model expects: a stuck valve, a heat source that does not start, a window open without a sensor. Only once the room has learned its model (a slow floor heating could not be told from a stuck one before). 0 = off.",
           "battery_threshold": "Alert when the battery of a room device (TRV, sensor) drops below this.",
           "verify_commands": "After 2 minutes checks that the device accepted the command, retries once, then alerts. Turn off only if a device reports its state slowly.",

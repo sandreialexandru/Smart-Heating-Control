@@ -47,8 +47,10 @@ GitHub releases.
 - 🚗 **Travel time for several people**: *Travel time sensors* takes one Waze
   or Google Travel Time sensor per person; the shortest trip counts, so the
   house preheats for whoever is closest to home (an unavailable sensor is left
-  out). A single sensor chosen before keeps working. With Proximity, its
-  *nearest* sensors already follow the closest person.
+  out). The trip of about 0 minutes of a person who is home is not someone on
+  the way home (with the rule *Everybody* the heating is lowered when another
+  person leaves). A single sensor chosen before keeps working. With Proximity,
+  its *nearest* sensors already follow the closest person.
 - The guide and the option texts now say plainly that a travel time sensor
   only tells how close someone is, not whether they are coming home, and
   recommend Proximity with its direction sensor for preheating on the way
@@ -89,7 +91,9 @@ GitHub releases.
   was heated by an old one. A steady temperature is not silence. Off with 0,
   longer for sensors that report only on a change and for a template or group
   sensor (an average), which writes only when one of its sensors changes
-  (*Alerts* options).
+  (*Alerts* options). A silent sensor of the room is left out until it reports
+  again, like an unavailable one (the other sensors, else the thermostat, else
+  eco); the sensor of a Generic Thermostat is watched too, and only told.
 - 🧯 **Heating without effect**: a room that heats for 2 hours, clearly below its
   target, while its temperature rises much less than the learned model expects
   (a third of it) is told: a stuck valve, a heat source that does not start, a

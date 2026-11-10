@@ -93,7 +93,9 @@ direction.
 
 **Travel time sensors** (Waze Travel Time, Google Travel Time), one per person
 with the person as origin and home as destination, are also accepted: the
-shortest trip counts (a sensor that is unavailable is left out). They only
+shortest trip counts (a sensor that is unavailable is left out, and so is the
+trip of about 0 minutes of a person who is home, which matters with the rule
+*Everybody*: the one still home is not "on the way home"). They only
 tell **how far away in minutes** someone is, not whether they are coming or
 going: the Waze or Google app does not share where you navigate to. On their
 own they work like presence measured in driving time ("someone is less than 10
@@ -149,7 +151,8 @@ or location tracking. It stays until you choose another mode (usually *Auto*).
   preheat: back on *Auto*, the rooms start from the away temperature. For
   absences with a known return, a schedule profile with `away` during those
   hours (see [the profile select](04-schedule.md#the-profile-select)) or the
-  vacation dates preheat in time.
+  vacation dates preheat in time. The vacation dates preheat only with the mode
+  on *Auto*: with *Away* left on, the rooms stay on `away` until it is changed.
 - It suits an automation, a button or a tablet: one change for the whole house.
 
 ## Vacation

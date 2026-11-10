@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.4rc6";
+const CARD_VERSION = "2.6.4rc7";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -28,6 +28,16 @@ const FLAT_RULES = [
 ];
 // A target that is only a temperature (no level): neutral.
 const TEMP_COLOR = "var(--ac-fixed)";
+// Alerts that mean something does not work (red); the others are warnings (amber).
+const ALERT_ERRORS = [
+  "source_unavailable",
+  "device_unavailable",
+  "sensor_unavailable",
+  "not_accepted",
+  "schedule_invalid",
+  "outdoor_unavailable",
+  "preset_missing",
+];
 const PRESET_COLORS = {
   comfort: "#d9480f",
   home: "#f08c00",
@@ -399,6 +409,29 @@ const TEXT = {
     device_temp: "Device {temp}",
     trv_boost_chip: "Heating by sensor · {temp}",
     trv_boost_chip_off: "By sensor: {temp} while heating",
+    resume: "Resume",
+    cancel_override: "Cancel",
+    end_guests: "End",
+    next_at: "{preset} at {time}",
+    at_source_unavailable: "Heat source unavailable",
+    at_room_difference: "Rooms heated unevenly",
+    at_preset_missing: "Level missing",
+    at_not_accepted: "Temperature not accepted",
+    at_window_long: "Window open too long",
+    at_device_unavailable: "Device unavailable",
+    at_sensor_unavailable: "Sensors unavailable",
+    at_sensor_silent: "Sensor silent",
+    at_no_effect: "Heating without effect",
+    at_schedule_invalid: "Invalid schedule",
+    at_schedule_gap: "Days without a profile",
+    at_battery_low: "Low battery",
+    at_device_limit_max: "Device limit",
+    at_device_limit_min: "Device limit",
+    at_weather_without_source: "No outdoor temperature",
+    at_boiler_min_rooms: "Heat source cannot start",
+    at_outdoor_unavailable: "Outdoor temperature unavailable",
+    at_mold_risk: "Mold risk",
+    at_other: "Alert",
   },
   ro: {
     title: "Încălzire",
@@ -692,6 +725,29 @@ const TEXT = {
     device_temp: "Dispozitiv {temp}",
     trv_boost_chip: "Încălzire după senzor · {temp}",
     trv_boost_chip_off: "După senzor: {temp} cât încălzește",
+    resume: "Reia",
+    cancel_override: "Anulează",
+    end_guests: "Oprește",
+    next_at: "{preset} la {time}",
+    at_source_unavailable: "Sursa de căldură indisponibilă",
+    at_room_difference: "Camere încălzite inegal",
+    at_preset_missing: "Nivel lipsă",
+    at_not_accepted: "Temperatură neacceptată",
+    at_window_long: "Fereastră deschisă prea mult",
+    at_device_unavailable: "Dispozitiv indisponibil",
+    at_sensor_unavailable: "Senzori indisponibili",
+    at_sensor_silent: "Senzor tăcut",
+    at_no_effect: "Încălzire fără efect",
+    at_schedule_invalid: "Program invalid",
+    at_schedule_gap: "Zile fără profil",
+    at_battery_low: "Baterie descărcată",
+    at_device_limit_max: "Limita dispozitivului",
+    at_device_limit_min: "Limita dispozitivului",
+    at_weather_without_source: "Fără temperatură exterioară",
+    at_boiler_min_rooms: "Sursa de căldură nu poate porni",
+    at_outdoor_unavailable: "Temperatura exterioară indisponibilă",
+    at_mold_risk: "Risc de mucegai",
+    at_other: "Alertă",
   },
 };
 
@@ -1431,8 +1487,12 @@ class SmartHeatingControlCard extends HTMLElement {
       lo = 5;
       hi = 30;
     }
-    const f = cur === null ? 0 : Math.min(1, Math.max(0, (cur - lo) / (hi - lo)));
-    const sw = size >= 120 ? 11 : size >= 80 ? 8 : 5;
+    // Close to the target (0.3 °C, 0.5 °F) the arc ends exactly at the target dot,
+    // so a room on its target does not look a hair short or past it.
+    const near = String(a.temperature_unit || "").includes("F") ? 0.5 : 0.3;
+    const shown = cur !== null && tgt !== null && Math.abs(cur - tgt) <= near ? tgt : cur;
+    const f = shown === null ? 0 : Math.min(1, Math.max(0, (shown - lo) / (hi - lo)));
+    const sw = size >= 120 ? 10 : size >= 80 ? 6 : 5;
     const r = size / 2 - sw / 2 - 1;
     const c = 2 * Math.PI * r;
     const arc = c * 0.75;
@@ -1443,16 +1503,14 @@ class SmartHeatingControlCard extends HTMLElement {
       `<circle cx="${mid}" cy="${mid}" r="${r.toFixed(2)}" class="${cls}" stroke-width="${sw}" stroke-dasharray="${len.toFixed(
         1
       )} ${c.toFixed(1)}" transform="rotate(135 ${mid} ${mid})"></circle>`;
-    // The target as a short mark across the arc (a scale mark, not a handle), on the same scale.
+    // The target as a dot on the arc (a scale mark, not a handle), on the same scale.
     let mark = "";
     if (tgt !== null) {
       const ft = Math.min(1, Math.max(0, (tgt - lo) / (hi - lo)));
       const ang = ((135 + 270 * ft) * Math.PI) / 180;
-      const out = size >= 120 ? 4 : 2;
-      const p = (rad) => `${(mid + rad * Math.cos(ang)).toFixed(1)} ${(mid + rad * Math.sin(ang)).toFixed(1)}`;
-      const [x1, y1] = p(r - sw / 2 - out).split(" ");
-      const [x2, y2] = p(r + sw / 2 + out).split(" ");
-      mark = `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="gmark" stroke-width="${size >= 120 ? 1.5 : 1}"></line>`;
+      const cx = (mid + r * Math.cos(ang)).toFixed(1);
+      const cy = (mid + r * Math.sin(ang)).toFixed(1);
+      mark = `<circle cx="${cx}" cy="${cy}" r="${(size >= 120 ? 6 : sw * 0.72).toFixed(1)}" class="gmark" stroke-width="${size >= 120 ? 3 : 2}"></circle>`;
     }
     // Warming or cooling over the last 30 minutes (the decision sensor; 0 = steady or not known).
     const trend = cur === null ? 0 : Number(a.temperature_trend) || 0;
@@ -1509,23 +1567,29 @@ class SmartHeatingControlCard extends HTMLElement {
 
   /** Lines next to the arc: the reason, the time to target, the TRV boost, the device reading. */
   _chipsHtml(a, e, stateObj, eta) {
+    // Now: why the room is at this level, and the time to the target.
+    const sub = eta && eta === this._t("eta_learning") ? this._heatDefault(e) : "";
+    const etaLine = eta
+      ? `<span class="csub" title="${esc(this._t(a.stop_forecast ? "stop_help" : "eta_help"))}">${esc(eta)}${
+          sub ? ` · ${esc(sub)}` : ""
+        }</span>`
+      : "";
     const chips = [
-      `<span class="chip">${this._icon(this._ruleIcon(stateObj.state))}<span>${esc(this._reasonText(a))}</span></span>`,
+      `<span class="chip line"><span class="clabel">${esc(this._t("now_tag"))}</span><span class="cval">${esc(
+        this._reasonText(a)
+      )}</span>${etaLine}</span>`,
     ];
-    if (eta) {
-      const sub = eta === this._t("eta_learning") ? this._heatDefault(e) : "";
-      chips.push(
-        `<span class="chip" title="${esc(this._t(a.stop_forecast ? "stop_help" : "eta_help"))}">${this._icon(
-          a.stop_forecast ? "thermometer-chevron-down" : "clock-outline"
-        )}<span>${esc(eta)}${sub ? ` <small>${esc(sub)}</small>` : ""}</span></span>`
-      );
-    }
-    // The next change (the chart opens in a window over the dashboard).
+    // Next: the next change of level and when.
     if (a.next_change) {
+      const level = a.next_preset ? num(a.levels?.[a.next_preset]) : null;
       chips.push(
-        `<span class="chip">${this._icon("calendar-arrow-right")}<span>${this._t("next")}: ${esc(
-          this._fmtTime(a.next_change)
-        )} → ${esc(this._presetName(a, a.next_preset))}</span></span>`
+        `<span class="chip line"><span class="clabel">${esc(this._t("next"))}</span><span class="cval"><span class="dot" style="--c:${
+          PRESET_COLORS[a.next_preset] || TEMP_COLOR
+        }"></span>${esc(
+          this._t("next_at")
+            .replace("{preset}", `${this._presetName(a, a.next_preset)}${level !== null ? ` ${this._temp(level)}` : ""}`)
+            .replace("{time}", this._fmtTime(a.next_change))
+        )}</span></span>`
       );
     }
     if (this._guestOn(a)) {
@@ -1605,20 +1669,14 @@ class SmartHeatingControlCard extends HTMLElement {
     }
     if (cfg.show_details) defs.push([`details-${id}`, "details", "information-outline", () => this._detailsHtml(a, e)]);
     const lock = e.child_lock ? this._state(e.child_lock) : null;
-    if (!defs.length && !lock && !a.override) return "";
+    if (!defs.length && !lock) return "";
     const open = (k) => !!this._open[k] || (k === `sched-${id}` && this._editing === id);
     const locked = lock?.state === "on";
-    // While there is a manual change: back to automatic, first in the row.
-    const back = a.override
-      ? `<button class="sbtn back" data-action="clear" data-room="${esc(id)}" title="${esc(this._t("clear_override"))}">${this._icon(
-          "autorenew"
-        )}<span>${esc(this._t("auto_short"))}</span></button>`
-      : "";
+    // The first one (a temperature for a while) is the main action of the room.
     const buttons =
-      back +
       defs
         .map(
-          ([k, label, icon]) => `<button class="sbtn ${open(k) ? "on" : ""}" data-action="fold" data-key="${esc(k)}"
+          ([k, label, icon], i) => `<button class="sbtn ${i === 0 && k.startsWith("quick-") ? "primary" : ""} ${open(k) ? "on" : ""}" data-action="fold" data-key="${esc(k)}"
           aria-expanded="${open(k)}">${this._icon(icon)}<span>${esc(this._t(label))}</span></button>`
         )
         .join("") +
@@ -1628,14 +1686,14 @@ class SmartHeatingControlCard extends HTMLElement {
             locked ? "lock-outline" : "lock-open-variant-outline"
           )}<span>${esc(this._t("lock_short"))}</span></button>`
         : "");
-    const count = defs.length + (lock ? 1 : 0) + (a.override ? 1 : 0);
+    const count = defs.length + (lock ? 1 : 0);
     // The chart is not drawn here: it opens in a window (``_chartPopup``).
     const bodies = defs
       .filter(([k]) => open(k) && !k.startsWith("chart-"))
       .map(([, , , html]) => html())
       .join("");
-    // One row up to 5 buttons, else two even rows (no button left alone on a row).
-    const cols = count <= 5 ? count : Math.ceil(count / 2);
+    // Up to 3 per row; 4 as two rows of 2 (no button left alone on a row).
+    const cols = count <= 3 ? count : count === 4 ? 2 : 3;
     return `<div class="sbtns" style="--cols:${cols}">${buttons}</div>${bodies}`;
   }
 
@@ -1682,21 +1740,23 @@ class SmartHeatingControlCard extends HTMLElement {
     const modeCount = modeOptions.length;
     const modes = modeOptions
       .map(
-        (opt) => `<button class="seg ${mode?.state === opt ? "active" : ""}" data-action="mode"
+        (opt) => `<button class="seg ${mode?.state === opt ? "active" : ""}" data-action="mode" aria-pressed="${mode?.state === opt}"
           data-entity="${esc(e.mode)}" data-option="${esc(opt)}">${esc(this._label(mode, opt))}</button>`
       )
       .join("");
     // The scenarios of the house: one button each, the active one marked.
     const scenarioOptions = scenario?.attributes?.options || [];
+    // Three per row, the same shape as the mode buttons (two when there are only two or four).
+    const scenCols = [2, 4].includes(scenarioOptions.length) ? 2 : 3;
     const scenarios = scenarioOptions.length
-      ? `<div class="scenarios" role="group" aria-label="${esc(this._t("scenario"))}">
+      ? `<div class="scenarios">
           <span class="sclabel">${this._icon("playlist-check")}<span>${esc(this._t("scenario"))}</span></span>
-          ${scenarioOptions
+          <div class="segmented scen-grid" style="--n:${scenCols}" role="group" aria-label="${esc(this._t("scenario"))}">${scenarioOptions
             .map(
-              (opt) => `<button class="scen ${scenario.state === opt ? "active" : ""}" data-action="mode"
-                data-entity="${esc(e.scenario)}" data-option="${esc(opt)}">${esc(opt)}</button>`
+              (opt) => `<button class="seg scen ${scenario.state === opt ? "active" : ""}" data-action="mode" title="${esc(opt)}"
+                aria-pressed="${scenario.state === opt}" data-entity="${esc(e.scenario)}" data-option="${esc(opt)}">${esc(opt)}</button>`
             )
-            .join("")}
+            .join("")}</div>
         </div>`
       : "";
 
@@ -1731,7 +1791,7 @@ class SmartHeatingControlCard extends HTMLElement {
           ${titleHtml}
           ${presencePill(false)}
           ${demand?.state === "on" ? this._flame(this._houseHeating(house), null, true) : ""}
-          <span class="pill mode">${esc(this._label(mode))}</span>
+          <span class="pill mode active">${esc(this._label(mode))}</span>
           <span class="ctemp muted">${this._icon("weather-partly-cloudy")} ${esc(this._temp(outdoor?.state))}</span>
           <span class="chev"></span>
         </button>`;
@@ -1762,6 +1822,9 @@ class SmartHeatingControlCard extends HTMLElement {
         ? abtn("restore", this._t("auto_short"), `data-action="press" data-entity="${esc(e.clear_overrides)}"`, "", this._t("clear_all"))
         : "",
     ].filter(Boolean);
+    // On 6 columns: 5 buttons as 3 + 2, 4 as 2 + 2, else one row.
+    const spans = { 1: [6], 2: [3, 3], 3: [2, 2, 2], 4: [3, 3, 3, 3], 5: [2, 2, 2, 3, 3] }[actions.length] || actions.map(() => 2);
+    const actionsHtml = actions.map((html, i) => html.replace("<button ", `<button style="--span:${spans[i]}" `)).join("");
 
     const vacPanel = this._open[vacKey]
       ? `<div class="panel blue">
@@ -1798,7 +1861,7 @@ class SmartHeatingControlCard extends HTMLElement {
           <div class="htitle-row">
             ${foldBack}${titleHtml}
             ${presencePill(true)}
-            ${presence?.attributes?.arriving ? `<span class="pill">${this._t("arriving")}</span>` : ""}
+            ${presence?.attributes?.arriving ? `<span class="pill arriving">${this._icon("arrow-right")}${esc(this._t("arriving"))}</span>` : ""}
             ${demand?.state === "on" ? this._flame(this._houseHeating(house), e.heat_demand) : ""}
           </div>
           <div class="segmented ${modeCount > 4 ? "many" : ""}" style="--n:${modeCount}" role="group" aria-label="${esc(this._t("mode"))}">${modes}</div>
@@ -1818,7 +1881,7 @@ class SmartHeatingControlCard extends HTMLElement {
           ${runtime ? this._runtimeStat(e.heating_runtime) : ""}
         </div>
         ${this._cutoffHtml(outdoor, cutoff, e.outdoor_cutoff, mode, season, pause)}
-        <div class="hactions" style="--n:${actions.length}">${actions.join("")}</div>
+        <div class="hactions">${actionsHtml}</div>
         ${vacPanel}
       </section>`;
   }
@@ -1897,8 +1960,13 @@ class SmartHeatingControlCard extends HTMLElement {
     } else {
       text = this._t("cutoff_on").replace("{temp}", this._temp(a.cutoff_resume_temperature));
     }
-    return `<div class="cutoffline ${reason === "forecast_cold" ? "" : "on"} link" ${this._more(entityId)}>
-        <b>${esc(this._t("cutoff"))}:</b> ${esc(text)}</div>`;
+    return this._msg({
+      kind: reason === "forecast_cold" ? "info cutoffline" : "warn cutoffline on",
+      icon: reason === "forecast_cold" ? "weather-cloudy" : "weather-sunny",
+      lead: `${this._t("cutoff")}:`,
+      text,
+      link: entityId,
+    });
   }
 
   /** Banner while guest mode is on (the Guests button turns it off), with its end when it has one. */
@@ -1911,9 +1979,15 @@ class SmartHeatingControlCard extends HTMLElement {
     const suspended = this._state(house.entities?.presence)?.attributes?.vacation_suspended;
     const away = this._state(house.entities?.mode)?.state === "away";
     const key = suspended ? "guests_banner_vacation" : away ? "guests_banner_away" : "guests_banner";
-    return `<div class="banner teal link" ${this._more(house.entities.guest_mode)}>${this._icon("account-group-outline")}<span>${esc(
-      name + this._t(key) + until
-    )}</span></div>`;
+    const [lead, rest] = this._split(this._t(key));
+    return this._msg({
+      kind: "teal banner",
+      icon: "account-group-outline",
+      lead: name + lead,
+      text: rest + until,
+      link: house.entities.guest_mode,
+      action: { label: this._t("end_guests"), attrs: `data-action="toggle" data-entity="${esc(house.entities.guest_mode)}"` },
+    });
   }
 
   /** Banner while the house is paused (the switch stays the only control). */
@@ -1921,7 +1995,42 @@ class SmartHeatingControlCard extends HTMLElement {
     const pause = this._state(house.entities?.pause);
     if (pause?.state !== "on") return "";
     const name = this._houses().length > 1 && house.name ? `${house.name}: ` : "";
-    return `<div class="banner">${this._icon("pause-circle-outline")}<span>${esc(name + this._t("paused_banner"))}</span></div>`;
+    const [lead, rest] = this._split(this._t("paused_banner"));
+    return this._msg({
+      kind: "warn banner",
+      icon: "pause",
+      lead: name + lead,
+      text: rest,
+      action: { label: this._t("resume"), attrs: `data-action="toggle" data-entity="${esc(house.entities.pause)}"` },
+    });
+  }
+
+  /** "Pause: only frost …" → ["Pause:", "only frost …"] (the subject in bold); no colon: all is text. */
+  _split(text) {
+    const i = text.indexOf(": ");
+    return i > 0 && i < 40 ? [text.slice(0, i + 1), text.slice(i + 2)] : ["", text];
+  }
+
+  /**
+   * One shape for every message: a tinted band, the icon in a circle, the subject
+   * in bold, the text; on the right its action (a button) or a chevron when the
+   * text opens an entity. ``kind``: warn, teal, info, error or plain (outlined).
+   */
+  _msg({ kind = "info", icon, lead = "", text = "", link = null, action = null }) {
+    // With a button the text opens the entity, else the whole band does.
+    const textLink = link && action ? link : null;
+    const bandLink = link && !action ? link : null;
+    const body = `<span class="mtext ${textLink ? "link" : ""}" ${this._more(textLink)}>${lead ? `<b>${esc(lead)}</b> ` : ""}${esc(
+      text
+    )}</span>`;
+    const right = action
+      ? `<button class="mbtn" ${action.attrs}>${esc(action.label)}</button>`
+      : bandLink
+        ? `<span class="mchev" aria-hidden="true"></span>`
+        : "";
+    return `<div class="msg ${kind} ${bandLink ? "link" : ""}" ${bandLink ? this._more(bandLink) : 'role="status"'}><span class="micon">${this._icon(
+      icon
+    )}</span>${body}${right}</div>`;
   }
 
   /** Room block (or one compact tile / folded row); the sections are shown when it is open. */
@@ -1937,6 +2046,7 @@ class SmartHeatingControlCard extends HTMLElement {
     if (folded) return this._foldedRow(stateObj, color);
 
     const badges = [];
+    let overrideMsg = "";
     // "Heating" (pulsing) while the heat source runs for the room; "Asks for heat" while it waits.
     if (a.heat_demand) badges.push(this._flame(!!a.heating, e.heat_demand));
     const alertIcon = this._alertIcon(a);
@@ -1953,7 +2063,6 @@ class SmartHeatingControlCard extends HTMLElement {
     }
     if (a.override) {
       const until = this._overrideUntil(a);
-      const prefix = stateObj.state === "manual_override" ? "" : `${this._t("override")} `;
       const origin = a.override.origin ? ` · ${this._t(`origin_${a.override.origin}`)}` : "";
       // While a higher rule wins: not sent yet, or set again once it ends.
       // (The maximum temperature limits the manual value for good.)
@@ -1965,10 +2074,14 @@ class SmartHeatingControlCard extends HTMLElement {
           : a.override.interrupted
             ? ` · ${this._t("back_after").replace("{rule}", this._label(stateObj))}`
             : "";
-      badges.push(`<span class="pill link wrap" ${this._more(
-        e.manual_override,
-        a.override.until ? null : this._t("reeval_help")
-      )}>${this._icon("hand-back-right-outline")}${esc(prefix + until + origin + back)}</span>`);
+      overrideMsg = this._msg({
+        kind: "plain override",
+        icon: "hand-back-right-outline",
+        lead: this._t("override"),
+        text: `${until}${origin}${back}`,
+        link: e.manual_override,
+        action: { label: this._t("cancel_override"), attrs: `data-action="clear" data-room="${esc(key)}" title="${esc(this._t("clear_override"))}"` },
+      });
     }
 
     const head = `
@@ -1977,11 +2090,13 @@ class SmartHeatingControlCard extends HTMLElement {
           <button class="room-title" data-action="fold" data-key="room-${esc(key)}" aria-expanded="true">
             <span class="chev open"></span><span class="name">${esc(a.room_name)}</span>
           </button>
-          <span class="pill rule link" ${this._more(e.decision)}><span class="dot"></span>${esc(this._label(stateObj))}</span>
         </div>
+        <span class="pill rule link" ${this._more(e.decision)}><span class="dot"></span>${esc(
+          a.preset ? `${this._presetName(a, a.preset)} · ${this._label(stateObj)}` : this._label(stateObj)
+        )}</span>
         ${badges.length ? `<div class="decision">${badges.join("")}</div>` : ""}
       </div>`;
-    const hero = `<div class="hero">${this._gauge(a, e, 140)}<div class="chips">${this._presetPill(a)}${this._chipsHtml(
+    const hero = `<div class="hero">${this._gauge(a, e, 168)}<div class="chips">${this._chipsHtml(
       a,
       e,
       stateObj,
@@ -1992,11 +2107,13 @@ class SmartHeatingControlCard extends HTMLElement {
     const parts = [
       head,
       hero,
-      this._sectionsHtml(a, e, stateObj),
+      overrideMsg,
       this._noHeatHtml(a),
+      this._alertsHtml(a),
+      this._sectionsHtml(a, e, stateObj),
       this._todayHtml(a),
     ];
-    return `<section class="block room open" style="--c:${color}">${parts.join("")}</section>`;
+    return `<section class="block room open ${this._alertLevel(a)}" style="--c:${color}">${parts.join("")}</section>`;
   }
 
   /** The level the room is at (its colour and name); a temperature without a level shows only the value. */
@@ -2045,17 +2162,30 @@ class SmartHeatingControlCard extends HTMLElement {
   /** A folded room: small arc, name, reason, target; a tap opens it. */
   _foldedRow(stateObj, color) {
     const a = stateObj.attributes;
-    const eta = this._eta(a);
-    return `<section class="block room folded" style="--c:${color}">
+    // One line: the level and its target, then the time to the target or the next change.
+    const level = a.preset
+      ? `${this._presetName(a, a.preset)} ${this._temp(a.target_temperature)}`
+      : this._temp(a.target_temperature);
+    const line = [level, this._roomNext(a)].filter(Boolean).join(" · ");
+    const icons = this._statusIcons(a);
+    return `<section class="block room folded ${this._alertLevel(a)}" style="--c:${color}">
         <button class="frow" data-action="fold" data-key="room-${esc(a.room_id)}" aria-expanded="false">
-          ${this._gauge(a, null, 54, false)}
+          ${this._gauge(a, null, 60, false)}
           <span class="ftext"><span class="fname"><span class="name">${esc(a.room_name)}</span></span>
-            ${eta ? `<span class="freason">${esc(eta)}</span>` : ""}</span>
-          ${this._statusIcons(a)}
-          ${this._presetPill(a, true)}
+            <span class="freason"><span class="dot"></span><span>${esc(line)}</span></span></span>
+          ${icons ? `<span class="ficons">${icons}</span>` : ""}
           <span class="chev"></span>
         </button>
       </section>`;
+  }
+
+  /** While heating the time to the target, else the next change ("Sleep at 22:00"), else the time to the target. */
+  _roomNext(a) {
+    const eta = this._eta(a);
+    const next = a.next_change
+      ? this._t("next_at").replace("{preset}", this._presetName(a, a.next_preset)).replace("{time}", this._fmtTime(a.next_change))
+      : "";
+    return (a.heating && eta) || next || eta;
   }
 
   /** One tile per room in the compact card: arc, level, target; a tap opens the room. */
@@ -2071,20 +2201,19 @@ class SmartHeatingControlCard extends HTMLElement {
       a.override ? `<span class="tstat" title="${esc(this._t("override"))}">${this._icon("hand-back-right-outline")}</span>` : "",
       this._guestOn(a) ? `<span class="tstat teal" title="${esc(this._t("guests_banner"))}">${this._icon("account-group-outline")}</span>` : "",
     ].join("");
-    const eta = this._eta(a);
     // While heating the time to the target, else the next change (the icons above say the rest).
-    const next = a.next_change ? `${this._presetName(a, a.next_preset)} · ${this._fmtTime(a.next_change)}` : "";
-    const line = (heating && eta) || next || eta;
-    return `<button class="tile" data-action="fold" data-key="room-${esc(a.room_id)}" aria-expanded="false" style="--c:${color}"
+    const line = this._roomNext(a);
+    return `<button class="tile ${this._alertLevel(a)}" data-action="fold" data-key="room-${esc(a.room_id)}" aria-expanded="false" style="--c:${color}"
         aria-label="${esc(`${a.room_name}, ${this._temp(a.current_temperature)}, ${this._label(stateObj)}`)}">
         <span class="tile-head"><span class="tname"><span class="cname">${esc(a.room_name)}</span></span>${
           status ? `<span class="tstats">${status}</span>` : ""
         }</span>
-        <span class="tile-body">${this._gauge(a, null, 64, false)}
-          <span class="tile-info">${this._presetPill(a)}
-            <span class="tsub">${esc(this._t("target_tag"))} ${this._temp(a.target_temperature)}</span>
+        <span class="tile-body">${this._gauge(a, null, 84, false)}
+          <span class="tile-info"><span class="tsub">${esc(this._t("target_tag"))}</span>
+            <span class="tval">${this._temp(a.target_temperature)}</span>
             ${line ? `<span class="muted">${esc(line)}</span>` : ""}</span>
         </span>
+        ${this._presetPill(a)}
       </button>`;
   }
 
@@ -2134,9 +2263,7 @@ class SmartHeatingControlCard extends HTMLElement {
       .replace("{count}", r.count ?? "")
       .replace("{needed}", r.needed ?? "")
       .replace("{room}", r.room ?? "");
-    return `<p class="reason noheat">${this._icon("information-outline")}<span><b>${esc(
-      this._t("no_heat")
-    )}:</b> ${esc(text)}</span></p>`;
+    return this._msg({ kind: "info noheat", icon: "information-outline", lead: `${this._t("no_heat")}:`, text });
   }
 
   /** When a manual change ends, in words. */
@@ -3210,8 +3337,7 @@ class SmartHeatingControlCard extends HTMLElement {
       }`;
     const program = estimate || runtimeHtml ? `<dl class="details">${estimate}${runtimeHtml}</dl>` : "";
     const learning = this._learnHtml(e, a);
-    const html = `${this._alertsHtml(a)}
-      ${group(this._t("grp_temps"), temps)}
+    const html = `${group(this._t("grp_temps"), temps)}
       ${group(this._t("grp_program"), program)}
       ${group(this._t("grp_learning"), learning ? `<dl class="details">${learning}</dl>` : "")}
       ${group(this._t("grp_devices"), this._devicesHtml(a))}
@@ -3363,21 +3489,37 @@ class SmartHeatingControlCard extends HTMLElement {
     )}">${this._icon("alert-outline")}</span>`;
   }
 
-  /** Alerts of the room and of the whole house, in the language of the card. */
+  /** How serious the alerts of a room are: "al-error", "al-warn" or "" (the outline of the room). */
+  _alertLevel(a) {
+    const alerts = a.alerts || [];
+    if (alerts.some((al) => ALERT_ERRORS.includes(al.code))) return "al-error";
+    return alerts.length ? "al-warn" : "";
+  }
+
+  /** Alerts of the room and of the whole house: title, text, and the entity a tap opens. */
   _alertsHtml(a) {
     const alerts = a.alerts || [];
     if (!alerts.length) return "";
     const items = alerts
       .map((al) => {
         const p = al.params || {};
-        const text = this._alertText(al);
         const entity = p.entity || (Array.isArray(p.entities) ? p.entities[0] : null);
-        return `<li class="${entity ? "link" : ""}" ${this._more(entity)}>${this._icon("alert-outline")}<span>${esc(
-          text
-        )}</span></li>`;
+        const kind = ALERT_ERRORS.includes(al.code) ? "error" : "warn";
+        const icon = al.code === "mold_risk" ? "water-alert-outline" : kind === "error" ? "alert-circle-outline" : "alert-outline";
+        const named = this._t(`at_${al.code}`);
+        const title = named === `at_${al.code}` ? this._t("at_other") : named;
+        // "Mold risk: the coldest wall …" under the title "Mold risk": the subject once.
+        let text = this._alertText(al);
+        if (text.toLowerCase().startsWith(`${title.toLowerCase()}: `)) text = text.slice(title.length + 2).replace(/^./, (c) => c.toUpperCase());
+        return `<li class="${kind} ${entity ? "link" : ""}" ${this._more(entity)}><span class="micon">${this._icon(icon)}</span>
+            <span class="atext"><b>${esc(title)}</b><span>${esc(text)}</span></span>${
+              entity ? '<span class="mchev" aria-hidden="true"></span>' : ""
+            }</li>`;
       })
       .join("");
-    return `<div class="label">${esc(this._t("alerts"))}</div><ul class="alerts">${items}</ul>`;
+    return `<section class="alertbox" aria-label="${esc(this._t("alerts"))}"><div class="ahead"><span>${esc(
+      this._t("alerts")
+    )}</span><span class="acount">${alerts.length}</span></div><ul class="alerts">${items}</ul></section>`;
   }
 
   /** Which days a profile is for, in words. */
@@ -4331,13 +4473,24 @@ const STYLE = `
     --ac-sun: #ffc61a;
     --ac-hot: #d9480f;
     --ac-warn: #c98a12;
+    --ac-err: var(--error-color, #db4437);
+    --ac-teal: #2f9e8f;
+    /* The chosen button (mode, scenario): tinted with the accent, never only bold. */
+    --ac-active-bg: color-mix(in srgb, var(--ac-accent) 18%, transparent);
+    --ac-active-fg: color-mix(in srgb, var(--ac-accent) 72%, var(--primary-text-color));
+    --ac-active-line: color-mix(in srgb, var(--ac-accent) 55%, transparent);
+    /* Text on an amber or red tint stays readable in a light and a dark theme. */
+    --ac-warn-fg: color-mix(in srgb, var(--warning-color, #f0ad4e) 62%, var(--primary-text-color));
+    --ac-err-fg: color-mix(in srgb, var(--ac-err) 75%, var(--primary-text-color));
     color: var(--primary-text-color);
+    font-variant-numeric: tabular-nums;
   }
   ha-card { padding: 16px; color: var(--primary-text-color); display: flex; flex-direction: column; gap: 12px; }
   .title { margin: 0; font-size: 1.35em; font-weight: 500; letter-spacing: -0.01em; }
   .empty { margin: 0; color: var(--ac-muted); }
   .muted { color: var(--ac-muted); font-size: 0.85em; }
-  .block { border: 1px solid var(--ac-line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .block { border: 1px solid transparent; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px;
+    background: var(--ac-surface); }
   .house { background: var(--ac-surface); }
   .name { font-weight: 600; font-size: 1.1em; }
   .label { font-size: 0.8em; color: var(--ac-muted); margin-bottom: -4px; }
@@ -4363,11 +4516,12 @@ const STYLE = `
   /* pills */
   .pill { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8em; padding: 3px 10px;
     border-radius: 999px; background: var(--ac-surface-2); white-space: nowrap; }
-  .pill.rule { background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--primary-text-color);
-    box-shadow: inset 0 0 0 1.5px var(--c); font-weight: 500; }
+  .pill { min-height: 26px; box-sizing: border-box; font-weight: 500; }
+  .pill.rule { background: var(--ac-surface-2); color: var(--primary-text-color); font-weight: 500; }
+  .pill.active, .pill.arriving { background: var(--ac-active-bg); color: var(--ac-active-fg); box-shadow: inset 0 0 0 1px var(--ac-active-line); font-weight: 600; }
   .pill.hot { background: var(--ac-hot); color: #fff; }
-  .pill.warn { background: var(--ac-warn); color: #fff; }
-  .presence-state.home { background: color-mix(in srgb, #f08c00 22%, transparent); }
+  .pill.warn { background: color-mix(in srgb, var(--warning-color, #f0ad4e) 18%, transparent); color: var(--ac-warn-fg); }
+  .presence-state.home { background: color-mix(in srgb, #f08c00 18%, transparent); }
   .presence-state.nearby { background: color-mix(in srgb, #2f9e8f 22%, transparent); }
   .presence-state.far { background: color-mix(in srgb, #8a96a3 25%, transparent); }
 
@@ -4391,19 +4545,17 @@ const STYLE = `
   .btn.icon-only { padding: 6px; }
   .btn.icon-only .x { display: none; }
   .btn.icon-only ha-icon:not(:defined) + .x { display: inline; }
-  .segmented { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); padding: 3px; gap: 3px;
+  .segmented { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); padding: 4px; gap: 4px;
     border-radius: 12px; background: var(--ac-surface-2); }
-  .seg { border: none; background: none; padding: 8px 2px; border-radius: 9px; font: inherit; font-size: 0.9em;
-    color: var(--primary-text-color); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .scenarios { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
-  .scenarios .sclabel { display: inline-flex; align-items: center; gap: 5px; font-size: 0.85em;
-    color: var(--secondary-text-color); margin-right: 2px; }
+  .seg { border: none; background: none; min-height: 36px; padding: 0 8px; border-radius: 9px; font: inherit; font-size: 0.88em;
+    font-weight: 500; color: var(--ac-muted); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .seg:hover { color: var(--primary-text-color); background: var(--ac-surface); }
+  .scenarios { display: flex; flex-direction: column; gap: 8px; }
+  .scenarios .sclabel { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85em; color: var(--ac-muted); }
   .scenarios .sclabel ha-icon { --mdc-icon-size: 16px; }
-  .scen { border: 1px solid var(--divider-color); background: none; padding: 5px 11px; border-radius: 999px; font: inherit;
-    font-size: 0.85em; color: var(--primary-text-color); cursor: pointer; }
-  .scen.active { background: var(--ac-surface-2); border-color: var(--ac-accent); color: var(--ac-accent); font-weight: 600; }
-  .segmented.many .seg { font-size: 0.8em; padding: 8px 0; }
-  .seg.active { background: var(--card-background-color); box-shadow: 0 1px 2px rgba(0,0,0,.18); font-weight: 600; color: var(--ac-accent); }
+  .segmented.many .seg { font-size: 0.82em; padding: 0 2px; }
+  .seg.active, .seg.active:hover { background: var(--ac-active-bg); color: var(--ac-active-fg); font-weight: 600;
+    box-shadow: inset 0 0 0 1px var(--ac-active-line); }
   .toggle { display: inline-flex; align-items: center; gap: 8px; background: none; border: none; font: inherit;
     color: var(--primary-text-color); cursor: pointer; padding: 4px 0; }
   .toggle .knob { width: 34px; height: 20px; border-radius: 10px; background: var(--disabled-color, #bdbdbd); position: relative; flex: none; }
@@ -4463,15 +4615,28 @@ const STYLE = `
   .decision { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   .reason { margin: 0; color: var(--ac-muted); font-size: 0.9em; }
   .pill.wrap { white-space: normal; text-align: left; }
-  .reason.noheat { display: flex; gap: 6px; align-items: flex-start; color: var(--primary-text-color); }
-  .reason.noheat ha-icon { --mdc-icon-size: 18px; color: var(--ac-muted); flex: none; }
+
   .link { cursor: pointer; }
   .link:hover { filter: brightness(0.96); }
   .link:focus-visible { outline: 2px solid var(--ac-accent); outline-offset: 2px; }
-  .banner { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 12px;
-    background: color-mix(in srgb, var(--warning-color, #f0ad4e) 18%, transparent);
-    border: 1px solid color-mix(in srgb, var(--warning-color, #f0ad4e) 55%, transparent); font-size: 0.9em; }
-  .banner ha-icon { --mdc-icon-size: 20px; color: var(--warning-color, #f0ad4e); flex: none; }
+  /* messages: one shape, the colour says how much it matters */
+  .msg { --t: var(--ac-muted); --tb: var(--ac-surface-2); display: flex; align-items: center; gap: 12px; padding: 12px;
+    border-radius: 12px; background: var(--tb); font-size: 0.9em; line-height: 1.45; }
+  .msg.warn { --t: var(--ac-warn-fg); --tb: color-mix(in srgb, var(--warning-color, #f0ad4e) 15%, transparent); }
+  .msg.teal { --t: color-mix(in srgb, var(--ac-teal) 75%, var(--primary-text-color)); --tb: color-mix(in srgb, var(--ac-teal) 15%, transparent); }
+  .msg.error { --t: var(--ac-err-fg); --tb: color-mix(in srgb, var(--ac-err) 13%, transparent); }
+  .msg.plain { --t: var(--primary-text-color); --tb: transparent; box-shadow: inset 0 0 0 1px var(--ac-line); }
+  .micon { width: 32px; height: 32px; flex: none; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    color: var(--t); background: color-mix(in srgb, currentColor 16%, transparent); }
+  .msg.info .micon, .msg.plain .micon { background: var(--ac-surface-2); }
+  .micon ha-icon { --mdc-icon-size: 18px; }
+  .mtext { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .mtext b { font-weight: 600; }
+  .mbtn { flex: none; min-height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--ac-line);
+    background: var(--card-background-color); color: var(--primary-text-color); font: inherit; font-size: 0.95em; font-weight: 600; cursor: pointer; }
+  .mbtn:hover { background: var(--ac-surface-2); }
+  .mchev { flex: none; width: 7px; height: 7px; margin: 0 6px 0 2px; border-right: 2px solid var(--ac-muted);
+    border-bottom: 2px solid var(--ac-muted); transform: rotate(-45deg); }
   .details.devices div.dev { display: flex; align-items: center; gap: 10px; padding: 6px 10px; }
   .details.devices div.dev ha-icon { --mdc-icon-size: 20px; color: var(--ac-muted); flex: none; }
   .details.devices .dname { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -4480,13 +4645,20 @@ const STYLE = `
   .details.devices .dval { flex: none; font-variant-numeric: tabular-nums; font-weight: 500; }
   .details.devices div.dev.bad { box-shadow: inset 3px 0 0 var(--ac-warn); }
   .details.devices div.dev.bad .dval, .details.devices div.dev.bad ha-icon { color: var(--ac-warn); }
-  .cutoffline { font-size: 0.85em; color: var(--ac-muted); padding: 6px 10px; border-radius: 10px; background: var(--ac-surface); }
-  .cutoffline b { color: var(--primary-text-color); font-weight: 500; }
-  .cutoffline.on { background: color-mix(in srgb, var(--warning-color, #f0ad4e) 14%, transparent); }
-  ul.alerts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-  ul.alerts li { display: flex; gap: 8px; align-items: flex-start; font-size: 0.85em; padding: 8px 10px; border-radius: 10px;
-    background: color-mix(in srgb, var(--error-color, #db4437) 10%, transparent); }
-  ul.alerts ha-icon { --mdc-icon-size: 18px; color: var(--error-color, #db4437); flex: none; }
+  .alertbox { border-radius: 12px; box-shadow: inset 0 0 0 1px var(--ac-line); overflow: hidden; }
+  .ahead { display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-weight: 600; border-bottom: 1px solid var(--ac-line); }
+  .acount { min-width: 22px; height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 999px; font-size: 0.78em; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center; color: var(--ac-err-fg);
+    background: color-mix(in srgb, var(--ac-err) 16%, transparent); }
+  ul.alerts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  ul.alerts li { --t: var(--ac-warn-fg); display: flex; gap: 12px; align-items: flex-start; padding: 12px; font-size: 0.9em; }
+  ul.alerts li + li { border-top: 1px solid var(--ac-line); }
+  ul.alerts li.error { --t: var(--ac-err-fg); }
+  ul.alerts .micon { width: 28px; height: 28px; }
+  ul.alerts .micon ha-icon { --mdc-icon-size: 16px; }
+  ul.alerts .atext { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  ul.alerts .atext span { color: var(--ac-muted); line-height: 1.45; overflow-wrap: anywhere; }
+  ul.alerts .mchev { align-self: center; }
   .chart-card { border-radius: 14px; background: var(--ac-surface); padding: 12px 12px 10px;
     box-shadow: inset 0 0 0 1px var(--ac-line); display: flex; flex-direction: column; gap: 4px; }
   .hchart.with-out { height: 210px; }
@@ -4679,9 +4851,9 @@ const STYLE = `
 
   /* compact */
   ha-card.compact { gap: 8px; }
-  .crow { display: flex; align-items: center; gap: 10px; width: 100%; font: inherit; color: var(--primary-text-color);
-    background: var(--ac-surface); border: none; border-radius: 12px; padding: 10px 12px; cursor: pointer; text-align: left;
-    transition: background .15s; min-height: 48px; box-sizing: border-box; }
+  .crow { display: flex; align-items: center; gap: 8px; width: 100%; font: inherit; color: var(--primary-text-color);
+    background: var(--ac-surface); border: none; border-radius: 16px; padding: 8px 12px 8px 14px; cursor: pointer; text-align: left;
+    transition: background .15s; min-height: 56px; box-sizing: border-box; }
   .crow:hover { background: var(--ac-surface-2); }
   .crow ha-icon { --mdc-icon-size: 20px; color: var(--ac-muted); }
   .crow .cbar { width: 4px; align-self: stretch; border-radius: 2px; background: var(--c); flex: none; }
@@ -4693,15 +4865,14 @@ const STYLE = `
   .crow .cnow { font-size: 1.15em; font-weight: 300; }
   .crow .carrow { color: var(--ac-muted); font-size: 0.85em; }
   .crow .chev { margin-left: 2px; }
-  .cicon ha-icon { --mdc-icon-size: 18px; }
-  .cicon.hot ha-icon { color: var(--ac-hot); }
-  .cicon.warn ha-icon { color: var(--ac-warn); }
   .house-row .pill { flex: none; }
-  .house-row .ctemp { font-size: 0.85em; }
+  .house-row .ctemp { font-size: 1em; font-weight: 600; }
+  .house-row .ctemp ha-icon { --mdc-icon-size: 18px; align-self: center; }
   @media (max-width: 420px) { .house-row .pill.mode { display: none; } }
 
   /* house */
-  .house-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .block.house { gap: 16px; }
+  .house-head { display: flex; flex-direction: column; align-items: stretch; gap: 16px; }
   .who { display: flex; align-items: center; gap: 8px 12px; min-width: 0; flex-wrap: wrap; flex: 1 1 auto; }
   .avatars { display: flex; gap: 8px; flex: none; padding: 4px; flex-wrap: wrap; row-gap: 10px; }
   .avatars.overlap { gap: 9px; row-gap: 9px; }
@@ -4729,34 +4900,43 @@ const STYLE = `
   .pill.presence-state.home ha-icon { color: #f08c00; }
   .pill.presence-state.nearby ha-icon { color: #2f9e8f; }
   .hname { font-weight: 600; }
-  .house-head .segmented { flex: 0 1 280px; min-width: 220px; }
+
   .block.house { container-type: inline-size; }
   /* Two by two on a narrow card, all in one row on a wide one. */
-  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  /* Values as a table with thin lines: two by two on a narrow card, all in one row on a wide one. */
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--ac-line); }
   .stats.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .stat, button.stat.period { display: flex; flex-direction: column; gap: 2px; background: none; border: none; border-radius: 0;
+    border-bottom: 1px solid var(--ac-line); padding: 12px 12px 12px 0; text-align: left; min-width: 0; font: inherit; color: inherit; }
+  .stats > :nth-child(2n) { border-left: 1px solid var(--ac-line); padding-left: 12px; }
+  .stats.three > * { border-left: 1px solid var(--ac-line); padding-left: 12px; }
+  .stats.three > :first-child { border-left: none; padding-left: 0; }
   @container (min-width: 440px) {
     .stats, .stats.three { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+    .stats > * { border-left: 1px solid var(--ac-line); padding-left: 12px; }
+    .stats > :first-child { border-left: none; padding-left: 0; }
   }
-  .stat, button.stat.period { display: flex; flex-direction: column; gap: 3px; background: var(--ac-surface-2); border-radius: 10px;
-    padding: 8px 10px; text-align: left; min-width: 0; }
-  .stat .k { display: flex; align-items: center; gap: 5px; font-size: 0.72em; color: var(--ac-muted); min-width: 0; }
+  .stat .k { display: flex; align-items: center; gap: 6px; font-size: 0.75em; color: var(--ac-muted); min-width: 0; }
   .stat .k ha-icon { --mdc-icon-size: 14px; flex: none; }
-  .stat .v { font-variant-numeric: tabular-nums; font-size: 1.15em; font-weight: 500; }
-  .stat.hot { background: color-mix(in srgb, var(--ac-hot) 16%, transparent); }
-  .stat.hot .k, .stat.hot .v { color: var(--ac-hot); }
+  .stat .v { font-variant-numeric: tabular-nums; font-size: 1.25em; font-weight: 600; }
+  .stat.hot .v { color: var(--ac-hot); }
   .stat.warn .v { color: var(--ac-warn); }
-  .hactions { display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); gap: 6px; }
-  @media (max-width: 420px) { .hactions { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-  .abtn { --t: var(--ac-accent); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-    min-height: 56px; padding: 6px 4px; border-radius: 12px; border: 1px solid var(--ac-line); background: var(--card-background-color);
-    color: var(--primary-text-color); font: inherit; font-size: 0.75em; cursor: pointer; min-width: 0; transition: background .15s, border-color .15s; }
-  .abtn span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hactions { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+  .abtn { --t: var(--ac-accent); grid-column: span var(--span, 2); display: flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 48px; padding: 0 12px; box-sizing: border-box; border-radius: 12px; border: 1px solid var(--ac-line); background: transparent;
+    color: var(--primary-text-color); font: inherit; font-size: 0.9em; font-weight: 500; cursor: pointer; min-width: 0;
+    transition: background .15s, border-color .15s; }
+  .abtn span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* On a narrow card the icon goes above the name, so the name keeps its room. */
+  @container (max-width: 400px) {
+    .abtn { flex-direction: column; gap: 2px; min-height: 56px; padding: 4px; font-size: 0.82em; }
+  }
   .abtn ha-icon { --mdc-icon-size: 20px; }
   .abtn:hover { background: var(--ac-surface-2); }
   .abtn.warn { --t: var(--warning-color, #f0ad4e); }
   .abtn.teal { --t: #2f9e8f; }
   .abtn.blue { --t: #4a78b5; }
-  .abtn.on, .abtn.open { border-color: var(--t); background: color-mix(in srgb, var(--t) 16%, var(--card-background-color)); }
+  .abtn.on, .abtn.open { border-color: color-mix(in srgb, var(--t) 60%, transparent); background: color-mix(in srgb, var(--t) 16%, transparent); font-weight: 600; }
   .abtn.on ha-icon { color: var(--t); }
   .panel { --t: var(--ac-accent); display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 12px;
     background: color-mix(in srgb, var(--t) 8%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--t) 40%, transparent); }
@@ -4767,10 +4947,13 @@ const STYLE = `
   .pill.state.on, .pill.teal { background: #2f9e8f; color: #fff; }
 
   /* rooms */
-  .block.room { background: color-mix(in srgb, var(--c) 6%, var(--card-background-color));
-    border-color: color-mix(in srgb, var(--c) 32%, var(--ac-line)); gap: 14px; }
-  .room-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .rh-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+  /* Neutral rooms: the level colour only on the arc and its dot; the outline only for an alert. */
+  .block.room { gap: 16px; }
+  .block.room.al-error, .tile.al-error { border-color: color-mix(in srgb, var(--ac-err) 50%, transparent); }
+  .block.room.al-warn, .tile.al-warn { border-color: color-mix(in srgb, var(--warning-color, #f0ad4e) 55%, transparent); }
+  .room-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .rh-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; flex: 1 1 auto; }
+  .room-head .decision { flex: none; }
   .room-title .name { font-size: 1.15em; }
   .pill.rule .dot { width: 8px; height: 8px; }
   .pill ha-icon { --mdc-icon-size: 15px; }
@@ -4783,28 +4966,31 @@ const STYLE = `
   .block.room.open { container-type: inline-size; }
   .hero { display: flex; gap: 16px; align-items: center; }
   .hero .chips { flex: 1 1 0; }
-  .hero .chips .pill.preset { align-self: flex-start; }
-  @container (max-width: 440px) {
+  @container (max-width: 400px) {
     .hero { gap: 12px; }
-    .hero .gauge { width: 112px !important; height: 112px !important; --gs: 112px; }
+    .hero .gauge { width: 136px !important; height: 136px !important; --gs: 136px; }
     .hero .gauge svg { width: 100%; height: 100%; }
-    .hero .chip { font-size: 0.85em; }
   }
   .gauge { position: relative; display: inline-block; flex: none; }
   .gauge svg { display: block; }
-  .gauge .gtrack { fill: none; stroke: color-mix(in srgb, var(--c) 20%, var(--ac-line)); stroke-linecap: round; }
+  .gauge .gtrack { fill: none; stroke: var(--ac-line); stroke-linecap: round; }
   .gauge .gvalue { fill: none; stroke: var(--c); stroke-linecap: round; }
-  .gauge .gmark { stroke: var(--primary-text-color); stroke-linecap: round; filter: drop-shadow(0 0 1.5px var(--card-background-color)); }
+  .gauge .gmark { fill: var(--primary-text-color); stroke: var(--ac-opaque, var(--card-background-color)); }
   .gcenter { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   /* In the opening of the arc, under the number. */
   .gtrend { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: inline-flex; line-height: 0; }
-  .gtrend ha-icon { --mdc-icon-size: max(14px, calc(var(--gs) * 0.2)); }
+  .gtrend ha-icon { --mdc-icon-size: max(14px, calc(var(--gs) * 0.13)); }
   .gtrend.up { color: var(--ac-hot); }
   .gtrend.down { color: var(--state-climate-cool-color, #2b9af9); }
-  .gnum { font-size: max(13px, calc(var(--gs) * 0.24)); font-weight: 300; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-  .gsub { font-size: 0.8em; color: var(--ac-muted); margin-top: 5px; }
-  .chips { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+  .gnum { font-size: max(15px, calc(var(--gs) * 0.26)); font-weight: 600; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .gsub { font-size: 0.8em; color: var(--ac-muted); margin-top: 6px; }
+  .chips { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
   .chip { display: inline-flex; align-items: flex-start; gap: 7px; font-size: 0.9em; line-height: 1.35; }
+  .chip.line { display: flex; flex-direction: column; gap: 2px; }
+  .chip.line .clabel { font-size: 0.82em; color: var(--ac-muted); }
+  .chip.line .cval { font-weight: 500; display: inline-flex; align-items: baseline; gap: 6px; }
+  .chip.line .cval .dot { width: 8px; height: 8px; align-self: center; }
+  .chip.line .csub { font-size: 0.88em; color: var(--ac-muted); }
   .chip ha-icon { --mdc-icon-size: 17px; color: var(--c); flex: none; }
   .chip small { display: block; }
   .chip.soft { align-self: flex-start; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 0.82em;
@@ -4814,73 +5000,71 @@ const STYLE = `
   .chip.neutral ha-icon { color: var(--ac-muted); }
   .chip.guest ha-icon { color: #2f9e8f; }
   .today { display: flex; flex-direction: column; gap: 4px; }
-  .tlabel { font-size: 0.72em; color: var(--ac-muted); text-transform: uppercase; letter-spacing: 0.06em; }
-  .tbar { position: relative; height: 12px; border-radius: 6px; overflow: hidden; background: var(--ac-surface-2); }
-  .tbar i { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--c) 80%, transparent); }
-  .tbar b { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--primary-text-color); }
+  .tlabel { font-size: 0.78em; color: var(--ac-muted); }
+  .tbar { position: relative; height: 14px; border-radius: 7px; background: var(--ac-surface-2); }
+  .tbar i { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--c) 85%, transparent); }
+  .tbar i:first-child { border-radius: 7px 0 0 7px; }
+  .tbar i:last-of-type { border-radius: 0 7px 7px 0; }
+  .tbar b { position: absolute; top: -3px; bottom: -3px; width: 3px; margin-left: -1.5px; border-radius: 2px; background: var(--primary-text-color);
+    box-shadow: 0 0 0 2px var(--ac-opaque, var(--card-background-color)); }
   .tticks { display: flex; justify-content: space-between; font-size: 0.68em; color: var(--ac-muted); }
   .sbtns { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 8px; }
-  @media (max-width: 420px) { .sbtns { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-  .sbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 56px; padding: 6px 4px; border-radius: 12px;
-    border: 1px solid var(--ac-line); background: var(--card-background-color); color: var(--primary-text-color); font: inherit;
-    font-size: 0.85em; font-weight: 500; cursor: pointer; min-width: 0; transition: background .15s, border-color .15s; }
-  .sbtn span { text-align: center; line-height: 1.2; overflow-wrap: break-word; hyphens: auto; }
-  .sbtn ha-icon { --mdc-icon-size: 20px; flex: none; }
-  .sbtn.back { border-color: var(--ac-accent); background: color-mix(in srgb, var(--ac-accent) 16%, var(--card-background-color)); }
-  .sbtn.back ha-icon { color: var(--ac-accent); }
+  .sbtn { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; padding: 4px 8px; border-radius: 12px;
+    border: 1px solid var(--ac-line); background: transparent; color: var(--primary-text-color); font: inherit;
+    font-size: 0.9em; font-weight: 500; cursor: pointer; min-width: 0; box-sizing: border-box; transition: background .15s, border-color .15s; }
+  .sbtn span { text-align: center; line-height: 1.2; overflow-wrap: break-word; hyphens: auto; min-width: 0; }
+  .sbtn ha-icon { --mdc-icon-size: 18px; flex: none; }
+  @container (max-width: 400px) {
+    .sbtn { flex-direction: column; gap: 2px; min-height: 56px; padding: 4px; font-size: 0.85em; }
+  }
+  .sbtn.primary { border-color: color-mix(in srgb, var(--c) 60%, transparent); background: color-mix(in srgb, var(--c) 22%, transparent); font-weight: 600; }
   .sbtn.lock.on { border-color: var(--warning-color, #f0ad4e); background: color-mix(in srgb, var(--warning-color, #f0ad4e) 16%, var(--card-background-color)); }
   .sbtn.lock.on ha-icon { color: var(--warning-color, #f0ad4e); }
   .sbtn:hover { background: var(--ac-surface-2); }
-  .sbtn.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 18%, var(--card-background-color)); }
+  .sbtn.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 18%, transparent); }
   .section { display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: var(--ac-surface);
     box-shadow: inset 0 0 0 1px var(--ac-line); }
   .section-head { font-weight: 500; }
   .section .fold-body { padding-top: 6px; }
-  .block.room.folded { padding: 8px 12px; }
+  .block.room.folded { padding: 8px 12px 8px 8px; }
   .frow { display: flex; align-items: center; gap: 12px; width: 100%; font: inherit; color: inherit; background: none; border: none;
-    padding: 0; cursor: pointer; text-align: left; min-height: 54px; }
-  .ftext { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-  .ftext .name { font-weight: 600; }
-  .freason { font-size: 0.82em; color: var(--ac-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .frow .gnum, .tile .gnum { font-weight: 400; }
-  .frow ha-icon, .frow .cicon ha-icon { --mdc-icon-size: 18px; }
+    padding: 0; cursor: pointer; text-align: left; min-height: 60px; }
+  .ftext { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+  .ftext .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .freason { display: flex; align-items: flex-start; gap: 6px; font-size: 0.85em; line-height: 1.35; color: var(--ac-muted); min-width: 0; }
+  .freason .dot { width: 8px; height: 8px; margin-top: 5px; }
+  .freason > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+  .ficons { display: inline-flex; gap: 6px; flex: none; }
 
   /* compact tiles */
-  .rooms-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+  .rooms-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
   .rooms-list > .block { grid-column: 1 / -1; }
-  .tile { display: flex; flex-direction: column; gap: 10px; font: inherit; color: inherit; text-align: left; cursor: pointer; padding: 12px;
-    border-radius: 16px; border: 1px solid color-mix(in srgb, var(--c) 32%, var(--ac-line));
-    background: color-mix(in srgb, var(--c) 7%, var(--card-background-color)); min-width: 0; }
-  .tile:hover { background: color-mix(in srgb, var(--c) 12%, var(--card-background-color)); }
+  .tile { display: flex; flex-direction: column; gap: 12px; font: inherit; color: inherit; text-align: left; cursor: pointer; padding: 14px;
+    border-radius: 16px; border: 1px solid transparent; background: var(--ac-surface); min-width: 0; box-sizing: border-box; }
+  .tile:hover, .crow:hover, .frow:hover { background: var(--ac-surface-2); }
+  .tile > .pill.preset { align-self: flex-start; max-width: 100%; min-height: 28px; padding: 0 12px; }
   .tile-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; min-height: 28px; }
   .tile .cname { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .tstat { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none;
-    background: color-mix(in srgb, var(--c) 22%, transparent); }
-  .tstat ha-icon { --mdc-icon-size: 16px; }
-  .tstat.hot { background: var(--ac-hot); color: #fff; }
-  .tstat.warn { background: var(--ac-warn); color: #fff; }
-  .tstat.teal { background: #2f9e8f; color: #fff; }
-  .alerticon { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none;
-    background: var(--error-color, #db4437); color: #fff; }
-  .alerticon ha-icon { --mdc-icon-size: 16px; }
-  .alerticon.sm { width: 24px; height: 24px; }
-  .alerticon.sm ha-icon { --mdc-icon-size: 14px; }
+  /* Status icons: all 28 px circles, tinted by meaning. */
+  .tstat, .cicon, .alerticon { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    flex: none; background: var(--ac-surface-2); color: var(--primary-text-color); }
+  .tstat ha-icon, .cicon ha-icon, .alerticon ha-icon { --mdc-icon-size: 16px; }
+  .tstat.warn, .cicon.warn { background: color-mix(in srgb, var(--warning-color, #f0ad4e) 18%, transparent); color: var(--ac-warn-fg); }
+  .tstat.teal, .cicon.teal { background: color-mix(in srgb, var(--ac-teal) 18%, transparent); color: color-mix(in srgb, var(--ac-teal) 75%, var(--primary-text-color)); }
+  .alerticon { background: color-mix(in srgb, var(--ac-err) 16%, transparent); color: var(--ac-err-fg); }
   .flame { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none;
     color: var(--ac-hot); background: color-mix(in srgb, var(--ac-hot) 10%, transparent); box-shadow: inset 0 0 0 1.5px var(--ac-hot); }
   .flame ha-icon { --mdc-icon-size: 16px; }
   .flame.on { background: var(--ac-hot); color: #fff; box-shadow: none; }
   .flame.on ha-icon { animation: shc-flicker 1.6s ease-in-out infinite; transform-origin: 50% 85%; }
-  .flame.sm { width: 24px; height: 24px; }
-  .flame.sm ha-icon { --mdc-icon-size: 14px; }
+
   @keyframes shc-flicker {
     0%, 100% { transform: scale(1) rotate(0deg); }
     30% { transform: scale(1.1, 1.18) rotate(-4deg); }
     60% { transform: scale(0.94, 1.04) rotate(3deg); }
   }
   .tstats { display: inline-flex; gap: 4px; flex: none; }
-  .cicon.teal ha-icon { color: #2f9e8f; }
-  .cicon { display: inline-flex; border-radius: 50%; }
-  .tile-body { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .tile-body { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .gcol { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: none; }
   .pill.preset { background: color-mix(in srgb, var(--c) 22%, transparent); font-weight: 500; }
   .pill.preset .dot, .pill.rule .dot { width: 8px; height: 8px; }
@@ -4888,10 +5072,10 @@ const STYLE = `
   .tname { flex-wrap: nowrap; flex: 1; }
   .tname .cname { flex: 0 1 auto; }
   .tname .pill { min-width: 0; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; }
-  .banner.teal { background: color-mix(in srgb, #2f9e8f 18%, transparent); border-color: color-mix(in srgb, #2f9e8f 55%, transparent); }
-  .banner.teal ha-icon { color: #2f9e8f; }
-  .tile-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 0.85em; align-items: flex-start; }
-  .tile-info .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+  .tile-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; align-items: flex-start; }
+  .tile-info .tsub { font-size: 0.75em; color: var(--ac-muted); }
+  .tile-info .tval { font-size: 1.15em; font-weight: 600; }
+  .tile-info .muted { font-size: 0.8em; line-height: 1.35; overflow-wrap: anywhere; max-width: 100%; }
 
   :host([offscreen]) .pulse, :host([offscreen]) .flame.on ha-icon { animation-play-state: paused; }
   @media (prefers-reduced-motion: reduce) { .pulse, .flame.on ha-icon { animation: none; } * { transition: none !important; } }

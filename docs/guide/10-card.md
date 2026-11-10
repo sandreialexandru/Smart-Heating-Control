@@ -62,66 +62,88 @@ collapsed: true
   presence (Home / Nearby / Away) and the flame.
 - **Presence**, with every person as a round badge (the photo or the initial)
   in the colour of where they are: orange home, green nearby, grey far.
-- Tiles for **the outdoor average** (over the *Average over* hours), the
-  **season**, the **heat demand** and the **heating time**: two by two on a
-  narrow card (three in a row without the heating time), all in one row on a
-  wide one.
-- The **mode** (Auto / Away / Vacation / Off / Summer).
-- The **scenarios**, one button each, the active one marked (when the house has any, see [chapter 4](04-schedule.md#scenarios)).
-- A row of buttons: **Pause** and **Guests** (on / off), **Vacation** (opens
-  the vacation dates), **Reevaluate** and **Automatic** (clears all manual
-  changes). A button stays coloured while its mode is on.
+- **The outdoor average** (over the *Average over* hours), the **season**, the
+  **heat demand** and the **heating time**, as a table with thin lines: two by
+  two on a narrow card (three in a row without the heating time), all in one
+  row on a wide one.
+- The **mode** (Auto / Away / Vacation / Off / Summer), the chosen one tinted
+  with the accent colour of the theme.
+- The **scenarios**, three per row in the same buttons as the modes (two per
+  row when there are two or four), the active one tinted the same way (when
+  the house has any, see [chapter 4](04-schedule.md#scenarios)).
+- The buttons, 3 + 2: **Pause** and **Guests** (on / off), **Vacation** (opens
+  the vacation dates), then **Reevaluate** and **Automatic** (clears all manual
+  changes); the icon is next to the name, above it on a narrow card. A button
+  stays coloured while its mode is on.
 - **Warm outside**, while the heating is off because it is warm, with the reason
   (measured average or forecast) or when the forecast lets the heating run (see
   [chapter 6](06-weather.md)). Not shown where it cannot act: mode Off or Summer,
   outside the season, in a pause.
-- A **pause band** at the top while the house is paused, and a **guest band**
-  while guest mode is on (with its end, when it has one; it also says when a
-  vacation or the Away mode waits for the guests).
+- A **pause band** at the top while the house is paused, with a **Resume**
+  button, and a **guest band** while guest mode is on, with an **End** button
+  (with its end, when it has one; it also says when a vacation or the Away mode
+  waits for the guests).
+- Every message has the same shape: a tinted band, the icon in a circle, the
+  subject in bold and the text; amber for a warning (pause, *Warm outside*),
+  green-blue for the guests, grey for information (*Not heating*, *Warm
+  outside* cancelled by the forecast). A band that opens an entity ends with an
+  arrow.
 - In the compact card the folded house row shows the people, the presence
   (Home / Nearby / Away), the mode, the outdoor temperature and a flame while
   there is heat demand.
 
 ## A room
 
-The header shows the name, the decision (e.g. *Nearby*, *Schedule*; in the
-colour of the level) and the flame, open window and manual change badges, and
-*Mold risk* (a drop) while the mold risk alert of the room is active.
+The header shows the name, the level and the decision (e.g. *Home ·
+Schedule*, with a dot in the colour of the level), the flame, the open window
+badge, and *Mold risk* (a drop) while the mold risk alert of the room is
+active. The rooms are neutral: the colour of the level is only on the arc and
+its dots. A room with an alert is outlined: red when something does not work
+(a device, a sensor or the heat source unavailable, a temperature not
+accepted, an invalid schedule, a missing level), amber for the other alerts.
 
 A **flame** shows the heat everywhere (house, open room, folded row, compact
 tile): an outlined circle while there is a demand for heat (*Asks for heat*), a
 full one that flickers while the heat source really runs (*Heating*); the words
 appear when it is touched or hovered.
 
-A folded room (row or compact tile) shows only the **level** (e.g. *Eco*) and
-small icons: heating (flame), window open, mold risk (a drop, while its alert
-is active), manual change and guest mode while it is on; the decision appears when the room is open, with the level next to
-the arc. Under the name, the compact tile shows the time to the target while
-the room heats, else the next change (e.g. *Sleep · 22:00*). Below the
+A folded room shows the arc and, under the name, one line: the level and its
+target, then the time to the target while the room heats, else the next change
+(e.g. *Home 21.0° · Sleep at 22:00*); on the right small round icons, all the
+same size: heating (flame), alerts, window open, mold risk (a drop, while its
+alert is active), manual change and guest mode while it is on. A compact tile
+shows the same icons, the arc, the target under *Target*, the same line and
+the level below the arc; the decision appears when the room is open. Below the
 header:
 
 - an **arc** with the room temperature and the target under it; the arc is
   empty at the frost protection and full at the maximum temperature of the room
-  (it only shows the temperature, it does not change anything); a short mark
-  across the arc shows the target on the same scale (also on the small arcs);
+  (it only shows the temperature, it does not change anything); a dot on the
+  arc shows the target on the same scale (also on the small arcs); within
+  0.3 °C (0.5 °F) of the target the arc ends exactly on the dot;
   an **arrow** in the opening of the arc (also on the small arcs) shows that
   the room is warming (↑) or cooling (↓): a change of at least 0.2 °C per hour
   over the last 30 minutes, one step of a usual sensor (0.1 °C) in 30 minutes;
   no arrow while it is steady or not known yet (the `temperature_trend`
   attribute of the *Decision* sensor);
-- next to it the **reason** (in the card language), the **time to target**
+- next to it, under **Now**, the **reason** (in the card language), the **time to target**
   (e.g. *~35 min*) or, during an optimal stop, the **expected temperature at
   the change** (*~21.5° at 22:00*), guest mode while it is on, **By the room sensor** when it is on for the
   room, and what the device itself measures (rooms with TRVs / climate
-  devices);
+  devices); under **Next**, the next level, its temperature and when (e.g.
+  *Sleep 18.5° at 22:00*);
 - **Today**: the profile of the day as a bar over the schedule day (from the
   house *Schedule day starts at*, e.g. 00 → 24 or 04 → 04), with the time now.
-If a room below its target does not heat, the card says why (*Not heating: …*,
-see [chapter 8](08-heat-source-and-energy.md#when-a-room-below-its-target-does-not-heat)).
-While there is a manual change, an **Automatic** button first in the row of
-buttons under the arc clears it (back to automatic).
+While there is a manual change, a band under the arc says until when and where
+it was made, with a **Cancel** button (back to automatic). If a room below its
+target does not heat, a band says why (*Not heating: …*, see
+[chapter 8](08-heat-source-and-energy.md#when-a-room-below-its-target-does-not-heat)).
+The **alerts** of the room and of the house follow, in a list with their
+number: each with a title (e.g. *Sensor silent*), the text in the language of
+the card and, when it is about an entity, an arrow; a tap opens that entity.
 
-Under the arc, buttons open the sections **For a while** (*Set for a while*),
+Below, buttons (three per row; the first, **For a while**, is the main one and
+is tinted in the colour of the level) open the sections **For a while** (*Set for a while*),
 **Schedule**, **Chart**, **Levels** (*Level temperatures*) and **Details**, each on its own (several can be open at once); an
 open section's button stays coloured. A **Lock** button next to them turns the
 child lock of the room on or off (coloured while on). The chart and the

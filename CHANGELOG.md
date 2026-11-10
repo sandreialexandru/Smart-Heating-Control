@@ -64,6 +64,30 @@ GitHub releases.
 
 ### Card
 
+- 🎨 **New look, easier to read** (design only, every value and button stays):
+  - rooms are neutral: the level colour is only on the arc and its dot, not on
+    the whole room; a room is outlined red for an alert that something does not
+    work and amber for a warning;
+  - the arc ends exactly on the target when the room is within 0.3 °C (0.5 °F)
+    of it, and the target is a dot on the arc instead of a mark across it;
+    bigger, bolder temperatures;
+  - the house: its values as a table with thin lines, the chosen mode and
+    scenario tinted with the accent colour, the scenarios three per row in the
+    same buttons as the modes, the five buttons as 3 + 2 with the icon next to
+    the name (above it on a narrow card);
+  - a folded room shows on one line the level, its target and the time to the
+    target or the next change (*Home 21.0° · Sleep at 22:00*); a compact tile
+    shows the target under *Target*, the next change, and the level below the
+    arc;
+  - an open room: the level and the rule in its header (*Home · Schedule*),
+    *Now* and *Next* next to the arc, the buttons three per row with *For a
+    while* as the main one;
+  - **messages in one shape** (a tinted band, the icon in a circle, the subject
+    in bold): the pause band with a **Resume** button, the guest band with an
+    **End** button, *Warm outside*, *Not heating* and the manual change with a
+    **Cancel** button (instead of the *Automatic* button in the row);
+  - **alerts in the open room**, with a title, their number and a tap that
+    opens the entity (they were the first item of the *Details*).
 - ⏱️ **Set for a while with only the hours** ([#7](https://github.com/sandreialexandru/Smart-Heating-Control/issues/7)):
   with the temperature left empty, *Set* changes how long the current manual
   change lasts, from now (its level or temperature stays). Without a manual

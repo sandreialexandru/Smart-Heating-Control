@@ -393,9 +393,9 @@ type: custom:smart-heating-control-card
 
 Every room also shows its decision, a flame (outlined while it asks for heat, full and flickering
 while it heats; also on the house and on folded rooms) / window / manual change badges, an arc with the room temperature (empty at the frost protection, full at
-the maximum; it only shows the value), an arrow ↑ / ↓ in its opening while the room warms or cools (`temperature_trend`: at least 0.2 °C/h over the last 30 minutes) and the target, the reason, the time to
+the maximum; it only shows the value), the target as a dot on it (the arc ends on the dot within 0.3 °C / 0.5 °F of the target), an arrow ↑ / ↓ in its opening while the room warms or cools (`temperature_trend`: at least 0.2 °C/h over the last 30 minutes) and the target, the reason, the time to
 target, heating by the room sensor when it is on, what the device itself measures, today's
-profile as a bar, and an *Automatic* button (back to automatic) in the row of buttons while there is a manual change. Buttons under the arc open *For a while* (set for
+profile as a bar, and while there is a manual change a band with a *Cancel* button (back to automatic). Buttons under the arc (three per row) open *For a while* (set for
 a while; a manual change with an end shows the time it has left), *Schedule* (each profile with its days and an on / off switch; its
 days are chosen in the editor), *Chart*, *Levels* (level temperatures) and *Details*, each on its own (several
 at once), and a *Lock* button for the child lock of the room.
@@ -426,8 +426,11 @@ at once), and a *Lock* button for the child lock of the room.
   the tooltip shows *Early start* / *Early stop* above it.
 - **Pause**: a banner at the top of the card while the house is paused (the
   *Pause* switch stays the only control).
-- **Details**, grouped: the alerts of the room and of the house (first, in the
-  language of the card); *Temperatures* (room, target, thermostat preset,
+- **Alerts** of the room and of the house in the open room, under the arc: a
+  list with their number, each with a title, the text in the language of the
+  card and a tap that opens its entity; the room is outlined red for an alert
+  that something does not work, amber for the others.
+- **Details**, grouped: *Temperatures* (room, target, thermostat preset,
   humidity of the air and at the coldest wall with a humidity sensor,
   adjustments, level temperatures); *Schedule* (next optimal start / stop,
   heating time); *Learning* (its state or progress, with a **Reset** button

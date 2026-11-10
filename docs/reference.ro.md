@@ -415,9 +415,9 @@ type: custom:smart-heating-control-card
 
 Fiecare cameră arată și decizia, o flacără (conturată cât cere căldură, plină și pâlpâind cât
 încălzește; și la casă și la camerele pliate) / insignele pentru fereastră / modificare manuală, un arc cu temperatura camerei (gol la
-antiîngheț, plin la maxim; doar arată valoarea), o săgeată ↑ / ↓ în deschiderea lui cât camera se încălzește sau se răcește (`temperature_trend`: cel puțin 0,2 °C/h în ultimele 30 de minute) și ținta, motivul, timpul până
+antiîngheț, plin la maxim; doar arată valoarea), ținta ca un punct pe el (arcul se oprește în punct la cel mult 0,3 °C / 0,5 °F de țintă), o săgeată ↑ / ↓ în deschiderea lui cât camera se încălzește sau se răcește (`temperature_trend`: cel puțin 0,2 °C/h în ultimele 30 de minute) și ținta, motivul, timpul până
 la țintă, încălzirea după senzorul camerei când e pornită, ce măsoară dispozitivul însuși, profilul
-zilei ca bară și un buton *Automat* (înapoi la automat) în rândul de butoane cât există o modificare manuală. Butoanele de sub arc deschid *Temporar* (setează
+zilei ca bară și, cât există o modificare manuală, o bandă cu butonul *Anulează* (înapoi la automat). Butoanele de sub arc (câte trei pe rând) deschid *Temporar* (setează
 temporar; o modificare manuală cu sfârșit arată cât mai are), *Program* (fiecare profil cu zilele lui și un comutator pornit /
 oprit; zilele se aleg în editor), *Grafic*, *Niveluri* (temperaturile nivelurilor) și *Detalii*, fiecare separat (mai
 multe deodată) și un buton *Blocare* pentru blocarea modificărilor în cameră.
@@ -450,8 +450,11 @@ multe deodată) și un buton *Blocare* pentru blocarea modificărilor în camer�
   anticipată* deasupra ei.
 - **Pauză**: o bandă sus pe card cât timp casa e în pauză (comutatorul *Pauză*
   rămâne singurul control).
-- **Detalii**, pe grupuri: alertele camerei și ale casei (primele, în limba
-  cardului); *Temperaturi* (camera, ținta, presetul termostatului, ajustările,
+- **Alertele** camerei și ale casei în camera deschisă, sub arc: o listă cu
+  numărul lor, fiecare cu un titlu, textul în limba cardului și o atingere care
+  deschide entitatea; camera e conturată roșu pentru o alertă că ceva nu
+  funcționează, chihlimbar pentru celelalte.
+- **Detalii**, pe grupuri: *Temperaturi* (camera, ținta, presetul termostatului, ajustările,
   umiditatea aerului și la peretele cel mai rece cu senzor de umiditate,
   temperaturile nivelurilor); *Program* (următoarea pornire / oprire
   anticipată, timpul de încălzire); *Învățare* (starea sau progresul, cu un

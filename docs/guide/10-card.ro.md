@@ -62,66 +62,86 @@ collapsed: true
   (Acasă / Aproape / Departe) și flacăra.
 - **Prezența**, cu fiecare persoană ca un cerc (poza sau inițiala) în culoarea
   locului unde e: portocaliu acasă, verde aproape, gri departe.
-- Plăci pentru **media temperaturii de afară** (pe orele din *Medie pe*),
-  **sezon**, **cererea de căldură** și **timpul de încălzire**: două câte două
-  pe un card îngust (trei pe rând fără timpul de încălzire), toate pe un rând
-  pe unul lat.
-- **Modul** (Auto / Plecat / Vacanță / Oprit / Vară).
-- **Scenariile**, câte un buton, cel activ marcat (când casa are, vezi [capitolul 4](04-program.ro.md#scenarii)).
-- Un rând de butoane: **Pauză** și **Oaspeți** (pornit / oprit), **Vacanță**
-  (deschide datele vacanței), **Reevaluează** și **Automat** (anulează toate
-  modificările manuale). Un buton rămâne colorat cât modul lui e pornit.
+- **Media temperaturii de afară** (pe orele din *Medie pe*), **sezonul**,
+  **cererea de căldură** și **timpul de încălzire**, ca un tabel cu linii
+  subțiri: două câte două pe un card îngust (trei pe rând fără timpul de
+  încălzire), toate pe un rând pe unul lat.
+- **Modul** (Auto / Plecat / Vacanță / Oprit / Vară), cel ales colorat cu
+  culoarea de accent a temei.
+- **Scenariile**, câte trei pe rând în aceleași butoane ca modurile (câte două
+  când sunt două sau patru), cel activ colorat la fel (când casa are, vezi
+  [capitolul 4](04-program.ro.md#scenarii)).
+- Butoanele, 3 + 2: **Pauză** și **Oaspeți** (pornit / oprit), **Vacanță**
+  (deschide datele vacanței), apoi **Reevaluează** și **Automat** (anulează
+  toate modificările manuale); iconița e lângă nume, deasupra lui pe un card
+  îngust. Un buton rămâne colorat cât modul lui e pornit.
 - **Cald afară**, cât încălzirea e oprită pentru că e cald, cu motivul (media
   măsurată sau prognoza) sau când prognoza lasă încălzirea să pornească
   ([capitolul 6](06-vreme.ro.md)). Nu apare unde nu are efect: modul Oprit sau
   Vară, în afara sezonului, în pauză.
-- O **bandă de pauză** sus cât casa e în pauză și o **bandă de oaspeți** cât
-  modul oaspeți e pornit (cu sfârșitul lui, când are unul; spune și când o
-  vacanță sau modul Plecat așteaptă după oaspeți).
+- O **bandă de pauză** sus cât casa e în pauză, cu butonul **Reia**, și o
+  **bandă de oaspeți** cât modul oaspeți e pornit, cu butonul **Oprește** (cu
+  sfârșitul lui, când are unul; spune și când o vacanță sau modul Plecat
+  așteaptă după oaspeți).
+- Toate mesajele au aceeași formă: o bandă colorată, iconița într-un cerc,
+  subiectul îngroșat și textul; chihlimbar pentru avertizări (pauză, *Cald
+  afară*), verde-albăstrui pentru oaspeți, gri pentru informații (*Nu
+  încălzește*, *Cald afară* anulat de prognoză). O bandă care deschide o
+  entitate se termină cu o săgeată.
 - În cardul compact, rândul pliat al casei arată persoanele, prezența
   (Acasă / Aproape / Departe), modul, temperatura de afară și o flacără cât
   există cerere de căldură.
 
 ## O cameră
 
-Antetul arată numele, decizia (de exemplu *Aproape*, *Program*; în culoarea
-nivelului) și flacăra și insignele pentru fereastră deschisă și modificare manuală,
-plus *Risc de mucegai* (o picătură) cât e activă alerta de mucegai a camerei.
+Antetul arată numele, nivelul și decizia (de exemplu *Acasă · Program*, cu un
+punct în culoarea nivelului), flacăra, insigna pentru fereastră deschisă și
+*Risc de mucegai* (o picătură) cât e activă alerta de mucegai a camerei.
+Camerele sunt neutre: culoarea nivelului e doar pe arc și pe punctele lui. O
+cameră cu alertă e conturată: roșu când ceva nu funcționează (un dispozitiv, un
+senzor sau sursa de căldură indisponibile, o temperatură neacceptată, un
+program invalid, un nivel lipsă), chihlimbar pentru celelalte alerte.
 
 O **flacără** arată căldura peste tot (casa, camera deschisă, rândul pliat,
 placa compactă): un cerc conturat cât există cerere de căldură (*Cere
 căldură*), unul plin care pâlpâie cât sursa de căldură chiar merge
 (*Încălzește*); cuvintele apar la atingere sau la mouse.
 
-O cameră pliată (rând sau placă compactă) arată doar **nivelul** (de exemplu
-*Eco*) și iconițe mici: încălzire (flacără), fereastră deschisă, risc de mucegai
-(o picătură, cât e activă alerta lui), modificare manuală și modul oaspeți cât
-e pornit; decizia apare când camera e deschisă, cu
-nivelul lângă arc. Sub nume, placa compactă arată timpul până la țintă cât
-camera încălzește, altfel următoarea schimbare (de exemplu *Somn · 22:00*).
-Sub antet:
+O cameră pliată arată arcul și, sub nume, un rând: nivelul și ținta lui, apoi
+timpul până la țintă cât camera încălzește, altfel următoarea schimbare (de
+exemplu *Acasă 21.0° · Somn la 22:00*); în dreapta iconițe rotunde mici, toate
+de aceeași mărime: încălzire (flacără), alerte, fereastră deschisă, risc de
+mucegai (o picătură, cât e activă alerta lui), modificare manuală și modul
+oaspeți cât e pornit. O placă compactă arată aceleași iconițe, arcul, ținta sub
+*Țintă*, același rând și nivelul sub arc; decizia apare când camera e
+deschisă. Sub antet:
 
 - un **arc** cu temperatura camerei și ținta sub ea; arcul e gol la antiîngheț
   și plin la temperatura maximă a camerei (doar arată temperatura, nu schimbă
-  nimic); o liniuță scurtă de-a curmezișul arcului arată ținta pe aceeași scară
-  (și pe arcurile mici); o **săgeată** în deschiderea arcului (și pe arcurile
+  nimic); un punct pe arc arată ținta pe aceeași scară (și pe arcurile mici);
+  la cel mult 0,3 °C (0,5 °F) de țintă arcul se oprește exact în punct; o **săgeată** în deschiderea arcului (și pe arcurile
   mici) arată că camera se încălzește (↑) sau se răcește (↓): o schimbare de
   cel puțin 0,2 °C pe oră în ultimele 30 de minute, adică un pas al unui
   senzor obișnuit (0,1 °C) în 30 de minute; fără săgeată cât e stabilă sau nu
   se știe încă (atributul `temperature_trend` al senzorului *Decizie*);
-- lângă el **motivul** (în limba cardului), **timpul până la țintă** (de exemplu
+- lângă el, la **Acum**, **motivul** (în limba cardului), **timpul până la țintă** (de exemplu
   *~35 min*) sau, în timpul unei opriri anticipate, **temperatura estimată la
   schimbare** (*~21.5° la 22:00*), modul oaspeți cât e pornit, **După senzorul camerei** când e pornită pentru
   cameră și ce măsoară dispozitivul însuși (camerele cu TRV / dispozitive
-  climate);
+  climate); la **Următor**, nivelul următor, temperatura lui și ora (de
+  exemplu *Somn 18.5° la 22:00*);
 - **Azi**: profilul zilei ca bară pe ziua programului (de la *Ziua programului începe la*
   a casei, de exemplu 00 → 24 sau 04 → 04), cu ora de acum.
-Dacă o cameră sub țintă nu încălzește, cardul spune de ce (*Nu încălzește: …*,
+Cât există o modificare manuală, o bandă sub arc spune până când și de unde a
+fost făcută, cu butonul **Anulează** (înapoi la automat). Dacă o cameră sub
+țintă nu încălzește, o bandă spune de ce (*Nu încălzește: …*,
 [capitolul 8](08-sursa-si-energie.ro.md#când-nu-încălzește-o-cameră-sub-țintă)).
-Cât există o modificare manuală, butonul **Automat**, primul din rândul de
-butoane de sub arc, o anulează (înapoi la automat).
+Urmează **alertele** camerei și ale casei, într-o listă cu numărul lor: fiecare
+cu un titlu (de exemplu *Senzor tăcut*), textul în limba cardului și, când e
+despre o entitate, o săgeată; o atingere deschide entitatea.
 
-Sub arc, butoanele deschid secțiunile **Temporar** (*Setează temporar*),
+Mai jos, butoanele (câte trei pe rând; primul, **Temporar**, e cel principal și
+e colorat în culoarea nivelului) deschid secțiunile **Temporar** (*Setează temporar*),
 **Program**, **Grafic**, **Niveluri** (*Temperaturile nivelurilor*) și
 **Detalii**, fiecare separat (pot fi deschise mai multe deodată);
 butonul unei secțiuni deschise rămâne colorat. Butonul **Blocare** de lângă ele

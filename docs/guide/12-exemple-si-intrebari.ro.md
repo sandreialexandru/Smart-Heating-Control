@@ -129,7 +129,7 @@ Nu. Integrarea e pentru încălzire.
 ## Ce e de făcut când ceva nu merge
 
 1. **Decizia** camerei în card (regula și motivul).
-2. ***Detaliile*** camerei: alertele sunt primele.
+2. **Deschide camera**: alertele ei sunt listate sub arc.
 3. **Entitățile**: senzorii de temperatură, termostatul, persoanele,
    sursa de căldură; una indisponibilă explică multe.
 4. **Butonul *Reevaluează*** (casa), ca decizia să fie recalculată imediat.

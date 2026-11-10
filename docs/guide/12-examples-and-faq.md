@@ -130,7 +130,7 @@ No. The integration is for heating.
 ## When something does not work
 
 1. **Read the decision** of the room in the card (the rule and the reason).
-2. **Open the room *Details***: the alerts come first.
+2. **Open the room**: its alerts are listed under the arc.
 3. **Check the entities**: the temperature sensors, the thermostat, the people,
    the heat source; an unavailable one explains a lot.
 4. **Press *Reevaluate*** (house) to work out the decision again at once.

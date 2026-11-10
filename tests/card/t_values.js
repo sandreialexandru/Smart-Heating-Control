@@ -173,3 +173,39 @@ test("house scenarios: a button each, the active one marked, a click chooses it"
   await mount(p, {}, { rooms: R });
   ok(!(await p.evaluate(() => !!card.shadowRoot.querySelector(".scenarios"))), "no row without scenarios");
 });
+
+test("messages: Resume ends the pause, End ends the guest mode, Cancel the manual change", async (p) => {
+  const until = new Date(Date.now() + 2 * H).toISOString();
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom", override: { temperature: 23, until, origin: "card", preset: null, applied: true } }], pause: true, guest: true });
+  const btns = await p.evaluate(() => [...card.shadowRoot.querySelectorAll(".msg .mbtn")].map((b) => [b.innerText, b.dataset.action, b.dataset.entity || b.dataset.room]));
+  eq(btns, [["Resume", "toggle", "switch.home_pause"], ["End", "toggle", "switch.home_guest_mode"], ["Cancel", "clear", "r1"]], "buttons");
+  await click(p, '.msg [data-entity="switch.home_pause"]'); await p.waitForTimeout(50);
+  eq((await last(p)).data.entity_id, "switch.home_pause", "pause toggled");
+});
+
+test("alerts: title, text and count in the open room; the room outlined by the most serious one", async (p) => {
+  const alerts = [
+    { code: "device_unavailable", params: { entity: "climate.trv", minutes: 15 }, room: "r1", message: "m" },
+    { code: "mold_risk", params: { surface: 84, humidity: 62 }, room: "r1", message: "m" },
+  ];
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom", alerts }, { id: "r2", name: "Office", alerts: [alerts[1]] }, { id: "r3", name: "Kid" }] });
+  const box = await p.evaluate(() => {
+    const b = card.shadowRoot.querySelector(".alertbox");
+    return { count: b.querySelector(".acount").innerText, items: [...b.querySelectorAll("li")].map((li) => [li.className.trim().split(/\s+/)[0], li.querySelector("b").innerText, li.querySelector(".atext span").innerText]) };
+  });
+  eq(box.count, "2", "count");
+  eq(box.items[0].slice(0, 2), ["error", "Device unavailable"], "error first");
+  eq(box.items[1].slice(0, 2), ["warn", "Mold risk"], "mold");
+  ok(box.items[1][2].startsWith("The coldest wall"), "the subject once: " + box.items[1][2]);
+  const outline = await p.evaluate(() => [...card.shadowRoot.querySelectorAll(".block.room")].map((b) => ["al-error", "al-warn"].find((c) => b.classList.contains(c)) || ""));
+  eq(outline, ["al-error", "", "al-warn"], "outlines (rooms by name: Bedroom, Kid, Office)");
+});
+
+test("arc: ends on the target dot when the room is within 0.3° of it", async (p) => {
+  await mount(p, { collapsed: true }, { rooms: [{ id: "r1", name: "Bedroom", current: 20.8, target: 21 }, { id: "r2", name: "Office", current: 20.5, target: 21 }] });
+  const dash = await p.evaluate(() => [...card.shadowRoot.querySelectorAll(".gvalue")].map((c) => parseFloat(c.getAttribute("stroke-dasharray"))));
+  // 7–25° scale, r = 60/2 − 5/2 − 1 = 26.5, 270° of it = 124.9; the round end (2.5) taken off.
+  const arc = 2 * Math.PI * 26.5 * 0.75;
+  ok(Math.abs(dash[0] - (arc * (21 - 7) / 18 - 2.5)) < 0.2, "snapped " + dash[0]);
+  ok(Math.abs(dash[1] - (arc * (20.5 - 7) / 18 - 2.5)) < 0.2, "not snapped " + dash[1]);
+});

@@ -124,6 +124,8 @@ against the change, short enough to see a heating cycle.
 - a **window or door sensor** of the room (or a linked one) was open;
 - the **state of the heat source** was unknown;
 - the **valve exercise** was running;
+- the TRVs were **kept open for the heat source** (*Keep the last TRV open*:
+  the leftover heat would look like a room that cools slowly);
 - the house has an outdoor temperature (sensor or weather entity) but it was
   **unknown**;
 - the house has a weather entity but its clouds were **unknown in daylight**

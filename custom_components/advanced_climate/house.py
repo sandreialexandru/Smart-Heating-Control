@@ -64,6 +64,7 @@ from .const import (
     CONF_FROST_TEMP,
     CONF_GUEST_EXPIRE_HOURS,
     CONF_HOME_RULE,
+    CONF_KEEP_LAST_OPEN,
     CONF_MAX_TEMP,
     CONF_NEARBY_GEOMETRIC,
     CONF_NEARBY_ZONES,
@@ -200,6 +201,10 @@ class House:
         # Events of the next days (start, end, summary): profiles of the coming days.
         self.calendar_events: list[tuple[datetime, datetime, str]] = []
         self.heat_demand = False
+        # The room whose TRVs are kept open for the heat source (the last room
+        # that asked for heat), and the rooms that asked at the last evaluation.
+        self.keep_open_room: str | None = None
+        self._last_askers: list[str] = []
         self.boiler_on: bool | None = None
         self.boiler_changed: datetime | None = None
         self._source_running_since: datetime | None = None
@@ -470,6 +475,9 @@ class House:
             await self._async_control_boiler(now)
         except Exception:
             _LOGGER.exception("Error controlling the heat source of %s", self.entry.title)
+        if self._update_keep_open():
+            # The room kept open (or no longer kept open) gets its TRVs set now.
+            self.async_request_evaluate()
         try:
             self._check_room_difference()
             self._check_weather_alerts(now)
@@ -1371,6 +1379,49 @@ class House:
             self.boiler_changed = now
             self._frost_started = bool(want and self.paused)
 
+    def _update_keep_open(self) -> bool:
+        """Choose, keep or end the room whose TRVs stay open for the heat source.
+
+        When no room asks for heat any more, the last room that asked (the one
+        furthest below its target when several stopped together) keeps its TRVs
+        open, so the heat left in the source has a way through. It ends when
+        another room asks for heat, when a stronger rule takes the room (window,
+        manual change, pause, mode, warm outside...), or when the room itself is
+        cold enough to ask for heat again. True when the room changed.
+        """
+        previous = self.keep_open_room
+        enabled = bool(self.options.get(CONF_KEEP_LAST_OPEN)) and bool(
+            self.options.get(CONF_BOILER_ENTITY)
+        )
+        sourced = [room for room in self.rooms.values() if room.uses_house_source]
+        asking = [room for room in sourced if room.heat_demand and room.id != previous]
+        askers = [room.id for room in asking if room.can_keep_open]
+        if not enabled:
+            self.keep_open_room = None
+            self._last_askers = []
+            return previous is not None
+        held = self.rooms.get(previous) if previous else None
+        if previous is not None:
+            if held is None or asking or not held.kept_open or held.keep_open_needs_heat:
+                self.keep_open_room = None
+                self._last_askers = askers
+                return True
+            return False
+        if asking:
+            self._last_askers = askers
+            return False
+        candidates = [self.rooms[rid] for rid in self._last_askers if rid in self.rooms]
+        self._last_askers = []
+        if not candidates:
+            return False
+
+        def below(room: Room) -> float:
+            gap = room.temperature_gap()
+            return float("-inf") if gap is None else gap
+
+        self.keep_open_room = max(candidates, key=below).id
+        return True
+
     def _check_source_available(
         self, now: datetime, configured: bool, source_on: bool | None
     ) -> None:
@@ -1662,6 +1713,7 @@ class House:
             "season_active": self.season_active,
             "daily_means": self.outdoor.daily_means,
             "heat_demand": self.heat_demand,
+            "keep_open_room": self.keep_open_room,
             "house_offsets": self.house_offsets(),
             "calendar_message": self.calendar_message,
             "last_evaluation": iso(self._last_eval),

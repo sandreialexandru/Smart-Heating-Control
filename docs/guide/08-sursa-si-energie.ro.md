@@ -86,13 +86,39 @@ Assistant. Când un timp minim se termină, integrarea verifică imediat din nou
 > **TRV-uri pe toate caloriferele: bypass sau un calorifer fără TRV.**
 >
 > Când ultima cameră nu mai cere căldură (a ajuns la țintă), TRV-urile ei
-> primesc ținta și se închid, dar sursa de căldură merge până la capătul
-> timpului minim pornită, dacă e setat unul. Integrarea nu ține un TRV deschis
-> pentru asta: ar încălzi camera peste țintă. Instalația însăși trebuie să
+> primesc ținta și decid singure: multe se închid complet (senzorul lor e lângă
+> caloriferul cald), unele lasă robinetul puțin deschis. Sursa de căldură merge
+> până la capătul timpului minim pornită, dacă e setat unul, iar căldura rămasă
+> în ea și în țevi tot are nevoie pe unde să treacă. Instalația ar trebui să
 > lase apa să circule, ca și cu TRV-uri mecanice obișnuite: un bypass automat,
 > o centrală cu bypass intern sau un calorifer fără TRV (de obicei în baie).
-> Fără așa ceva, se alege un *Timp minim pornită* mic sau 0 (implicit), ca
-> sursa să se oprească imediat ce nu mai cere nicio cameră.
+> Fără așa ceva, se alege un *Timp minim pornită* mic sau 0 (implicit) și se
+> poate folosi *Ține deschis ultimul TRV* (mai jos).
+
+**Ține deschis ultimul TRV** (oprit implicit; doar cu o *Sursă de căldură*):
+când nu mai cere căldură nicio cameră, TRV-urile ultimei camere care a cerut
+rămân deschise, ca restul de căldură din sursă și din țevi să aibă pe unde
+trece, ca printr-un bypass, iar robinetul să nu se mai miște noaptea (mai puțin
+zgomot, mai puțină baterie). Când se opresc mai multe camere deodată, e aleasă
+cea mai departe sub țintă.
+
+- TRV-urile primesc temperatura maximă a camerei (în limita maximului
+  TRV-ului); cele comandate *Pornit / oprit* rămân pornite. Și cele comandate
+  prin *Preset* primesc acea temperatură, ca la mișcarea robinetelor, iar
+  apoi din nou presetul lor.
+- Între timp camera nu cere căldură: sursa rămâne oprită. Ținta ei rămâne cea
+  a regulii ei (cardul o arată, cu motivul *Ținut deschis pentru sursa de
+  căldură*).
+- Se termină când altă cameră cere căldură, când camera e preluată de o regulă
+  mai puternică (fereastră, modificare manuală, pauză, modul Oprit sau Vară,
+  în afara sezonului, cald afară, mișcarea robinetelor) sau când camera însăși
+  e destul de rece ca să ceară căldură (ținta minus histerezisul); TRV-urile
+  primesc atunci din nou ținta.
+- Ce accepți când o pornești: camera se poate încălzi peste țintă (cu căldura
+  rămasă în instalație), iar învățarea ei sare peste timpul cât e ținută
+  deschisă (un calorifer deschis ar arăta ca o cameră care se răcește încet).
+- Camerele cu relee, cu Generic Thermostat sau care nu se încălzesc de la
+  sursa casei nu sunt ținute deschise niciodată.
 
 **În pauză** integrarea nu comandă sursa, cu o singură excepție: o pornește
 pentru antiîngheț și o oprește din nou când nu mai e nevoie (și după o

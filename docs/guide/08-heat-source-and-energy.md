@@ -87,14 +87,37 @@ the integration checks again at once.
 > **TRVs on every radiator: a bypass or a radiator without a TRV.**
 >
 > When the last room stops asking for heat (it reached its target), its TRVs
-> get the target and close, but the heat source runs until its minimum on time
-> ends, when one is set. The integration does not keep a TRV open for it: that
-> would heat the room above its target. The installation itself must give the
-> water a way through, as it must with plain mechanical TRVs: an automatic
-> bypass, a boiler with an internal bypass, or one radiator without a TRV
-> (often in the bathroom). Without one, choose a short *Heat source minimum on
-> time* or 0 (the default), so the source stops as soon as no room asks for
-> heat.
+> get the target and it is up to them: many close fully (their sensor sits next
+> to the warm radiator), some keep the valve slightly open. The heat source runs
+> on until its minimum on time ends, when one is set, and the heat left in it
+> and in the pipes still needs a way through. The installation should give the
+> water one, as with plain mechanical TRVs: an automatic bypass, a boiler with
+> an internal bypass, or one radiator without a TRV (often in the bathroom).
+> Without one, choose a short *Heat source minimum on time* or 0 (the default),
+> and consider *Keep the last TRV open* (below).
+
+**Keep the last TRV open** (off by default; only with a *Heat source*): when no
+room asks for heat any more, the TRVs of the last room that asked stay open, so
+the heat left in the source and the pipes has a way through, as with a bypass,
+and the valve does not move again during the night (less noise, less battery).
+When several rooms stop together, the one furthest below its target is chosen.
+
+- The TRVs get the maximum temperature of the room (within the TRV's own
+  maximum); TRVs commanded *On / off* stay on. TRVs commanded by *Preset* get
+  that temperature too, as for the valve exercise, and their preset again
+  afterwards.
+- The room asks for no heat meanwhile: the heat source stays off. Its target
+  stays the one of its rule (the card shows it, and the reason *Kept open for
+  the heat source*).
+- It ends when another room asks for heat, when a stronger rule takes the room
+  (window, manual change, pause, mode Off or Summer, out of season, warm
+  outside, valve exercise), or when the room itself is cold enough to ask for
+  heat (its target minus the hysteresis); the TRVs then get the target again.
+- What you accept by turning it on: the room may get warmer than its target
+  (by the heat left in the installation), and its learning skips the time it
+  is kept open (an open radiator would look like a room that cools slowly).
+- Rooms with relays, with a Generic Thermostat or that do not heat from the
+  heat source of the house are never kept open.
 
 **In a pause** the integration does not control the source, with one exception:
 it starts it for frost protection and stops it again when no longer needed

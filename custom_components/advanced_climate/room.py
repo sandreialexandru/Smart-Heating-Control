@@ -931,7 +931,13 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self._note_decision(decision)
         self._record(decision, now)
         self.decision = decision
-        self.target_temperature = self._resolve_temperature(decision.target)
+        # Kept open for the heat source: the target of the room stays the one
+        # of its rule (the TRVs only are opened further).
+        self.target_temperature = (
+            decision.params.get("temperature")
+            if self.kept_open
+            else self._resolve_temperature(decision.target)
+        )
 
         await self._async_apply(decision.target)
         await self._async_calibrate(now)
@@ -1077,7 +1083,34 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             frost_holding=self._frost_holding(),
             device_setpoint=self._device_setpoint(),
             on_off=self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC,
+            keep_open=house.keep_open_room == self.id,
+            keep_open_temp=self._keep_open_temp(),
         )
+
+    @property
+    def kept_open(self) -> bool:
+        """The TRVs are kept open for the heat source (the last room that asked for heat)."""
+        return self.decision is not None and self.decision.key == "keep_open"
+
+    @property
+    def can_keep_open(self) -> bool:
+        """A room with TRVs that heats from the heat source of the house."""
+        return self.source == SOURCE_CLIMATE and self.uses_house_source
+
+    @property
+    def keep_open_needs_heat(self) -> bool:
+        """Kept open, but the room itself is cold enough to ask for heat again."""
+        return (
+            self.current_temp is not None
+            and self.target_temperature is not None
+            and self.current_temp <= self.target_temperature - float(self.config[CONF_HYSTERESIS])
+        )
+
+    def _keep_open_temp(self) -> float:
+        """What the TRVs get while kept open: the maximum of the room, within theirs."""
+        value = self.max_temp()
+        device_max = self.device_max_temp()
+        return value if device_max is None else min(value, device_max)
 
     def _note_decision(self, decision: Decision) -> None:
         """What a decision means for a manual change and the optimal stop."""
@@ -1101,11 +1134,14 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             # An episode is not used with a window open, when the outdoor
             # temperature of a house that has one became unknown, when the
             # state of the heat source is unknown, or during the valve exercise.
+            # Nor while the TRVs are kept open for the heat source (the leftover
+            # heat would look like a room that cools slowly).
             disturbed = (
                 self._window_sensor_open()
                 or (house.outdoor_configured and outdoor is None)
                 or self.source_unknown
                 or self._exercise_until is not None
+                or self.kept_open
             )
             self.learner.observe(
                 now,
@@ -1234,8 +1270,9 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
     def _update_demand(self) -> None:
         """Whether the room asks for heat (hvac_action, else the hysteresis; relays: on)."""
         demand = False
-        if self._exercise_until is not None:
-            pass  # the valves are exercised: no heat is asked for
+        if self._exercise_until is not None or self.kept_open:
+            # The valves are exercised, or kept open for the heat source: no heat is asked for.
+            pass
         elif self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC:
             demand = bool(self._relay_on)
         elif self.boost:

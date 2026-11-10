@@ -71,6 +71,7 @@ from .const import (
     CONF_HUMIDITY_SENSOR,
     CONF_HYSTERESIS,
     CONF_INERTIA_CONTROL,
+    CONF_KEEP_LAST_OPEN,
     CONF_LEVELS,
     CONF_LINKED_WINDOW_SENSORS,
     CONF_MAX_TEMP,
@@ -560,6 +561,7 @@ def _boiler_details(v: dict[str, Any], rooms: list[selector.SelectOptionDict]) -
         fields[_req(CONF_BOILER_MIN_ROOMS, shown, d)] = _number(1, most, 1)
         fields[_req(CONF_BOILER_MIN_ON, v, d)] = _number(0, 60, 1, "min")
         fields[_req(CONF_BOILER_MIN_OFF, v, d)] = _number(0, 60, 1, "min")
+        fields[_req(CONF_KEEP_LAST_OPEN, v, d)] = _bool()
         if str(v[CONF_BOILER_ENTITY]).startswith("climate."):
             # A thermostat as the heat source: boosted like the TRVs.
             fields[_req(CONF_BOILER_BOOST, v, d)] = selector.BooleanSelector()

@@ -146,6 +146,10 @@ class RoomInputs:
     vacation_preheat: bool = False
     # Frost protection is heating: it continues until the device stops asking for heat.
     frost_holding: bool = False
+    # The last room that asked for heat keeps its TRVs open (``keep_open_temp``)
+    # while no other room asks (house option *Keep the last TRV open*).
+    keep_open: bool = False
+    keep_open_temp: float | None = None
 
 
 @dataclass(slots=True)
@@ -441,6 +445,31 @@ def decide(inputs: RoomInputs) -> Decision:
                     key=decision.key,
                     params=decision.params,
                 )
+
+    # The last room that asked for heat: its TRVs stay open for the heat left in
+    # the source. Only over the rules that heat (not a manual change, a window,
+    # a pause, warm outside or the frost protection of a day without a profile).
+    if inputs.keep_open and adjustable and _heating(target) and decision.rule != RULE_CUTOFF:
+        would = (
+            target.temperature
+            if target.kind == KIND_TEMPERATURE
+            else inputs.level_temp(target.preset or "")
+        )
+        decision = Decision(
+            decision.rule,
+            Target(
+                KIND_TEMPERATURE,
+                preset=target.preset,
+                temperature=inputs.keep_open_temp
+                if inputs.keep_open_temp is not None
+                else inputs.max_temp,
+            ),
+            f"Kept open for the heat source: the last room that asked for heat "
+            f"(would be {target.describe(inputs.unit)})",
+            decision.offsets,
+            key="keep_open",
+            params={"preset": target.preset, "temperature": would},
+        )
 
     return apply_safety(decision, inputs)
 

@@ -795,3 +795,53 @@ class MutationGapsEngineTest(unittest.TestCase):
         self.assertEqual((below.rule, below.key), (const.RULE_SAFETY, "frost_below"))
         # The optimal stop: exactly at the comfort floor is not below it.
         self.assertEqual(engine.optimal_stop_state(False, False, 21.5, 21.5), (True, False, False))
+
+
+class KeepOpenTest(unittest.TestCase):
+    """The last room that asked for heat keeps its TRVs open (house option)."""
+
+    def test_over_the_schedule_with_the_level_it_would_have(self) -> None:
+        d = engine.decide(inputs(keep_open=True, keep_open_temp=24.0))
+        self.assertEqual(d.rule, const.RULE_SCHEDULE)
+        self.assertEqual(d.key, "keep_open")
+        self.assertEqual((d.target.kind, d.target.temperature), ("temperature", 24.0))
+        # The level stays (its colour in the card) and what it would be is told.
+        self.assertEqual(d.target.preset, "home")
+        self.assertEqual(d.params, {"preset": "home", "temperature": 22.0})
+
+    def test_without_the_temperature_of_the_trv_the_maximum_of_the_room(self) -> None:
+        d = engine.decide(inputs(keep_open=True))
+        self.assertEqual(d.target.temperature, 25.0)
+
+    def test_never_above_the_maximum(self) -> None:
+        d = engine.decide(inputs(keep_open=True, keep_open_temp=30.0))
+        self.assertEqual(d.target.temperature, 25.0)
+
+    def test_with_the_adjustments_the_adjusted_target_is_told(self) -> None:
+        d = engine.decide(inputs(keep_open=True, keep_open_temp=24.0, offsets=[("sun", -1.0)]))
+        self.assertEqual(
+            (d.key, d.target.temperature, d.params["temperature"]), ("keep_open", 24.0, 21.0)
+        )
+
+    def test_presence_and_vacation_rules_are_kept_open_too(self) -> None:
+        for kwargs in ({"presence": "nearby"}, {"presence": "far"}, {"mode": const.MODE_VACATION}):
+            d = engine.decide(inputs(keep_open=True, keep_open_temp=24.0, **kwargs))
+            self.assertEqual(d.key, "keep_open", kwargs)
+
+    def test_a_stronger_rule_is_not_kept_open(self) -> None:
+        for kwargs in (
+            {"paused": True},
+            {"window_open": True},
+            {"override_active": True},
+            {"valve_exercise": True},
+            {"mode": const.MODE_OFF},
+            {"mode": const.MODE_SUMMER},
+            {"season_active": False},
+            {"cutoff_active": True},
+            {"schedule_preset": const.PRESET_FROST},
+        ):
+            d = engine.decide(inputs(keep_open=True, keep_open_temp=24.0, **kwargs))
+            self.assertNotEqual(d.key, "keep_open", kwargs)
+
+    def test_off_by_default(self) -> None:
+        self.assertNotEqual(engine.decide(inputs()).key, "keep_open")

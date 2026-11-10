@@ -9,6 +9,16 @@ GitHub releases.
 
 ### New
 
+- 🔓 **Keep the last TRV open** (house option, at the heat source, off by
+  default): when no room asks for heat any more, the TRVs of the last room that
+  asked stay open (the maximum of the room; On / off: on; Preset: that
+  temperature), so the heat left in the boiler and the pipes has a way through,
+  as with a bypass, and the valve does not move again during the night (less
+  noise, less battery). Until another room asks for heat, a stronger rule takes
+  the room (window, manual change, pause, mode, warm outside) or the room itself
+  needs heat. The room asks for no heat meanwhile and keeps its target; it may
+  get warmer than it, and its learning skips that time. The card shows *Kept
+  open for the heat source*. Suggested by a user.
 - 🏠 **Mode away** (#9): a fifth mode of the house, *Away*: nobody home, set by
   hand, without people or location tracking. Every room goes to `away` until
   another mode is chosen. Below a manual change of a room and the vacation,

@@ -209,3 +209,10 @@ test("arc: ends on the target dot when the room is within 0.3° of it", async (p
   ok(Math.abs(dash[0] - (arc * (21 - 7) / 18 - 2.5)) < 0.2, "snapped " + dash[0]);
   ok(Math.abs(dash[1] - (arc * (20.5 - 7) / 18 - 2.5)) < 0.2, "not snapped " + dash[1]);
 });
+
+test("reason: the last room kept open for the heat source, with what it would be", async (p) => {
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom", reasonKey: "keep_open" }] });
+  const t = await p.evaluate(() =>
+    card._reasonText({ reason_key: "keep_open", reason_params: { preset: "home", temperature: 21 }, preset_names: {}, offsets: [] }));
+  ok(t.startsWith("Kept open for the heat source: the last room that asked for heat (would be Home 21"), t);
+});

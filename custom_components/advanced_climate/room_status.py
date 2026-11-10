@@ -61,6 +61,7 @@ class RoomStatus:
             or self.current_temp >= self.target_temperature
             or self.heating
             or self._exercise_until is not None
+            or self.kept_open
         ):
             return None
         house = self.house
@@ -138,6 +139,7 @@ class RoomStatus:
             "current_temperature": self.current_temp,
             "target_temperature": self.target_temperature,
             "heat_demand": self.heat_demand,
+            "kept_open": self.kept_open,
             "window_open": self.window_open,
             "override": self.override_info(),
             "schedule_error": self.schedule_error,

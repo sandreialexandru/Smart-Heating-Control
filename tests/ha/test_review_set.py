@@ -273,3 +273,69 @@ async def test_no_effect_not_told_in_a_pause(
         await _tick(hass, freezer, 600)
     assert f"no_effect_{room.id}" not in house.active_alerts
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="With the rule Everybody, the travel time of the person at home (0 min) counts "
+    "as someone on the way home: the heating is not lowered when another person leaves.",
+)
+async def test_everybody_rule_person_at_home_is_not_on_the_way(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Rule Everybody, one travel time per person: the one at home is not arriving."""
+    hass.states.async_set("sensor.waze_andrei", "0", MINUTES)
+    hass.states.async_set("sensor.waze_laura", "60", MINUTES)
+    hass.states.async_set("person.laura", "home")
+    entry = await _setup(
+        hass,
+        freezer,
+        house_options={
+            "persons": ["person.andrei", "person.laura"],
+            "home_rule": "all",
+            "travel_time": ["sensor.waze_andrei", "sensor.waze_laura"],
+        },
+    )
+    house = entry.runtime_data
+    hass.states.async_set("person.laura", "not_home")
+    await _tick(hass, freezer, 11 * 60)
+    assert hass.states.get("sensor.home_presence").state == "nearby"
+    assert not house.arriving
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_two_profiles_chosen_one_after_the_other_both_stay(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """An automation choosing a workday profile and then a weekend one: both are on."""
+    schedule = (
+        "workday: 00:00 sleep, 07:00 home\n"
+        "weekend: 00:00 sleep, 09:00 comfort\n"
+        "home_office: 00:00 sleep, 07:00 comfort\n"
+        "guests: 00:00 sleep, 08:00 comfort"
+    )
+    days = {
+        "workday": {"days": "workday", "enabled": True},
+        "weekend": {"days": "weekend", "enabled": True},
+        "home_office": {"days": "workday", "enabled": False},
+        "guests": {"days": "weekend", "enabled": False},
+    }
+    entry = await _setup(hass, freezer, schedule=schedule, profile_days=days)
+    await _tick(hass, freezer, 15)
+    for option in ("home_office", "guests"):
+        # No pause between them, as two actions of an automation.
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {"entity_id": "select.bedroom_schedule_profile", "option": option},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+    saved = next(iter(entry.subentries.values())).data["profile_days"]
+    assert {n: d["enabled"] for n, d in saved.items()} == {
+        "workday": False,
+        "weekend": False,
+        "home_office": True,
+        "guests": True,
+    }
+    assert await hass.config_entries.async_unload(entry.entry_id)

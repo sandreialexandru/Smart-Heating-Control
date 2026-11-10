@@ -455,6 +455,9 @@ def decide(inputs: RoomInputs) -> Decision:
             if target.kind == KIND_TEMPERATURE
             else inputs.level_temp(target.preset or "")
         )
+        # Within the safety limits, as the target would be sent.
+        if would is not None:
+            would = min(max(would, inputs.frost_temp), inputs.max_temp)
         decision = Decision(
             decision.rule,
             Target(

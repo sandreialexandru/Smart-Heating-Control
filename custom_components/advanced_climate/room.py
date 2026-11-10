@@ -276,6 +276,8 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self._started_at = dt_util.utcnow()
         self._exercise_until: datetime | None = None
         self._relay_on: bool | None = None
+        # An on / off TRV turned on only to be kept open for the heat source.
+        self._relay_held = False
         # Kept over a restart: the minimum on / off time of the relay holds.
         self._relay_changed: datetime | None = from_iso(stored.get("relay_changed"))
         self._heating_since: datetime | None = None

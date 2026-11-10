@@ -179,3 +179,75 @@ async def test_off_by_default(hass: HomeAssistant, freezer: FrozenDateTimeFactor
     assert entry.runtime_data.keep_open_room is None
     assert trvs.sent("climate.bedroom") == 21.0
     await _unload(hass, entry)
+
+
+async def test_an_on_off_trv_kept_open_does_not_go_on_heating_after(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """On / off TRV: on only to be kept open; once that ends it is not left on in the band."""
+    hvac = async_mock_service(hass, "climate", "set_hvac_mode")
+    async_mock_service(hass, "climate", "set_temperature")
+    sensor = {"unit_of_measurement": "°C", "device_class": "temperature"}
+    hass.states.async_set("switch.boiler", "on")
+    hass.states.async_set("sensor.bedroom_temp", "20.0", sensor)
+    hass.states.async_set("climate.bedroom", "off", {**TRV, "temperature": 21.0})
+    hass.states.async_set(
+        "climate.office", "heat", {**TRV, "temperature": 17.0, "hvac_action": "idle"}
+    )
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Bedroom",
+                {
+                    "source": "climate",
+                    "command_mode": "hvac_mode",
+                    "climates": ["climate.bedroom"],
+                    "temperature_sensors": ["sensor.bedroom_temp"],
+                    "min_on_minutes": 10,
+                },
+            ),
+            ("Office", {**ROOM, "climates": ["climate.office"]}),
+        ],
+        boiler_entity="switch.boiler",
+        keep_last_open=True,
+    )
+    bedroom = _room(entry, "Bedroom")
+
+    def last(entity_id: str) -> str | None:
+        calls = [c.data["hvac_mode"] for c in hvac if c.data["entity_id"] == entity_id]
+        return calls[-1] if calls else None
+
+    async def trv(state: str) -> None:
+        hass.states.async_set("climate.bedroom", state, {**TRV, "temperature": 21.0}, Context())
+        await _tick(hass, freezer, 5)
+
+    # Below the band: on, asks for heat.
+    assert last("climate.bedroom") == "heat"
+    await trv("heat")
+    assert bedroom.heat_demand
+    # Above it (after its minimum on time): off; nobody asks any more, so it is
+    # turned on again to be kept open.
+    await _tick(hass, freezer, 601)
+    hass.states.async_set("sensor.bedroom_temp", "21.4", sensor)
+    await _tick(hass, freezer, 5)
+    assert last("climate.bedroom") == "off"
+    await trv("off")
+    await _tick(hass, freezer, 2)
+    assert bedroom.kept_open
+    assert last("climate.bedroom") == "heat"
+    await trv("heat")
+    assert not bedroom.heat_demand
+    # The office asks; the bedroom (21.0, inside the band) is turned off at once,
+    # without its minimum on time and without asking for heat.
+    hass.states.async_set("sensor.bedroom_temp", "21.0", sensor)
+    hass.states.async_set(
+        "climate.office", "heat", {**TRV, "temperature": 21.0, "hvac_action": "heating"}, Context()
+    )
+    await _tick(hass, freezer, 5)
+    await _tick(hass, freezer, 2)
+    assert not bedroom.kept_open
+    assert last("climate.bedroom") == "off"
+    assert not bedroom.heat_demand
+    await _unload(hass, entry)

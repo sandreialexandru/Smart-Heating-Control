@@ -845,3 +845,10 @@ class KeepOpenTest(unittest.TestCase):
 
     def test_off_by_default(self) -> None:
         self.assertNotEqual(engine.decide(inputs()).key, "keep_open")
+
+
+class KeepOpenLimitsTest(unittest.TestCase):
+    def test_what_it_would_be_is_within_the_safety_limits(self) -> None:
+        levels = {**LEVELS, "away": 5.0}
+        d = engine.decide(inputs(keep_open=True, mode=const.MODE_VACATION, level_temp=levels.get))
+        self.assertEqual((d.key, d.params["temperature"]), ("keep_open", 7.0))

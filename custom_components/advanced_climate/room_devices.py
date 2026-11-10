@@ -131,8 +131,10 @@ class RoomDevices:
             self.override["interrupted"] = False
             target = stored
         if self._boost_capable:
-            # The demand first, so the TRVs get the right temperature now.
-            heat = target.kind != KIND_OFF and self._exercise_until is None
+            # The demand first, so the TRVs get the right temperature now. Kept
+            # open for the heat source the room asks for no heat (nor remembers
+            # it, so it does not go on asking once that ends).
+            heat = target.kind != KIND_OFF and self._exercise_until is None and not self.kept_open
             temperature = self._resolve_temperature(target)
             if self.boost:
                 self._boost_demand = heat and self._boost_wanted(temperature)
@@ -603,6 +605,11 @@ class RoomDevices:
         if actual is None:
             return False
         self._note_relay_state(actual, now)
+        held = self.kept_open
+        # Just kept open for the heat source: the TRV was on only for it. The
+        # band starts again from off, without the minimum on time.
+        released = self._relay_held and not held
+        band_from = False if released else actual
         if target.kind == KIND_OFF:
             want = False
         else:
@@ -612,7 +619,7 @@ class RoomDevices:
             else:
                 hysteresis = float(self.config[CONF_HYSTERESIS])
                 want, by_model = on_off_wanted(
-                    actual,
+                    band_from,
                     self.current_temp,
                     temperature,
                     hysteresis,
@@ -623,8 +630,9 @@ class RoomDevices:
         if want or target.kind == KIND_OFF:
             self.inertia_stop = None
         if want == actual:
+            self._relay_held = held and want
             return False
-        if self._relay_must_wait(actual, now):
+        if not released and self._relay_must_wait(actual, now):
             return False
         ok = True
         if self.source == SOURCE_SWITCH:
@@ -647,7 +655,10 @@ class RoomDevices:
                 )
         if ok:
             self._relay_on = want
-            self._relay_changed = now
+            self._relay_held = held and want
+            if not held:
+                # Kept open is no start of the room: no minimum on time after it.
+                self._relay_changed = now
         return ok
 
     def _inertia_extreme(self, now: datetime) -> Callable[[bool], float] | None:

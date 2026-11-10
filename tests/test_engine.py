@@ -688,3 +688,110 @@ class OptimalEdgesTest(unittest.TestCase):
             engine.optimal_period(60, lambda out: 30.0, lambda length: (None, "forecast"), 5.0),
             (30.0, 5.0, "now"),
         )
+
+
+class MutationGapsEngineTest(unittest.TestCase):
+    """Places the mutation tests showed without a test (2.6.4)."""
+
+    def test_unknown_level_compared_by_name(self) -> None:
+        # A level with no known temperature (a preset of the thermostat): warmer
+        # than eco by name, except eco itself and away.
+        def levels(p):
+            return None if p in ("custom", "away") else LEVELS.get(p)
+
+        d = engine.decide(inputs(sensor_failed=True, schedule_preset="custom", level_temp=levels))
+        self.assertEqual((d.rule, d.target.preset), (const.RULE_SENSOR_FALLBACK, "eco"))
+        d = engine.decide(inputs(sensor_failed=True, schedule_preset="away", level_temp=levels))
+        self.assertEqual(d.key, "sensor_fallback_schedule")
+        self.assertEqual(d.target.preset, "away")
+        # Eco known, the other unknown: still by name.
+        d = engine.decide(inputs(room_unoccupied=True, schedule_preset="custom", level_temp=levels))
+        self.assertEqual((d.rule, d.target.preset), (const.RULE_UNOCCUPIED, "eco"))
+        # Eco unknown too, the schedule eco: not warmer than itself.
+        d = engine.decide(
+            inputs(room_unoccupied=True, schedule_preset="eco", level_temp=lambda p: None)
+        )
+        self.assertEqual((d.rule, d.target.preset), (const.RULE_SCHEDULE, "eco"))
+
+    def test_cutoff_tells_the_temperature_it_replaces(self) -> None:
+        # A preset target: the temperature of its level.
+        d = engine.decide(inputs(cutoff_active=True))
+        self.assertEqual(d.params["temperature"], LEVELS["home"])
+        # A temperature target (someone nearby, fixed temperature): that temperature.
+        d = engine.decide(
+            inputs(
+                cutoff_active=True,
+                presence=const.PRESENCE_NEARBY,
+                nearby_mode=const.NEARBY_TEMPERATURE,
+                nearby_temp=18.5,
+            )
+        )
+        self.assertEqual((d.rule, d.params["temperature"]), (const.RULE_CUTOFF, 18.5))
+
+    def test_offsets_on_a_temperature_target(self) -> None:
+        d = engine.decide(
+            inputs(
+                presence=const.PRESENCE_NEARBY,
+                nearby_mode=const.NEARBY_TEMPERATURE,
+                nearby_temp=18.5,
+                offsets=[("compensation", 1.0)],
+            )
+        )
+        self.assertEqual(d.target.kind, "temperature")
+        self.assertAlmostEqual(d.target.temperature, 19.5)
+        # Offsets that cancel out (below 0.05 in all): the target as it is.
+        d = engine.decide(inputs(offsets=[("a", 0.5), ("b", -0.5)]))
+        self.assertEqual((d.target.kind, d.target.preset), ("preset", "home"))
+
+    def test_optimal_edges_equal_and_unknown_levels(self) -> None:
+        change = NOW + timedelta(minutes=10)
+        same = dict(LEVELS, sleep=22.0)
+        # Started, but the next level is not warmer: no optimal start.
+        self.assertEqual(
+            engine.optimal_schedule(
+                NOW, "sleep", change, "home", 20.0, same.get, 60.0, True, 120, False, 30, True
+            ),
+            ("sleep", const.RULE_SCHEDULE),
+        )
+        # Not warmer and not colder: no optimal stop either.
+        self.assertEqual(
+            engine.optimal_schedule(
+                NOW, "home", change, "sleep", 22.0, same.get, None, False, 120, True, 30
+            ),
+            ("home", const.RULE_SCHEDULE),
+        )
+        # The next level unknown: nothing early.
+        unknown = dict(LEVELS, home=None)
+        self.assertEqual(
+            engine.optimal_schedule(
+                NOW, "sleep", change, "home", 18.0, unknown.get, 60.0, True, 120, False, 30
+            ),
+            ("sleep", const.RULE_SCHEDULE),
+        )
+        # A stop of one minute with half a minute left: it starts.
+        soon = NOW + timedelta(seconds=30)
+        self.assertEqual(
+            engine.optimal_schedule(
+                NOW, "home", soon, "sleep", 22.0, LEVELS.get, None, False, 120, True, 1
+            ),
+            ("sleep", const.RULE_OPTIMAL_STOP),
+        )
+        # An optimal start of a fraction of a minute counts too.
+        self.assertEqual(
+            engine.optimal_schedule(
+                NOW, "sleep", soon, "home", 20.0, LEVELS.get, 0.75, True, 120, False, 30
+            ),
+            ("home", const.RULE_OPTIMAL_START),
+        )
+
+    def test_frost_exactly_at_the_limit(self) -> None:
+        # Exactly at the frost temperature the room is not below it: summer stays,
+        # and a frost protection that is holding says "heating up", not "below".
+        summer = {"mode": const.MODE_SUMMER}
+        self.assertEqual(engine.decide(inputs(current_temp=7.0, **summer)).rule, const.RULE_SUMMER)
+        held = engine.decide(inputs(current_temp=7.0, frost_holding=True, **summer))
+        self.assertEqual((held.rule, held.key), (const.RULE_SAFETY, "frost_holding"))
+        below = engine.decide(inputs(current_temp=6.9, **summer))
+        self.assertEqual((below.rule, below.key), (const.RULE_SAFETY, "frost_below"))
+        # The optimal stop: exactly at the comfort floor is not below it.
+        self.assertEqual(engine.optimal_stop_state(False, False, 21.5, 21.5), (True, False, False))

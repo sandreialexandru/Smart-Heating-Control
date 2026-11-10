@@ -114,7 +114,11 @@ async def test_no_effect_text_in_fahrenheit(
     entry = await _setup(
         hass,
         freezer,
-        house_options={"alert_silent_hours": 0, "outdoor_sensor": "sensor.outdoor"},
+        house_options={
+            "alert_silent_hours": 0,
+            "outdoor_sensor": "sensor.outdoor",
+            "temperature_unit": "°F",
+        },
     )
     house = entry.runtime_data
     room = next(iter(house.rooms.values()))

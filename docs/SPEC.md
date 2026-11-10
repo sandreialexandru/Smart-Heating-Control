@@ -81,7 +81,7 @@ settings depend on the command:
 | Command | Levels in the room settings |
 | --- | --- |
 | Preset | Each level picks one of the **thermostat's own presets** (read from the device). The thermostat keeps that temperature; the integration learns it for display. A level without a preset is reached by sending its temperature. The hvac mode is not changed (presets may need `auto`). |
-| Temperature | Configurable **names** and a **temperature** per level; the temperature is sent to the device. A device in `auto` (its own schedule) that has `heat` is put in `heat`; one with only `auto` stays in it. |
+| Temperature | Configurable **names** and a **temperature** per level; the temperature is sent to the device. A device in `auto` (its own schedule) that has `heat` is put in `heat` once it holds the temperature sent and stayed in `auto` (one that leaves `auto` by itself gets no mode command); one with only `auto` stays in it. |
 | On / off (`hvac_mode`) | Configurable **names** and a **temperature** per level; the device presets are not used, the integration switches it on and off around the level temperature. |
 
 The temperatures set in the room settings can also be changed later from the

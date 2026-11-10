@@ -85,7 +85,7 @@ depind de comandă:
 | Comandă | Nivelurile în setările camerei |
 | --- | --- |
 | Preset | Fiecare nivel alege unul dintre **preseturile termostatului** (citite de pe dispozitiv). Termostatul păstrează acea temperatură; integrarea o învață pentru afișare. Un nivel fără preset e atins trimițând temperatura lui. Modul hvac nu se schimbă (preseturile pot cere `auto`). |
-| Temperatură | **Nume** configurabile și o **temperatură** pentru fiecare nivel; temperatura e trimisă dispozitivului. Un dispozitiv pe `auto` (programul lui) care are `heat` e trecut pe `heat`; unul care are doar `auto` rămâne pe el. |
+| Temperatură | **Nume** configurabile și o **temperatură** pentru fiecare nivel; temperatura e trimisă dispozitivului. Un dispozitiv pe `auto` (programul lui) care are `heat` e trecut pe `heat` după ce ține temperatura trimisă și a rămas pe `auto` (unul care iese singur din `auto` nu primește nicio comandă de mod); unul care are doar `auto` rămâne pe el. |
 | Pornit / oprit (`hvac_mode`) | **Nume** configurabile și o **temperatură** pentru fiecare nivel; preseturile dispozitivului nu se folosesc, integrarea îl pornește și îl oprește în jurul temperaturii nivelului. |
 
 Temperaturile din setările camerei se pot schimba și mai târziu din card sau din

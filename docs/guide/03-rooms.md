@@ -50,7 +50,7 @@ fight. Sensors (temperature, window, occupancy) may be shared by several rooms.
 
 | Command | What the integration does | Suits |
 | --- | --- | --- |
-| **Temperature** | Sends the temperature of every level (e.g. 21 °C for `home`). The thermostat keeps it. A TRV found in *auto* (its own schedule, e.g. the one stored in Zigbee2MQTT) is put in *heat*, so its schedule no longer changes the target; a device with only *auto* stays in it. | Most TRVs |
+| **Temperature** | Sends the temperature of every level (e.g. 21 °C for `home`). The thermostat keeps it. A TRV found in *auto* (its own schedule, e.g. the one stored in Zigbee2MQTT) is put in *heat* once it took the temperature and stayed in *auto*, so its schedule no longer changes the target. A thermostat that leaves *auto* by itself when a temperature is set (Netatmo, Tado) gets no mode command; a device with only *auto* stays in it. | Most TRVs |
 | **Preset** | Every level uses a preset of the thermostat, with the temperature set in the thermostat. The mode of the thermostat is left as it is (some presets need *auto*). | Thermostats with well set presets |
 | **On / off (hvac mode)** | The thermostat is only turned on and off; the integration keeps the temperature, from the room sensor. | Simple thermostats or ones with a badly placed sensor |
 

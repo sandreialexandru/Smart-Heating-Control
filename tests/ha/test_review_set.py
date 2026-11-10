@@ -85,15 +85,36 @@ async def test_trv_turned_off_by_hand_comes_back_with_the_child_lock(
 async def test_trv_left_in_auto_is_put_in_heat(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """With the Temperature command a TRV found in auto (its own schedule) is put in heat."""
+    """With the Temperature command a TRV that takes the temperature and stays in auto
+    (its own schedule) is put in heat."""
     entry, calls = await _trv(hass, freezer, state="auto")
-    assert calls["set_hvac_mode"][-1].data == {"entity_id": "climate.trv", "hvac_mode": "heat"}
+    # First only the temperature: many thermostats leave auto by themselves.
     assert calls["set_temperature"][-1].data == {"entity_id": "climate.trv", "temperature": 21.0}
-    # It reports heat: nothing more to send, and not a manual change.
+    assert not calls["set_hvac_mode"]
+    # It took it and stayed in auto (Sonoff TRVZB): now heat.
+    hass.states.async_set("climate.trv", "auto", {**TRV_AUTO, "temperature": 21.0})
+    await _tick(hass, freezer, 310)
+    assert calls["set_hvac_mode"][-1].data == {"entity_id": "climate.trv", "hvac_mode": "heat"}
+    assert hass.states.get("sensor.office_decision").state != "manual_override"
+    # It reports heat: nothing more to send.
     sent = len(calls["set_hvac_mode"])
     hass.states.async_set("climate.trv", "heat", {**TRV_AUTO, "temperature": 21.0})
     await _tick(hass, freezer, 310)
     assert len(calls["set_hvac_mode"]) == sent
+    assert hass.states.get("sensor.office_decision").state != "manual_override"
+    await _unload(hass, entry)
+
+
+async def test_thermostat_leaving_auto_by_itself_gets_no_mode(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Netatmo, Tado: a temperature set takes them out of auto; heat (a boost to the
+    maximum on Netatmo) is never sent."""
+    entry, calls = await _trv(hass, freezer, state="auto")
+    hass.states.async_set("climate.trv", "heat", {**TRV_AUTO, "temperature": 21.0})
+    for _ in range(3):
+        await _tick(hass, freezer, 310)
+    assert not calls["set_hvac_mode"]
     assert hass.states.get("sensor.office_decision").state != "manual_override"
     await _unload(hass, entry)
 

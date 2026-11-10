@@ -367,9 +367,12 @@ class RoomDevices:
 
         In auto a TRV follows the schedule stored in it and changes its target
         by itself; with the Temperature command it is put in heat, so it keeps
-        the temperature sent. A device with only auto keeps it (that is its
-        heating mode), and the Preset command leaves the mode alone (presets
-        may need auto).
+        the temperature sent. Only once it took the temperature and stayed in
+        auto (``_holds``): many thermostats leave auto by themselves when a
+        temperature is set (Netatmo, Tado), and for some heat means a boost to
+        the maximum. A device with only auto keeps it (that is its heating
+        mode), and the Preset command leaves the mode alone (presets may need
+        auto).
         """
         return (
             self.command_mode == COMMAND_TEMPERATURE
@@ -377,13 +380,22 @@ class RoomDevices:
             and "heat" in (state.attributes.get("hvac_modes") or [])
         )
 
+    def _holds(self, state: State, target: Target) -> bool:
+        """The thermostat holds the temperature of the target (in its own unit)."""
+        temperature = self._climate_temperature(target)
+        if temperature is None:
+            return False
+        current = float_attr(state, ATTR_TEMPERATURE)
+        wanted = self._device_value(state, temperature)
+        return current is not None and abs(current - wanted) < 0.05
+
     def _matches(self, state: State, target: Target) -> bool:
         """Return True if the climate state already matches the target."""
         if target.kind == KIND_OFF:
             if STATE_OFF in (state.attributes.get("hvac_modes") or []):
                 return state.state == STATE_OFF
             return float_attr(state, ATTR_TEMPERATURE) == float_attr(state, "min_temp")
-        if state.state == STATE_OFF or self._own_schedule_mode(state):
+        if state.state == STATE_OFF:
             return False
         if target.kind == KIND_PRESET and self.command_mode == COMMAND_PRESET:
             name = self._device_preset(
@@ -391,15 +403,11 @@ class RoomDevices:
             )
             if name is not None:
                 return state.attributes.get("preset_mode") == name
-        temperature = self._climate_temperature(target)
-        if temperature is None:
-            # A level the thermostat has no preset for, and whose temperature is
-            # unknown: not reached, so the room says so (``preset_missing``).
-            return False
-        # Compared in the unit of the thermostat, as sent.
-        current = float_attr(state, ATTR_TEMPERATURE)
-        wanted = self._device_value(state, temperature)
-        return current is not None and abs(current - wanted) < 0.05
+        # A level the thermostat has no preset for, and whose temperature is
+        # unknown, is not reached, so the room says so (``preset_missing``).
+        # Compared in the unit of the thermostat, as sent; taken in auto (its own
+        # schedule) it still has to be put in heat.
+        return self._holds(state, target) and not self._own_schedule_mode(state)
 
     async def _async_apply_climate(self, entity_id: str, target: Target, force: bool) -> bool:
         """Bring one thermostat to the target (mode, preset or temperature)."""
@@ -422,7 +430,9 @@ class RoomDevices:
                 return False
             return await self._send(entity_id, "set_temperature", ATTR_TEMPERATURE, minimum)
 
-        if (state.state == STATE_OFF and on_mode) or self._own_schedule_mode(state):
+        if (state.state == STATE_OFF and on_mode) or (
+            self._own_schedule_mode(state) and self._holds(state, target)
+        ):
             await self._send(entity_id, "set_hvac_mode", "hvac_mode", on_mode or "heat", "state")
 
         if target.kind == KIND_PRESET and self.command_mode == COMMAND_PRESET:

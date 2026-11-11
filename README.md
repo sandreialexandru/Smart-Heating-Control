@@ -93,28 +93,6 @@ type: custom:smart-heating-control-card
 
 Every part can be hidden; the options are in the [guide](docs/guide/10-card.md).
 
-## ✅ Tested with
-
-Smart Heating Control works with any `climate`, `switch` or temperature
-`sensor` entity of Home Assistant, whatever the brand. These are the devices
-users have confirmed so far:
-
-| Device | Used as |
-| --- | --- |
-| Sonoff TRVZB (Zigbee2MQTT) | TRVs commanded by temperature, with *Offset* or *External temperature* calibration from a room sensor (*External temperature* needs `temperature_sensor_select` set to external in Zigbee2MQTT) |
-| Zigbee TRVs (several per room) | TRVs commanded by temperature |
-| Hive thermostat (local, Zigbee) | Heat source that starts the boiler |
-| Shelly relay | Heat source (the boiler relay) |
-| Tuya Zigbee dry contact (TS0001) | Heat source, through a template switch (it shows up as a `light`) |
-| Generic Thermostat | Heating of the whole house, or a room |
-| ESP32 relay (ESPHome) | The switch of a Generic Thermostat that starts the boiler |
-| Sonoff Zigbee temperature sensors (with and without display) | Room sensors |
-| Xiaomi temperature sensor | Room sensor (also for the TRV calibration) |
-
-Using it with another device? Tell us in an
-[issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues), so
-it can be added here.
-
 ## 🚀 Get started
 
 [![Open your Home Assistant and add this repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sandreialexandru&repository=Smart-Heating-Control&category=integration)
@@ -154,6 +132,7 @@ Download the file and open it in a browser.
 | Document | What it covers |
 |---|---|
 | 📖 [Guide](docs/guide/README.md) | Step by step, in plain words: every setting, every kind of heating, examples |
+| ✅ [Tested with](docs/tested-with.md) | The devices users have confirmed |
 | 🧠 [How the integration learns](docs/learning.md) | The room model, with worked examples and simulations |
 | 🔧 [Reference](docs/reference.md) | Every rule, sensor, attribute, service and card option, in technical detail |
 | 📋 [Specification](docs/SPEC.md) | The full specification |

@@ -107,6 +107,8 @@ users have confirmed so far:
 | Shelly relay | Heat source (the boiler relay) |
 | Tuya Zigbee dry contact (TS0001) | Heat source, through a template switch (it shows up as a `light`) |
 | Generic Thermostat | Heating of the whole house, or a room |
+| ESP32 relay (ESPHome) | The switch of a Generic Thermostat that starts the boiler |
+| Sonoff Zigbee temperature sensors (with and without display) | Room sensors |
 | Xiaomi temperature sensor | Room sensor (also for the TRV calibration) |
 
 Using it with another device? Tell us in an

@@ -110,6 +110,8 @@ dispozitivele confirmate până acum de utilizatori:
 | Releu Shelly | Sursă de căldură (releul centralei) |
 | Contact uscat Tuya Zigbee (TS0001) | Sursă de căldură, printr-un template switch (apare ca `light`) |
 | Generic Thermostat | Încălzirea întregii case sau a unei camere |
+| Releu ESP32 (ESPHome) | Comutatorul unui Generic Thermostat care pornește centrala |
+| Senzori de temperatură Sonoff Zigbee (cu și fără display) | Senzorii camerelor |
 | Senzor de temperatură Xiaomi | Senzorul camerei (și pentru calibrarea TRV-ului) |
 
 Folosești integrarea cu alt dispozitiv? Spune într-un

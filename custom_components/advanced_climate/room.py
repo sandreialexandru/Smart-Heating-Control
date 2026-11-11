@@ -30,6 +30,7 @@ from .const import (
     COMMAND_PRESET,
     COMMAND_TEMPERATURE,
     CONF_AREA,
+    CONF_BOILER_ENTITY,
     CONF_CLIMATES,
     CONF_COMMAND_MODE,
     CONF_FROST_TEMP,
@@ -1201,8 +1202,19 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
 
     @property
     def starts_house_source(self) -> bool:
-        """A room of the heat source that may start it (off: a secondary room)."""
-        return self.uses_house_source and bool(self.config.get(CONF_STARTS_HOUSE_SOURCE, True))
+        """A room of the heat source that may start it (off: a secondary room).
+
+        Secondary only in a house with a heat source (the form asks only then)
+        and never the whole-house zone (the only room of the house).
+        """
+        if not self.uses_house_source:
+            return False
+        secondary = (
+            not self.config.get(CONF_STARTS_HOUSE_SOURCE, True)
+            and bool(self.house.options.get(CONF_BOILER_ENTITY))
+            and not self.is_whole_house
+        )
+        return not secondary
 
     def _frost_holding(self) -> bool:
         """Frost protection started (heating off otherwise) and the device still heats."""

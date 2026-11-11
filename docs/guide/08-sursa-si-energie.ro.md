@@ -148,8 +148,9 @@ poate fi *Cameră de referință* și încălzește cât merge propriul dispozit
 **Camere secundare.** O cameră pe centrală poate fi făcută secundară: la pasul de
 după dispozitivele ei, *Poate porni sursa de căldură a casei* oprit (implicit
 pornit; apare doar când camera se încălzește de la sursa casei). O cameră
-secundară nu pornește niciodată centrala pentru ea și nu se numără la *Camere
-necesare*; TRV-urile, vanele sau releele ei se deschid totuși cât e sub țintă,
+secundară nu pornește niciodată centrala pentru ea, nu se numără la *Camere
+necesare*, nu poate fi *Cameră de referință* și nu e camera rece din *Alertă
+când o cameră rămâne mai rece cu*; TRV-urile, vanele sau releele ei se deschid totuși cât e sub țintă,
 deci primește căldură doar cât centrala merge pentru altă cameră. Potrivit
 pentru camere care nu trebuie să fie reci, dar nici calde la o oră anume:
 balcoane închise, camera de oaspeți, hol, debara. Într-o zi blândă centrala

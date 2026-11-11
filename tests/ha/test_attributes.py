@@ -325,7 +325,7 @@ async def test_no_heat_reason_of_a_secondary_room(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """A secondary room (it cannot start the heat source) waits for another room."""
-    entry, room, _ = await _room(hass, freezer)
+    entry, room, _ = await _room(hass, freezer, {"boiler_entity": "switch.boiler"})
     house = entry.runtime_data
     room.config = {**room.config, "starts_house_source": False}
     room.heating = False
@@ -334,10 +334,9 @@ async def test_no_heat_reason_of_a_secondary_room(
     house.heat_source_state = lambda: (True, False)
     house.source_waiting = None
     assert room.no_heat_reason() == {"code": "secondary"}
-    # With a reference room, the reference room decides (as for every room).
-    other = "other-room"
-    house.options = {**house.options, "reference_room": other}
-    assert room.no_heat_reason() == {"code": "source_off"}
+    # Without a heat source the room cannot be secondary (the form does not ask).
+    house.options = {k: v for k, v in house.options.items() if k != "boiler_entity"}
+    assert room.starts_house_source
     await _unload(hass, entry)
 
 
@@ -445,4 +444,36 @@ async def test_devices_of_a_room_with_their_role(
         ["binary_sensor.window", "window"],
         ["binary_sensor.motion", "occupancy"],
     ]
+    await _unload(hass, entry)
+
+
+async def test_a_secondary_room_is_never_the_cold_room_of_the_difference_alert(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A secondary room waits for the others by design: no "rooms heated unevenly" for it."""
+    from types import SimpleNamespace
+
+    entry, _, _ = await _room(hass, freezer, {"boiler_entity": "switch.boiler"})
+    house = entry.runtime_data
+
+    def fake(name: str, gap: float, starts: bool) -> SimpleNamespace:
+        return SimpleNamespace(
+            name=name,
+            temperature_gap=lambda: gap,
+            uses_house_source=True,
+            starts_house_source=starts,
+        )
+
+    sent: list[str] = []
+    house.notify = lambda key, *a, **k: sent.append(key)
+    house.clear_alert = lambda key: None
+    house.options = {**house.options, "room_diff_alert": 2.0}
+    real = house.rooms
+    house.rooms = {"a": fake("Living", -0.2, True), "b": fake("Balcony", 4.0, False)}
+    house._check_room_difference()
+    assert sent == []
+    house.rooms = {"a": fake("Living", -0.2, True), "b": fake("Office", 4.0, True)}
+    house._check_room_difference()
+    assert sent == ["room_difference"]
+    house.rooms = real
     await _unload(hass, entry)

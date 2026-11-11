@@ -547,6 +547,31 @@ async def test_room_of_the_heat_source_may_be_a_secondary_room(hass: HomeAssista
     assert result["step_id"] == "control_on_off"
 
 
+async def test_a_secondary_room_is_not_offered_as_the_reference_room(hass: HomeAssistant) -> None:
+    """Only a room that may start the heat source can decide alone when it runs."""
+    second = {**RELAY_ROOM, "switches": ["input_boolean.hall"], "starts_house_source": False}
+    entry = _house_with_rooms(
+        hass,
+        options={"boiler_entity": "switch.boiler"},
+        rooms=[
+            ("Bedroom", RELAY_ROOM),
+            ("Office", {**RELAY_ROOM, "switches": ["input_boolean.office"]}),
+            ("Hall", second),
+        ],
+    )
+    options = hass.config_entries.options
+    result = await options.async_init(entry.entry_id)
+    result = await options.async_configure(result["flow_id"], {"next_step_id": "boiler"})
+    result = await options.async_configure(result["flow_id"], {"boiler_entity": "switch.boiler"})
+    assert result["step_id"] == "boiler_details"
+    field = next(k for k in result["data_schema"].schema if str(k) == "reference_room")
+    offered = [o["label"] for o in result["data_schema"].schema[field].config["options"]]
+    assert offered == ["Bedroom", "Office"]
+    # Rooms needed: at most the rooms that may start the heat source.
+    field = next(k for k in result["data_schema"].schema if str(k) == "boiler_min_rooms")
+    assert result["data_schema"].schema[field].config["max"] == 2
+
+
 async def test_heat_source_and_generic_thermostat_relay(hass: HomeAssistant) -> None:
     """The heat source is not a room device, nor the relay of a Generic Thermostat room."""
     climate = _gt_climate(hass, "switch.gt_relay")

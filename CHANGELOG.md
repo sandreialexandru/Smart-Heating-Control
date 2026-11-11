@@ -15,8 +15,9 @@ GitHub releases.
   *Rooms needed*; its TRVs, valves or relays still open while it is below its
   target, so it takes heat only while the boiler runs for another room
   (enclosed balconies, a guest room, a hall). Frost protection still starts the
-  boiler for it. The card says *a secondary room: it takes heat when another
-  room starts the heat source*.
+  boiler for it. A secondary room cannot be the *Reference room* and is never
+  the cold room of the *Alert when a room stays colder than*. The card says *a
+  secondary room: it takes heat when another room starts the heat source*.
 
 ## 2.6.4 – 2026-11-11
 

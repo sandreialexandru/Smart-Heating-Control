@@ -1260,8 +1260,9 @@ class House:
         # and of them only those that may (not the secondary rooms).
         sourced = {rid: room for rid, room in self.rooms.items() if room.uses_house_source}
         starters = {rid: room for rid, room in sourced.items() if room.starts_house_source}
+        # The reference room must be one that may start the heat source.
         reference = opts.get(CONF_REFERENCE_ROOM)
-        if reference not in sourced:
+        if reference not in starters:
             reference = None
         needed = max(1, int(opts[CONF_BOILER_MIN_ROOMS]))
         if reference:
@@ -1614,7 +1615,13 @@ class House:
         }
         if not gaps:
             return
-        cold = {name: gap for name, gap in gaps.items() if gap > limit}
+        # A secondary room waits for the others by design: it is never "cold".
+        secondary = {
+            room.name
+            for room in self.rooms.values()
+            if room.uses_house_source and not room.starts_house_source
+        }
+        cold = {name: gap for name, gap in gaps.items() if gap > limit and name not in secondary}
         reached = [name for name, gap in gaps.items() if gap <= 0]
         if cold and reached:
             text = ", ".join(

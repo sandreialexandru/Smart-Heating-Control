@@ -147,7 +147,9 @@ the boiler (neither for *Rooms needed* nor for frost protection), cannot be the
 **Secondary rooms.** A room on the boiler can be made secondary: in the step
 after its devices, *Can start the house heat source* off (on by default; asked
 only when the room heats from the heat source of the house). A secondary room
-never starts the boiler for itself and does not count for *Rooms needed*; its
+never starts the boiler for itself, does not count for *Rooms needed*, cannot be
+the *Reference room* and is not the cold room of the *Alert when a room stays
+colder than*; its
 TRVs, valves or relays still open while it is below its target, so it takes
 heat only while the boiler runs for another room. Good for rooms that should
 not be cold but need not be warm at a set time: enclosed balconies, a guest

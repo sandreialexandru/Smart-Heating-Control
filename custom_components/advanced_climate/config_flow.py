@@ -1360,7 +1360,9 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
         return [
             selector.SelectOptionDict(value=sub.subentry_id, label=sub.title)
             for sub in self.config_entry.subentries.values()
-            if sub.subentry_type == SUBENTRY_ROOM and sub.data.get(CONF_USE_HOUSE_SOURCE, True)
+            if sub.subentry_type == SUBENTRY_ROOM
+            and sub.data.get(CONF_USE_HOUSE_SOURCE, True)
+            and sub.data.get(CONF_STARTS_HOUSE_SOURCE, True)
         ]
 
     def _room_count(self) -> int:
@@ -1546,7 +1548,7 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
             ):
                 errors = {key: error}
             if not errors:
-                if with_source and d.get(CONF_USE_HOUSE_SOURCE, True):
+                if with_source and d.get(CONF_USE_HOUSE_SOURCE, True) and not self._is_house_zone():
                     return await self.async_step_house_source()
                 return await self._after_devices()
         return self.async_show_form(
@@ -1555,6 +1557,13 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
             errors=errors,
             description_placeholders=placeholders,
         )
+
+    def _is_house_zone(self) -> bool:
+        """The whole-house zone is reconfigured (it always starts the heat source)."""
+        if not self._subentry_id:
+            return False
+        sub = self._get_entry().subentries.get(self._subentry_id)
+        return sub is not None and sub.unique_id == HOUSE_ZONE_ID
 
     async def _after_devices(self) -> SubentryFlowResult:
         """The step after the devices, by how the room is controlled."""

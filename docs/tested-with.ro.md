@@ -18,6 +18,6 @@ dispozitivele confirmate până acum de utilizatori:
 | Senzori de temperatură Sonoff Zigbee (cu și fără display) | Senzorii camerelor |
 | Senzor de temperatură Xiaomi | Senzorul camerei (și pentru calibrarea TRV-ului) |
 
-Folosești integrarea cu alt dispozitiv? Spune într-un
+Integrarea merge și cu alt dispozitiv? Se poate spune într-un
 [issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues), ca
-să fie adăugat aici.
+dispozitivul să fie adăugat aici.

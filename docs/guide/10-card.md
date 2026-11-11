@@ -135,15 +135,16 @@ header:
 - **Today**: the profile of the day as a bar over the schedule day (from the
   house *Schedule day starts at*, e.g. 00 → 24 or 04 → 04), with the time now.
 While there is a manual change, a band under the arc says until when and where
-it was made, with a **Cancel** button (back to automatic). If a room below its
+it was made, and an **Automatic** button first in the row of buttons clears it
+(back to automatic). If a room below its
 target does not heat, a band says why (*Not heating: …*, see
 [chapter 8](08-heat-source-and-energy.md#when-a-room-below-its-target-does-not-heat)).
 The **alerts** of the room and of the house follow, in a list with their
 number: each with a title (e.g. *Sensor silent*), the text in the language of
 the card and, when it is about an entity, an arrow; a tap opens that entity.
 
-Below, buttons (three per row; the first, **For a while**, is the main one and
-is tinted in the colour of the level) open the sections **For a while** (*Set for a while*),
+Below, buttons (three per row; one is coloured only while its section is open)
+open the sections **For a while** (*Set for a while*),
 **Schedule**, **Chart**, **Levels** (*Level temperatures*) and **Details**, each on its own (several can be open at once); an
 open section's button stays coloured. A **Lock** button next to them turns the
 child lock of the room on or off (coloured while on). The chart and the

@@ -417,7 +417,7 @@ Fiecare cameră arată și decizia, o flacără (conturată cât cere căldură,
 încălzește; și la casă și la camerele pliate) / insignele pentru fereastră / modificare manuală, un arc cu temperatura camerei (gol la
 antiîngheț, plin la maxim; doar arată valoarea), ținta ca un punct pe el (arcul se oprește în punct la cel mult 0,3 °C / 0,5 °F de țintă), o săgeată ↑ / ↓ în deschiderea lui cât camera se încălzește sau se răcește (`temperature_trend`: cel puțin 0,2 °C/h în ultimele 30 de minute) și ținta, motivul, timpul până
 la țintă, încălzirea după senzorul camerei când e pornită, ce măsoară dispozitivul însuși, profilul
-zilei ca bară și, cât există o modificare manuală, o bandă cu butonul *Anulează* (înapoi la automat). Butoanele de sub arc (câte trei pe rând) deschid *Temporar* (setează
+zilei ca bară și, cât există o modificare manuală, o bandă cu sfârșitul ei și un buton *Automat* (înapoi la automat) primul în rândul de butoane. Butoanele de sub arc (câte trei pe rând) deschid *Temporar* (setează
 temporar; o modificare manuală cu sfârșit arată cât mai are), *Program* (fiecare profil cu zilele lui și un comutator pornit /
 oprit; zilele se aleg în editor), *Grafic*, *Niveluri* (temperaturile nivelurilor) și *Detalii*, fiecare separat (mai
 multe deodată) și un buton *Blocare* pentru blocarea modificărilor în cameră.

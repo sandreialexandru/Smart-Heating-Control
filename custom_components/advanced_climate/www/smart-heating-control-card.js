@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.4rc9";
+const CARD_VERSION = "2.6.4rc10";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -411,7 +411,6 @@ const TEXT = {
     trv_boost_chip: "Heating by sensor · {temp}",
     trv_boost_chip_off: "By sensor: {temp} while heating",
     resume: "Resume",
-    cancel_override: "Cancel",
     end_guests: "End",
     next_at: "{preset} at {time}",
     at_source_unavailable: "Heat source unavailable",
@@ -728,7 +727,6 @@ const TEXT = {
     trv_boost_chip: "Încălzire după senzor · {temp}",
     trv_boost_chip_off: "După senzor: {temp} cât încălzește",
     resume: "Reia",
-    cancel_override: "Anulează",
     end_guests: "Oprește",
     next_at: "{preset} la {time}",
     at_source_unavailable: "Sursa de căldură indisponibilă",
@@ -1671,14 +1669,20 @@ class SmartHeatingControlCard extends HTMLElement {
     }
     if (cfg.show_details) defs.push([`details-${id}`, "details", "information-outline", () => this._detailsHtml(a, e)]);
     const lock = e.child_lock ? this._state(e.child_lock) : null;
-    if (!defs.length && !lock) return "";
+    if (!defs.length && !lock && !a.override) return "";
     const open = (k) => !!this._open[k] || (k === `sched-${id}` && this._editing === id);
     const locked = lock?.state === "on";
-    // The first one (a temperature for a while) is the main action of the room.
+    // While there is a manual change: back to automatic, first in the row.
+    const back = a.override
+      ? `<button class="sbtn back" data-action="clear" data-room="${esc(id)}" title="${esc(this._t("clear_override"))}">${this._icon(
+          "autorenew"
+        )}<span>${esc(this._t("auto_short"))}</span></button>`
+      : "";
     const buttons =
+      back +
       defs
         .map(
-          ([k, label, icon], i) => `<button class="sbtn ${i === 0 && k.startsWith("quick-") ? "primary" : ""} ${open(k) ? "on" : ""}" data-action="fold" data-key="${esc(k)}"
+          ([k, label, icon]) => `<button class="sbtn ${open(k) ? "on" : ""}" data-action="fold" data-key="${esc(k)}"
           aria-expanded="${open(k)}">${this._icon(icon)}<span>${esc(this._t(label))}</span></button>`
         )
         .join("") +
@@ -1688,7 +1692,7 @@ class SmartHeatingControlCard extends HTMLElement {
             locked ? "lock-outline" : "lock-open-variant-outline"
           )}<span>${esc(this._t("lock_short"))}</span></button>`
         : "");
-    const count = defs.length + (lock ? 1 : 0);
+    const count = defs.length + (lock ? 1 : 0) + (a.override ? 1 : 0);
     // The chart is not drawn here: it opens in a window (``_chartPopup``).
     const bodies = defs
       .filter(([k]) => open(k) && !k.startsWith("chart-"))
@@ -2082,7 +2086,6 @@ class SmartHeatingControlCard extends HTMLElement {
         lead: this._t("override"),
         text: `${until}${origin}${back}`,
         link: e.manual_override,
-        action: { label: this._t("cancel_override"), attrs: `data-action="clear" data-room="${esc(key)}" title="${esc(this._t("clear_override"))}"` },
       });
     }
 
@@ -3236,7 +3239,7 @@ class SmartHeatingControlCard extends HTMLElement {
       this._t("quick"),
       `<p class="hint">${this._t("quick_hint")}</p>
         <div class="presets">${presets}</div>
-        <div class="quickset">
+        <div class="quickset" data-ov="${esc(a.override ? `${a.override.since || ""}|${a.override.until || ""}` : "")}">
           ${this._btn(this._t("apply"), `data-action="quick-temp" data-room="${esc(a.room_id)}"`, {
             icon: "thermometer-check",
           })}
@@ -4205,6 +4208,20 @@ class SmartHeatingControlCard extends HTMLElement {
   }
 
   /** Temperature and duration entered in the quick manual change. */
+  /**
+   * After a manual change from the card: the fields lose the focus (while a field
+   * has it the card is not drawn again) and the hours typed go, so the next one
+   * starts from the target of the room.
+   */
+  _quickDone(room) {
+    const sel = (k) => this.shadowRoot.querySelector(`input[data-quick="${k}"][data-room="${CSS.escape(room)}"]`);
+    const hours = sel("hours");
+    if (hours) hours.value = "";
+    this.shadowRoot.activeElement?.blur?.();
+    this._lastKey = null;
+    this._render(true);
+  }
+
   _quickValues(room) {
     const temp = this.shadowRoot.querySelector(`input[data-quick="temp"][data-room="${CSS.escape(room)}"]`);
     const hours = this.shadowRoot.querySelector(`input[data-quick="hours"][data-room="${CSS.escape(room)}"]`);
@@ -4321,12 +4338,14 @@ class SmartHeatingControlCard extends HTMLElement {
       case "quick-preset": {
         const { data } = this._quickValues(room);
         await this._call("advanced_climate", "set_override", { room, preset: el.dataset.preset, ...data });
+        this._quickDone(room);
         return;
       }
       case "quick-temp": {
         const { temp, data } = this._quickValues(room);
         if (temp !== null) {
           await this._call("advanced_climate", "set_override", { room, temperature: temp, ...data });
+          this._quickDone(room);
           return;
         }
         // Only the hours: the manual change now lasts that long from now
@@ -4338,6 +4357,7 @@ class SmartHeatingControlCard extends HTMLElement {
           return;
         }
         await this._call("advanced_climate", "set_override", { room, ...keep, ...data });
+        this._quickDone(room);
         return;
       }
       case "edit": {
@@ -5019,7 +5039,7 @@ const STYLE = `
   @container (max-width: 400px) {
     .sbtn { flex-direction: column; gap: 2px; min-height: 56px; padding: 4px; font-size: 0.85em; }
   }
-  .sbtn.primary { border-color: color-mix(in srgb, var(--c) 60%, transparent); background: color-mix(in srgb, var(--c) 22%, transparent); font-weight: 600; }
+  .sbtn.back { border-color: var(--ac-active-line); background: var(--ac-active-bg); color: var(--ac-active-fg); font-weight: 600; }
   .sbtn.lock.on { border-color: var(--warning-color, #f0ad4e); background: color-mix(in srgb, var(--warning-color, #f0ad4e) 16%, var(--card-background-color)); }
   .sbtn.lock.on ha-icon { color: var(--warning-color, #f0ad4e); }
   .sbtn:hover { background: var(--ac-surface-2); }

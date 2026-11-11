@@ -74,6 +74,10 @@ GitHub releases.
 
 ### Card
 
+- 🐞 *Set for a while*: its fields (the temperature and the hours typed) start
+  again from the target of the room once the manual change ends, and the field
+  lets go of the focus after *Apply* (while a field has it the card is not
+  drawn again, so it could keep showing the old state).
 - 🎨 **New look, easier to read** (design only, every value and button stays):
   - rooms are neutral: the level colour is only on the arc and its dot, not on
     the whole room; a room is outlined red for an alert that something does not
@@ -90,12 +94,12 @@ GitHub releases.
     shows the target under *Target*, the next change, and the level below the
     arc;
   - an open room: the level and the rule in its header (*Home · Schedule*),
-    *Now* and *Next* next to the arc, the buttons three per row with *For a
-    while* as the main one;
+    *Now* and *Next* next to the arc, the buttons three per row (*Automatic*
+    first while there is a manual change);
   - **messages in one shape** (a tinted band, the icon in a circle, the subject
     in bold): the pause band with a **Resume** button, the guest band with an
-    **End** button, *Warm outside*, *Not heating* and the manual change with a
-    **Cancel** button (instead of the *Automatic* button in the row);
+    **End** button, *Warm outside*, *Not heating* and the manual change with
+    its end;
   - **alerts in the open room**, with a title, their number and a tap that
     opens the entity (they were the first item of the *Details*).
 - ⏱️ **Set for a while with only the hours** ([#7](https://github.com/sandreialexandru/Smart-Heating-Control/issues/7)):

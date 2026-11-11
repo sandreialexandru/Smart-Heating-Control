@@ -133,15 +133,16 @@ deschisă. Sub antet:
 - **Azi**: profilul zilei ca bară pe ziua programului (de la *Ziua programului începe la*
   a casei, de exemplu 00 → 24 sau 04 → 04), cu ora de acum.
 Cât există o modificare manuală, o bandă sub arc spune până când și de unde a
-fost făcută, cu butonul **Anulează** (înapoi la automat). Dacă o cameră sub
+fost făcută, iar butonul **Automat**, primul din rândul de butoane, o anulează
+(înapoi la automat). Dacă o cameră sub
 țintă nu încălzește, o bandă spune de ce (*Nu încălzește: …*,
 [capitolul 8](08-sursa-si-energie.ro.md#când-nu-încălzește-o-cameră-sub-țintă)).
 Urmează **alertele** camerei și ale casei, într-o listă cu numărul lor: fiecare
 cu un titlu (de exemplu *Senzor tăcut*), textul în limba cardului și, când e
 despre o entitate, o săgeată; o atingere deschide entitatea.
 
-Mai jos, butoanele (câte trei pe rând; primul, **Temporar**, e cel principal și
-e colorat în culoarea nivelului) deschid secțiunile **Temporar** (*Setează temporar*),
+Mai jos, butoanele (câte trei pe rând; unul e colorat doar cât e deschisă
+secțiunea lui) deschid secțiunile **Temporar** (*Setează temporar*),
 **Program**, **Grafic**, **Niveluri** (*Temperaturile nivelurilor*) și
 **Detalii**, fiecare separat (pot fi deschise mai multe deodată);
 butonul unei secțiuni deschise rămâne colorat. Butonul **Blocare** de lângă ele

@@ -174,11 +174,14 @@ test("house scenarios: a button each, the active one marked, a click chooses it"
   ok(!(await p.evaluate(() => !!card.shadowRoot.querySelector(".scenarios"))), "no row without scenarios");
 });
 
-test("messages: Resume ends the pause, End ends the guest mode, Cancel the manual change", async (p) => {
+test("messages: Resume ends the pause, End ends the guest mode, Automatic the manual change", async (p) => {
   const until = new Date(Date.now() + 2 * H).toISOString();
   await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom", override: { temperature: 23, until, origin: "card", preset: null, applied: true } }], pause: true, guest: true });
   const btns = await p.evaluate(() => [...card.shadowRoot.querySelectorAll(".msg .mbtn")].map((b) => [b.innerText, b.dataset.action, b.dataset.entity || b.dataset.room]));
-  eq(btns, [["Resume", "toggle", "switch.home_pause"], ["End", "toggle", "switch.home_guest_mode"], ["Cancel", "clear", "r1"]], "buttons");
+  eq(btns, [["Resume", "toggle", "switch.home_pause"], ["End", "toggle", "switch.home_guest_mode"]], "buttons");
+  // The manual change: back to automatic with the Automatic button, first in the row.
+  const back = await p.evaluate(() => { const b = card.shadowRoot.querySelector(".sbtns .sbtn"); return [b.className.includes("back"), b.innerText, b.dataset.action, b.dataset.room]; });
+  eq(back, [true, "Automatic", "clear", "r1"], "automatic first");
   await click(p, '.msg [data-entity="switch.home_pause"]'); await p.waitForTimeout(50);
   eq((await last(p)).data.entity_id, "switch.home_pause", "pause toggled");
 });
@@ -215,4 +218,35 @@ test("reason: the last room kept open for the heat source, with what it would be
   const t = await p.evaluate(() =>
     card._reasonText({ reason_key: "keep_open", reason_params: { preset: "home", temperature: 21 }, preset_names: {}, offsets: [] }));
   ok(t.startsWith("Kept open for the heat source: the last room that asked for heat (would be Home 21"), t);
+});
+
+
+test("set for a while: no button looks active until opened; the fields start again from the target once the manual change ends", async (p) => {
+  const until = new Date(Date.now() + H).toISOString();
+  const room = (o) => ({ id: "r1", name: "Bedroom", ...o });
+  await mount(p, {}, { rooms: [room({ target: 23, override: { temperature: 23, until, since: new Date().toISOString(), origin: "card", preset: null, applied: true } })] });
+  const cls = await p.evaluate(() => [...card.shadowRoot.querySelectorAll(".sbtn")].map((b) => b.className.trim().split(/\s+/).slice(1).join(" ")));
+  eq(cls[0], "back", "Automatic");
+  ok(cls.slice(1).every((c) => c === "" || c === "lock"), "none of the others looks active: " + cls);
+  await click(p, '[data-key="quick-r1"]');
+  await p.evaluate(() => {
+    card.shadowRoot.querySelector('input[data-quick="temp"]').value = "24";
+    card.shadowRoot.querySelector('input[data-quick="hours"]').value = "3";
+  });
+  // The manual change ends (time over): the fields hold the target again, no hours.
+  await p.evaluate(() => { card.hass = makeHass({ rooms: [{ id: "r1", name: "Bedroom", target: 21 }] }); });
+  await p.waitForTimeout(50);
+  const vals = await p.evaluate(() => ["temp", "hours"].map((k) => card.shadowRoot.querySelector(`input[data-quick="${k}"]`).value));
+  eq(vals, ["21", ""], "fields reset");
+  ok(!(await p.evaluate(() => !!card.shadowRoot.querySelector(".sbtn.back"))), "no Automatic without a manual change");
+});
+
+test("set for a while: after Apply the field lets go of the focus, so the card is drawn again", async (p) => {
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom", target: 21 }] });
+  await click(p, '[data-key="quick-r1"]');
+  await p.evaluate(() => { const i = card.shadowRoot.querySelector('input[data-quick="hours"]'); i.focus(); i.value = "2"; });
+  await click(p, '[data-action="quick-temp"]');
+  await p.waitForTimeout(50);
+  eq(await p.evaluate(() => card.shadowRoot.activeElement?.tagName || null), null, "no focused field");
+  eq(await p.evaluate(() => card.shadowRoot.querySelector('input[data-quick="hours"]').value), "", "hours cleared");
 });

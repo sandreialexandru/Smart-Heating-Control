@@ -106,7 +106,9 @@ jobs:
         with:
           node-version: "22"
       - run: npm install --no-audit --no-fund
-      - run: npx playwright install --with-deps chromium
+      # The runner image already has the libraries Chromium needs: when the
+      # Ubuntu package servers cannot be reached, the browser alone is enough.
+      - run: npx playwright install --with-deps chromium || npx playwright install chromium
       - run: node run.js
         env:
           CARD_TEST_SHOTS: ${{ runner.temp }}/card-test-shots

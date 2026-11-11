@@ -14,7 +14,7 @@ Stare: **de decis** · **mai târziu** · **există deja** · **nu facem** · **
 | A doua sursă electrică pe cameră (pompă aer-aer, AC) folosită când curentul e ieftin, TRV-ul ca rezervă | GitHub | nu facem | În afara principiului. Alte integrări aleg sursa (TRV principal, AC secundar, după diferență și temperatura de afară), fără tarif. Soluție: două camere cu același senzor (TRV la ținta normală, pompa cu +0,5–1 °C, fără sursa casei), oprită / pornită prin `set_override` / `clear_override` după senzorul lui de „curent ieftin”. |
 | Cerere de căldură în procente / centrale cu modulare (Ariston Sensys) | Discord / Facebook | de decis | Acum: senzorul binar „Heat demand” al casei și al camerelor; Sensys poate fi sursa casei fără boost (doar heat / off). Idee: senzor de cerere în procente. |
 | Pauză când pompa de căldură face apă caldă (Ecodan DHW) | Discord (callumt) | mai târziu | Rezolvat acum cu `switch.home_pause` dintr-o automatizare. Idee: o intrare „sursa e ocupată”. |
-| Listă „Tested with” (dispozitive testate) în README | noi | mai târziu | |
+| Listă „Tested with” (dispozitive testate) în README | noi | făcut | Din issue-urile #1, #2, #5, #6, #10; tado (#8) și termostatele Tuya Wi-Fi (#1) lăsate deoparte până la confirmare. |
 | Ține deschis TRV-ul ultimei camere până cere căldură alta (căldura rămasă a centralei, baterie, zgomot noaptea) | Reddit r/homeassistant (ex-utilizator tado) | făcut | 2.6.4rc8: bifa *Keep the last TRV open* la sursa casei, fără limită (cine o bifează acceptă depășirea țintei); TRV-urile primesc maximul camerei (Pornit/oprit: pornit; Preset: temperatura); camera nu cere căldură; învățarea sare peste acel timp; se termină când cere altă cameră, o regulă mai puternică sau camera are nevoie de căldură. |
 
 ## Idei

@@ -93,6 +93,26 @@ type: custom:smart-heating-control-card
 
 Every part can be hidden; the options are in the [guide](docs/guide/10-card.md).
 
+## ✅ Tested with
+
+Smart Heating Control works with any `climate`, `switch` or temperature
+`sensor` entity of Home Assistant, whatever the brand. These are the devices
+users have confirmed so far:
+
+| Device | Used as |
+| --- | --- |
+| Sonoff TRVZB (Zigbee2MQTT) | TRVs commanded by temperature, with *Offset* or *External temperature* calibration from a room sensor (*External temperature* needs `temperature_sensor_select` set to external in Zigbee2MQTT) |
+| Zigbee TRVs (several per room) | TRVs commanded by temperature |
+| Hive thermostat (local, Zigbee) | Heat source that starts the boiler |
+| Shelly relay | Heat source (the boiler relay) |
+| Tuya Zigbee dry contact (TS0001) | Heat source, through a template switch (it shows up as a `light`) |
+| Generic Thermostat | Heating of the whole house, or a room |
+| Xiaomi temperature sensor | Room sensor (also for the TRV calibration) |
+
+Using it with another device? Tell us in an
+[issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues), so
+it can be added here.
+
 ## 🚀 Get started
 
 [![Open your Home Assistant and add this repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sandreialexandru&repository=Smart-Heating-Control&category=integration)

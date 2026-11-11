@@ -1256,8 +1256,10 @@ class House:
     async def _async_control_boiler(self, now: datetime) -> None:
         """Switch the boiler from the heat demand of the rooms, with minimum on / off times."""
         opts = self.options
-        # Only the rooms that heat from the heat source of the house start it.
+        # Only the rooms that heat from the heat source of the house start it,
+        # and of them only those that may (not the secondary rooms).
         sourced = {rid: room for rid, room in self.rooms.items() if room.uses_house_source}
+        starters = {rid: room for rid, room in sourced.items() if room.starts_house_source}
         reference = opts.get(CONF_REFERENCE_ROOM)
         if reference not in sourced:
             reference = None
@@ -1265,18 +1267,18 @@ class House:
         if reference:
             demand = sourced[reference].heat_demand
         else:
-            count = sum(1 for room in sourced.values() if room.heat_demand)
-            demand = count >= needed if sourced else False
+            count = sum(1 for room in starters.values() if room.heat_demand)
+            demand = count >= needed if starters else False
         # More rooms needed than the house has (rooms were removed): the heat
         # source would start only for frost protection.
-        if opts.get(CONF_BOILER_ENTITY) and not reference and needed > len(sourced):
+        if opts.get(CONF_BOILER_ENTITY) and not reference and needed > len(starters):
             self.notify(
                 "boiler_min_rooms",
                 f"Rooms needed to start the heat source is {needed}, but the house has "
-                f"{len(sourced)} rooms that heat from it: the heat source starts only for "
+                f"{len(starters)} rooms that can start it: the heat source starts only for "
                 "frost protection.",
                 code="boiler_min_rooms",
-                params={"needed": needed, "rooms": len(sourced)},
+                params={"needed": needed, "rooms": len(starters)},
             )
         else:
             self.clear_alert("boiler_min_rooms")
@@ -1393,7 +1395,9 @@ class House:
         enabled = bool(self.options.get(CONF_KEEP_LAST_OPEN)) and bool(
             self.options.get(CONF_BOILER_ENTITY)
         )
-        sourced = [room for room in self.rooms.values() if room.uses_house_source]
+        # Only the rooms that start the heat source (a secondary room asking does
+        # not start it, so it does not end the room kept open).
+        sourced = [room for room in self.rooms.values() if room.starts_house_source]
         asking = [room for room in sourced if room.heat_demand and room.id != previous]
         askers = [room.id for room in asking if room.can_keep_open]
         if not enabled:

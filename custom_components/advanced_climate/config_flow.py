@@ -129,6 +129,7 @@ from .const import (
     CONF_SEASON_TEMP,
     CONF_SOLAR_OFFSET,
     CONF_SOURCE,
+    CONF_STARTS_HOUSE_SOURCE,
     CONF_STOP_TOLERANCE,
     CONF_SWITCHES,
     CONF_TEMP_AGGREGATION,
@@ -1545,19 +1546,45 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
             ):
                 errors = {key: error}
             if not errors:
-                if d[CONF_SOURCE] == SOURCE_GT:
-                    return await self.async_step_levels()
-                if _is_on_off(d):
-                    return await self.async_step_control_on_off()
-                if _boost_on(d):
-                    return await self.async_step_control_boost()
-                return await self.async_step_control_thermostat()
+                if with_source and d.get(CONF_USE_HOUSE_SOURCE, True):
+                    return await self.async_step_house_source()
+                return await self._after_devices()
         return self.async_show_form(
             step_id="devices",
             data_schema=schema,
             errors=errors,
             description_placeholders=placeholders,
         )
+
+    async def _after_devices(self) -> SubentryFlowResult:
+        """The step after the devices, by how the room is controlled."""
+        d = self._data
+        if d[CONF_SOURCE] == SOURCE_GT:
+            return await self.async_step_levels()
+        if _is_on_off(d):
+            return await self.async_step_control_on_off()
+        if _boost_on(d):
+            return await self.async_step_control_boost()
+        return await self.async_step_control_thermostat()
+
+    async def async_step_house_source(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """A room of the heat source: may it start the heat source (off: a secondary room)."""
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_STARTS_HOUSE_SOURCE,
+                    default=bool(self._data.get(CONF_STARTS_HOUSE_SOURCE, True)),
+                ): _bool()
+            }
+        )
+        if user_input is not None:
+            self._data[CONF_STARTS_HOUSE_SOURCE] = bool(
+                user_input.get(CONF_STARTS_HOUSE_SOURCE, True)
+            )
+            return await self._after_devices()
+        return self.async_show_form(step_id="house_source", data_schema=schema)
 
     def _on_off(self) -> bool:
         """True when the room is controlled on / off (relays or hvac_mode)."""

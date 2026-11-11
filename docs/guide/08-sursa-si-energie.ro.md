@@ -145,6 +145,20 @@ merge sursa ei**:
 nu pornește centrala (nici la *Camere necesare*, nici pentru antiîngheț), nu
 poate fi *Cameră de referință* și încălzește cât merge propriul dispozitiv.
 
+**Camere secundare.** O cameră pe centrală poate fi făcută secundară: la pasul de
+după dispozitivele ei, *Poate porni sursa de căldură a casei* oprit (implicit
+pornit; apare doar când camera se încălzește de la sursa casei). O cameră
+secundară nu pornește niciodată centrala pentru ea și nu se numără la *Camere
+necesare*; TRV-urile, vanele sau releele ei se deschid totuși cât e sub țintă,
+deci primește căldură doar cât centrala merge pentru altă cameră. Potrivit
+pentru camere care nu trebuie să fie reci, dar nici calde la o oră anume:
+balcoane închise, camera de oaspeți, hol, debara. Într-o zi blândă centrala
+poate merge puțin, așa că o cameră secundară poate rămâne ore întregi sub țintă.
+Antiînghețul pornește totuși centrala pentru ea, din motive de siguranță.
+Învățarea și timpul ei de încălzire se numără doar cât merge centrala, ca la
+orice cameră de pe centrală. O cameră secundară care cere căldură nu oprește
+*Ține deschis ultimul TRV*.
+
 O cameră care cere căldură în timp ce sursa așteaptă alte camere se răcește, iar
 asta se învață ca pierdere de căldură. Cât timp starea sursei e necunoscută, nu se învață
 nimic.
@@ -161,6 +175,7 @@ Cardul spune de ce, iar senzorul *Decizie* are atributul `no_heat_reason`:
 | releul așteaptă timpul minim pornit / oprit | protecția releului |
 | sursa de căldură așteaptă timpul minim pornit / oprit | protecția centralei |
 | așteaptă alte camere: X din Y cer căldură | *Camere necesare* |
+| cameră secundară: primește căldură când altă cameră pornește sursa de căldură | *Poate porni sursa de căldură a casei* oprit |
 | așteaptă camera de referință … | *Cameră de referință* |
 | sursa de căldură e oprită / starea ei e necunoscută | centrala nu merge sau nu se știe |
 | termostatul e oprit | termostatul camerei e pe `off` |

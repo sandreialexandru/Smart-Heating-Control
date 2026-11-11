@@ -36,6 +36,7 @@ heating are skipped.
 | **Command** | Only for other thermostats / TRVs, see below. |
 | **Heat by the room sensor** | Only for other thermostats / TRVs with the *Temperature* command (otherwise *Heating by the room sensor works only with the Temperature command*), see step 3. Not the same as *Heat by the room sensors* of the whole-house zone, which does the same for a thermostat that heats the whole home. |
 | **Heats from the heat source of the house** | Only when the house has a *Heat source* (on by default). On: the room's radiators are on the boiler; the room starts the boiler when it asks for heat and heats only while the boiler runs. Off: the room has its own heat (electric heater, heat pump, air conditioner); it does not start the boiler, does not count for *Rooms needed*, cannot be the *Reference room* and heats while its own device runs. |
+| **Can start the house heat source** | Only for a room that heats from the heat source of the house, on the next step (on by default). Off: a secondary room; it never starts the boiler for itself, its devices open while it is below its target, so it takes heat only while the boiler runs for another room (frost protection still starts the boiler). See [chapter 8](08-heat-source-and-energy.md). |
 
 At least one device must be picked (otherwise *Select at least one device*).
 

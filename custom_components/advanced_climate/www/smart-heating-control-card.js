@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.4";
+const CARD_VERSION = "2.6.5rc1";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -293,6 +293,7 @@ const TEXT = {
     nh_source_min_on: "the heat source waits for its minimum on time",
     nh_source_min_off: "the heat source waits for its minimum off time",
     nh_rooms_needed: "waiting for other rooms: {count} of {needed} ask for heat",
+    nh_secondary: "a secondary room: it takes heat when another room starts the heat source",
     nh_reference_room: "waiting for the reference room {room}",
     nh_source_off: "the heat source is off",
     nh_source_unknown: "the state of the heat source is unknown",
@@ -353,7 +354,7 @@ const TEXT = {
     al_device_limit_max: "{entity} accepts at most {value}: raise its Max temperature on the device if the room needs more.",
     al_device_limit_min: "{entity} accepts at least {value}: lower its Min temperature on the device for a lower frost protection.",
     al_weather_without_source: "On but not working without an outdoor temperature sensor or a weather entity: {features}.",
-    al_boiler_min_rooms: "Rooms needed to start the heat source is {needed}, but the house has {rooms} rooms: the heat source starts only for frost protection.",
+    al_boiler_min_rooms: "Rooms needed to start the heat source is {needed}, but the house has {rooms} rooms that can start it: the heat source starts only for frost protection.",
     al_outdoor_unavailable: "No outdoor temperature from {entities} for more than {minutes} min: the cutoff, the automatic season, the compensation and the optimal stop cannot use it.",
     al_mold_risk: "Mold risk: the coldest wall reached about {surface}% humidity (room {humidity}%). Airing the room and keeping it warmer lower the risk.",
     wf_cutoff: "turn heating off when warm",
@@ -609,6 +610,7 @@ const TEXT = {
     nh_source_min_on: "sursa de căldură așteaptă timpul minim pornit",
     nh_source_min_off: "sursa de căldură așteaptă timpul minim oprit",
     nh_rooms_needed: "așteaptă alte camere: {count} din {needed} cer căldură",
+    nh_secondary: "cameră secundară: primește căldură când altă cameră pornește sursa de căldură",
     nh_reference_room: "așteaptă camera de referință {room}",
     nh_source_off: "sursa de căldură e oprită",
     nh_source_unknown: "starea sursei de căldură e necunoscută",
@@ -669,7 +671,7 @@ const TEXT = {
     al_device_limit_max: "{entity} acceptă cel mult {value}: ridică Max temperature pe dispozitiv dacă e nevoie de mai mult.",
     al_device_limit_min: "{entity} acceptă cel puțin {value}: coboară Min temperature pe dispozitiv pentru un antiîngheț mai jos.",
     al_weather_without_source: "Pornite, dar nu funcționează fără senzor de temperatură exterioară sau entitate meteo: {features}.",
-    al_boiler_min_rooms: "Camere necesare pentru pornirea sursei de căldură: {needed}, dar casa are {rooms} camere: sursa de căldură pornește doar pentru antiîngheț.",
+    al_boiler_min_rooms: "Camere necesare pentru pornirea sursei de căldură: {needed}, dar casa are {rooms} camere care o pot porni: sursa de căldură pornește doar pentru antiîngheț.",
     al_outdoor_unavailable: "Nicio temperatură de afară de la {entities} de peste {minutes} min: oprirea când e cald, sezonul automat, compensarea și oprirea anticipată nu o pot folosi.",
     al_mold_risk: "Risc de mucegai: umiditatea la peretele cel mai rece a ajuns la aproximativ {surface}% (camera {humidity}%). Aerisirea și o cameră mai caldă scad riscul.",
     wf_cutoff: "oprirea când e cald",

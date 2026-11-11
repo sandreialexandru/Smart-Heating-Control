@@ -36,6 +36,7 @@ de încălzire sunt săriți.
 | **Comandă** | Doar pentru alte termostate / TRV-uri, mai jos. |
 | **Încălzește după senzorul camerei** | Doar pentru alte termostate / TRV-uri cu comanda *Temperatură* (altfel apare *Încălzirea după senzorul camerei merge doar cu comanda Temperatură*), detalii la pasul 3. Nu e același lucru cu *Încălzește după senzorii camerelor* de la zona pentru toată casa, care face același lucru pentru un termostat ce încălzește toată casa. |
 | **Se încălzește de la sursa de căldură a casei** | Doar când casa are o *Sursă de căldură* (implicit pornit). Pornit: caloriferele camerei sunt pe centrală; camera pornește centrala când cere căldură și încălzește doar cât merge centrala. Oprit: camera are încălzirea ei (radiator electric, pompă de căldură, aer condiționat); nu pornește centrala, nu contează la *Camere necesare*, nu poate fi *Cameră de referință* și încălzește cât merge propriul dispozitiv. |
+| **Poate porni sursa de căldură a casei** | Doar pentru o cameră care se încălzește de la sursa casei, la pasul următor (implicit pornit). Oprit: o cameră secundară; nu pornește niciodată centrala pentru ea, dispozitivele ei se deschid cât e sub țintă, deci primește căldură doar cât centrala merge pentru altă cameră (antiînghețul pornește totuși centrala). Vezi [capitolul 8](08-sursa-si-energie.ro.md). |
 
 Trebuie ales cel puțin un dispozitiv (altfel apare *Alege cel puțin un
 dispozitiv*).

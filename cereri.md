@@ -15,6 +15,7 @@ Stare: **de decis** · **mai târziu** · **există deja** · **nu facem** · **
 | Cerere de căldură în procente / centrale cu modulare (Ariston Sensys) | Discord / Facebook | de decis | Acum: senzorul binar „Heat demand” al casei și al camerelor; Sensys poate fi sursa casei fără boost (doar heat / off). Idee: senzor de cerere în procente. |
 | Pauză când pompa de căldură face apă caldă (Ecodan DHW) | Discord (callumt) | mai târziu | Rezolvat acum cu `switch.home_pause` dintr-o automatizare. Idee: o intrare „sursa e ocupată”. |
 | Listă „Tested with” (dispozitive testate) în README | noi | făcut | Din issue-urile #1, #2, #5, #6, #10; tado (#8) și termostatele Tuya Wi-Fi (#1) lăsate deoparte până la confirmare. |
+| Camere secundare: nu pornesc centrala, primesc căldură doar când o pornește altă cameră | noi | făcut | 2.6.5rc1: bifa *Can start the house heat source* (implicit pornit), doar la camerele sursei casei; antiînghețul pornește totuși centrala; nu se numără la Camere necesare; nu oprește camera ținută deschisă. |
 | Ține deschis TRV-ul ultimei camere până cere căldură alta (căldura rămasă a centralei, baterie, zgomot noaptea) | Reddit r/homeassistant (ex-utilizator tado) | făcut | 2.6.4rc8: bifa *Keep the last TRV open* la sursa casei, fără limită (cine o bifează acceptă depășirea țintei); TRV-urile primesc maximul camerei (Pornit/oprit: pornit; Preset: temperatura); camera nu cere căldură; învățarea sare peste acel timp; se termină când cere altă cameră, o regulă mai puternică sau camera are nevoie de căldură. |
 
 ## Idei

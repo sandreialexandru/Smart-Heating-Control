@@ -478,7 +478,16 @@
             "switches": "The relays that heat this room.",
             "command_mode": "Temperature: the integration sends the temperature of each level (most TRVs); a TRV in auto (its own schedule) is put in heat. Preset: each level uses a preset of the thermostat, with the thermostat's temperature. On / off: the thermostat is only switched on and off, the integration keeps the temperature.",
             "trv_boost": "While the room asks for heat, the TRVs get the Temperature while heating (by default the maximum temperature of the house), so they stay open until the room is warm; the rest of the time they get the target. The heat demand then comes from the room sensor, with the hysteresis. Needs a temperature sensor in the room. Only with the Temperature command.",
-            "use_house_source": "On: the room's heat comes from the heat source of the house (radiators on the boiler): it starts the boiler when it asks for heat, and it heats only while the boiler runs. Off: the room has its own heat (electric heater, heat pump, air conditioner): it does not start the boiler, and it heats while its own device runs."
+            "use_house_source": "On: the room's heat comes from the heat source of the house (radiators on the boiler): it starts the boiler when it asks for heat (unless it is made a secondary room on the next step), and it heats only while the boiler runs. Off: the room has its own heat (electric heater, heat pump, air conditioner): it does not start the boiler, and it heats while its own device runs."
+          }
+        },
+        "house_source": {
+          "title": "Heat source of the house",
+          "data": {
+            "starts_house_source": "Can start the house heat source"
+          },
+          "data_description": {
+            "starts_house_source": "On (default): when this room asks for heat it starts the heat source of the house (the boiler), like every room. Off: a secondary room. It never starts the boiler for itself; its TRVs, valves or relays still open when it is below its target, so it takes heat only while the boiler runs for another room. Good for rooms that should not be cold but do not need to be warm at a set time: enclosed balconies, a guest room, a hall, a storage room. On a mild day the boiler may run little, so the room may stay below its target for hours. Frost protection still starts the boiler for it, for safety. It does not count for Rooms needed to start the heat source."
           }
         },
         "control_on_off": {

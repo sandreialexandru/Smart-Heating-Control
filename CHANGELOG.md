@@ -5,6 +5,19 @@ release (and of each beta pre-release) are taken from here: a beta shows the
 *Unreleased* section, a release its own section. Older versions: see the
 GitHub releases.
 
+## Unreleased
+
+### New
+
+- 🏠 **Secondary rooms**: *Can start the house heat source* (per room, on by
+  default, asked only for a room that heats from the heat source of the house).
+  Off: the room never starts the boiler for itself and does not count for
+  *Rooms needed*; its TRVs, valves or relays still open while it is below its
+  target, so it takes heat only while the boiler runs for another room
+  (enclosed balconies, a guest room, a hall). Frost protection still starts the
+  boiler for it. The card says *a secondary room: it takes heat when another
+  room starts the heat source*.
+
 ## 2.6.4 – 2026-11-11
 
 ### New

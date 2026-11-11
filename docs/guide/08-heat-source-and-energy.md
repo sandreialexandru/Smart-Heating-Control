@@ -144,6 +144,19 @@ the heat source of the house* off, in its devices step. It then does not start
 the boiler (neither for *Rooms needed* nor for frost protection), cannot be the
 *Reference room*, and heats while its own device runs.
 
+**Secondary rooms.** A room on the boiler can be made secondary: in the step
+after its devices, *Can start the house heat source* off (on by default; asked
+only when the room heats from the heat source of the house). A secondary room
+never starts the boiler for itself and does not count for *Rooms needed*; its
+TRVs, valves or relays still open while it is below its target, so it takes
+heat only while the boiler runs for another room. Good for rooms that should
+not be cold but need not be warm at a set time: enclosed balconies, a guest
+room, a hall, a storage room. On a mild day the boiler may run little, so a
+secondary room may stay below its target for hours. Frost protection still
+starts the boiler for it, for safety. Its learning and heating time count only
+while the boiler runs, as for every room of the boiler. A secondary room asking
+for heat does not end *Keep the last TRV open*.
+
 A room that asks for heat while the source waits for other rooms cools down,
 and this is learned as heat loss. While the state of the source is unknown,
 nothing is learned.
@@ -161,6 +174,7 @@ attribute:
 | the relay waits for its minimum on / off time | relay protection |
 | the heat source waits for its minimum on / off time | boiler protection |
 | waiting for other rooms: X of Y ask for heat | *Rooms needed* |
+| a secondary room: it takes heat when another room starts the heat source | *Can start the house heat source* off |
 | waiting for the reference room … | *Reference room* |
 | the heat source is off / its state is unknown | the boiler does not run or nobody knows |
 | the thermostat is off | the room thermostat is `off` |

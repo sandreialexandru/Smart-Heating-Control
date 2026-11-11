@@ -478,7 +478,16 @@
             "switches": "Releele care încălzesc camera.",
             "command_mode": "Temperatură: integrarea trimite temperatura fiecărui nivel (majoritatea TRV-urilor); un TRV pe auto (programul lui) e trecut pe heat. Preset: fiecare nivel folosește un preset al termostatului, cu temperatura din termostat. Pornit / oprit: termostatul doar e pornit și oprit, integrarea ține temperatura.",
             "trv_boost": "Cât camera cere căldură, TRV-urile primesc Temperatura cât încălzește (implicit temperatura maximă a casei), ca să rămână deschise până se încălzește camera; în rest primesc ținta. Cererea de căldură vine atunci de la senzorul camerei, cu histerezisul. Are nevoie de un senzor de temperatură în cameră. Doar cu comanda Temperatură.",
-            "use_house_source": "Pornit: căldura camerei vine de la sursa de căldură a casei (calorifere pe centrală): pornește centrala când cere căldură și încălzește doar cât merge centrala. Oprit: camera are încălzirea ei (radiator electric, pompă de căldură, aer condiționat): nu pornește centrala și încălzește cât merge propriul dispozitiv."
+            "use_house_source": "Pornit: căldura camerei vine de la sursa de căldură a casei (calorifere pe centrală): pornește centrala când cere căldură (doar dacă nu e făcută cameră secundară la pasul următor) și încălzește doar cât merge centrala. Oprit: camera are încălzirea ei (radiator electric, pompă de căldură, aer condiționat): nu pornește centrala și încălzește cât merge propriul dispozitiv."
+          }
+        },
+        "house_source": {
+          "title": "Sursa de căldură a casei",
+          "data": {
+            "starts_house_source": "Poate porni sursa de căldură a casei"
+          },
+          "data_description": {
+            "starts_house_source": "Pornit (implicit): când camera cere căldură, pornește sursa de căldură a casei (centrala), ca orice cameră. Oprit: o cameră secundară. Nu pornește niciodată centrala pentru ea; TRV-urile, vanele sau releele ei se deschid totuși cât e sub țintă, deci primește căldură doar cât centrala merge pentru altă cameră. Potrivit pentru camere care nu trebuie să fie reci, dar nici calde la o oră anume: balcoane închise, camera de oaspeți, hol, debara. Într-o zi blândă centrala poate merge puțin, așa că acea cameră poate rămâne ore întregi sub țintă. Antiînghețul pornește totuși centrala pentru ea, din motive de siguranță. Nu se numără la Camere necesare pentru pornirea sursei."
           }
         },
         "control_on_off": {

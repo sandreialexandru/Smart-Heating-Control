@@ -306,6 +306,9 @@ CONF_HYSTERESIS: Final = "hysteresis"
 CONF_TRV_BOOST: Final = "trv_boost"
 # The room heats from the heat source of the house (off: its own heat, e.g. electric).
 CONF_USE_HOUSE_SOURCE: Final = "use_house_source"
+# A room of the heat source that may start it (on) or only takes heat while
+# other rooms run it (off: a secondary room).
+CONF_STARTS_HOUSE_SOURCE: Final = "starts_house_source"
 CONF_TRV_BOOST_TEMP: Final = "trv_boost_temperature"  # °C; empty = maximum of the house
 CONF_STOP_TOLERANCE: Final = "stop_tolerance"  # comfort kept by optimal stop (other thermostats)
 CONF_MIN_ON: Final = "min_on_minutes"
@@ -385,6 +388,7 @@ DEFAULT_SCHEDULE: Final = (
 ROOM_DEFAULTS: Final = {
     CONF_SOURCE: SOURCE_GT,
     CONF_USE_HOUSE_SOURCE: True,
+    CONF_STARTS_HOUSE_SOURCE: True,
     CONF_CLIMATES: [],
     CONF_SWITCHES: [],
     CONF_COMMAND_MODE: COMMAND_PRESET,

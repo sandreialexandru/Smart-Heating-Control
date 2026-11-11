@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import async_mock_service
 
 from custom_components.advanced_climate.learning import ThermalLearner
@@ -250,4 +251,55 @@ async def test_an_on_off_trv_kept_open_does_not_go_on_heating_after(
     assert not bedroom.kept_open
     assert last("climate.bedroom") == "off"
     assert not bedroom.heat_demand
+    await _unload(hass, entry)
+
+
+async def test_a_secondary_room_neither_starts_the_boiler_nor_ends_the_room_kept_open(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    trvs = Trvs(hass)
+    hass.states.async_set("switch.boiler", "on")
+    for entity_id in ("climate.bedroom", "climate.office"):
+        hass.states.async_set(
+            entity_id, "heat", {**TRV, "temperature": 17.0, "hvac_action": "idle"}
+        )
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            ("Bedroom", {**ROOM, "climates": ["climate.bedroom"]}),
+            ("Office", {**ROOM, "climates": ["climate.office"], "starts_house_source": False}),
+        ],
+        boiler_entity="switch.boiler",
+        keep_last_open=True,
+    )
+    house = entry.runtime_data
+    office = _room(entry, "Office")
+    # The secondary room alone asks: the house asks for no heat.
+    trvs.report("climate.bedroom", "idle", 21.1)
+    trvs.report("climate.office", "heating", 19.0)
+    await _tick(hass, freezer, 5)
+    assert office.heat_demand
+    assert not house.heat_demand
+    assert office.no_heat_reason() in ({"code": "secondary"}, None)
+    # The bedroom asks: the house asks for heat, the office takes it too.
+    trvs.report("climate.bedroom", "heating", 20.0)
+    await _tick(hass, freezer, 5)
+    assert house.heat_demand
+    # The bedroom stops: it is kept open; the office still asking does not end that.
+    trvs.report("climate.bedroom", "idle", 21.1)
+    await _tick(hass, freezer, 5)
+    await _tick(hass, freezer, 2)
+    assert house.keep_open_room == _room(entry, "Bedroom").id
+    trvs.report("climate.bedroom", "heating", 21.2)
+    trvs.report("climate.office", "heating", 19.0)
+    await _tick(hass, freezer, 5)
+    assert house.keep_open_room == _room(entry, "Bedroom").id
+    assert not house.heat_demand
+    # Frost protection of the secondary room starts the boiler, for safety.
+    office.heat_demand = True
+    office.target_temperature = office.frost_temp()
+    assert office.frost_demand
+    await house._async_control_boiler(dt_util.utcnow())
+    assert house.heat_demand
     await _unload(hass, entry)

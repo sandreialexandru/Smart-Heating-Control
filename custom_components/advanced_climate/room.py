@@ -57,6 +57,7 @@ from .const import (
     CONF_SCHEDULE_SOURCE,
     CONF_SOLAR_OFFSET,
     CONF_SOURCE,
+    CONF_STARTS_HOUSE_SOURCE,
     CONF_SWITCHES,
     CONF_TEMP_AGGREGATION,
     CONF_TEMP_SENSORS,
@@ -1197,6 +1198,11 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
     def uses_house_source(self) -> bool:
         """True when the room heats from the heat source of the house (the default)."""
         return bool(self.config.get(CONF_USE_HOUSE_SOURCE, True))
+
+    @property
+    def starts_house_source(self) -> bool:
+        """A room of the heat source that may start it (off: a secondary room)."""
+        return self.uses_house_source and bool(self.config.get(CONF_STARTS_HOUSE_SOURCE, True))
 
     def _frost_holding(self) -> bool:
         """Frost protection started (heating off otherwise) and the device still heats."""

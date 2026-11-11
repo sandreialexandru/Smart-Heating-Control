@@ -321,6 +321,26 @@ async def test_no_heat_reason_waits_for_the_rooms_needed_or_the_reference_room(
     await _unload(hass, entry)
 
 
+async def test_no_heat_reason_of_a_secondary_room(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A secondary room (it cannot start the heat source) waits for another room."""
+    entry, room, _ = await _room(hass, freezer)
+    house = entry.runtime_data
+    room.config = {**room.config, "starts_house_source": False}
+    room.heating = False
+    room.current_temp = room.target_temperature - 1
+    room.heat_demand = True
+    house.heat_source_state = lambda: (True, False)
+    house.source_waiting = None
+    assert room.no_heat_reason() == {"code": "secondary"}
+    # With a reference room, the reference room decides (as for every room).
+    other = "other-room"
+    house.options = {**house.options, "reference_room": other}
+    assert room.no_heat_reason() == {"code": "source_off"}
+    await _unload(hass, entry)
+
+
 # ---------------------------------------------------------------- diagnostics
 async def test_diagnostics_leave_out_the_people_and_the_recipients(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory

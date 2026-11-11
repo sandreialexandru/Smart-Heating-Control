@@ -69,6 +69,9 @@ class RoomStatus:
         if self.heat_demand and self.uses_house_source:
             if configured and source_on is None:
                 return {"code": "source_unknown"}
+            if not self.starts_house_source and not house.options.get(CONF_REFERENCE_ROOM):
+                # A secondary room: it waits for a room that starts the heat source.
+                return {"code": "secondary"}
             if house.source_waiting:
                 return {"code": f"source_{house.source_waiting}"}
             reference = house.options.get(CONF_REFERENCE_ROOM)
@@ -81,7 +84,7 @@ class RoomStatus:
                 return {"code": "reference_room", "room": house.rooms[reference].name}
             needed = max(1, int(house.options[CONF_BOILER_MIN_ROOMS]))
             count = sum(
-                1 for room in house.rooms.values() if room.heat_demand and room.uses_house_source
+                1 for room in house.rooms.values() if room.heat_demand and room.starts_house_source
             )
             if not reference and count < needed:
                 return {"code": "rooms_needed", "count": count, "needed": needed}

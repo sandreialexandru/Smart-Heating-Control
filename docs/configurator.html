@@ -651,7 +651,14 @@ const ROOM = [
         true,
         { m: L('The room heats from the boiler.', 'Camera se încălzește de la centrală.'), e: L('It starts the boiler when it asks for heat; its heating and learning count only while the boiler runs.', 'Pornește centrala când cere căldură; încălzirea și învățarea ei se numără doar cât merge centrala.'), x: L('A room with TRVs on the radiators.', 'O cameră cu TRV-uri pe calorifere.') },
         { m: L('The room has its own heat.', 'Camera are încălzirea ei.'), e: L('It does not start the boiler and heats while its own device runs.', 'Nu pornește centrala și încălzește cât merge propriul dispozitiv.'), x: L('Bathroom with an electric heater in a house with TRVs and a boiler.', 'Baie cu radiator electric într-o casă cu TRV-uri și centrală.') },
-        { show: c => hasTxt(c.o('boiler_entity')) })
+        { show: c => hasTxt(c.o('boiler_entity')) }),
+      bool('starts_house_source', L('Can start the house heat source', 'Poate porni sursa de căldură a casei'),
+        L('Only for a room that heats from the heat source of the house (the next step of the form). On: the room starts the boiler when it asks for heat. Off: a secondary room; it never starts the boiler for itself, its devices still open while it is below its target, so it takes heat only while the boiler runs for another room. Frost protection still starts the boiler for it.',
+          'Doar pentru o cameră care se încălzește de la sursa casei (pasul următor al formularului). Pornit: camera pornește centrala când cere căldură. Oprit: o cameră secundară; nu pornește niciodată centrala pentru ea, dispozitivele ei se deschid totuși cât e sub țintă, deci primește căldură doar cât centrala merge pentru altă cameră. Antiînghețul pornește totuși centrala pentru ea.'),
+        true,
+        { m: L('The room starts the boiler (default).', 'Camera pornește centrala (implicit).'), e: L('It counts for Rooms needed.', 'Se numără la Camere necesare.') },
+        { m: L('A secondary room.', 'O cameră secundară.'), e: L('It takes heat only while the boiler runs for other rooms; on a mild day it may stay below its target for hours.', 'Primește căldură doar cât centrala merge pentru alte camere; într-o zi blândă poate rămâne ore întregi sub țintă.'), x: L('An enclosed balcony, a guest room, a hall.', 'Un balcon închis, camera de oaspeți, holul.') },
+        { show: c => hasTxt(c.o('boiler_entity')) && c.r('use_house_source') !== false })
     ]
   },
   {

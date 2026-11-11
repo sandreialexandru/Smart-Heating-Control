@@ -5,7 +5,7 @@ release (and of each beta pre-release) are taken from here: a beta shows the
 *Unreleased* section, a release its own section. Older versions: see the
 GitHub releases.
 
-## Unreleased
+## 2.6.4 – 2026-11-11
 
 ### New
 
@@ -81,7 +81,7 @@ GitHub releases.
 - 🎨 **New look, easier to read** (design only, every value and button stays):
   - rooms are neutral: the level colour is only on the arc and its dot, not on
     the whole room; a room is outlined red for an alert that something does not
-    work and amber for a warning;
+    work and amber for a warning (its alert icon in the same colour);
   - the arc ends exactly on the target when the room is within 0.3 °C (0.5 °F)
     of it, and the target is a dot on the arc instead of a mark across it;
     bigger, bolder temperatures;

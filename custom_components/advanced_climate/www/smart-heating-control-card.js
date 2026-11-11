@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.4rc10";
+const CARD_VERSION = "2.6.4";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -3489,7 +3489,9 @@ class SmartHeatingControlCard extends HTMLElement {
     const alerts = a.alerts || [];
     if (!alerts.length) return "";
     const text = alerts.map((al) => this._alertText(al)).join("\n");
-    return `<span class="alerticon ${small ? "sm" : ""}" title="${esc(text)}" role="img" aria-label="${esc(
+    // Red when something does not work, amber for warnings (as the outline of the room).
+    const warn = this._alertLevel(a) === "al-warn" ? "warn" : "";
+    return `<span class="alerticon ${warn} ${small ? "sm" : ""}" title="${esc(text)}" role="img" aria-label="${esc(
       `${this._t("alerts")}: ${text}`
     )}">${this._icon("alert-outline")}</span>`;
   }
@@ -5074,6 +5076,7 @@ const STYLE = `
   .tstat.warn, .cicon.warn { background: color-mix(in srgb, var(--warning-color, #f0ad4e) 18%, transparent); color: var(--ac-warn-fg); }
   .tstat.teal, .cicon.teal { background: color-mix(in srgb, var(--ac-teal) 18%, transparent); color: color-mix(in srgb, var(--ac-teal) 75%, var(--primary-text-color)); }
   .alerticon { background: color-mix(in srgb, var(--ac-err) 16%, transparent); color: var(--ac-err-fg); }
+  .alerticon.warn { background: color-mix(in srgb, var(--warning-color, #f0ad4e) 18%, transparent); color: var(--ac-warn-fg); }
   .flame { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none;
     color: var(--ac-hot); background: color-mix(in srgb, var(--ac-hot) 10%, transparent); box-shadow: inset 0 0 0 1.5px var(--ac-hot); }
   .flame ha-icon { --mdc-icon-size: 16px; }

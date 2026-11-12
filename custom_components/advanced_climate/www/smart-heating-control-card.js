@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.5rc10";
+const CARD_VERSION = "2.6.5rc11";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -935,7 +935,6 @@ const TEXT = {
     nh_source_min_off: "die Wärmequelle wartet ihre Mindestpause ab",
     nh_rooms_needed: "wartet auf andere Räume: {count} von {needed} fordern Wärme an",
     nh_secondary: "ein Nebenraum: Er bekommt Wärme, wenn ein anderer Raum die Wärmequelle startet",
-    nh_reference_room: "wartet auf den Referenzraum {room}",
     nh_circuit_closed: "sein Kreis ({entity}) ist aus: Pumpe oder Ventil laufen nicht",
     nh_source_off: "die Wärmequelle ist aus",
     nh_source_unknown: "der Zustand der Wärmequelle ist unbekannt",
@@ -998,6 +997,7 @@ const TEXT = {
     al_weather_without_source: "Eingeschaltet, aber ohne Außentemperatursensor oder Wetter-Entität wirkungslos: {features}.",
     al_boiler_min_rooms: "Zum Starten der Wärmequelle sind {needed} Räume nötig, aber das Haus hat nur {rooms} Räume, die sie starten können: Die Wärmequelle startet nur für den Frostschutz.",
     al_outdoor_unavailable: "Seit mehr als {minutes} min keine Außentemperatur von {entities}: Abschaltung, automatische Heizperiode, Kompensation und optimaler Stopp können sie nicht nutzen.",
+    al_circuit_unavailable: "Das Kreisrelais {entity} ist seit mehr als {minutes} min nicht verfügbar: Die Räume seines Kreises bekommen keine Wärme. Repariere das Relais oder ändere die Kreise des Hauses.",
     al_mold_risk: "Schimmelgefahr: An der kältesten Wand wurden etwa {surface} % Feuchtigkeit erreicht (Raum {humidity} %). Lüften und etwas wärmer heizen senken das Risiko.",
     wf_cutoff: "Heizung aus, wenn es warm ist",
     wf_season_auto: "automatische Heizperiode",
@@ -1074,6 +1074,7 @@ const TEXT = {
     at_weather_without_source: "Keine Außentemperatur",
     at_boiler_min_rooms: "Wärmequelle kann nicht starten",
     at_outdoor_unavailable: "Außentemperatur nicht verfügbar",
+    at_circuit_unavailable: "Kreisrelais nicht verfügbar",
     at_mold_risk: "Schimmelgefahr",
     at_other: "Warnung",
   },
@@ -1254,7 +1255,6 @@ const TEXT = {
     nh_source_min_off: "de warmtebron wacht op zijn minimale uit-tijd",
     nh_rooms_needed: "wacht op andere kamers: {count} van {needed} vragen om warmte",
     nh_secondary: "een bijkamer: hij krijgt warmte als een andere kamer de warmtebron start",
-    nh_reference_room: "wacht op de referentiekamer {room}",
     nh_circuit_closed: "zijn circuit ({entity}) staat uit: de pomp of klep werkt niet",
     nh_source_off: "de warmtebron staat uit",
     nh_source_unknown: "de status van de warmtebron is onbekend",
@@ -1317,6 +1317,7 @@ const TEXT = {
     al_weather_without_source: "Aan, maar werkt niet zonder buitentemperatuursensor of weerentiteit: {features}.",
     al_boiler_min_rooms: "Er zijn {needed} kamers nodig om de warmtebron te starten, maar het huis heeft {rooms} kamers die hem kunnen starten: de warmtebron start alleen voor vorstbeveiliging.",
     al_outdoor_unavailable: "Al meer dan {minutes} min geen buitentemperatuur van {entities}: de afschakeling, het automatische seizoen, de compensatie en de optimale stop kunnen hem niet gebruiken.",
+    al_circuit_unavailable: "Het circuitrelais {entity} is al meer dan {minutes} min onbeschikbaar: de kamers van zijn circuit krijgen geen warmte. Repareer het relais of pas de circuits van het huis aan.",
     al_mold_risk: "Schimmelrisico: de koudste muur bereikte ongeveer {surface}% vochtigheid (kamer {humidity}%). Luchten en de kamer iets warmer houden verlagen het risico.",
     wf_cutoff: "verwarming uit als het warm is",
     wf_season_auto: "automatisch seizoen",
@@ -1393,6 +1394,7 @@ const TEXT = {
     at_weather_without_source: "Geen buitentemperatuur",
     at_boiler_min_rooms: "Warmtebron kan niet starten",
     at_outdoor_unavailable: "Buitentemperatuur onbeschikbaar",
+    at_circuit_unavailable: "Circuitrelais onbeschikbaar",
     at_mold_risk: "Schimmelrisico",
     at_other: "Melding",
   },
@@ -1573,7 +1575,6 @@ const TEXT = {
     nh_source_min_off: "la source de chaleur attend sa durée minimale d'arrêt",
     nh_rooms_needed: "attend d'autres pièces : {count} sur {needed} demandent de la chaleur",
     nh_secondary: "une pièce secondaire : elle reçoit de la chaleur quand une autre pièce démarre la source",
-    nh_reference_room: "attend la pièce de référence {room}",
     nh_circuit_closed: "son circuit ({entity}) est éteint : le circulateur ou la vanne ne fonctionne pas",
     nh_source_off: "la source de chaleur est éteinte",
     nh_source_unknown: "l'état de la source de chaleur est inconnu",
@@ -1636,6 +1637,7 @@ const TEXT = {
     al_weather_without_source: "Activé mais sans effet sans capteur de température extérieure ni entité météo : {features}.",
     al_boiler_min_rooms: "Il faut {needed} pièces pour démarrer la source de chaleur, mais la maison n'a que {rooms} pièces capables de la démarrer : la source ne démarre que pour le hors-gel.",
     al_outdoor_unavailable: "Aucune température extérieure de {entities} depuis plus de {minutes} min : la coupure, la saison automatique, la compensation et l'arrêt optimal ne peuvent pas l'utiliser.",
+    al_circuit_unavailable: "Le relais de circuit {entity} est indisponible depuis plus de {minutes} min : les pièces de son circuit ne reçoivent pas de chaleur. Réparez le relais ou modifiez les circuits de la maison.",
     al_mold_risk: "Risque de moisissure : le mur le plus froid a atteint environ {surface} % d'humidité (pièce {humidity} %). Aérer et garder la pièce un peu plus chaude réduisent le risque.",
     wf_cutoff: "couper le chauffage quand il fait doux",
     wf_season_auto: "saison automatique",
@@ -1712,6 +1714,7 @@ const TEXT = {
     at_weather_without_source: "Pas de température extérieure",
     at_boiler_min_rooms: "La source ne peut pas démarrer",
     at_outdoor_unavailable: "Température extérieure indisponible",
+    at_circuit_unavailable: "Relais de circuit indisponible",
     at_mold_risk: "Risque de moisissure",
     at_other: "Alerte",
   },
@@ -1892,7 +1895,6 @@ const TEXT = {
     nh_source_min_off: "la fonte di calore aspetta il suo tempo minimo di spegnimento",
     nh_rooms_needed: "aspetta altre stanze: {count} su {needed} chiedono calore",
     nh_secondary: "una stanza secondaria: prende calore quando un'altra stanza accende la fonte di calore",
-    nh_reference_room: "aspetta la stanza di riferimento {room}",
     nh_circuit_closed: "il suo circuito ({entity}) è spento: la pompa o la valvola non funziona",
     nh_source_off: "la fonte di calore è spenta",
     nh_source_unknown: "lo stato della fonte di calore è sconosciuto",
@@ -1955,6 +1957,7 @@ const TEXT = {
     al_weather_without_source: "Attivo ma senza effetto senza un sensore di temperatura esterna o un'entità meteo: {features}.",
     al_boiler_min_rooms: "Servono {needed} stanze per accendere la fonte di calore, ma la casa ha solo {rooms} stanze che possono accenderla: la fonte si accende solo per l'antigelo.",
     al_outdoor_unavailable: "Nessuna temperatura esterna da {entities} da più di {minutes} min: lo spegnimento, la stagione automatica, la compensazione e lo spegnimento ottimale non possono usarla.",
+    al_circuit_unavailable: "Il relè di circuito {entity} non è disponibile da più di {minutes} min: le stanze del suo circuito non ricevono calore. Ripara il relè o cambia i circuiti della casa.",
     al_mold_risk: "Rischio muffa: la parete più fredda ha raggiunto circa {surface}% di umidità (stanza {humidity}%). Arieggiare e tenere la stanza un po' più calda riducono il rischio.",
     wf_cutoff: "spegnere il riscaldamento quando fa caldo",
     wf_season_auto: "stagione automatica",
@@ -2031,6 +2034,7 @@ const TEXT = {
     at_weather_without_source: "Nessuna temperatura esterna",
     at_boiler_min_rooms: "La fonte di calore non può partire",
     at_outdoor_unavailable: "Temperatura esterna non disponibile",
+    at_circuit_unavailable: "Relè di circuito non disponibile",
     at_mold_risk: "Rischio muffa",
     at_other: "Avviso",
   },

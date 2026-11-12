@@ -1355,3 +1355,63 @@ async def test_top_up_is_saved(hass: HomeAssistant) -> None:
     )
     assert result["step_id"] == "control_on_off"
     assert flow._progress[result["flow_id"]]._data["top_up"] is True
+
+
+async def test_keep_the_last_trv_open_only_with_trv_rooms(hass: HomeAssistant) -> None:
+    """Only TRV rooms of the heat source are kept open: without one it is not asked."""
+    trv_room = {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"}
+    for n, (rooms, shown) in enumerate(
+        (
+            ([("Bedroom", RELAY_ROOM)], False),
+            ([("Bedroom", {**trv_room, "use_house_source": False})], False),
+            ([("Bedroom", RELAY_ROOM), ("Office", trv_room)], True),
+        )
+    ):
+        boiler = f"switch.boiler_{n}"
+        entry = _house_with_rooms(hass, options={"boiler_entity": boiler}, rooms=rooms)
+        options = hass.config_entries.options
+        result = await options.async_init(entry.entry_id)
+        result = await options.async_configure(result["flow_id"], {"next_step_id": "boiler"})
+        result = await options.async_configure(result["flow_id"], {"boiler_entity": boiler})
+        assert result["step_id"] == "boiler_details"
+        assert ("keep_last_open" in _keys(result)) is shown, rooms
+        await options.async_configure(result["flow_id"], {})
+
+
+async def test_hysteresis_asked_for_a_trv_topped_up(hass: HomeAssistant) -> None:
+    """A TRV reporting hvac_action, without a room sensor: the hysteresis is asked
+    only when the room is topped up (it is its band)."""
+    hass.states.async_set(
+        "climate.trv", "heat", {"hvac_action": "idle", "temperature": 21, "current_temperature": 20}
+    )
+    entry = _house_with_rooms(hass, options={"boiler_entity": "switch.boiler"})
+    flow = hass.config_entries.subentries
+    for top_up in (False, True):
+        result = await flow.async_init(
+            (entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER}
+        )
+        result = await flow.async_configure(
+            result["flow_id"], {"name": f"Room {top_up}", "source": "climate"}
+        )
+        result = await flow.async_configure(
+            result["flow_id"],
+            {
+                "climates": ["climate.trv2" if top_up else "climate.trv"],
+                "command_mode": "temperature",
+                "trv_boost": False,
+                "use_house_source": True,
+            },
+        )
+        assert result["step_id"] == "house_source"
+        result = await flow.async_configure(
+            result["flow_id"], {"starts_house_source": True, "top_up": top_up}
+        )
+        result = await _until(hass, result, flow, stop={"sensors"})
+        result = await flow.async_configure(result["flow_id"], {"temperature_sensors": []})
+        hysteresis = result.get("step_id") == "sensors_details" and "hysteresis" in _keys(result)
+        assert hysteresis is top_up
+        hass.states.async_set(
+            "climate.trv2",
+            "heat",
+            {"hvac_action": "idle", "temperature": 21, "current_temperature": 20},
+        )

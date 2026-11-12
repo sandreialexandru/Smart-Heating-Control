@@ -38,7 +38,10 @@ GitHub releases.
   already open, and skips a manual change, an open window, the pause and the
   optimal stop; its learning skips that time. A room kept open (*Keep the
   last TRV open*) that another room releases goes on topped up at once, its
-  TRVs not closed in between.
+  TRVs not closed in between. Its band is the hysteresis of the room, now
+  asked also for a TRV that reports whether it heats when the room is topped
+  up; *Keep the last TRV open* is asked only when a room with TRVs heats from
+  the heat source.
 
 ### Fixed
 

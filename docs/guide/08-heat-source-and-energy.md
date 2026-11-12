@@ -96,7 +96,8 @@ the integration checks again at once.
 > Without one, choose a short *Heat source minimum on time* or 0 (the default),
 > and consider *Keep the last TRV open* (below).
 
-**Keep the last TRV open** (off by default; only with a *Heat source*): when no
+**Keep the last TRV open** (off by default; only with a *Heat source* and a
+room with TRVs on it): when no
 room asks for heat any more, the TRVs of the last room that asked stay open, so
 the heat left in the source and the pipes has a way through, as with a bypass,
 and the valve does not move again during the night (less noise, less battery).

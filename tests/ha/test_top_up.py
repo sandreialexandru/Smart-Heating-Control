@@ -311,3 +311,37 @@ async def test_the_room_kept_open_goes_on_topped_up_without_closing(
     targets = [d["target"]["temperature"] for d in list(bedroom.decisions)[decided_before:]]
     assert all(t == 25.0 for t in targets)
     await _unload(hass, entry)
+
+
+async def test_a_secondary_room_topped_up(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Secondary and topped up: it never starts the boiler, and while the
+    boiler runs for others it heats up to its target."""
+    entry, trvs = await _setup(hass, freezer, starts_house_source=False)
+    office = _room(entry, "Office")
+    trvs.report("climate.bedroom", "idle", 21.2)
+    trvs.report("climate.office", "heating", 20.0)
+    await _steps(hass, freezer)
+    assert not _on(hass, "input_boolean.boiler")
+    trvs.report("climate.office", "idle", 20.8)
+    trvs.report("climate.bedroom", "heating", 20.0)
+    await _steps(hass, freezer)
+    assert _on(hass, "input_boolean.boiler")
+    assert office.topped_up
+    await _unload(hass, entry)
+
+
+async def test_not_counted_for_the_rooms_needed(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Two rooms needed: a topped up room is not one of them."""
+    entry, trvs = await _setup(hass, freezer)
+    entry.runtime_data.options["boiler_min_rooms"] = 2
+    office = _room(entry, "Office")
+    trvs.report("climate.office", "idle", 20.8)
+    trvs.report("climate.bedroom", "heating", 20.0)
+    await _steps(hass, freezer)
+    assert not _on(hass, "input_boolean.boiler")
+    assert not office.topped_up
+    await _unload(hass, entry)

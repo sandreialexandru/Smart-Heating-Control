@@ -653,14 +653,14 @@
             "calibration_entities": "Calibration entities",
             "occupancy_minutes": "Eco after no occupancy for",
             "occupancy_return_minutes": "Back from eco after presence of",
-            "hysteresis": "Frost protection hysteresis"
+            "hysteresis": "Hysteresis"
           },
           "data_description": {
             "temperature_aggregation": "With several sensors: average, the coldest or the median.",
             "calibration_entities": "The TRV number entities (offset or external temperature).",
             "occupancy_minutes": "How long the room must be empty before eco.",
             "occupancy_return_minutes": "How long someone must be present without a break before a room in eco for no occupancy follows its schedule again. 0 = at once (as before). A shorter visit (someone takes something and leaves) keeps the room in eco, and the count starts again at the next presence. Presence counts without a break: a motion sensor that turns off between movements starts the count again, so a presence sensor (mmWave) or a motion sensor with a long clear time suits it better.",
-            "hysteresis": "The room sensor decides the frost protection: below it the TRVs are boosted to open, until frost protection plus this value."
+            "hysteresis": "With a room sensor, it decides the frost protection: below it the TRVs are boosted to open, until frost protection plus this value. With Top up while the boiler runs: while the boiler runs for other rooms, the room is topped up when it is below its target by less than this value (it does not ask for heat yet)."
           }
         },
         "windows_details": {

@@ -549,7 +549,9 @@ def _boiler_schema(v: dict[str, Any]) -> vol.Schema:
     )
 
 
-def _boiler_details(v: dict[str, Any], rooms: list[selector.SelectOptionDict]) -> vol.Schema:
+def _boiler_details(
+    v: dict[str, Any], rooms: list[selector.SelectOptionDict], trv_rooms: bool = True
+) -> vol.Schema:
     """Boiler timing and the rooms that decide it (reference room only with several rooms)."""
     d = HOUSE_DEFAULTS
     fields: dict[Any, Any] = {}
@@ -565,7 +567,9 @@ def _boiler_details(v: dict[str, Any], rooms: list[selector.SelectOptionDict]) -
         fields[_req(CONF_BOILER_MIN_ROOMS, shown, d)] = _number(1, most, 1)
         fields[_req(CONF_BOILER_MIN_ON, v, d)] = _number(0, 60, 1, "min")
         fields[_req(CONF_BOILER_MIN_OFF, v, d)] = _number(0, 60, 1, "min")
-        fields[_req(CONF_KEEP_LAST_OPEN, v, d)] = _bool()
+        if trv_rooms:
+            # Only TRV rooms of the heat source are kept open.
+            fields[_req(CONF_KEEP_LAST_OPEN, v, d)] = _bool()
         # The relays of the heating circuits (pumps or zone valves), if any.
         fields[_opt(CONF_CIRCUITS, v)] = _entity(["switch", "input_boolean"], multiple=True)
         if str(v[CONF_BOILER_ENTITY]).startswith("climate."):
@@ -1383,6 +1387,15 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
             and sub.data.get(CONF_STARTS_HOUSE_SOURCE, True)
         ]
 
+    def _trv_rooms(self) -> bool:
+        """True when a room with TRVs heats from the heat source (it can be kept open)."""
+        return any(
+            sub.subentry_type == SUBENTRY_ROOM
+            and sub.data.get(CONF_SOURCE) == SOURCE_CLIMATE
+            and sub.data.get(CONF_USE_HOUSE_SOURCE, True)
+            for sub in self.config_entry.subentries.values()
+        )
+
     def _room_count(self) -> int:
         """Rooms of the house (the whole-house zone included)."""
         return sum(
@@ -1421,7 +1434,7 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Settings of the chosen boiler."""
-        schema = _boiler_details(self._pending_values, self._room_options())
+        schema = _boiler_details(self._pending_values, self._room_options(), self._trv_rooms())
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {"entity": "", "owner": ""}
         if user_input is not None and (circuits := as_list(user_input.get(CONF_CIRCUITS))):
@@ -1986,9 +1999,10 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                 0, OCCUPANCY_RETURN_MAX, 1, "min"
             )
         # TRVs with a room sensor are boosted for frost protection until frost
-        # protection + hysteresis; asked here when no earlier step asked for it.
+        # protection + hysteresis, and a room topped up while the boiler runs
+        # uses it as its band; asked here when no earlier step asked for it.
         if (
-            as_list(d.get(CONF_TEMP_SENSORS))
+            (as_list(d.get(CONF_TEMP_SENSORS)) or d.get(CONF_TOP_UP))
             and d[CONF_SOURCE] == SOURCE_CLIMATE
             and d.get(CONF_COMMAND_MODE) != COMMAND_HVAC
             and not _boost_on(d)

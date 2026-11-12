@@ -95,7 +95,8 @@ Assistant. Când un timp minim se termină, integrarea verifică imediat din nou
 > Fără așa ceva, se alege un *Timp minim pornită* mic sau 0 (implicit) și se
 > poate folosi *Ține deschis ultimul TRV* (mai jos).
 
-**Ține deschis ultimul TRV** (oprit implicit; doar cu o *Sursă de căldură*):
+**Ține deschis ultimul TRV** (oprit implicit; doar cu o *Sursă de căldură* și
+o cameră cu TRV-uri pe ea):
 când nu mai cere căldură nicio cameră, TRV-urile ultimei camere care a cerut
 rămân deschise, ca restul de căldură din sursă și din țevi să aibă pe unde
 trece, ca printr-un bypass, iar robinetul să nu se mai miște noaptea (mai puțin

@@ -212,6 +212,9 @@ class House:
         self.boiler_changed: datetime | None = None
         self._source_running_since: datetime | None = None
         self._frost_started = False  # heat source started for frost protection while paused
+        # Circuits turned on in a pause (only for frost protection): turned off
+        # again when no longer needed; the others are left alone in a pause.
+        self._pause_circuits: set[str] = set()
         self._source_wait_until: datetime | None = None
         self._source_unavailable_since: datetime | None = None
         self._outdoor_unavailable_since: datetime | None = None
@@ -1304,17 +1307,36 @@ class House:
         # to go).
         circuits = self.circuits
         if circuits:
-            # Only when the heat source is to start: a room waiting for other
-            # rooms or for the reference room does not run its pump for nothing.
+
+            def usable(room: Room) -> bool:
+                return room.circuit is None or self.circuit_on(room.circuit) is not None
+
+            # Only when the heat source can start: a room waiting for other rooms
+            # or for the reference room, or rooms that would start it only with
+            # an unavailable circuit, do not run a pump for nothing.
+            if reference:
+                can_start = demand and usable(sourced[reference])
+            else:
+                count = sum(1 for room in starters.values() if room.heat_demand and usable(room))
+                can_start = count >= needed if starters else False
+            # In a pause something else controls the heating: only frost protection.
             wanted = {
                 room.circuit
                 for room in sourced.values()
                 if room.circuit
                 and (
-                    (demand and room.heat_demand and room.starts_house_source) or room.frost_demand
+                    room.frost_demand
+                    or (
+                        not self.paused
+                        and can_start
+                        and room.heat_demand
+                        and room.starts_house_source
+                    )
                 )
             }
-            await self._async_switch_circuits(sorted(wanted), True)
+            opened = await self._async_switch_circuits(sorted(wanted), True)
+            if self.paused:
+                self._pause_circuits |= set(opened)
 
             def open_path(room: Room) -> bool:
                 return room.circuit is None or self.circuit_on(room.circuit) is True
@@ -1344,8 +1366,18 @@ class House:
             # Closed only once the heat source is off, or while another one stays open.
             _, running = self.heat_source_state()
             still = [c for c in circuits if c in wanted and self.circuit_on(c)]
-            if running is False or still:
-                await self._async_switch_circuits([c for c in circuits if c not in wanted], False)
+            if self.paused:
+                # Only those turned on in the pause for frost protection.
+                done = [c for c in self._pause_circuits if c not in wanted]
+                if done and (running is False or still):
+                    await self._async_switch_circuits(sorted(done), False)
+                    self._pause_circuits -= set(done)
+            else:
+                self._pause_circuits = set()
+                if running is False or still:
+                    await self._async_switch_circuits(
+                        [c for c in circuits if c not in wanted], False
+                    )
 
     @property
     def circuits(self) -> list[str]:
@@ -1361,8 +1393,9 @@ class House:
             return None
         return state.state == STATE_ON  # type: ignore[union-attr]
 
-    async def _async_switch_circuits(self, entities: list[str], on: bool) -> None:
-        """Turn circuit relays on or off (those not already so)."""
+    async def _async_switch_circuits(self, entities: list[str], on: bool) -> list[str]:
+        """Turn circuit relays on or off (those not already so); those switched."""
+        switched: list[str] = []
         for entity_id in entities:
             state = self.circuit_on(entity_id)
             if state is None or state == on:
@@ -1377,6 +1410,9 @@ class House:
                 )
             except (HomeAssistantError, ValueError) as err:
                 _LOGGER.warning("Could not switch the circuit %s: %s", entity_id, err)
+            else:
+                switched.append(entity_id)
+        return switched
 
     async def _async_switch_source(self, now: datetime, demand: bool, frost: bool) -> None:
         """Start or stop the heat source, with its minimum on / off times."""

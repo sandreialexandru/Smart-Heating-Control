@@ -36,7 +36,9 @@ GitHub releases.
   heats up to its target, so the boiler starts less often. It never starts
   nor holds the boiler, does not count for *Rooms needed*, needs its circuit
   already open, and skips a manual change, an open window, the pause and the
-  optimal stop; its learning skips that time.
+  optimal stop; its learning skips that time. A room kept open (*Keep the
+  last TRV open*) that another room releases goes on topped up at once, its
+  TRVs not closed in between.
 
 ### Fixed
 

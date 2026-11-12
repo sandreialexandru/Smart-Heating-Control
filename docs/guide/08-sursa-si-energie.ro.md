@@ -141,6 +141,10 @@ centrala pornește mai rar.
 - Cu un circuit, doar cât acel circuit e deja deschis (nu se pornește o pompă
   pentru câteva zecimi de grad). Învățarea ei sare peste acest timp, ca la
   ținerea deschisă.
+- Cu *Ține deschis ultimul TRV*: camera ținută deschisă nu se încălzește la
+  ocazie. Când altă cameră cere căldură și camera ținută deschisă e în
+  histerezis, trece direct la încălzirea la ocazie: TRV-urile ei rămân
+  deschise, fără să primească ținta între timp.
 
 **În pauză** integrarea nu comandă sursa, cu o singură excepție: o pornește
 pentru antiîngheț și o oprește din nou când nu mai e nevoie (și după o

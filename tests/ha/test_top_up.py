@@ -260,3 +260,54 @@ async def test_a_relay_room_is_topped_up(
     assert not office.topped_up
     assert not _on(hass, "input_boolean.valve")
     await _unload(hass, entry)
+
+
+async def test_the_room_kept_open_goes_on_topped_up_without_closing(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Kept open, then another room asks: inside its hysteresis the room is
+    topped up at once; its TRVs do not get the target in between."""
+    trvs = Trvs(hass)
+    assert await async_setup_component(hass, "input_boolean", {"input_boolean": {"boiler": {}}})
+    for entity_id in ("climate.bedroom", "climate.office"):
+        hass.states.async_set(
+            entity_id, "heat", {**TRV, "temperature": 17.0, "hvac_action": "idle"}
+        )
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            ("Bedroom", {**ROOM, "climates": ["climate.bedroom"], "top_up": True}),
+            ("Office", {**ROOM, "climates": ["climate.office"]}),
+        ],
+        boiler_entity="input_boolean.boiler",
+        keep_last_open=True,
+    )
+    house = entry.runtime_data
+    bedroom = _room(entry, "Bedroom")
+    trvs.report("climate.office", "idle", 21.2)
+    trvs.report("climate.bedroom", "heating", 20.0)
+    await _steps(hass, freezer)
+    # The bedroom stops asking a little below its target: kept open.
+    trvs.report("climate.bedroom", "idle", 20.9)
+    await _steps(hass, freezer)
+    assert house.keep_open_room == bedroom.id
+    assert trvs.sent("climate.bedroom") == 25.0
+    sent_before = len(trvs.temperature)
+    decided_before = len(bedroom.decisions)
+    # The office asks: the bedroom is topped up, its TRV keeps the maximum.
+    trvs.report("climate.office", "heating", 20.0)
+    await _steps(hass, freezer)
+    assert house.keep_open_room is None
+    assert bedroom.topped_up
+    later = [
+        c.data["temperature"]
+        for c in trvs.temperature[sent_before:]
+        if c.data["entity_id"] == "climate.bedroom"
+    ]
+    assert 21.0 not in later
+    assert trvs.sent("climate.bedroom") == 25.0
+    # Not even for a moment: no decision with the target in between.
+    targets = [d["target"]["temperature"] for d in list(bedroom.decisions)[decided_before:]]
+    assert all(t == 25.0 for t in targets)
+    await _unload(hass, entry)

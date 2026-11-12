@@ -1139,9 +1139,11 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         """While the heat source runs: a little below the target (inside the
         hysteresis, so not asking yet), up to the target. Its circuit, if any,
         must be open already (a pump is not started for a few tenths)."""
-        if not self.can_top_up or self.kept_open:
+        # The room kept open now is not topped up; one just released (another
+        # room asks) goes on at once, its TRVs not closed in between.
+        if not self.can_top_up or self.house.keep_open_room == self.id:
             return False
-        if not active and self.heat_demand:
+        if not active and self.heat_demand and not self.kept_open:
             return False
         if self.circuit is not None and self.house.circuit_on(self.circuit) is not True:
             return False

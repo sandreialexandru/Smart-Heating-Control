@@ -139,6 +139,10 @@ boiler starts less often.
 - With a circuit, only while that circuit is already open (no pump is started
   for a few tenths of a degree). Its learning skips that time, as when kept
   open.
+- With *Keep the last TRV open*: the room kept open is not topped up. When
+  another room asks for heat and the room kept open is inside its hysteresis,
+  it goes on topped up at once: its TRVs stay open, without getting the
+  target in between.
 
 **In a pause** the integration does not control the source, with one exception:
 it starts it for frost protection and stops it again when no longer needed

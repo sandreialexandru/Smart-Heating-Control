@@ -126,9 +126,16 @@ safety:
   pause starts is taken back to the target once (see [chapter 3](03-rooms.md)).
 
 The card shows a band at the top while the house is paused. A manual change
-made in a pause is kept and applies after the pause: one from the card or a
-service is sent then, one made on the device stays as it is (the child lock does
-not undo it during the pause).
+from the card or a service made in a pause is kept and sent after the pause.
+A change made **on the devices** in a pause is not a manual change: in a pause
+something else controls the heating (a heat pump making hot water, an
+automation, you by hand), so when the pause ends the integration sends its
+decision again.
+
+> **An automation that pauses the house** (for example while a heat pump makes
+> hot water): change the devices back first, wait until they report it (a
+> *Wait for a template* on their state), and turn the pause off last. A device
+> change after the pause has ended is a manual change again.
 
 ## The house modes
 

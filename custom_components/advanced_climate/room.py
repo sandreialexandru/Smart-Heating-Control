@@ -629,6 +629,19 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
     # ------------------------------------------------------------------
     # Events
     # ------------------------------------------------------------------
+    def _device_changed(self, entity_id: str, new: State | None) -> None:
+        """A device changed, not by the integration: a manual change, except in a pause.
+
+        In a pause something else controls the heating (a heat pump making hot
+        water, an automation, a person by hand): what it leaves on the devices
+        is no choice for after the pause. Its values are not ours any more, so
+        the decision is sent again when the pause ends.
+        """
+        if self.house.paused:
+            self.sent.forget(entity_id)
+            return
+        self._handle_manual_change(entity_id, new)
+
     @callback
     def _async_entity_changed(self, event: Event[EventStateChangedData]) -> None:
         """A room entity changed: detect manual changes and evaluate again."""
@@ -641,7 +654,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             if self._check_device_limit(entity_id, old, new):
                 pass  # its own limit, not a person
             elif self._is_manual_change(event, old, new):
-                self._handle_manual_change(entity_id, new)
+                self._device_changed(entity_id, new)
             else:
                 self.sent.confirm(entity_id, new, now)
         elif entity_id in self.switches:
@@ -654,7 +667,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
                 and not self.house.is_own_context(event.context)
                 and not self.sent.is_echo(entity_id, old, new, now)
             ):
-                self._handle_manual_change(entity_id, new)
+                self._device_changed(entity_id, new)
         if entity_id in as_list(self.config.get(CONF_TEMP_SENSORS)) or entity_id in self.climates:
             self._update_temperature(now)
         self._update_window(now)

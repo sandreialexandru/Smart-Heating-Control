@@ -188,7 +188,7 @@ definit; apoi integrarea preia din nou controlul.
 | Limitele TRV | învățate | Un TRV care ține mai puțin decât a trimis temperatura cât încălzește / mișcarea robinetelor (cel puțin ținta) sau mai mult decât a trimis antiînghețul / oprirea (sub cel mai jos nivel) își ține propriile Max / Min temperature: nu e modificare manuală, comenzile următoare rămân în ele, alertă, păstrate 24 h (nu peste o repornire sau reîncărcare). Se învață doar în 5 minute de la comandă și doar cât TRV-ul nu a arătat valoarea trimisă; după aceea o altă valoare e modificare manuală |
 | Durată | configurabilă, universală | O singură regulă pentru orice modificare manuală, inclusiv oprirea GT: **durată fixă** (X ore) sau **până la următoarea reevaluare** declanșată de o schimbare (interval, prezență, fereastră, mod). Verificarea periodică nu o încheie |
 | Domeniu | cameră | Toată casa doar când camerele au robinete proprii; se oferă doar cu mai multe camere |
-| Pauză | – | Comutator: nicio comandă, fără calibrarea TRV (antiînghețul și temperatura maximă se aplică în continuare) |
+| Pauză | – | Comutator: nicio comandă, fără calibrarea TRV (antiînghețul și temperatura maximă se aplică în continuare). O schimbare făcută pe dispozitive în pauză nu e o modificare manuală: la sfârșitul pauzei decizia e trimisă din nou |
 | Blocare pentru copii | oprită | Modificările manuale sunt anulate imediat |
 | Anulare | – | Buton pentru fiecare cameră și pentru casă |
 | Card / serviciu | – | Un nivel sau o temperatură puse din card sau cu `set_override` se trimit doar cât se aplică modificarea manuală (nu în pauză, cu fereastra deschisă, în modul Oprit / Vară…) și rămân pe dispozitive tot timpul ei |

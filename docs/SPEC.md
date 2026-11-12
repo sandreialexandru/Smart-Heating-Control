@@ -184,7 +184,7 @@ the integration takes control again.
 | TRV limits | learned | A TRV that holds less than the temperature while heating / the valve exercise sent (at least the target) or more than frost protection / off sent (below the lowest level) holds its own Max / Min temperature: not a manual change, the next commands stay within it, alert, kept 24 h (not over a restart or reload). Learned only within 5 minutes of the command and only while the TRV has not shown the value sent; after that a different value is a manual change |
 | Duration | configurable, universal | One rule for every manual change, including turning GT off: **fixed duration** (X hours) or **until the next reevaluation** triggered by a change (slot, presence, window, mode). The periodic check does not end it |
 | Scope | room | Whole house only when rooms have their own valves; offered only with more than one room |
-| Pause | – | Switch: no commands at all, no TRV calibration (frost protection and the maximum temperature still apply) |
+| Pause | – | Switch: no commands at all, no TRV calibration (frost protection and the maximum temperature still apply). A change made on the devices in a pause is no manual change: when the pause ends the decision is sent again |
 | Child lock | off | Manual changes are reverted immediately |
 | Clear | – | Button per room and for the house |
 | Card / service | – | A level or temperature set from the card or with `set_override` is sent only while the manual change applies (not in a pause, with a window open, in mode Off / Summer…), and stays on the devices for its whole time |

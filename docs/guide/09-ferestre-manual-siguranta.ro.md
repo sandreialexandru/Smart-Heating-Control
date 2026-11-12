@@ -127,10 +127,17 @@ siguranță:
 - **încălzirea după senzorul camerei**: o temperatură mai mare rămasă pe TRV-uri
   când începe pauza e adusă înapoi la țintă o dată ([capitolul 3](03-camere.ro.md)).
 
-În card apare o bandă sus cât timp casa e în pauză. O modificare manuală făcută
-în pauză se păstrează și se aplică după pauză: una din card sau din serviciu se
-trimite atunci, una făcută pe dispozitiv rămâne cum e (blocarea pentru copii nu
-o anulează în pauză).
+În card apare o bandă sus cât timp casa e în pauză. O modificare manuală din
+card sau din serviciu făcută în pauză se păstrează și se trimite după pauză. O
+schimbare făcută **pe dispozitive** în pauză nu e o modificare manuală: în
+pauză altcineva controlează încălzirea (o pompă de căldură care face apă caldă,
+o automatizare, tu de mână), așa că la sfârșitul pauzei integrarea trimite din
+nou decizia ei.
+
+> **O automatizare care pune casa în pauză** (de exemplu cât o pompă de căldură
+> face apă caldă): readuce întâi dispozitivele, așteaptă să o raporteze (un
+> *Wait for a template* pe starea lor) și oprește pauza la sfârșit. O schimbare
+> pe dispozitiv după ce pauza s-a terminat e din nou o modificare manuală.
 
 ## Modurile casei
 

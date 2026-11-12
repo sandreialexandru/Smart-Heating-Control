@@ -45,6 +45,11 @@ GitHub releases.
 
 ### Fixed
 
+- ⏸️ A change made on the devices in a pause (a heat pump making hot water,
+  an automation) is no longer a manual change: in a pause something else
+  controls the heating, so when the pause ends the decision is sent again. A
+  manual change from the card or a service in a pause is still kept.
+
 - 🕒 The card shows times in the *Time format* of the user profile of Home
   Assistant (24 h, 12 h, of the language or of the system); before, it always
   used the clock of the language, so English showed 12 h even when 24 h was

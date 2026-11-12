@@ -1516,6 +1516,44 @@ async def test_pause_sends_nothing_for_a_manual_relay(
     await hass.async_block_till_done()
 
 
+async def test_a_device_changed_in_a_pause_is_no_manual_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """In a pause something else controls the heating (a heat pump making hot
+    water, an automation): what it leaves on the devices is not kept; when the
+    pause ends the decision is sent again."""
+    entry = await _setup(hass, freezer)
+    await _tick(hass, freezer, 15)
+    before = hass.states.get("input_boolean.heater").state
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.home_pause"}, blocking=True
+    )
+    await hass.async_block_till_done()
+    flipped = "off" if before == "on" else "on"
+    # Changed by something else (a new context), as an automation would.
+    await hass.services.async_call(
+        "input_boolean", f"turn_{flipped}", {"entity_id": "input_boolean.heater"}, blocking=True
+    )
+    await _tick(hass, freezer, 5)
+    decision = hass.states.get("sensor.bedroom_decision")
+    assert decision.state == "pause"
+    assert decision.attributes["override"] is None
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": "switch.home_pause"}, blocking=True
+    )
+    await _tick(hass, freezer, 5)
+    assert hass.states.get("sensor.bedroom_decision").state != "manual_override"
+    assert hass.states.get("input_boolean.heater").state == before
+    # Out of the pause the same change is a manual change again.
+    await hass.services.async_call(
+        "input_boolean", f"turn_{flipped}", {"entity_id": "input_boolean.heater"}, blocking=True
+    )
+    await _tick(hass, freezer, 5)
+    assert hass.states.get("sensor.bedroom_decision").state == "manual_override"
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_card_attributes_not_heating_alerts_cutoff(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -1812,10 +1850,11 @@ async def test_frost_protection_from_the_room_sensor_opens_the_trv(
     await hass.async_block_till_done()
 
 
-async def test_device_change_in_a_pause_is_kept(
+async def test_device_change_in_a_pause_is_not_kept(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """A change made on the thermostat in a pause applies after the pause."""
+    """A change made on the thermostat in a pause is no manual change: when the
+    pause ends the target is sent again."""
     trv = {
         "hvac_modes": ["heat", "off"],
         "current_temperature": 20.0,
@@ -1830,18 +1869,19 @@ async def test_device_change_in_a_pause_is_kept(
         "switch", "turn_on", {"entity_id": "switch.home_pause"}, blocking=True
     )
     await hass.async_block_till_done()
-    # A person sets 23 °C on the TRV during the pause.
+    # Something else sets 23 °C on the TRV during the pause.
     hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 23.0}, context=Context())
     await hass.async_block_till_done()
     room = next(iter(entry.runtime_data.rooms.values()))
-    assert room.override is not None
+    assert room.override is None
     count = len(calls)
     await hass.services.async_call(
         "switch", "turn_off", {"entity_id": "switch.home_pause"}, blocking=True
     )
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.office_decision").state == "manual_override"
-    assert len(calls) == count  # the 23 °C set by hand is not overwritten
+    assert hass.states.get("sensor.office_decision").state != "manual_override"
+    assert len(calls) > count
+    assert calls[-1].data["temperature"] == room.target_temperature
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 

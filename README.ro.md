@@ -8,7 +8,7 @@
 [![Validate](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml/badge.svg)](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml)
 [![Tests](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/tests.yml/badge.svg)](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/tests.yml)
 
-☕ **Îți place Smart Heating Control? Susține dezvoltarea lui:**
+**Îți place Smart Heating Control? Susține dezvoltarea lui:**
 
 [![Support on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/sandreialexandru)
 
@@ -23,15 +23,15 @@ https://github.com/user-attachments/assets/31181198-e0fa-4510-bbfa-af9f790a19c7
 
 <p align="center"><sub>Cardul în folosire · persoane și date inventate</sub></p>
 
-## ✨ Ce face
+## Ce face
 
-🏠 **Știe cine e acasă.** Fiecare persoană e *acasă*, *aproape* (undeva în
+**Știe cine e acasă.** Fiecare persoană e *acasă*, *aproape* (undeva în
 oraș) sau *departe*. Casa încălzește pentru cine e acolo, ține *eco* cât
 cineva e doar aproape, trece pe *away* când toți sunt departe și, cu Proximity
 (recomandat, cu direcția) sau cu un senzor de timp de drum, pornește din nou
 încălzirea când cineva e pe drum spre casă.
 
-🧠 **Învață singură fiecare cameră.** Fiecare cameră învață cât de repede se
+**Învață singură fiecare cameră.** Fiecare cameră învață cât de repede se
 încălzește, cum se răcește, cât de încet reacționează caloriferele sau
 pardoseala, cât dă în plus la ger o centrală cu curbă de temperatură și, cu o
 entitate meteo, cât o încălzește soarele. Apoi pornește încălzirea exact cât
@@ -39,39 +39,39 @@ de devreme trebuie ca să fie cald la timp și o oprește mai devreme când came
 rămâne oricum confortabilă. Nu se setează nimic: unei camere îi trebuie circa
 o zi, 4 ore cu încălzire și 4 fără.
 
-📅 **Programe după săptămâna fiecăruia.** Profiluri pentru zile lucrătoare,
+**Programe după săptămâna fiecăruia.** Profiluri pentru zile lucrătoare,
 weekend, zile anume sau sărbători (din integrarea Workday), un calendar care
 alege profilul unei zile sau un helper Program existent. Se editează în card,
 prin tragerea orelor.
 
-🪟 **Ferestre deschise și modificări manuale, rezolvate.** Un senzor de
+**Ferestre deschise și modificări manuale, rezolvate.** Un senzor de
 fereastră sau o scădere bruscă a temperaturii reduce încălzirea; camerele
 vecine pot urma. O modificare făcută de mână pe termostat se păstrează cât
 s-a ales, apoi revine programul.
 
-🌦️ **Ține cont de vreme.** Oprește încălzirea când e cald afară (și după
+**Ține cont de vreme.** Oprește încălzirea când e cald afară (și după
 prognoză), păstrează un sezon de încălzire, adaugă căldură la ger și coboară
 ținta unei camere însorite.
 
-⚡ **Energie.** Pornește centrala doar când o cameră are nevoie, urmează un
+**Energie.** Pornește centrala doar când o cameră are nevoie, urmează un
 tarif dinamic sau surplusul fotovoltaic și numără timpul de încălzire pe zi,
 săptămână sau lună.
 
-🛡️ **Sigură.** Antiîngheț mereu, o temperatură maximă, fiecare comandă
+**Sigură.** Antiîngheț mereu, o temperatură maximă, fiecare comandă
 verificată și trimisă din nou dacă n-a ajuns, alerte pentru ferestre deschise,
 dispozitive indisponibile, baterii descărcate și **risc de mucegai** la
 peretele cel mai rece, plus mișcarea săptămânală a robinetelor TRV.
 
-🔍 **Se explică singură.** Fiecare cameră are un senzor *Decizie* cu regula
+**Se explică singură.** Fiecare cameră are un senzor *Decizie* cu regula
 care a câștigat și motivul, un eveniment la fiecare schimbare și un diagnostic
 cu ultimele 100 de decizii.
 
-🧩 **Se potrivește casei.** Generic Thermostat (se alege doar presetul;
+**Se potrivește casei.** Generic Thermostat (se alege doar presetul;
 termostatul funcționează la fel ca înainte), TRV-uri cu calibrare după un
 senzor din cameră, alte termostate, relee. °C sau °F pe casă. Română și
 engleză.
 
-## 🖼️ Cardul
+## Cardul
 
 Integrarea vine cu un card Lovelace, adăugat singur la resursele
 dashboard-ului.
@@ -96,7 +96,7 @@ type: custom:smart-heating-control-card
 
 Orice parte se poate ascunde; opțiunile sunt în [ghid](docs/guide/10-card.ro.md).
 
-## 🚀 Primii pași
+## Primii pași
 
 [![Deschide Home Assistant și adaugă acest repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sandreialexandru&repository=Smart-Heating-Control&category=integration)
 
@@ -130,22 +130,22 @@ Fișierul se descarcă și se deschide într-un browser.
 
 <br clear="right">
 
-## 📚 Documentație
+## Documentație
 
 | Document | Ce conține |
 |---|---|
-| 📖 [Ghid](docs/guide/README.ro.md) | Pas cu pas, pe înțelesul tuturor: fiecare setare, fiecare fel de încălzire, exemple |
-| ✅ [Testat cu](docs/tested-with.ro.md) | Dispozitivele confirmate de utilizatori |
-| 🧠 [Cum învață integrarea](docs/learning.ro.md) | Modelul camerei, cu exemple calculate și simulări |
-| 🔧 [Referință](docs/reference.ro.md) | Fiecare regulă, senzor, atribut, serviciu și opțiune a cardului, în detaliu tehnic |
-| 📋 [Specificație](docs/SPEC.ro.md) | Specificația completă |
-| 📝 [Changelog](CHANGELOG.md) | Ce s-a schimbat, versiune cu versiune (în engleză) |
+| [Ghid](docs/guide/README.ro.md) | Pas cu pas, pe înțelesul tuturor: fiecare setare, fiecare fel de încălzire, exemple |
+| [Testat cu](docs/tested-with.ro.md) | Dispozitivele confirmate de utilizatori |
+| [Cum învață integrarea](docs/learning.ro.md) | Modelul camerei, cu exemple calculate și simulări |
+| [Referință](docs/reference.ro.md) | Fiecare regulă, senzor, atribut, serviciu și opțiune a cardului, în detaliu tehnic |
+| [Specificație](docs/SPEC.ro.md) | Specificația completă |
+| [Changelog](CHANGELOG.md) | Ce s-a schimbat, versiune cu versiune (în engleză) |
 
-## 🌍 Traduceri
+## Traduceri
 
 Română și engleză: integrarea, cardul și documentația.
 
-## ☕ Susținere
+## Susținere
 
 Dacă Smart Heating Control e de folos, proiectul poate fi susținut cu o cafea
 pe [Ko-fi](https://ko-fi.com/sandreialexandru). Mulțumesc!

@@ -8,7 +8,7 @@
 [![Validate](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml/badge.svg)](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml)
 [![Tests](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/tests.yml/badge.svg)](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/tests.yml)
 
-☕ **Like Smart Heating Control? Support its development:**
+**Like Smart Heating Control? Support its development:**
 
 [![Support on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/sandreialexandru)
 
@@ -23,52 +23,52 @@ https://github.com/user-attachments/assets/31181198-e0fa-4510-bbfa-af9f790a19c7
 
 <p align="center"><sub>The card in use · invented people and data</sub></p>
 
-## ✨ What it does
+## What it does
 
-🏠 **Knows who is home.** Every person is *home*, *nearby* (somewhere in your
+**Knows who is home.** Every person is *home*, *nearby* (somewhere in your
 town) or *far*. The house heats for whoever is there, keeps *eco* while you
 are only nearby, goes to *away* when everyone is far, and, with Proximity
 (recommended, with its direction) or a travel time sensor, starts heating
 again when someone is on the way back.
 
-🧠 **Learns every room by itself.** Each room learns how fast it warms, how it
+**Learns every room by itself.** Each room learns how fast it warms, how it
 cools, how slowly its radiators or floor react, how a boiler with a weather
 curve gives more in the cold and, with a weather entity, how much the sun
 warms it. Then it starts heating just early enough to be warm on time, and
 stops early when the room will stay comfortable anyway. Nothing to set: a
 room needs about a day, 4 hours with heating and 4 without.
 
-📅 **Schedules that fit your week.** Profiles for workdays, weekends, single
+**Schedules that fit your week.** Profiles for workdays, weekends, single
 days or holidays (from the Workday integration), a calendar that picks the
 profile of a day, or an existing Schedule helper. Edit them in the card by
 dragging the times.
 
-🪟 **Open windows and manual changes, handled.** A window sensor or a sudden
+**Open windows and manual changes, handled.** A window sensor or a sudden
 temperature drop lowers the heating; neighbouring rooms can follow. Turn a
 thermostat by hand and the change is kept for as long as you chose, then the
 schedule comes back.
 
-🌦️ **Weather aware.** Turns the heating off when it is warm outside (also from
+**Weather aware.** Turns the heating off when it is warm outside (also from
 the forecast), keeps a heating season, adds heat in hard frost, and lowers a
 sunny room.
 
-⚡ **Energy.** Starts the boiler only when a room needs it, follows a dynamic
+**Energy.** Starts the boiler only when a room needs it, follows a dynamic
 tariff or solar surplus, and counts the heating time per day, week or month.
 
-🛡️ **Safe.** Frost protection always, a maximum temperature, every command
+**Safe.** Frost protection always, a maximum temperature, every command
 checked and sent again if it did not arrive, alerts for open windows,
 unavailable devices, low batteries and **mold risk** at the coldest wall, and
 a weekly valve exercise for TRVs.
 
-🔍 **Explains itself.** Every room has a *Decision* sensor with the rule that
+**Explains itself.** Every room has a *Decision* sensor with the rule that
 won and why, an event on every change, and diagnostics with the last 100
 decisions.
 
-🧩 **Fits your house.** Generic Thermostat (only the preset is chosen; your
+**Fits your house.** Generic Thermostat (only the preset is chosen; your
 thermostat keeps working as before), TRVs with calibration from a room sensor,
 other thermostats, relays. °C or °F per house. English and Romanian.
 
-## 🖼️ The card
+## The card
 
 A Lovelace card comes with the integration and is added to the dashboard
 resources by itself.
@@ -93,7 +93,7 @@ type: custom:smart-heating-control-card
 
 Every part can be hidden; the options are in the [guide](docs/guide/10-card.md).
 
-## 🚀 Get started
+## Get started
 
 [![Open your Home Assistant and add this repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sandreialexandru&repository=Smart-Heating-Control&category=integration)
 
@@ -127,22 +127,22 @@ Download the file and open it in a browser.
 
 <br clear="right">
 
-## 📚 Documentation
+## Documentation
 
 | Document | What it covers |
 |---|---|
-| 📖 [Guide](docs/guide/README.md) | Step by step, in plain words: every setting, every kind of heating, examples |
-| ✅ [Tested with](docs/tested-with.md) | The devices users have confirmed |
-| 🧠 [How the integration learns](docs/learning.md) | The room model, with worked examples and simulations |
-| 🔧 [Reference](docs/reference.md) | Every rule, sensor, attribute, service and card option, in technical detail |
-| 📋 [Specification](docs/SPEC.md) | The full specification |
-| 📝 [Changelog](CHANGELOG.md) | What changed, version by version |
+| [Guide](docs/guide/README.md) | Step by step, in plain words: every setting, every kind of heating, examples |
+| [Tested with](docs/tested-with.md) | The devices users have confirmed |
+| [How the integration learns](docs/learning.md) | The room model, with worked examples and simulations |
+| [Reference](docs/reference.md) | Every rule, sensor, attribute, service and card option, in technical detail |
+| [Specification](docs/SPEC.md) | The full specification |
+| [Changelog](CHANGELOG.md) | What changed, version by version |
 
-## 🌍 Translations
+## Translations
 
 English and Romanian: the integration, the card and the documentation.
 
-## ☕ Support
+## Support
 
 If Smart Heating Control is useful to you, you can buy me a coffee on
 [Ko-fi](https://ko-fi.com/sandreialexandru). Thank you!

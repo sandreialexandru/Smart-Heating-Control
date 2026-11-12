@@ -26,8 +26,9 @@ GitHub releases.
   stops; while another circuit keeps the boiler running, a circuit no longer
   needed closes at once. The boiler is not started for a room whose circuit is
   off or unavailable (the card says *its circuit (…) is off*). A secondary room
-  does not open its circuit; frost protection does, and *Keep the last TRV
-  open* keeps it open.
+  does not open its circuit; frost protection does. A room waiting for *Rooms
+  needed* or the *Reference room* does not open its circuit, and *Keep the last
+  TRV open* closes it once the boiler is off (no pump running all night).
 
 ### Fixed
 

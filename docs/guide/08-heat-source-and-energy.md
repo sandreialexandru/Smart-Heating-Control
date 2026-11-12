@@ -154,7 +154,10 @@ What the integration does:
 - A secondary room does not open its circuit; it heats while its circuit is
   open for another room.
 - Frost protection opens the circuit and starts the boiler.
-- *Keep the last TRV open* keeps the circuit of that room open too.
+- *Keep the last TRV open* keeps the TRVs of that room open, but its circuit
+  closes once the boiler is off, so a pump does not run all night.
+- A room waiting for *Rooms needed* or for the *Reference room* does not open
+  its circuit: the circuits open only when the boiler is to start.
 - No delays: the relay does not wait for a pump to run up or a valve to
   open. A zone valve with an end switch that starts the boiler by itself
   needs no circuit here.

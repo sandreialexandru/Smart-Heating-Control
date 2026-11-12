@@ -1302,14 +1302,14 @@ class House:
         # to go).
         circuits = self.circuits
         if circuits:
+            # Only when the heat source is to start: a room waiting for other
+            # rooms or for the reference room does not run its pump for nothing.
             wanted = {
                 room.circuit
                 for room in sourced.values()
                 if room.circuit
                 and (
-                    (room.heat_demand and room.starts_house_source)
-                    or room.frost_demand
-                    or room.id == self.keep_open_room
+                    (demand and room.heat_demand and room.starts_house_source) or room.frost_demand
                 )
             }
             await self._async_switch_circuits(sorted(wanted), True)

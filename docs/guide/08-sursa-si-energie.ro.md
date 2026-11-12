@@ -155,7 +155,12 @@ Ce face integrarea:
 - O cameră secundară nu își deschide circuitul; încălzește cât circuitul ei e
   deschis pentru altă cameră.
 - Antiînghețul deschide circuitul și pornește centrala.
-- *Ține deschis ultimul TRV* ține deschis și circuitul acelei camere.
+- *Ține deschis ultimul TRV* ține deschise TRV-urile acelei camere, dar
+  circuitul ei se închide după ce se oprește centrala, ca o pompă să nu meargă
+  toată noaptea.
+- O cameră care așteaptă *Camere necesare* sau *Camera de referință* nu își
+  deschide circuitul: circuitele se deschid doar când urmează să pornească
+  centrala.
 - Fără întârzieri: releul nu așteaptă pornirea pompei sau deschiderea
   ventilului. Un ventil de zonă cu contact de capăt care pornește singur
   centrala nu are nevoie de circuit aici.

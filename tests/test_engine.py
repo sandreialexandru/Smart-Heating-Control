@@ -847,6 +847,40 @@ class KeepOpenTest(unittest.TestCase):
         self.assertNotEqual(engine.decide(inputs()).key, "keep_open")
 
 
+class TopUpTest(unittest.TestCase):
+    """A room a little below its target, topped up while the heat source runs."""
+
+    def test_over_the_schedule_with_the_level_it_would_have(self) -> None:
+        d = engine.decide(inputs(top_up=True, keep_open_temp=24.0))
+        self.assertEqual((d.rule, d.key), (const.RULE_SCHEDULE, "top_up"))
+        self.assertEqual((d.target.kind, d.target.temperature), ("temperature", 24.0))
+        self.assertEqual(d.params, {"preset": "home", "temperature": 22.0})
+        self.assertTrue(d.description.startswith("Topped up while the heat source runs"))
+
+    def test_kept_open_wins(self) -> None:
+        d = engine.decide(inputs(top_up=True, keep_open=True, keep_open_temp=24.0))
+        self.assertEqual(d.key, "keep_open")
+
+    def test_not_during_the_optimal_stop(self) -> None:
+        d = engine.decide(
+            inputs(top_up=True, keep_open_temp=24.0, schedule_rule=const.RULE_OPTIMAL_STOP)
+        )
+        self.assertEqual(d.rule, const.RULE_OPTIMAL_STOP)
+        self.assertNotEqual(d.key, "top_up")
+
+    def test_a_stronger_rule_is_not_topped_up(self) -> None:
+        for kwargs in (
+            {"paused": True},
+            {"window_open": True},
+            {"override_active": True},
+            {"mode": const.MODE_OFF},
+            {"cutoff_active": True},
+            {"schedule_preset": const.PRESET_FROST},
+        ):
+            d = engine.decide(inputs(top_up=True, keep_open_temp=24.0, **kwargs))
+            self.assertNotEqual(d.key, "top_up", kwargs)
+
+
 class KeepOpenLimitsTest(unittest.TestCase):
     def test_what_it_would_be_is_within_the_safety_limits(self) -> None:
         levels = {**LEVELS, "away": 5.0}

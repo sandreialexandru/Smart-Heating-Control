@@ -120,6 +120,28 @@ cea mai departe sub țintă.
 - Camerele cu relee, cu Generic Thermostat sau care nu se încălzesc de la
   sursa casei nu sunt ținute deschise niciodată.
 
+**Se încălzește la ocazie** (pe cameră, oprit implicit; doar pentru o cameră
+cu TRV-uri sau relee care se încălzește de la *Sursa de căldură*, nu pentru un
+Generic Thermostat, care își decide singur releul): cât centrala merge pentru
+alte camere, o cameră care e puțin sub țintă, în histerezisul ei (implicit
+0,3 °C), deci încă nu cere căldură, își deschide TRV-urile sau releul și se
+încălzește până la țintă. Ar cere curând și ar porni din nou centrala; așa
+centrala pornește mai rar.
+
+- TRV-urile primesc temperatura maximă a camerei, ca la ținerea deschisă;
+  releul e pornit. Ținta camerei rămâne cea a regulii ei (cardul arată motivul
+  *Încălzită la ocazie: centrala merge deja pentru alte camere*).
+- Între timp camera nu cere căldură: nu pornește centrala, nu o ține pornită
+  și nu se numără la *Camere necesare*.
+- Se termină la țintă, când se oprește centrala sau când camera e preluată de
+  o regulă mai puternică (fereastră, modificare manuală, pauză, modul Oprit sau
+  Vară, cald afară, oprirea optimă). Un TRV care încă încălzește în histerezis
+  după aceea nu pornește din nou centrala; sub histerezis, camera cere căldură
+  ca de obicei.
+- Cu un circuit, doar cât acel circuit e deja deschis (nu se pornește o pompă
+  pentru câteva zecimi de grad). Învățarea ei sare peste acest timp, ca la
+  ținerea deschisă.
+
 **În pauză** integrarea nu comandă sursa, cu o singură excepție: o pornește
 pentru antiîngheț și o oprește din nou când nu mai e nevoie (și după o
 repornire în timpul pauzei).

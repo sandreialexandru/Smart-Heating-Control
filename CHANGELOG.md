@@ -30,6 +30,14 @@ GitHub releases.
   needed* or the *Reference room* does not open its circuit, and *Keep the last
   TRV open* closes it once the boiler is off (no pump running all night).
 
+- ♨️ **Top up while the boiler runs** (room option, off by default; TRVs or
+  relays of the heat source): while the boiler runs for other rooms, a room
+  only a little below its target (inside its hysteresis, so not asking yet)
+  heats up to its target, so the boiler starts less often. It never starts
+  nor holds the boiler, does not count for *Rooms needed*, needs its circuit
+  already open, and skips a manual change, an open window, the pause and the
+  optimal stop; its learning skips that time.
+
 ### Fixed
 
 - 🕒 The card shows times in the *Time format* of the user profile of Home

@@ -532,9 +532,11 @@ async def test_room_of_the_heat_source_may_be_a_secondary_room(hass: HomeAssista
         {"switches": ["input_boolean.bath_heater"], "use_house_source": True},
     )
     assert result["step_id"] == "house_source"
-    assert _keys(result) == {"starts_house_source"}
+    assert _keys(result) == {"starts_house_source", "top_up"}
     default = next(k for k in result["data_schema"].schema if str(k) == "starts_house_source")
     assert default.default() is True
+    default = next(k for k in result["data_schema"].schema if str(k) == "top_up")
+    assert default.default() is False
     result = await flow.async_configure(result["flow_id"], {"starts_house_source": False})
     assert result["step_id"] == "control_on_off"
     # A room with its own heat is not asked.
@@ -1294,7 +1296,7 @@ async def test_circuits_of_the_house_and_the_circuit_of_a_room(hass: HomeAssista
         {"switches": ["input_boolean.bath_heater"], "use_house_source": True},
     )
     assert result["step_id"] == "house_source"
-    assert _keys(result) == {"starts_house_source", "circuit"}
+    assert _keys(result) == {"starts_house_source", "top_up", "circuit"}
     field = next(k for k in result["data_schema"].schema if str(k) == "circuit")
     values = [o["value"] for o in result["data_schema"].schema[field].config["options"]]
     assert values == ["switch.floor", "switch.radiators"]
@@ -1319,4 +1321,37 @@ async def test_no_circuit_field_without_circuits(hass: HomeAssistant) -> None:
         result["flow_id"],
         {"switches": ["input_boolean.bath_heater"], "use_house_source": True},
     )
+    assert _keys(result) == {"starts_house_source", "top_up"}
+
+
+async def test_top_up_is_not_asked_for_a_generic_thermostat(hass: HomeAssistant) -> None:
+    """A Generic Thermostat decides its relay by itself: it cannot be topped up."""
+    climate = _gt_climate(hass, "switch.gt_relay")
+    entry = _house_with_rooms(hass, options={"boiler_entity": "switch.boiler"})
+    flow = hass.config_entries.subentries
+    result = await flow.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
+    result = await flow.async_configure(
+        result["flow_id"], {"name": "Living", "source": "generic_thermostat"}
+    )
+    result = await flow.async_configure(
+        result["flow_id"], {"climates": [climate], "use_house_source": True}
+    )
+    assert result["step_id"] == "house_source"
     assert _keys(result) == {"starts_house_source"}
+
+
+async def test_top_up_is_saved(hass: HomeAssistant) -> None:
+    """Turned on for a relay room of the heat source, kept for the room."""
+    entry = _house_with_rooms(hass, options={"boiler_entity": "switch.boiler"})
+    flow = hass.config_entries.subentries
+    result = await flow.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
+    result = await flow.async_configure(result["flow_id"], {"name": "Bath", "source": "switch"})
+    result = await flow.async_configure(
+        result["flow_id"],
+        {"switches": ["input_boolean.bath_heater"], "use_house_source": True},
+    )
+    result = await flow.async_configure(
+        result["flow_id"], {"starts_house_source": True, "top_up": True}
+    )
+    assert result["step_id"] == "control_on_off"
+    assert flow._progress[result["flow_id"]]._data["top_up"] is True

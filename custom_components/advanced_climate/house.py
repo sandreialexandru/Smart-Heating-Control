@@ -205,6 +205,8 @@ class House:
         # The room whose TRVs are kept open for the heat source (the last room
         # that asked for heat), and the rooms that asked at the last evaluation.
         self.keep_open_room: str | None = None
+        # The rooms topped up while the heat source runs for other rooms.
+        self.top_up_rooms: set[str] = set()
         self._last_askers: list[str] = []
         self.boiler_on: bool | None = None
         self.boiler_changed: datetime | None = None
@@ -478,8 +480,8 @@ class House:
             await self._async_control_boiler(now)
         except Exception:
             _LOGGER.exception("Error controlling the heat source of %s", self.entry.title)
-        if self._update_keep_open():
-            # The room kept open (or no longer kept open) gets its TRVs set now.
+        if self._update_keep_open() | self._update_top_up():
+            # The room kept open or topped up (or no longer) gets its TRVs set now.
             self.async_request_evaluate()
         try:
             self._check_room_difference()
@@ -1501,6 +1503,25 @@ class House:
         self.keep_open_room = max(candidates, key=below).id
         return True
 
+    def _update_top_up(self) -> bool:
+        """Choose the rooms topped up while the heat source runs (True when it changed).
+
+        A room with the option on, a little below its target (inside its
+        hysteresis, so it does not ask for heat yet), heats up to its target
+        while the heat source runs for other rooms: it would ask soon and start
+        it again. It asks for no heat meanwhile, so the heat source stops when
+        the rooms that asked are warm, and the room is no longer topped up.
+        """
+        previous = self.top_up_rooms
+        _, running = self.heat_source_state()
+        if running is not True:
+            self.top_up_rooms = set()
+        else:
+            self.top_up_rooms = {
+                room.id for room in self.rooms.values() if room.top_up_wanted(room.id in previous)
+            }
+        return self.top_up_rooms != previous
+
     def _check_source_available(
         self, now: datetime, configured: bool, source_on: bool | None
     ) -> None:
@@ -1799,6 +1820,7 @@ class House:
             "daily_means": self.outdoor.daily_means,
             "heat_demand": self.heat_demand,
             "keep_open_room": self.keep_open_room,
+            "top_up_rooms": sorted(self.top_up_rooms),
             "house_offsets": self.house_offsets(),
             "calendar_message": self.calendar_message,
             "last_evaluation": iso(self._last_eval),

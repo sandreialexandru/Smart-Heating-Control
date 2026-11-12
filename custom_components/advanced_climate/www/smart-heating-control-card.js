@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.5rc5";
+const CARD_VERSION = "2.6.5rc6";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -388,6 +388,7 @@ const TEXT = {
     r_optimal_stop: "Optimal stop: lowering early to {preset}",
     r_cutoff: "Warm outside: heating off (would be {would})",
     r_keep_open: "Kept open for the heat source: the last room that asked for heat (would be {would})",
+    r_top_up: "Topped up while the heat source runs for other rooms (would be {would})",
     r_max_level: "Maximum temperature ({preset} is above {max})",
     r_frost_level: "Frost protection ({preset} is below {frost})",
     r_max_device: "Maximum temperature: {value} is above {max}",
@@ -706,6 +707,7 @@ const TEXT = {
     r_optimal_stop: "Oprire anticipată: coboară mai devreme la {preset}",
     r_cutoff: "Cald afară: încălzire oprită (ar fi {would})",
     r_keep_open: "Ținut deschis pentru sursa de căldură: ultima cameră care a cerut căldură (ar fi {would})",
+    r_top_up: "Încălzită la ocazie: centrala merge deja pentru alte camere (ar fi {would})",
     r_max_level: "Temperatura maximă ({preset} e peste {max})",
     r_frost_level: "Antiîngheț ({preset} e sub {frost})",
     r_max_device: "Temperatura maximă: {value} e peste {max}",

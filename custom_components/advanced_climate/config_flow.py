@@ -137,6 +137,7 @@ from .const import (
     CONF_TEMP_AGGREGATION,
     CONF_TEMP_SENSORS,
     CONF_TEMP_UNIT,
+    CONF_TOP_UP,
     CONF_TRAVEL_TIME,
     CONF_TRV_BOOST,
     CONF_TRV_BOOST_TEMP,
@@ -1611,6 +1612,13 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                 default=bool(self._data.get(CONF_STARTS_HOUSE_SOURCE, True)),
             ): _bool()
         }
+        # Topped up while the heat source runs: TRVs and relays (SHC opens them);
+        # not a Generic Thermostat, which decides its relay by itself.
+        top_up = self._data.get(CONF_SOURCE) in (SOURCE_CLIMATE, SOURCE_SWITCH)
+        if top_up:
+            fields[vol.Required(CONF_TOP_UP, default=bool(self._data.get(CONF_TOP_UP, False)))] = (
+                _bool()
+            )
         # The circuit of the room, among those of the house (only when it has some).
         opts = self._get_entry().options
         circuits = as_list(opts.get(CONF_CIRCUITS)) if opts.get(CONF_BOILER_ENTITY) else []
@@ -1640,6 +1648,10 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
             self._data[CONF_STARTS_HOUSE_SOURCE] = bool(
                 user_input.get(CONF_STARTS_HOUSE_SOURCE, True)
             )
+            if top_up:
+                self._data[CONF_TOP_UP] = bool(user_input.get(CONF_TOP_UP, False))
+            else:
+                self._data.pop(CONF_TOP_UP, None)
             if user_input.get(CONF_CIRCUIT):
                 self._data[CONF_CIRCUIT] = user_input[CONF_CIRCUIT]
             else:

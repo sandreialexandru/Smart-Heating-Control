@@ -220,6 +220,13 @@ test("reason: the last room kept open for the heat source, with what it would be
   ok(t.startsWith("Kept open for the heat source: the last room that asked for heat (would be Home 21"), t);
 });
 
+test("reason: a room topped up while the heat source runs, with what it would be", async (p) => {
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom", reasonKey: "top_up" }] });
+  const t = await p.evaluate(() =>
+    card._reasonText({ reason_key: "top_up", reason_params: { preset: "home", temperature: 21 }, preset_names: {}, offsets: [] }));
+  ok(t.startsWith("Topped up while the heat source runs for other rooms (would be Home 21"), t);
+});
+
 
 test("set for a while: no button looks active until opened; the fields start again from the target once the manual change ends", async (p) => {
   const until = new Date(Date.now() + H).toISOString();

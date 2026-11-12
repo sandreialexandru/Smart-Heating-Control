@@ -61,7 +61,7 @@ măsurătoare departe de ce face camera de obicei (o ușă lăsată deschisă,
 gătitul) contează mai puțin. Nu se folosesc: măsurătorile cu o fereastră
 deschisă, cu starea sursei de căldură necunoscută, în timpul exercițiului
 robinetelor, cât TRV-urile sunt ținute deschise pentru sursa de căldură (*Ține
-deschis ultimul TRV*) sau în afara sezonului rece (modul Oprit sau Vară, în afara
+deschis ultimul TRV*) sau camera e încălzită la ocazie cât merge centrala, ori în afara sezonului rece (modul Oprit sau Vară, în afara
 sezonului).
 
 **Până se învață** (4 ore cu încălzire și 4 ore fără, de obicei în prima zi) se

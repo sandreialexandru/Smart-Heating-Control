@@ -40,7 +40,7 @@ Versatile Thermostat, Better Thermostat, RoomMind, Advanced Heating Control (blu
 | Idee | De unde | Stare | Note |
 |---|---|---|---|
 | O entitate `climate` pe cameră (ținta, nivelul, pornit/oprit), pentru asistenții vocali, cardurile de termostat, HomeKit / Google / Alexa | RoomMind („Unified climate entity per room”), ZEAL | de decis | SHC nu are `climate` pe cameră. Ținta schimbată de acolo = modificare manuală; presetul = nivelul; off = camera oprită. |
-| Încălzire „la ocazie”: cât centrala merge deja, camerele aproape de țintă se încălzesc și ele, ca centrala să pornească mai rar | Versatile Thermostat (12 reacții) | de decis | Generalizează camerele secundare: o cameră sub țintă cu cel mult X °C își deschide TRV-ul doar cât merge centrala pentru altă cameră. |
+| Încălzire „la ocazie”: cât centrala merge deja, camerele aproape de țintă se încălzesc și ele, ca centrala să pornească mai rar | Versatile Thermostat (12 reacții) | făcut | 2.6.5rc6: bifa *Top up while the boiler runs* pe cameră (TRV-uri sau relee ale sursei, nu GT), oprită implicit; intervalul = histerezisul camerei, până la țintă; nu pornește și nu ține centrala, doar cu circuitul deja deschis. |
 | Comutator „controlată de SHC” pe cameră (o cameră lăsată temporar în pace, din automatizări) | Better Thermostat (cererea deschisă cu cele mai multe reacții), RoomMind | de decis | |
 | Estimarea economiei (ore de încălzire evitate, kWh / cost) | Vesta, statisticile RoomMind | de decis | SHC are deja timpul de funcționare pe casă și pe cameră; o estimare ar fi aproximativă. |
 | Reglarea directă a deschiderii ventilului (%) | Versatile Thermostat | nu facem | Reglează aparatul în locul lui: în afara principiului. |

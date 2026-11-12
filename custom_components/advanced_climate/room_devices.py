@@ -134,7 +134,11 @@ class RoomDevices:
             # The demand first, so the TRVs get the right temperature now. Kept
             # open for the heat source the room asks for no heat (nor remembers
             # it, so it does not go on asking once that ends).
-            heat = target.kind != KIND_OFF and self._exercise_until is None and not self.kept_open
+            heat = (
+                target.kind != KIND_OFF
+                and self._exercise_until is None
+                and not self.opened_for_source
+            )
             temperature = self._resolve_temperature(target)
             if self.boost:
                 self._boost_demand = heat and self._boost_wanted(temperature)
@@ -605,7 +609,7 @@ class RoomDevices:
         if actual is None:
             return False
         self._note_relay_state(actual, now)
-        held = self.kept_open
+        held = self.opened_for_source
         # Just kept open for the heat source: the TRV was on only for it. The
         # band starts again from off, without the minimum on time.
         released = self._relay_held and not held

@@ -119,6 +119,27 @@ When several rooms stop together, the one furthest below its target is chosen.
 - Rooms with relays, with a Generic Thermostat or that do not heat from the
   heat source of the house are never kept open.
 
+**Top up while the boiler runs** (per room, off by default; only for a room
+with TRVs or relays that heats from the *Heat source*, not a Generic
+Thermostat, which decides its relay by itself): while the boiler runs for other
+rooms, a room that is a little below its target, inside its hysteresis (0.3 °C
+by default), so it does not ask for heat yet, opens its TRVs or relay and heats
+up to its target. It would ask soon and start the boiler again; this way the
+boiler starts less often.
+
+- The TRVs get the maximum temperature of the room, as when kept open; a relay
+  is turned on. The target of the room stays the one of its rule (the card
+  shows the reason *Topped up while the heat source runs for other rooms*).
+- The room asks for no heat meanwhile: it never starts the boiler, never keeps
+  it running and does not count for *Rooms needed*.
+- It ends at the target, when the boiler stops, or when a stronger rule takes
+  the room (window, manual change, pause, mode Off or Summer, warm outside, the
+  optimal stop). A TRV still heating inside the hysteresis afterwards does not
+  start the boiler again; below it, the room asks for heat as usual.
+- With a circuit, only while that circuit is already open (no pump is started
+  for a few tenths of a degree). Its learning skips that time, as when kept
+  open.
+
 **In a pause** the integration does not control the source, with one exception:
 it starts it for frost protection and stops it again when no longer needed
 (also after a restart during the pause).

@@ -60,7 +60,8 @@ count less (half after a week), so the learning follows the room by itself
 when something changes. A measurement far from what the room usually does (a
 door left open, cooking) counts less. Not used: measurements with a window
 open, with the state of the heat source unknown, during the valve exercise,
-while the TRVs are kept open for the heat source (*Keep the last TRV open*), or
+while the TRVs are kept open for the heat source (*Keep the last TRV open*) or
+the room is topped up while the boiler runs, or
 outside the cold season (mode Off or Summer, outside the season).
 
 **Until it is learned** (4 hours with heating and 4 hours without, usually

@@ -309,6 +309,9 @@ CONF_USE_HOUSE_SOURCE: Final = "use_house_source"
 # A room of the heat source that may start it (on) or only takes heat while
 # other rooms run it (off: a secondary room).
 CONF_STARTS_HOUSE_SOURCE: Final = "starts_house_source"
+# While the heat source runs for other rooms, the room heats up to its target
+# when it is only a little below it (within its hysteresis): it would ask soon.
+CONF_TOP_UP: Final = "top_up"
 # The relays of the heating circuits of the house (a pump or zone valve each),
 # with the heat source; a room on the heat source may take one of them.
 CONF_CIRCUITS: Final = "circuits"

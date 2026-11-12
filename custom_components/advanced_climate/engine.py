@@ -150,6 +150,10 @@ class RoomInputs:
     # while no other room asks (house option *Keep the last TRV open*).
     keep_open: bool = False
     keep_open_temp: float | None = None
+    # While the heat source runs for other rooms, a room a little below its
+    # target heats up to it (room option *Top up while the heat source runs*):
+    # its TRVs get ``keep_open_temp`` like a room kept open.
+    top_up: bool = False
 
 
 @dataclass(slots=True)
@@ -449,7 +453,15 @@ def decide(inputs: RoomInputs) -> Decision:
     # The last room that asked for heat: its TRVs stay open for the heat left in
     # the source. Only over the rules that heat (not a manual change, a window,
     # a pause, warm outside or the frost protection of a day without a profile).
-    if inputs.keep_open and adjustable and _heating(target) and decision.rule != RULE_CUTOFF:
+    # A room topped up while the heat source runs for others: the same, but not
+    # while the optimal stop lets the room cool already.
+    top_up = inputs.top_up and decision.rule != RULE_OPTIMAL_STOP
+    if (
+        (inputs.keep_open or top_up)
+        and adjustable
+        and _heating(target)
+        and decision.rule != RULE_CUTOFF
+    ):
         would = (
             target.temperature
             if target.kind == KIND_TEMPERATURE
@@ -468,9 +480,12 @@ def decide(inputs: RoomInputs) -> Decision:
                 else inputs.max_temp,
             ),
             f"Kept open for the heat source: the last room that asked for heat "
+            f"(would be {target.describe(inputs.unit)})"
+            if inputs.keep_open
+            else f"Topped up while the heat source runs for other rooms "
             f"(would be {target.describe(inputs.unit)})",
             decision.offsets,
-            key="keep_open",
+            key="keep_open" if inputs.keep_open else "top_up",
             params={"preset": target.preset, "temperature": would},
         )
 

@@ -128,7 +128,8 @@ să fie mic față de schimbare, destul de scurt încât să se vadă un ciclu d
 - **starea sursei de căldură** a fost necunoscută;
 - rula **exercițiul robinetelor**;
 - TRV-urile erau **ținute deschise pentru sursa de căldură** (*Ține deschis
-  ultimul TRV*: restul de căldură ar arăta ca o cameră care se răcește încet);
+  ultimul TRV*: restul de căldură ar arăta ca o cameră care se răcește încet)
+  sau camera era **încălzită la ocazie** cât sursa mergea pentru alte camere;
 - casa are temperatură de afară (senzor sau entitate meteo), dar aceasta a fost
   **necunoscută**;
 - casa are entitate meteo, dar norii ei au fost **necunoscuți ziua** (semnalul

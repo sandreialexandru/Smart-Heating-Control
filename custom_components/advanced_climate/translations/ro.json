@@ -490,11 +490,13 @@
           "title": "Sursa de căldură a casei",
           "data": {
             "starts_house_source": "Poate porni sursa de căldură a casei",
-            "circuit": "Circuit"
+            "circuit": "Circuit",
+            "top_up": "Se încălzește la ocazie"
           },
           "data_description": {
             "starts_house_source": "Pornit (implicit): când camera cere căldură, pornește sursa de căldură a casei (centrala), ca orice cameră. Oprit: o cameră secundară. Nu pornește niciodată centrala pentru ea; TRV-urile, vanele sau releele ei se deschid totuși cât e sub țintă, deci primește căldură doar cât centrala merge pentru altă cameră. Potrivit pentru camere care nu trebuie să fie reci, dar nici calde la o oră anume: balcoane închise, camera de oaspeți, hol, debara. Într-o zi blândă centrala poate merge puțin, așa că acea cameră poate rămâne ore întregi sub țintă. Antiînghețul pornește totuși centrala pentru ea, din motive de siguranță. Nu se numără la Camere necesare pentru pornirea sursei.",
-            "circuit": "Circuitul de încălzire al acestei camere (releul pompei sau al ventilului de zonă), dintre cele ale casei. Releul lui pornește înaintea centralei când camera cere căldură și se oprește după ce centrala se oprește, când nicio cameră a lui nu mai are nevoie. Gol: camera nu are circuit."
+            "circuit": "Circuitul de încălzire al acestei camere (releul pompei sau al ventilului de zonă), dintre cele ale casei. Releul lui pornește înaintea centralei când camera cere căldură și se oprește după ce centrala se oprește, când nicio cameră a lui nu mai are nevoie. Gol: camera nu are circuit.",
+            "top_up": "Oprit (implicit). Pornit: cât centrala merge pentru alte camere și camera e puțin sub țintă (în histerezisul ei, implicit 0,3 °C, deci încă nu cere căldură), TRV-urile sau releul ei se deschid și se încălzește până la țintă. Ar cere curând și ar porni din nou centrala: așa centrala pornește mai rar. Nu pornește niciodată centrala și nici nu o ține pornită, nu se numără la Camere necesare și, cu un circuit, se încălzește doar cât acel circuit e deja deschis. Nu în timpul unei modificări manuale, cu fereastra deschisă, în pauză sau la oprirea optimă."
           }
         },
         "control_on_off": {

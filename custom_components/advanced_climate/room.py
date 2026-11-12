@@ -63,6 +63,7 @@ from .const import (
     CONF_SWITCHES,
     CONF_TEMP_AGGREGATION,
     CONF_TEMP_SENSORS,
+    CONF_TOP_UP,
     CONF_TRV_BOOST,
     CONF_USE_HOUSE_SOURCE,
     CONF_VALVE_DAY,
@@ -281,6 +282,10 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self._relay_on: bool | None = None
         # An on / off TRV turned on only to be kept open for the heat source.
         self._relay_held = False
+        # Just topped up (the heat source stopped before the target): a TRV
+        # still heating inside the hysteresis does not ask for heat (it would
+        # start the boiler again at once), until the room leaves the band.
+        self._top_up_settle = False
         # Kept over a restart: the minimum on / off time of the relay holds.
         self._relay_changed: datetime | None = from_iso(stored.get("relay_changed"))
         self._heating_since: datetime | None = None
@@ -935,12 +940,15 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         decision = decide(inputs)
         self._note_decision(decision)
         self._record(decision, now)
+        topped = self.topped_up
         self.decision = decision
+        if topped and not self.topped_up:
+            self._top_up_settle = True
         # Kept open for the heat source: the target of the room stays the one
         # of its rule (the TRVs only are opened further).
         self.target_temperature = (
             decision.params.get("temperature")
-            if self.kept_open
+            if self.opened_for_source
             else self._resolve_temperature(decision.target)
         )
 
@@ -1090,12 +1098,54 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             on_off=self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC,
             keep_open=house.keep_open_room == self.id,
             keep_open_temp=self._keep_open_temp(),
+            top_up=self.id in house.top_up_rooms,
         )
 
     @property
     def kept_open(self) -> bool:
         """The TRVs are kept open for the heat source (the last room that asked for heat)."""
         return self.decision is not None and self.decision.key == "keep_open"
+
+    @property
+    def topped_up(self) -> bool:
+        """Heating up to its target while the heat source runs for other rooms."""
+        return self.decision is not None and self.decision.key == "top_up"
+
+    @property
+    def opened_for_source(self) -> bool:
+        """The TRVs or relay are on for the heat source of the house, not for the
+        room itself (kept open, or topped up): the room asks for no heat."""
+        return self.kept_open or self.topped_up
+
+    @property
+    def can_top_up(self) -> bool:
+        """The room may be topped up: TRVs or a relay on the heat source of the
+        house, with the option on."""
+        return (
+            bool(self.config.get(CONF_TOP_UP))
+            and self.source in (SOURCE_CLIMATE, SOURCE_SWITCH)
+            and self.uses_house_source
+            and bool(self.house.options.get(CONF_BOILER_ENTITY))
+        )
+
+    def _in_top_up_band(self) -> bool:
+        """A little below the target: inside the hysteresis, not asking yet."""
+        current, target = self.current_temp, self.target_temperature
+        if current is None or target is None:
+            return False
+        return target - float(self.config[CONF_HYSTERESIS]) < current < target
+
+    def top_up_wanted(self, active: bool) -> bool:
+        """While the heat source runs: a little below the target (inside the
+        hysteresis, so not asking yet), up to the target. Its circuit, if any,
+        must be open already (a pump is not started for a few tenths)."""
+        if not self.can_top_up or self.kept_open:
+            return False
+        if not active and self.heat_demand:
+            return False
+        if self.circuit is not None and self.house.circuit_on(self.circuit) is not True:
+            return False
+        return self._in_top_up_band()
 
     @property
     def can_keep_open(self) -> bool:
@@ -1146,7 +1196,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
                 or (house.outdoor_configured and outdoor is None)
                 or self.source_unknown
                 or self._exercise_until is not None
-                or self.kept_open
+                or self.opened_for_source
             )
             self.learner.observe(
                 now,
@@ -1299,8 +1349,9 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
     def _update_demand(self) -> None:
         """Whether the room asks for heat (hvac_action, else the hysteresis; relays: on)."""
         demand = False
-        if self._exercise_until is not None or self.kept_open:
-            # The valves are exercised, or kept open for the heat source: no heat is asked for.
+        if self._exercise_until is not None or self.opened_for_source:
+            # The valves are exercised, or kept open or topped up for the heat
+            # source: no heat is asked for.
             pass
         elif self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC:
             demand = bool(self._relay_on)
@@ -1325,6 +1376,11 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
                     demand = True
                 elif current < target + hysteresis and self.heat_demand:
                     demand = True  # between the limits: keep heating
+            if self._top_up_settle:
+                if self._in_top_up_band():
+                    demand = False
+                else:
+                    self._top_up_settle = False
             # Frost protection from the room sensor (the TRVs are boosted for it).
             demand = demand or self._boost_demand
         self.heat_demand = demand

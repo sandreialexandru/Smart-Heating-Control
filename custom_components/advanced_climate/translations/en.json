@@ -107,7 +107,8 @@
       "entity_is_gt_heater": "{entity} is the relay of a Generic Thermostat used by {owner}. It cannot also be controlled here.",
       "room_sensor_is_outdoor": "{entity} is the outdoor sensor of {owner}. Choose a sensor in the room.",
       "boost_sensor_required": "Heating by the room sensors needs a temperature sensor.",
-      "boost_temperature_only": "Heating by the room sensors works only with the Temperature command."
+      "boost_temperature_only": "Heating by the room sensors works only with the Temperature command.",
+      "entity_is_circuit": "{entity} is a circuit relay of {owner}. It cannot also be a device of a room or another circuit."
     },
     "abort": {
       "reconfigure_successful": "Saved."
@@ -385,6 +386,7 @@
           "boiler_min_on": "Heat source minimum on time",
           "boiler_min_off": "Heat source minimum off time",
           "keep_last_open": "Keep the last TRV open",
+          "circuits": "Circuit relays",
           "reference_room": "Reference room",
           "boiler_boost": "Start and stop the source by its temperature",
           "boiler_idle_temp": "Heat source idle temperature"
@@ -394,6 +396,7 @@
           "boiler_min_on": "Minimum run time, against short cycles. 0 (default) = the heat source stops as soon as no room asks for heat. A longer time needs a bypass or a radiator without a TRV.",
           "boiler_min_off": "Minimum pause between starts.",
           "keep_last_open": "When no room asks for heat any more, the TRVs of the last room that asked stay open (they get the maximum temperature of the room, or are left on), so the heat left in the heat source and the pipes has a way through, as with a bypass, and the valve does not move again during the night. Until another room asks for heat, a stronger rule takes the room (window, manual change, pause, mode, warm outside) or the room itself needs heat. The room asks for no heat meanwhile, but it may get warmer than its target, and its learning skips that time. Off by default.",
+          "circuits": "Only with several heating circuits on the boiler (e.g. floor heating and radiators), each with its own pump or zone valve relay. A room on the heat source then picks its circuit (in its settings): when it asks for heat its circuit relay is turned on first, then the boiler; when no room needs it, the boiler stops first, then the circuit relay. The boiler is not started for a room whose circuit is off. Empty (default): no circuits, nothing changes.",
           "reference_room": "Only this room decides when it runs, the others just open or close their valves. Leave empty to use the number of rooms. Secondary rooms are not offered.",
           "boiler_boost": "A thermostat as the heat source (e.g. Hive, Nest, Tado, a Generic Thermostat) starts the boiler only by its own target and sensor. On (default): it stays in its heat mode; to start it gets the maximum temperature of the house, to stop it the idle temperature (by default the frost protection temperature of the house) (it then still protects against frost if Home Assistant stops). Its own target set by hand is taken back. Off: only its mode is switched (heat / off). A thermostat without a target temperature is always switched by its mode. Not the same as 'Heat by the room sensors' of the whole-house zone: that one is for a thermostat that heats the whole home itself.",
           "boiler_idle_temp": "Only with 'Start and stop the source by its temperature': what the thermostat gets while no room asks for heat. Empty (default): the frost protection temperature of the house, so the boiler stays off. A higher value (e.g. 17.5 °C) lets the thermostat keep its own area, by its own sensor, at that temperature: useful when it also heats radiators without TRVs. It must be below the maximum temperature of the house."
@@ -440,7 +443,9 @@
       "boost_sensor_required": "Heating by the room sensors needs a temperature sensor.",
       "boost_temperature_only": "Heating by the room sensors works only with the Temperature command.",
       "invalid_recipient": "“{recipient}” cannot be used: write a notify service (notify.name), optionally followed by email addresses, e.g. notify.me_gmail_com: ana@example.com, ion@example.com.",
-      "idle_not_below_max": "The idle temperature must be below the maximum temperature of the house."
+      "idle_not_below_max": "The idle temperature must be below the maximum temperature of the house.",
+      "entity_is_circuit": "{entity} is a circuit relay of {owner}. It cannot also be a device of a room or another circuit.",
+      "circuit_is_source": "The heat source cannot also be a circuit relay."
     }
   },
   "config_subentries": {
@@ -484,10 +489,12 @@
         "house_source": {
           "title": "Heat source of the house",
           "data": {
-            "starts_house_source": "Can start the house heat source"
+            "starts_house_source": "Can start the house heat source",
+            "circuit": "Circuit"
           },
           "data_description": {
-            "starts_house_source": "On (default): when this room asks for heat it starts the heat source of the house (the boiler), like every room. Off: a secondary room. It never starts the boiler for itself; its TRVs, valves or relays still open when it is below its target, so it takes heat only while the boiler runs for another room. Good for rooms that should not be cold but do not need to be warm at a set time: enclosed balconies, a guest room, a hall, a storage room. On a mild day the boiler may run little, so the room may stay below its target for hours. Frost protection still starts the boiler for it, for safety. It does not count for Rooms needed to start the heat source."
+            "starts_house_source": "On (default): when this room asks for heat it starts the heat source of the house (the boiler), like every room. Off: a secondary room. It never starts the boiler for itself; its TRVs, valves or relays still open when it is below its target, so it takes heat only while the boiler runs for another room. Good for rooms that should not be cold but do not need to be warm at a set time: enclosed balconies, a guest room, a hall, a storage room. On a mild day the boiler may run little, so the room may stay below its target for hours. Frost protection still starts the boiler for it, for safety. It does not count for Rooms needed to start the heat source.",
+            "circuit": "The heating circuit of this room (its pump or zone valve relay), among those of the house. Its relay is turned on before the boiler when the room asks for heat, and off after the boiler stops when no room of it needs it. Empty: the room has no circuit."
           }
         },
         "control_on_off": {
@@ -752,7 +759,8 @@
         "invalid_level_name": "The level name “{name}” cannot be used in the schedule: use letters, digits, spaces, “_” or “-” (no “,” “:” “#”).",
         "level_name_is_key": "The name “{name}” is the name of another level inside the schedule (home, sleep, eco, away, comfort, activity, frost): choose another one.",
         "calibration_sensor_required": "TRV calibration writes the room temperature into the TRV, so it needs a temperature sensor of the room. Add one, or set the calibration to Off.",
-        "calibration_entities_required": "Pick the TRV number entities the calibration writes to (the offset or the external temperature input), or set the calibration to Off on the previous page."
+        "calibration_entities_required": "Pick the TRV number entities the calibration writes to (the offset or the external temperature input), or set the calibration to Off on the previous page.",
+        "entity_is_circuit": "{entity} is a circuit relay of {owner}. It cannot also be a device of a room or another circuit."
       }
     },
     "scenario": {

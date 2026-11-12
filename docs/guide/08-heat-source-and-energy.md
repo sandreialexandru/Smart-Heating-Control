@@ -128,6 +128,37 @@ bedroom asks for heat: the boiler does not start, and the card shows in the
 bedroom *Not heating: waiting for other rooms: 1 of 2 ask for heat*. When the
 living room asks too, the boiler starts.
 
+## Heating circuits
+
+Some houses have several heating circuits on one boiler, each with its own
+pump or zone valve: floor heating and radiators, the ground floor and the
+upper floor. The boiler must not run while every circuit is closed.
+
+1. In the options of the house, at the heat source, pick the **Circuit
+   relays** (`switch` or `input_boolean`), one per circuit. The field is shown
+   only with a *Heat source*.
+2. In each room on the boiler, pick its **Circuit** (the step after its
+   devices; shown only when the house has circuit relays). A room without one
+   works as before.
+
+What the integration does:
+
+- When a room asks for heat, the relay of its circuit is turned on **first**,
+  then the boiler.
+- When no room of a circuit needs it any more, the boiler stops **first**
+  (after its minimum on time, if set), then the relay is turned off. While
+  another circuit keeps the boiler running, a circuit no longer needed is
+  closed at once.
+- The boiler is not started for a room whose circuit is off (unavailable, or
+  turned off by hand): the card says *its circuit (…) is off*.
+- A secondary room does not open its circuit; it heats while its circuit is
+  open for another room.
+- Frost protection opens the circuit and starts the boiler.
+- *Keep the last TRV open* keeps the circuit of that room open too.
+- No delays: the relay does not wait for a pump to run up or a valve to
+  open. A zone valve with an end switch that starts the boiler by itself
+  needs no circuit here.
+
 ## When a room "heats"
 
 For the learning and the heating time, a room **heats only while its source
@@ -177,6 +208,7 @@ attribute:
 | the heat source waits for its minimum on / off time | boiler protection |
 | waiting for other rooms: X of Y ask for heat | *Rooms needed* |
 | a secondary room: it takes heat when another room starts the heat source | *Can start the house heat source* off |
+| its circuit (…) is off: the pump or valve does not run | the circuit relay of the room is off or unavailable, see [Heating circuits](#heating-circuits) |
 | waiting for the reference room … | *Reference room* |
 | the heat source is off / its state is unknown | the boiler does not run or nobody knows |
 | the thermostat is off | the room thermostat is `off` |

@@ -50,6 +50,7 @@ from .const import (
     CONF_BOILER_MIN_ON,
     CONF_BOILER_MIN_ROOMS,
     CONF_CALENDAR,
+    CONF_CIRCUITS,
     CONF_COMP_BELOW,
     CONF_COMP_ENABLED,
     CONF_COMP_OFFSET,
@@ -355,7 +356,9 @@ class House:
         if opts.get(CONF_BOILER_ENTITY):
             self._unsubs.append(
                 async_track_state_change_event(
-                    self.hass, [opts[CONF_BOILER_ENTITY]], self._async_boiler_changed
+                    self.hass,
+                    [opts[CONF_BOILER_ENTITY], *self.circuits],
+                    self._async_boiler_changed,
                 )
             )
 
@@ -374,7 +377,7 @@ class House:
 
     @callback
     def _async_boiler_changed(self, event: Event[EventStateChangedData]) -> None:
-        """The heat source started or stopped (by us or not): evaluate again.
+        """The heat source or a circuit started or stopped (by us or not): evaluate again.
 
         The learning and the heating time follow the real state of the heat
         source, so they start and stop when it changes.
@@ -1286,12 +1289,41 @@ class House:
         # Frost protection of any room starts the heat source on its own (no
         # rooms needed, no reference room, also while paused).
         frost = any(room.frost_demand for room in sourced.values())
-        demand = demand or frost
         # The house asks for heat also when a room with its own heat does; only
-        # ``demand`` (the rooms of the heat source) switches the heat source.
-        self.heat_demand = demand or any(
-            room.heat_demand for room in self.rooms.values() if not room.uses_house_source
+        # the rooms of the heat source switch the heat source.
+        self.heat_demand = (
+            demand
+            or frost
+            or any(room.heat_demand for room in self.rooms.values() if not room.uses_house_source)
         )
+        # Circuits: the relay of a circuit opens before the heat source starts for
+        # a room of it, and closes after the heat source stops. A room of a closed
+        # circuit does not start the heat source (its water would have nowhere
+        # to go).
+        circuits = self.circuits
+        if circuits:
+            wanted = {
+                room.circuit
+                for room in sourced.values()
+                if room.circuit
+                and (
+                    (room.heat_demand and room.starts_house_source)
+                    or room.frost_demand
+                    or room.id == self.keep_open_room
+                )
+            }
+            await self._async_switch_circuits(sorted(wanted), True)
+
+            def open_path(room: Room) -> bool:
+                return room.circuit is None or self.circuit_on(room.circuit) is True
+
+            if reference:
+                demand = sourced[reference].heat_demand and open_path(sourced[reference])
+            else:
+                count = sum(1 for room in starters.values() if room.heat_demand and open_path(room))
+                demand = count >= needed if starters else False
+            frost = any(room.frost_demand and open_path(room) for room in sourced.values())
+        demand = demand or frost
         # Heating time of the house: while the heat source runs (its real state),
         # without one while at least one room heats.
         configured, source_on = self.heat_source_state()
@@ -1305,6 +1337,48 @@ class House:
 
         self.source_waiting = None
         self._source_wait_until = None
+        await self._async_switch_source(now, demand, frost)
+        if circuits:
+            # Closed only once the heat source is off, or while another one stays open.
+            _, running = self.heat_source_state()
+            still = [c for c in circuits if c in wanted and self.circuit_on(c)]
+            if running is False or still:
+                await self._async_switch_circuits([c for c in circuits if c not in wanted], False)
+
+    @property
+    def circuits(self) -> list[str]:
+        """The relays of the heating circuits (only with a heat source)."""
+        if not self.options.get(CONF_BOILER_ENTITY):
+            return []
+        return as_list(self.options.get(CONF_CIRCUITS))
+
+    def circuit_on(self, entity_id: str) -> bool | None:
+        """Whether a circuit relay is on (None while unavailable or unknown)."""
+        state = self.hass.states.get(entity_id)
+        if not valid(state):
+            return None
+        return state.state == STATE_ON  # type: ignore[union-attr]
+
+    async def _async_switch_circuits(self, entities: list[str], on: bool) -> None:
+        """Turn circuit relays on or off (those not already so)."""
+        for entity_id in entities:
+            state = self.circuit_on(entity_id)
+            if state is None or state == on:
+                continue
+            try:
+                await self.hass.services.async_call(
+                    entity_id.split(".", 1)[0],
+                    SERVICE_TURN_ON if on else SERVICE_TURN_OFF,
+                    {"entity_id": entity_id},
+                    blocking=True,
+                    context=self.new_context(),
+                )
+            except (HomeAssistantError, ValueError) as err:
+                _LOGGER.warning("Could not switch the circuit %s: %s", entity_id, err)
+
+    async def _async_switch_source(self, now: datetime, demand: bool, frost: bool) -> None:
+        """Start or stop the heat source, with its minimum on / off times."""
+        opts = self.options
         boiler = opts.get(CONF_BOILER_ENTITY)
         if not boiler:
             return

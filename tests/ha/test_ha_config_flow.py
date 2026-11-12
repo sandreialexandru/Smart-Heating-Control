@@ -1259,3 +1259,64 @@ async def test_trv_calibration_off_needs_nothing(hass: HomeAssistant) -> None:
         result["flow_id"], {"temperature_sensors": [], "calibration_mode": "off"}
     )
     assert result["step_id"] == "windows"
+
+
+async def test_circuits_of_the_house_and_the_circuit_of_a_room(hass: HomeAssistant) -> None:
+    """Circuit relays are set with the heat source; a room of it picks one of them."""
+    entry = _house_with_rooms(
+        hass, options={"boiler_entity": "switch.boiler"}, rooms=[("Bedroom", RELAY_ROOM)]
+    )
+    options = hass.config_entries.options
+    result = await options.async_init(entry.entry_id)
+    result = await options.async_configure(result["flow_id"], {"next_step_id": "boiler"})
+    result = await options.async_configure(result["flow_id"], {"boiler_entity": "switch.boiler"})
+    assert "circuits" in _keys(result)
+    # Not the heat source itself, nor the device of a room.
+    result = await options.async_configure(result["flow_id"], {"circuits": ["switch.boiler"]})
+    assert result["errors"] == {"circuits": "circuit_is_source"}
+    result = await options.async_configure(
+        result["flow_id"], {"circuits": [RELAY_ROOM["switches"][0]]}
+    )
+    assert result["errors"] == {"circuits": "entity_in_room"}
+    result = await options.async_configure(
+        result["flow_id"], {"circuits": ["switch.floor", "switch.radiators"]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    assert entry.options["circuits"] == ["switch.floor", "switch.radiators"]
+
+    # A new room of the heat source: its circuit, among those of the house.
+    flow = hass.config_entries.subentries
+    result = await flow.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
+    result = await flow.async_configure(result["flow_id"], {"name": "Bath", "source": "switch"})
+    result = await flow.async_configure(
+        result["flow_id"],
+        {"switches": ["input_boolean.bath_heater"], "use_house_source": True},
+    )
+    assert result["step_id"] == "house_source"
+    assert _keys(result) == {"starts_house_source", "circuit"}
+    field = next(k for k in result["data_schema"].schema if str(k) == "circuit")
+    values = [o["value"] for o in result["data_schema"].schema[field].config["options"]]
+    assert values == ["switch.floor", "switch.radiators"]
+    # A circuit relay is not a device of a room.
+    result2 = await flow.async_init(
+        (entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER}
+    )
+    result2 = await flow.async_configure(result2["flow_id"], {"name": "Hall", "source": "switch"})
+    result2 = await flow.async_configure(
+        result2["flow_id"], {"switches": ["switch.floor"], "use_house_source": False}
+    )
+    assert result2["errors"] == {"switches": "entity_is_circuit"}
+
+
+async def test_no_circuit_field_without_circuits(hass: HomeAssistant) -> None:
+    """Without circuits in the house, the room is asked only whether it may start the source."""
+    entry = _house_with_rooms(hass, options={"boiler_entity": "switch.boiler"})
+    flow = hass.config_entries.subentries
+    result = await flow.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
+    result = await flow.async_configure(result["flow_id"], {"name": "Bath", "source": "switch"})
+    result = await flow.async_configure(
+        result["flow_id"],
+        {"switches": ["input_boolean.bath_heater"], "use_house_source": True},
+    )
+    assert _keys(result) == {"starts_house_source"}

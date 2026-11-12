@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.5rc2";
+const CARD_VERSION = "2.6.5rc3";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -295,6 +295,7 @@ const TEXT = {
     nh_rooms_needed: "waiting for other rooms: {count} of {needed} ask for heat",
     nh_secondary: "a secondary room: it takes heat when another room starts the heat source",
     nh_reference_room: "waiting for the reference room {room}",
+    nh_circuit_closed: "its circuit ({entity}) is off: the pump or valve does not run",
     nh_source_off: "the heat source is off",
     nh_source_unknown: "the state of the heat source is unknown",
     nh_device_off: "the thermostat is off",
@@ -612,6 +613,7 @@ const TEXT = {
     nh_rooms_needed: "așteaptă alte camere: {count} din {needed} cer căldură",
     nh_secondary: "cameră secundară: primește căldură când altă cameră pornește sursa de căldură",
     nh_reference_room: "așteaptă camera de referință {room}",
+    nh_circuit_closed: "circuitul ei ({entity}) e oprit: pompa sau ventilul nu merge",
     nh_source_off: "sursa de căldură e oprită",
     nh_source_unknown: "starea sursei de căldură e necunoscută",
     nh_device_off: "termostatul e oprit",
@@ -2269,7 +2271,8 @@ class SmartHeatingControlCard extends HTMLElement {
       .replace("{value}", r.value ?? "")
       .replace("{count}", r.count ?? "")
       .replace("{needed}", r.needed ?? "")
-      .replace("{room}", r.room ?? "");
+      .replace("{room}", r.room ?? "")
+      .replace("{entity}", r.entity ? this._hass?.states?.[r.entity]?.attributes?.friendly_name || r.entity : "");
     return this._msg({ kind: "info noheat", icon: "information-outline", lead: `${this._t("no_heat")}:`, text });
   }
 

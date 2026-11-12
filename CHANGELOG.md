@@ -18,6 +18,16 @@ GitHub releases.
   boiler for it. A secondary room cannot be the *Reference room* and is never
   the cold room of the *Alert when a room stays colder than*. The card says *a
   secondary room: it takes heat when another room starts the heat source*.
+- 🔀 **Heating circuits** (#10): *Circuit relays* (house option, at the heat
+  source; empty by default) and a *Circuit* per room on the boiler, for houses
+  with several circuits on one boiler, each with its own pump or zone valve
+  relay (floor heating and radiators, two floors). The relay of a room's
+  circuit is turned on before the boiler starts and off after the boiler
+  stops; while another circuit keeps the boiler running, a circuit no longer
+  needed closes at once. The boiler is not started for a room whose circuit is
+  off or unavailable (the card says *its circuit (…) is off*). A secondary room
+  does not open its circuit; frost protection does, and *Keep the last TRV
+  open* keeps it open.
 
 ## 2.6.4 – 2026-11-11
 

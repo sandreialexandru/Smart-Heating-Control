@@ -31,6 +31,7 @@ from .const import (
     COMMAND_TEMPERATURE,
     CONF_AREA,
     CONF_BOILER_ENTITY,
+    CONF_CIRCUIT,
     CONF_CLIMATES,
     CONF_COMMAND_MODE,
     CONF_FROST_TEMP,
@@ -1201,6 +1202,14 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         return bool(self.config.get(CONF_USE_HOUSE_SOURCE, True))
 
     @property
+    def circuit(self) -> str | None:
+        """The relay of the heating circuit of the room (a circuit of the house), if any."""
+        circuit = self.config.get(CONF_CIRCUIT)
+        if not circuit or not self.uses_house_source:
+            return None
+        return circuit if circuit in self.house.circuits else None
+
+    @property
     def starts_house_source(self) -> bool:
         """A room of the heat source that may start it (off: a secondary room).
 
@@ -1326,6 +1335,9 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         configured = configured and self.uses_house_source
         self.source_unknown = configured and source_on is None
         heating = demand and (not configured or bool(source_on))
+        # On a circuit: only while its relay is on too (the pump or valve).
+        if heating and self.circuit is not None:
+            heating = self.house.circuit_on(self.circuit) is True
         now = dt_util.utcnow()
         if heating and self._heating_since is None:
             self._heating_since = now

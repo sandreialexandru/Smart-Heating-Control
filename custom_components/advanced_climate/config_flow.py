@@ -50,6 +50,8 @@ from .const import (
     CONF_CALENDAR,
     CONF_CALIBRATION_ENTITIES,
     CONF_CALIBRATION_MODE,
+    CONF_CIRCUIT,
+    CONF_CIRCUITS,
     CONF_CLIMATES,
     CONF_COMMAND_MODE,
     CONF_COMP_BELOW,
@@ -563,6 +565,8 @@ def _boiler_details(v: dict[str, Any], rooms: list[selector.SelectOptionDict]) -
         fields[_req(CONF_BOILER_MIN_ON, v, d)] = _number(0, 60, 1, "min")
         fields[_req(CONF_BOILER_MIN_OFF, v, d)] = _number(0, 60, 1, "min")
         fields[_req(CONF_KEEP_LAST_OPEN, v, d)] = _bool()
+        # The relays of the heating circuits (pumps or zone valves), if any.
+        fields[_opt(CONF_CIRCUITS, v)] = _entity(["switch", "input_boolean"], multiple=True)
         if str(v[CONF_BOILER_ENTITY]).startswith("climate."):
             # A thermostat as the heat source: boosted like the TRVs.
             fields[_req(CONF_BOILER_BOOST, v, d)] = selector.BooleanSelector()
@@ -721,16 +725,19 @@ def _entity_owners(hass: Any, skip: Skip = (None, None)) -> dict[str, tuple[str,
     """Who controls an entity already, in every house: entity -> (kind, where).
 
     Kinds: ``room`` (a thermostat or relay of a room), ``source`` (the heat
-    source of a house), ``gt_heater`` (the relay of a Generic Thermostat used by
-    a room). ``skip`` is (entry id, subentry id or "boiler") of what is being
+    source of a house), ``circuit`` (the relay of a heating circuit of a house),
+    ``gt_heater`` (the relay of a Generic Thermostat used by a room). ``skip`` is (entry id, subentry id or "boiler") of what is being
     edited, so it does not count against itself.
     """
     heaters = _gt_heaters(hass)
     owners: dict[str, tuple[str, str]] = {}
     for entry in hass.config_entries.async_entries(DOMAIN):
-        boiler = {**entry.data, **entry.options}.get(CONF_BOILER_ENTITY)
+        opts = {**entry.data, **entry.options}
+        boiler = opts.get(CONF_BOILER_ENTITY)
         if boiler and skip != (entry.entry_id, "boiler"):
             owners[boiler] = ("source", entry.title)
+            for circuit in as_list(opts.get(CONF_CIRCUITS)):
+                owners[circuit] = ("circuit", entry.title)
         for sub in entry.subentries.values():
             if skip == (entry.entry_id, sub.subentry_id):
                 continue
@@ -755,9 +762,11 @@ def _in_use_error(
         if entity_id in owners:
             kind, where = owners[entity_id]
             placeholders.update({"entity": entity_id, "owner": where})
-            return {"room": "entity_in_room", "source": "entity_is_source"}.get(
-                kind, "entity_is_gt_heater"
-            )
+            return {
+                "room": "entity_in_room",
+                "source": "entity_is_source",
+                "circuit": "entity_is_circuit",
+            }.get(kind, "entity_is_gt_heater")
     return None
 
 
@@ -1264,6 +1273,7 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
         schema: vol.Schema,
         user_input: dict[str, Any] | None,
         errors: dict[str, str] | None = None,
+        placeholders: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
         """Second form with the values that apply; skipped when there are none."""
         if not schema.schema:
@@ -1272,7 +1282,14 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
             return self.async_create_entry(
                 data=_merge(self._pending, schema, _kept(user_input, self._unit()))
             )
-        return self.async_show_form(step_id=step_id, data_schema=schema, errors=errors or {})
+        if user_input is not None:
+            schema = self.add_suggested_values_to_schema(schema, user_input)
+        return self.async_show_form(
+            step_id=step_id,
+            data_schema=schema,
+            errors=errors or {},
+            description_placeholders=placeholders,
+        )
 
     @property
     def _pending_values(self) -> dict[str, Any]:
@@ -1405,13 +1422,21 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
         """Settings of the chosen boiler."""
         schema = _boiler_details(self._pending_values, self._room_options())
         errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {"entity": "", "owner": ""}
+        if user_input is not None and (circuits := as_list(user_input.get(CONF_CIRCUITS))):
+            boiler = self._pending_values.get(CONF_BOILER_ENTITY)
+            skip = (self.config_entry.entry_id, "boiler")
+            if boiler in circuits:
+                errors[CONF_CIRCUITS] = "circuit_is_source"
+            elif error := _in_use_error(self.hass, circuits, skip, placeholders):
+                errors[CONF_CIRCUITS] = error
         if user_input is not None and user_input.get(CONF_BOILER_IDLE_TEMP) is not None:
             idle = _kept(user_input, self._unit())[CONF_BOILER_IDLE_TEMP]
             maximum = float({**HOUSE_DEFAULTS, **self._pending}[CONF_MAX_TEMP])
             if float(idle) >= maximum:
                 # It would never stop: idle at or above what starts it.
                 errors[CONF_BOILER_IDLE_TEMP] = "idle_not_below_max"
-        return self._second("boiler_details", schema, user_input, errors)
+        return self._second("boiler_details", schema, user_input, errors, placeholders)
 
     async def async_step_behavior(
         self, user_input: dict[str, Any] | None = None
@@ -1580,18 +1605,45 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """A room of the heat source: may it start the heat source (off: a secondary room)."""
-        schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_STARTS_HOUSE_SOURCE,
-                    default=bool(self._data.get(CONF_STARTS_HOUSE_SOURCE, True)),
-                ): _bool()
-            }
-        )
+        fields: dict[Any, Any] = {
+            vol.Required(
+                CONF_STARTS_HOUSE_SOURCE,
+                default=bool(self._data.get(CONF_STARTS_HOUSE_SOURCE, True)),
+            ): _bool()
+        }
+        # The circuit of the room, among those of the house (only when it has some).
+        opts = self._get_entry().options
+        circuits = as_list(opts.get(CONF_CIRCUITS)) if opts.get(CONF_BOILER_ENTITY) else []
+        if circuits:
+            options = [
+                selector.SelectOptionDict(
+                    value=c,
+                    label=str(
+                        (st := self.hass.states.get(c)) and st.attributes.get("friendly_name") or c
+                    ),
+                )
+                for c in circuits
+            ]
+            current = self._data.get(CONF_CIRCUIT)
+            fields[
+                vol.Optional(
+                    CONF_CIRCUIT,
+                    description={"suggested_value": current if current in circuits else None},
+                )
+            ] = selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=options, mode=selector.SelectSelectorMode.DROPDOWN
+                )
+            )
+        schema = vol.Schema(fields)
         if user_input is not None:
             self._data[CONF_STARTS_HOUSE_SOURCE] = bool(
                 user_input.get(CONF_STARTS_HOUSE_SOURCE, True)
             )
+            if user_input.get(CONF_CIRCUIT):
+                self._data[CONF_CIRCUIT] = user_input[CONF_CIRCUIT]
+            else:
+                self._data.pop(CONF_CIRCUIT, None)
             return await self._after_devices()
         return self.async_show_form(step_id="house_source", data_schema=schema)
 

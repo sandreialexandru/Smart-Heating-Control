@@ -76,6 +76,9 @@ class RoomStatus:
             if not self.starts_house_source and not reference:
                 # A secondary room: it waits for a room that starts the heat source.
                 return {"code": "secondary"}
+            if self.circuit is not None and house.circuit_on(self.circuit) is not True:
+                # The relay of its circuit (pump or valve) is off or unavailable.
+                return {"code": "circuit_closed", "entity": self.circuit}
             if house.source_waiting:
                 return {"code": f"source_{house.source_waiting}"}
             if reference and reference != self.id and not house.rooms[reference].heat_demand:

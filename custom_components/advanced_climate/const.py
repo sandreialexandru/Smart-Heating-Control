@@ -309,6 +309,10 @@ CONF_USE_HOUSE_SOURCE: Final = "use_house_source"
 # A room of the heat source that may start it (on) or only takes heat while
 # other rooms run it (off: a secondary room).
 CONF_STARTS_HOUSE_SOURCE: Final = "starts_house_source"
+# The relays of the heating circuits of the house (a pump or zone valve each),
+# with the heat source; a room on the heat source may take one of them.
+CONF_CIRCUITS: Final = "circuits"
+CONF_CIRCUIT: Final = "circuit"
 CONF_TRV_BOOST_TEMP: Final = "trv_boost_temperature"  # °C; empty = maximum of the house
 CONF_STOP_TOLERANCE: Final = "stop_tolerance"  # comfort kept by optimal stop (other thermostats)
 CONF_MIN_ON: Final = "min_on_minutes"

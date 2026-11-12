@@ -129,6 +129,37 @@ repornire în timpul pauzei).
 dormitor *Nu încălzește: așteaptă alte camere: 1 din 2 cer căldură*. Când cere
 și sufrageria, centrala pornește.
 
+## Circuite de încălzire
+
+Unele case au mai multe circuite de încălzire pe aceeași centrală, fiecare cu
+pompa sau ventilul lui de zonă: încălzire în pardoseală și calorifere, parterul
+și etajul. Centrala nu trebuie să meargă cât toate circuitele sunt închise.
+
+1. În opțiunile casei, la sursa de căldură, alege **Releele circuitelor**
+   (`switch` sau `input_boolean`), câte unul pe circuit. Câmpul apare doar cu o
+   *Sursă de căldură*.
+2. La fiecare cameră pe centrală, alege-i **Circuitul** (pasul de după
+   dispozitive; apare doar când casa are relee de circuit). O cameră fără
+   circuit merge ca înainte.
+
+Ce face integrarea:
+
+- Când o cameră cere căldură, releul circuitului ei e pornit **întâi**, apoi
+  centrala.
+- Când nicio cameră a unui circuit nu mai are nevoie de el, centrala se oprește
+  **întâi** (după timpul ei minim pornit, dacă e setat), apoi releul. Cât altă
+  cameră ține centrala pornită, un circuit care nu mai e necesar e închis
+  imediat.
+- Centrala nu e pornită pentru o cameră al cărei circuit e oprit (indisponibil
+  sau oprit de mână): cardul spune *circuitul ei (…) e oprit*.
+- O cameră secundară nu își deschide circuitul; încălzește cât circuitul ei e
+  deschis pentru altă cameră.
+- Antiînghețul deschide circuitul și pornește centrala.
+- *Ține deschis ultimul TRV* ține deschis și circuitul acelei camere.
+- Fără întârzieri: releul nu așteaptă pornirea pompei sau deschiderea
+  ventilului. Un ventil de zonă cu contact de capăt care pornește singur
+  centrala nu are nevoie de circuit aici.
+
 ## Când „încălzește” o cameră
 
 Pentru învățare și pentru timpul de încălzire, o cameră **încălzește doar cât
@@ -177,6 +208,7 @@ Cardul spune de ce, iar senzorul *Decizie* are atributul `no_heat_reason`:
 | sursa de căldură așteaptă timpul minim pornit / oprit | protecția centralei |
 | așteaptă alte camere: X din Y cer căldură | *Camere necesare* |
 | cameră secundară: primește căldură când altă cameră pornește sursa de căldură | *Poate porni sursa de căldură a casei* oprit |
+| circuitul ei (…) e oprit: pompa sau ventilul nu merge | releul circuitului camerei e oprit sau indisponibil, vezi [Circuite de încălzire](#circuite-de-încălzire) |
 | așteaptă camera de referință … | *Cameră de referință* |
 | sursa de căldură e oprită / starea ei e necunoscută | centrala nu merge sau nu se știe |
 | termostatul e oprit | termostatul camerei e pe `off` |

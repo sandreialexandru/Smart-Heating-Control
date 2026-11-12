@@ -276,6 +276,7 @@ moment on the server.
 
 ## Language
 
-The card is in English and Romanian, following the Home Assistant language. The
+The card is in English, Romanian, German, Dutch, French and Italian, following
+the Home Assistant language (another language shows English). The
 decision reason and the adjustment names are translated (the *Decision* sensor
 has them as `reason_key` and `reason_params`; `reason` stays the English text).

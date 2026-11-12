@@ -2,7 +2,7 @@
 
 # Smart Heating Control
 
-[English](README.md) | **Română**
+[English](README.md) | **Română** | [Deutsch](README.de.md) | [Nederlands](README.nl.md) | [Français](README.fr.md) | [Italiano](README.it.md)
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/)
 [![Validate](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml/badge.svg)](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml)
@@ -10,7 +10,7 @@
 
 **Îți place Smart Heating Control? Susține dezvoltarea lui:**
 
-[![Support on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/sandreialexandru)
+<a href="https://ko-fi.com/sandreialexandru"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support on Ko-fi" height="44"></a>
 
 **Încălzire pentru Home Assistant care știe cine e acasă, învață cum se
 încălzește fiecare cameră și spune de ce face ce face.**
@@ -19,9 +19,9 @@ Cald la venirea acasă, mai rece când nu e nimeni, fără căldură irosită pe
 fereastră deschisă și fără reguli de scris. Funcționează cu ce există deja:
 Generic Thermostat, TRV-uri, termostate inteligente sau un simplu releu.
 
-https://github.com/user-attachments/assets/31181198-e0fa-4510-bbfa-af9f790a19c7
+<p align="center"><a href="https://github.com/user-attachments/assets/31181198-e0fa-4510-bbfa-af9f790a19c7"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-demo.gif" alt="Cardul în folosire · persoane și date inventate" width="440"></a></p>
 
-<p align="center"><sub>Cardul în folosire · persoane și date inventate</sub></p>
+<p align="center"><sub>Cardul în folosire · persoane și date inventate · <a href="https://github.com/user-attachments/assets/31181198-e0fa-4510-bbfa-af9f790a19c7">video-ul la calitate mai bună</a></sub></p>
 
 ## Ce face
 
@@ -68,8 +68,8 @@ cu ultimele 100 de decizii.
 
 **Se potrivește casei.** Generic Thermostat (se alege doar presetul;
 termostatul funcționează la fel ca înainte), TRV-uri cu calibrare după un
-senzor din cameră, alte termostate, relee. °C sau °F pe casă. Română și
-engleză.
+senzor din cameră, alte termostate, relee. °C sau °F pe casă. În română,
+engleză, germană, olandeză, franceză și italiană.
 
 ## Cardul
 
@@ -143,7 +143,9 @@ Fișierul se descarcă și se deschide într-un browser.
 
 ## Traduceri
 
-Română și engleză: integrarea, cardul și documentația.
+Integrarea și cardul: română, engleză, germană, olandeză, franceză și italiană. Documentația: română și engleză.
+
+Textele în germană, olandeză, franceză și italiană sunt noi: dacă vorbești una dintre ele, ajută la verificarea lor în [acest issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues/12).
 
 ## Susținere
 

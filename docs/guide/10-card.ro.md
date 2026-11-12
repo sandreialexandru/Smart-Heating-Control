@@ -275,6 +275,7 @@ moment pe server.
 
 ## Limba
 
-Cardul e în engleză și română, după limba Home Assistant. Motivul deciziei și
+Cardul e în engleză, română, germană, olandeză, franceză și italiană, după
+limba Home Assistant (o altă limbă arată engleza). Motivul deciziei și
 numele ajustărilor sunt traduse (senzorul *Decizie* le are ca `reason_key` și
 `reason_params`; `reason` rămâne textul în engleză).

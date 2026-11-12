@@ -1,0 +1,1211 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Smart Heating Control",
+        "description": "Lege das Haus an. Räume fügst du danach mit „Raum hinzufügen“ hinzu; alle weiteren Einstellungen findest du in den Optionen der Integration.",
+        "data": {
+          "temperature_unit": "Temperatureinheit",
+          "name": "Name",
+          "persons": "Personen",
+          "nearby_zones": "Zonen in der Nähe",
+          "home_rule": "Das Haus ist „Zuhause“, wenn"
+        },
+        "data_description": {
+          "temperature_unit": "Alle Temperaturen dieses Hauses werden in dieser Einheit eingegeben und angezeigt. Du kannst sie später über „Neu konfigurieren“ ändern; die Werte werden umgerechnet.",
+          "name": "Wird an den Geräten und in der Karte angezeigt.",
+          "persons": "Personen, deren Standort über Zuhause / in der Nähe / weit weg entscheidet. Nur leer lassen, wenn die Anwesenheit keine Rolle spielen soll: Das Haus ist dann immer „Zuhause“ und nur der Zeitplan entscheidet.",
+          "nearby_zones": "Zonen, in denen das Haus als „in der Nähe“ gilt (Eco), z. B. deine Stadt. Außerhalb von Zuhause und aller Zonen = „weit weg“ (Abwesend). Leer lassen, wenn du nur Zuhause / weit weg brauchst.",
+          "home_rule": "„Mindestens eine Person“ passt für die meisten Haushalte. „Alle“ senkt die Heizung, sobald eine Person geht."
+        }
+      },
+      "reconfigure": {
+        "title": "Temperatureinheit",
+        "description": "Alle Temperaturen dieses Hauses (Einstellungen, Stufen, Karte) werden in dieser Einheit angezeigt. Die Werte werden umgerechnet, du musst nichts neu eingeben.",
+        "data": {
+          "temperature_unit": "Temperatureinheit"
+        },
+        "data_description": {
+          "temperature_unit": "Alle Temperaturen dieses Hauses werden in dieser Einheit eingegeben und angezeigt. Du kannst sie später über „Neu konfigurieren“ ändern; die Werte werden umgerechnet."
+        }
+      },
+      "heating": {
+        "title": "Heizung des ganzen Hauses",
+        "data": {
+          "source": "Beheizt durch"
+        },
+        "description": "Das eine Thermostat (oder Relais), das die ganze Wohnung heizt. Es wird zur Zone {zone} und funktioniert mit allen Optionen des Hauses. Heizen die Räume getrennt (Heizkörperthermostate, Heizgeräte, Klimaanlagen), wähle „Jeder Raum heizt separat“ und füge jeden Raum mit „Raum hinzufügen“ hinzu.",
+        "data_description": {
+          "source": "Was das ganze Haus heizt: ein Generic Thermostat, ein anderes Thermostat (Nest, Tado, Hive…) oder ein Relais, das den Kessel startet. „Jeder Raum heizt separat“, wenn kein einzelnes Gerät die ganze Wohnung heizt: Heizkörperthermostate oder Ventile an den Heizkörpern, Elektroheizungen, Klimaanlagen, Fußbodenheizungszonen. Jeder Raum wird dann mit seinem eigenen Gerät hinzugefügt, und bei Heizkörperthermostaten wählst du das Kesselrelais (oder das Thermostat, das den Kessel startet) als Wärmequelle."
+        }
+      },
+      "heating_devices": {
+        "title": "Geräte",
+        "data": {
+          "climates": "Thermostate",
+          "switches": "Schalter (Relais)",
+          "command_mode": "Befehl",
+          "trv_boost": "Nach den Raumsensoren heizen"
+        },
+        "data_description": {
+          "climates": "Das Thermostat, das den Kessel steuert, z. B. die Generic-Thermostat-Entität (climate.climate).",
+          "switches": "Nur wenn ein Relais das Haus direkt heizt, ohne Thermostat.",
+          "command_mode": "Nur für andere Thermostate als Generic Thermostat. Den Unterschied findest du in den Raumeinstellungen.",
+          "trv_boost": "Solange das Haus Wärme anfordert (nach seinen Temperatursensoren, mit der Hysterese), bekommen das Thermostat oder die Heizkörperthermostate die Temperatur beim Heizen (standardmäßig die Höchsttemperatur des Hauses) und heizen weiter, bis das Haus warm ist; sonst bekommen sie die Zieltemperatur. Nützlich, wenn das Gerät an der falschen Stelle misst (ein Thermostat im Flur, ein Heizkörperthermostat direkt am Heizkörper). Braucht einen Temperatursensor. Nur mit dem Befehl Temperatur. Nicht dasselbe wie „Quelle über ihre Temperatur starten und stoppen“: Das ist für ein Thermostat gedacht, das nur den Kessel für Räume mit eigenen Heizkörperthermostaten startet (dann „Jeder Raum heizt separat“ wählen und das Thermostat als Wärmequelle auswählen)."
+        }
+      },
+      "heating_on_off": {
+        "title": "Ein / Aus-Steuerung",
+        "data": {
+          "temperature_sensors": "Temperatursensoren",
+          "hysteresis": "Hysterese",
+          "min_on_minutes": "Mindestlaufzeit",
+          "min_off_minutes": "Mindestpause",
+          "inertia_control": "Gelernte Trägheit nutzen"
+        },
+        "description": "Die Integration schaltet die Heizung rund um die Zieltemperatur ein und aus.",
+        "data_description": {
+          "temperature_sensors": "Sensoren im Raum, die statt des Thermostatsensors genutzt werden (genauer, wenn das Thermostat neben einer Wärmequelle sitzt). Leer lassen, um den Thermostatsensor zu nutzen; für Relais nötig, da sie keinen Sensor haben.",
+          "hysteresis": "Die Heizung startet unter Zieltemperatur minus diesem Wert und stoppt über Zieltemperatur plus diesem Wert.",
+          "min_on_minutes": "Wie lange mindestens geheizt wird. 0 für Heizgeräte, denen kurze Takte nichts ausmachen.",
+          "min_off_minutes": "Wie lange mindestens zwischen zwei Starts pausiert wird.",
+          "inertia_control": "Sobald der Raum gelernt hat, wie träge seine Heizung reagiert, stoppt sie etwas früher, wenn die bereits abgegebene Wärme den Raum ohnehin an die Obergrenze der Hysterese bringt, und startet etwas früher, wenn der Raum sonst unter die Untergrenze fiele, bevor die Wärme ankommt. Die Grenzen selbst bleiben. Am nützlichsten bei trägen Heizungen (Gussheizkörper, Fußbodenheizung). Aus: Nur die Hysterese entscheidet."
+        }
+      },
+      "heating_thermostat": {
+        "title": "Thermostat",
+        "data": {
+          "hysteresis": "Hysterese"
+        },
+        "description": "Das Thermostat hält die Temperatur selbst; die Integration schickt nur die Stufe oder die Temperatur.",
+        "data_description": {
+          "hysteresis": "Dieses Thermostat meldet nicht, wann es heizt (kein hvac_action): Es gilt als heizend von diesem Abstand unter seiner Solltemperatur bis zu diesem Abstand darüber, wie ein Relais. Wird für den Wärmebedarf, den Kessel, die Heizzeit, das Lernen und als Komfortgrenze für den optimalen Stopp genutzt."
+        }
+      },
+      "heating_boost": {
+        "title": "Heizen nach den Raumsensoren",
+        "description": "Solange das Haus Wärme anfordert, bekommt das Thermostat (oder bekommen die Heizkörperthermostate) die Temperatur unten, sonst die Zieltemperatur. Das Haus fordert Wärme von Zieltemperatur minus Hysterese bis Zieltemperatur plus Hysterese an, gemessen von seinen Sensoren.",
+        "data": {
+          "temperature_sensors": "Temperatursensoren",
+          "trv_boost_temperature": "Temperatur beim Heizen",
+          "hysteresis": "Hysterese",
+          "inertia_control": "Gelernte Trägheit nutzen"
+        },
+        "data_description": {
+          "temperature_sensors": "Sensoren in den Räumen des Hauses: Nach ihnen wird der Wärmebedarf entschieden, nicht nach dem Sensor des Thermostats oder der Heizkörperthermostate.",
+          "trv_boost_temperature": "Wird an das Thermostat (oder die Heizkörperthermostate) geschickt, solange das Haus Wärme anfordert – nie unter der Zieltemperatur und nie über der Höchsttemperatur des Hauses oder des Geräts. Leer = Höchsttemperatur des Hauses.",
+          "hysteresis": "Das Haus fordert Wärme unter Zieltemperatur minus diesem Wert an und hört über Zieltemperatur plus diesem Wert auf, gemessen von seinen Sensoren.",
+          "inertia_control": "Sobald das Haus gelernt hat, wie träge seine Heizung reagiert, endet die höhere Temperatur etwas früher, wenn die bereits abgegebene Wärme das Haus von selbst an die Obergrenze der Hysterese bringt, und beginnt etwas früher, wenn das Haus sonst unter die Untergrenze fiele, bevor die Wärme ankommt. Die Grenzen bleiben. Aus: Nur die Hysterese entscheidet."
+        }
+      }
+    },
+    "error": {
+      "no_devices": "Wähle mindestens ein Gerät aus.",
+      "sensor_required": "Relais brauchen einen Temperatursensor im Raum.",
+      "entity_in_room": "{entity} wird bereits von {owner} gesteuert. Ein Gerät kann nur von einem Raum gesteuert werden.",
+      "entity_is_source": "{entity} ist die Wärmequelle von {owner}. Es kann nicht zusätzlich Gerät eines Raums sein.",
+      "entity_is_gt_heater": "{entity} ist das Relais eines Generic Thermostats von {owner}. Es kann hier nicht zusätzlich gesteuert werden.",
+      "room_sensor_is_outdoor": "{entity} ist der Außensensor von {owner}. Wähle einen Sensor im Raum.",
+      "boost_sensor_required": "Heizen nach den Raumsensoren braucht einen Temperatursensor.",
+      "boost_temperature_only": "Heizen nach den Raumsensoren funktioniert nur mit dem Befehl Temperatur.",
+      "entity_is_circuit": "{entity} ist ein Kreisrelais von {owner}. Es kann nicht zusätzlich Gerät eines Raums oder ein anderer Kreis sein."
+    },
+    "abort": {
+      "reconfigure_successful": "Gespeichert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Smart Heating Control – Optionen",
+        "menu_options": {
+          "heating": "Heizung des ganzen Hauses",
+          "presence": "Anwesenheit",
+          "calendar": "Arbeitstage und Kalender",
+          "weather": "Wetter und Heizperiode",
+          "energy": "Energie",
+          "boiler": "Wärmequelle und Wärmebedarf",
+          "behavior": "Manuelle Änderungen, Urlaub und Grenzen",
+          "alerts": "Warnungen"
+        }
+      },
+      "presence": {
+        "title": "Anwesenheit",
+        "data": {
+          "persons": "Personen",
+          "home_rule": "Das Haus ist „Zuhause“, wenn",
+          "nearby_zones": "Zonen in der Nähe",
+          "nearby_geometric": "Koordinaten für Zonen in der Nähe nutzen",
+          "departure_delay": "Verzögerung beim Gehen",
+          "arrival_delay": "Verzögerung beim Ankommen",
+          "presence_sensors": "Anwesenheitssensoren",
+          "guest_expire_hours": "Gastmodus endet nach",
+          "proximity_distance": "Proximity-Entfernungssensor",
+          "proximity_direction": "Proximity-Richtungssensor",
+          "travel_time": "Fahrzeitsensoren"
+        },
+        "data_description": {
+          "persons": "Personen, deren Standort über Zuhause / in der Nähe / weit weg entscheidet. Nur leer lassen, wenn die Anwesenheit keine Rolle spielen soll: Das Haus ist dann immer „Zuhause“ und nur der Zeitplan entscheidet.",
+          "home_rule": "„Mindestens eine Person“ passt für die meisten Haushalte. „Alle“ senkt die Heizung, sobald eine Person geht.",
+          "nearby_zones": "Zonen, in denen das Haus als „in der Nähe“ gilt (Eco), z. B. deine Stadt. Außerhalb von Zuhause und aller Zonen = „weit weg“ (Abwesend). Leer lassen, wenn du nur Zuhause / weit weg brauchst.",
+          "nearby_geometric": "Nutzt die GPS-Koordinaten: Wer in einer Zone ist, die innerhalb einer Zone in der Nähe liegt (z. B. Büro in der Stadt), gilt als in der Nähe. Ausschalten, wenn Personen keinen GPS-Standort haben.",
+          "departure_delay": "Wie lange alle weg sein müssen, bevor die Heizung abgesenkt wird. Verhindert Reaktionen auf kurze Wege (Einkaufen, Gassi gehen).",
+          "arrival_delay": "Meist 0: Die Heizung kommt zurück, sobald jemand zu Hause ist. Nur erhöhen, wenn GPS manchmal fälschlich „Zuhause“ meldet.",
+          "presence_sensors": "Halten das Haus auf „Zuhause“, solange sie an sind (mmWave, Bewegung, ein Schalter für Personen ohne Handy). Leer lassen, wenn alle die Companion-App haben.",
+          "guest_expire_hours": "Der Gastmodus hält das Haus auf „Zuhause“ und schaltet sich nach so vielen Stunden selbst ab. 0 = nur manuell.",
+          "proximity_distance": "Entfernungssensor der Proximity-Integration, zum Vorheizen auf dem Heimweg (empfohlen, zusammen mit dem Richtungssensor). Bei mehreren Personen den Sensor der nächsten Entfernung. Ohne Proximity leer lassen.",
+          "proximity_direction": "Richtungssensor von Proximity (bei mehreren Personen die Fahrtrichtung der nächsten Person). Nur die Richtung zeigt, dass jemand nach Hause kommt; sie gilt auch für die Fahrzeit.",
+          "travel_time": "Fahrzeit nach Hause (Waze, Google Travel Time), ein Sensor pro Person: Es zählt die kürzeste Fahrt (nicht die einer Person, die zu Hause ist, also etwa 0 Minuten). Sie sagt nur, wie nah jemand ist, nicht ob er heimkommt: Wer in der Nähe bleibt, hält das Haus warm. Besser ist Proximity, weil es die Richtung kennt."
+        }
+      },
+      "calendar": {
+        "title": "Arbeitstage und Kalender",
+        "data": {
+          "workday_sensor": "Arbeitstag-Sensor",
+          "calendar": "Kalender",
+          "day_boundary": "Der Tag im Zeitplan beginnt um"
+        },
+        "data_description": {
+          "workday_sensor": "Sensor der Workday-Integration, damit Feiertage das Profil der Wochenendtage nutzen. Ohne ihn sind Mo–Fr Arbeitstage.",
+          "calendar": "Optional. Ein Termin mit dem Namen eines Profils (z. B. home_office) oder einer Stufe (z. B. away) gilt, solange der Termin dauert. Leer lassen, wenn du keine Tage im Kalender planst.",
+          "day_boundary": "Auf 00:00 lassen. Nur bei Nachtschichten ändern, damit eine Nacht zum Vortag gehört."
+        }
+      },
+      "weather": {
+        "title": "Wetter und Heizperiode",
+        "data": {
+          "outdoor_sensor": "Außentemperatursensor",
+          "weather": "Wetter-Entität",
+          "cutoff_enabled": "Heizung aus, wenn es draußen warm ist",
+          "forecast_enabled": "Vorhersage nutzen",
+          "season_mode": "Heizperiode",
+          "compensation_enabled": "Außenkompensation",
+          "window_ignore_above": "Fenster ignorieren ab"
+        },
+        "data_description": {
+          "outdoor_sensor": "Außentemperatur für Abschaltung, Heizperiode und Kompensation. Wenn leer, wird die Temperatur der Wetter-Entität genutzt.",
+          "weather": "Für die Vorhersage, die Sonneneinstrahlung und als Außentemperatur, wenn es keinen Sensor gibt.",
+          "cutoff_enabled": "Stoppt die Heizung, wenn der Außenmittelwert die Abschalttemperatur erreicht. Braucht einen Außensensor oder eine Wetter-Entität.",
+          "forecast_enabled": "Nutzt den Mittelwert der Vorhersage für die nächsten Vorhersagestunden, nie eine einzelne Stunde. Heizung wegen des Außenmittelwerts aus: Sie darf wieder laufen, wenn dieser Mittelwert bei oder unter Abschalttemperatur minus Hysterese liegt. Heizung läuft: Sie wird früher abgeschaltet, wenn dieser Mittelwert die Abschalttemperatur erreicht, und bleibt aus, bis er auf Abschalttemperatur minus Hysterese fällt. Braucht eine Wetter-Entität mit stündlicher Vorhersage und die eingeschaltete Abschaltung.",
+          "season_mode": "„Immer“, wenn du die Saison mit dem Sommermodus umschaltest. „Zwischen Daten“ oder „Automatisch“, damit außerhalb der Heizperiode von selbst nicht geheizt wird. „Automatisch“ braucht einen Außensensor oder eine Wetter-Entität.",
+          "compensation_enabled": "Hebt die Zieltemperatur etwas an, wenn es draußen sehr kalt ist (die Wände sind kälter). Braucht einen Außensensor oder eine Wetter-Entität. Aus lassen, wenn die Räume die Temperatur gut halten.",
+          "window_ignore_above": "Offene Fenster senken die Heizung nicht, wenn es draußen so warm ist. Braucht einen Außensensor oder eine Wetter-Entität. Leer lassen, um immer zu reagieren."
+        }
+      },
+      "energy": {
+        "title": "Energie",
+        "data": {
+          "price_sensor": "Energiepreis-Sensor",
+          "pv_sensor": "PV-Überschuss-Sensor"
+        },
+        "data_description": {
+          "price_sensor": "Energiepreis-Sensor (dynamischer Tarif). Bei festem Preis leer lassen.",
+          "pv_sensor": "Ins Netz eingespeiste Leistung (W). Nur sinnvoll mit Elektroheizung oder Wärmepumpe."
+        }
+      },
+      "boiler": {
+        "title": "Wärmequelle und Wärmebedarf",
+        "data": {
+          "boiler_entity": "Wärmequelle"
+        },
+        "data_description": {
+          "boiler_entity": "Der Kessel (oder das Relais, das die Wärmequelle startet), wenn die Räume ihn nicht selbst starten können (Heizkörperthermostate, Zonenventile). Die Integration startet ihn, wenn Räume Wärme anfordern, und Lernen und Heizzeit zählen nur, solange er läuft. Nie das Relais, das ein Generic Thermostat schon nutzt. Mit Heizkörperthermostaten und einem Kessel, den ein Thermostat außerhalb von Home Assistant startet, ist das Lernen nicht zuverlässig: Optimaler Start und Stopp sind dann nicht zu empfehlen."
+        },
+        "description": "Nur für Häuser, in denen die Räume die Wärmequelle nicht selbst starten können (Heizkörperthermostate oder Zonenventile): Die Integration startet sie dann, wenn Räume Wärme anfordern, und ein Raum heizt (für das Lernen und die Heizzeit) nur, solange sie läuft.\n\n⚠️ Mit einem Thermostat an jedem Heizkörper muss die Anlage das Wasser durchlassen (ein automatischer Bypass, ein Kessel mit internem Bypass oder ein Heizkörper ohne Thermostat): Die Thermostate schließen bei ihrer Zieltemperatur, und die Wärmequelle läuft eventuell bis zum Ende ihrer Mindestlaufzeit."
+      },
+      "behavior": {
+        "title": "Manuelle Änderungen, Urlaub und Grenzen",
+        "data": {
+          "override_mode": "Manuelle Änderungen gelten",
+          "override_scope": "Manuelle Änderung gilt für",
+          "vacation_preheat_hours": "Vorheizen vor Urlaubsende",
+          "auto_vacation_hours": "Automatischer Urlaub, wenn alle weit weg sind seit",
+          "frost_temp": "Frostschutz",
+          "max_temp": "Höchsttemperatur",
+          "reevaluation_minutes": "Regelmäßige Prüfung alle"
+        },
+        "data_description": {
+          "override_mode": "Eine Regel für alle manuellen Änderungen. „Feste Dauer“ hält sie für die Stunden unten. „Bis zur nächsten Neubewertung“ endet, wenn sich Zeitplan, Anwesenheit, ein Fenster oder der Modus ändert; die regelmäßige Prüfung beendet sie nicht.",
+          "override_scope": "„Nur dieser Raum“ passt für die meisten Haushalte. „Ganzes Haus“ überträgt eine manuelle Änderung auf alle Räume; nur nutzen, wenn jeder Raum eigene Ventile hat.",
+          "vacation_preheat_hours": "Der Zeitplan kommt so viele Stunden vor Urlaubsende zurück, damit das Haus warm ist, wenn du ankommst.",
+          "auto_vacation_hours": "Schaltet den Urlaub von selbst ein, wenn alle so lange weit weg sind. 0 = nur manuell.",
+          "frost_temp": "Gilt bei offenem Fenster oder im Modus Aus. Räume mit Generic Thermostat nutzen stattdessen dessen Mindesttemperatur.",
+          "max_temp": "Keine Stufe, Anpassung oder manuelle Änderung der Integration geht darüber.",
+          "reevaluation_minutes": "Sicherheitsprüfung, die die Entscheidung erneut sendet, falls ein Gerät sie verloren hat. Änderungen werden ohnehin sofort angewendet; 5–15 Minuten sind gut."
+        }
+      },
+      "alerts": {
+        "title": "Warnungen",
+        "data": {
+          "notify_critical": "Wichtige Warnungen an",
+          "notify_warning": "Hinweise an",
+          "notify_info": "Informationen an",
+          "notify_resolved": "Melden, wenn eine Warnung endet",
+          "quiet_start": "Ruhezeit ab",
+          "quiet_end": "Ruhezeit bis",
+          "pause_remind_hours": "Erinnern, wenn die Pause länger dauert als",
+          "alert_window_minutes": "Warnen, wenn ein Fenster länger offen ist als",
+          "alert_unavailable_minutes": "Warnen, wenn ein Gerät länger nicht verfügbar ist als",
+          "alert_silent_hours": "Warnen, wenn ein Temperatursensor nichts sendet seit",
+          "alert_no_effect_hours": "Warnen, wenn das Heizen keine Wirkung zeigt seit",
+          "battery_threshold": "Batterie schwach unter",
+          "verify_commands": "Befehle prüfen",
+          "room_diff_alert": "Warnen, wenn ein Raum kälter bleibt um"
+        },
+        "data_description": {
+          "notify_critical": "Keine Heizung: Die Wärmequelle oder ein Thermostat ist nicht verfügbar. Wird sofort gesendet, auch in der Ruhezeit. Wähle Handys (notify.mobile_app_...) oder andere Benachrichtigungsdienste. Für E-Mail die Adressen hinter den Dienst schreiben, z. B. notify.me_gmail_com: ana@example.com, ion@example.com (Google Mail braucht sie). Leer lassen für Benachrichtigungen in Home Assistant.",
+          "notify_warning": "Etwas zum Nachsehen: ein offenes Fenster, eine schwache Batterie, ein ausgefallener Sensor, Frostschutz in einem Raum, eine vergessene Pause, ein Raum, der kälter ist als die anderen, eine Einstellung, die nicht funktioniert. E-Mail: die Adressen hinter dem Dienst, wie oben. Leer lassen für Benachrichtigungen in Home Assistant.",
+          "notify_info": "Was das Haus von selbst gemacht hat: Die Heizperiode hat begonnen oder geendet, ein geplanter Urlaub hat begonnen, das Haus heizt für deine Rückkehr vor, der automatische Urlaub hat begonnen oder geendet, der Gastmodus hat sich selbst beendet. Leer lassen, um nicht informiert zu werden.",
+          "notify_resolved": "Eine Nachricht, wenn ein Gerät wieder funktioniert, ein Fenster geschlossen oder eine Batterie gewechselt wurde (nur für Warnungen an die Empfänger oben). Auf dem Handy ersetzt sie die Warnung.",
+          "quiet_start": "Ab dieser Uhrzeit werden nur wichtige Warnungen gesendet; die anderen warten bis zum Ende der Ruhezeit und werden nur gesendet, wenn sie dann noch gelten. Beide leer lassen für keine Ruhezeit.",
+          "quiet_end": "Ende der Ruhezeit (darf am nächsten Morgen sein).",
+          "pause_remind_hours": "Ein Hinweis, wenn die Heizung so lange pausiert ist, danach einmal täglich (eine vergessene Pause heißt kaltes Haus). 0 = nie.",
+          "alert_window_minutes": "Warnen, wenn ein Fenster so lange offen bleibt, während Wärme gebraucht wird.",
+          "alert_unavailable_minutes": "Warnen, wenn ein Thermostat oder Sensor so lange nicht verfügbar ist.",
+          "alert_silent_hours": "Warnen, wenn ein Raumtemperatursensor verfügbar bleibt, aber so lange keinen Wert gesendet hat (nicht einmal denselben): Eine leere Batterie oder ein verlorenes Signal lassen oft den letzten Wert stehen. Ein stummer Sensor wird ausgelassen, bis er wieder meldet, wie ein nicht verfügbarer (dann zählen die anderen Sensoren, sonst das Thermostat, sonst Eco). 0 = aus. Für Sensoren erhöhen, die nur bei Temperaturänderung melden, und für Template- oder Gruppensensoren (ein Mittelwert), die nur schreiben, wenn sich einer ihrer Sensoren ändert.",
+          "alert_no_effect_hours": "Warnen, wenn ein Raum so lange deutlich unter seiner Zieltemperatur heizt und die Temperatur viel weniger steigt, als sein gelerntes Modell erwartet: ein klemmendes Ventil, eine Wärmequelle, die nicht startet, ein offenes Fenster ohne Sensor. Erst wenn der Raum sein Modell gelernt hat (vorher ließe sich eine träge Fußbodenheizung nicht von einer klemmenden unterscheiden). 0 = aus.",
+          "battery_threshold": "Warnen, wenn die Batterie eines Raumgeräts (Heizkörperthermostat, Sensor) unter diesen Wert fällt.",
+          "verify_commands": "Prüft nach 2 Minuten, ob das Gerät den Befehl übernommen hat, versucht es einmal erneut und warnt dann. Nur ausschalten, wenn ein Gerät seinen Zustand langsam meldet.",
+          "room_diff_alert": "Warnen, wenn ein Raum so weit unter seiner Zieltemperatur bleibt, während andere warm sind (klemmendes Ventil, offenes Fenster). 0 = aus; nur mit mehreren Räumen sinnvoll."
+        }
+      },
+      "heating": {
+        "title": "Heizung des ganzen Hauses",
+        "data": {
+          "source": "Beheizt durch"
+        },
+        "description": "Das eine Thermostat (oder Relais), das die ganze Wohnung heizt. Es wird zur Zone {zone} und funktioniert mit allen Optionen des Hauses. Heizen die Räume getrennt (Heizkörperthermostate, Heizgeräte, Klimaanlagen), wähle „Jeder Raum heizt separat“ und füge jeden Raum mit „Raum hinzufügen“ hinzu.",
+        "data_description": {
+          "source": "Was das ganze Haus heizt: ein Generic Thermostat, ein anderes Thermostat (Nest, Tado, Hive…) oder ein Relais, das den Kessel startet. „Jeder Raum heizt separat“, wenn kein einzelnes Gerät die ganze Wohnung heizt: Heizkörperthermostate oder Ventile an den Heizkörpern, Elektroheizungen, Klimaanlagen, Fußbodenheizungszonen. Jeder Raum wird dann mit seinem eigenen Gerät hinzugefügt, und bei Heizkörperthermostaten wählst du das Kesselrelais (oder das Thermostat, das den Kessel startet) als Wärmequelle."
+        }
+      },
+      "heating_devices": {
+        "title": "Geräte",
+        "data": {
+          "climates": "Thermostate",
+          "switches": "Schalter (Relais)",
+          "command_mode": "Befehl",
+          "trv_boost": "Nach den Raumsensoren heizen"
+        },
+        "data_description": {
+          "climates": "Das Thermostat, das den Kessel steuert, z. B. die Generic-Thermostat-Entität (climate.climate).",
+          "switches": "Nur wenn ein Relais das Haus direkt heizt, ohne Thermostat.",
+          "command_mode": "Nur für andere Thermostate als Generic Thermostat. Den Unterschied findest du in den Raumeinstellungen.",
+          "trv_boost": "Solange das Haus Wärme anfordert (nach seinen Temperatursensoren, mit der Hysterese), bekommen das Thermostat oder die Heizkörperthermostate die Temperatur beim Heizen (standardmäßig die Höchsttemperatur des Hauses) und heizen weiter, bis das Haus warm ist; sonst bekommen sie die Zieltemperatur. Nützlich, wenn das Gerät an der falschen Stelle misst (ein Thermostat im Flur, ein Heizkörperthermostat direkt am Heizkörper). Braucht einen Temperatursensor. Nur mit dem Befehl Temperatur. Nicht dasselbe wie „Quelle über ihre Temperatur starten und stoppen“: Das ist für ein Thermostat gedacht, das nur den Kessel für Räume mit eigenen Heizkörperthermostaten startet (dann „Jeder Raum heizt separat“ wählen und das Thermostat als Wärmequelle auswählen)."
+        }
+      },
+      "heating_on_off": {
+        "title": "Ein / Aus-Steuerung",
+        "data": {
+          "temperature_sensors": "Temperatursensoren",
+          "hysteresis": "Hysterese",
+          "min_on_minutes": "Mindestlaufzeit",
+          "min_off_minutes": "Mindestpause",
+          "inertia_control": "Gelernte Trägheit nutzen"
+        },
+        "description": "Die Integration schaltet die Heizung rund um die Zieltemperatur ein und aus.",
+        "data_description": {
+          "temperature_sensors": "Sensoren im Raum, die statt des Thermostatsensors genutzt werden (genauer, wenn das Thermostat neben einer Wärmequelle sitzt). Leer lassen, um den Thermostatsensor zu nutzen; für Relais nötig, da sie keinen Sensor haben.",
+          "hysteresis": "Die Heizung startet unter Zieltemperatur minus diesem Wert und stoppt über Zieltemperatur plus diesem Wert.",
+          "min_on_minutes": "Wie lange mindestens geheizt wird. 0 für Heizgeräte, denen kurze Takte nichts ausmachen.",
+          "min_off_minutes": "Wie lange mindestens zwischen zwei Starts pausiert wird.",
+          "inertia_control": "Sobald der Raum gelernt hat, wie träge seine Heizung reagiert, stoppt sie etwas früher, wenn die bereits abgegebene Wärme den Raum ohnehin an die Obergrenze der Hysterese bringt, und startet etwas früher, wenn der Raum sonst unter die Untergrenze fiele, bevor die Wärme ankommt. Die Grenzen selbst bleiben. Am nützlichsten bei trägen Heizungen (Gussheizkörper, Fußbodenheizung). Aus: Nur die Hysterese entscheidet."
+        }
+      },
+      "heating_thermostat": {
+        "title": "Thermostat",
+        "data": {
+          "hysteresis": "Hysterese"
+        },
+        "description": "Das Thermostat hält die Temperatur selbst; die Integration schickt nur die Stufe oder die Temperatur.",
+        "data_description": {
+          "hysteresis": "Dieses Thermostat meldet nicht, wann es heizt (kein hvac_action): Es gilt als heizend von diesem Abstand unter seiner Solltemperatur bis zu diesem Abstand darüber, wie ein Relais. Wird für den Wärmebedarf, den Kessel, die Heizzeit, das Lernen und als Komfortgrenze für den optimalen Stopp genutzt."
+        }
+      },
+      "presence_details": {
+        "title": "Vorheizen auf dem Heimweg",
+        "data": {
+          "arrival_distance": "Vorheizen unter der Entfernung",
+          "arrival_minutes": "Vorheizen unter der Fahrzeit"
+        },
+        "data_description": {
+          "arrival_distance": "Das Vorheizen beginnt, wenn jemand näher ist als diese Entfernung (mit dem Entfernungssensor).",
+          "arrival_minutes": "Das Vorheizen beginnt, wenn jemand weniger als so viele Minuten entfernt ist (mit dem Fahrzeitsensor)."
+        }
+      },
+      "weather_details": {
+        "title": "Werte für Wetter und Heizperiode",
+        "data": {
+          "cutoff_temp": "Abschalttemperatur außen",
+          "cutoff_hysteresis": "Hysterese der Abschaltung",
+          "cutoff_avg_hours": "Mittelwert über",
+          "forecast_hours": "Vorhersagestunden",
+          "season_start": "Beginn der Heizperiode (MM-TT)",
+          "season_end": "Ende der Heizperiode (MM-TT)",
+          "season_days": "Automatische Heizperiode: Tage in Folge",
+          "season_temp": "Schwelle der automatischen Heizperiode",
+          "compensation_below": "Kompensieren unter",
+          "compensation_offset": "Kompensation"
+        },
+        "data_description": {
+          "cutoff_temp": "Die Heizung stoppt, wenn der Außenmittelwert diese Temperatur erreicht oder überschreitet.",
+          "cutoff_hysteresis": "Die Heizung startet erst wieder bei oder unter Abschalttemperatur minus diesem Wert, damit sie nicht um die Abschaltgrenze hin- und herspringt. Der Vorhersagemittelwert nutzt dieselbe Grenze.",
+          "cutoff_avg_hours": "Die Abschaltung nutzt den Mittelwert der letzten Stunden, damit ein sonniger Nachmittag die Heizung nicht stoppt.",
+          "forecast_hours": "Vorhersagestunden im Mittelwert (jeder Wert für seine Stunde, der gemessene Wert bis zur nächsten Vorhersagestunde). Mehr Stunden schalten die Heizung vor einer warmen Phase früher ab.",
+          "season_start": "Erster Tag der Heizperiode: Monat und Tag, z. B. 10-15.",
+          "season_end": "Letzter Tag der Heizperiode: Monat und Tag, z. B. 04-15.",
+          "season_days": "Tage in Folge unter (oder über) der Schwelle, bevor die Heizperiode beginnt (oder endet).",
+          "season_temp": "Tagesmittel der Außentemperatur, das die Heizperiode beginnen oder enden lässt.",
+          "compensation_below": "Außentemperatur, unter der die Kompensation dazukommt.",
+          "compensation_offset": "Grad, die zur Zieltemperatur addiert werden (z. B. 0,5)."
+        }
+      },
+      "energy_details": {
+        "title": "Energie-Schwellen",
+        "data": {
+          "price_high": "Hoher Preis ab",
+          "price_high_offset": "Anpassung bei hohem Preis",
+          "price_low": "Niedriger Preis bis",
+          "price_low_offset": "Anpassung bei niedrigem Preis",
+          "pv_threshold": "Überschuss ab",
+          "pv_offset": "Anpassung bei Überschuss"
+        },
+        "data_description": {
+          "price_high": "Ab diesem Preis gilt die Anpassung für hohen Preis.",
+          "price_high_offset": "Meist negativ, z. B. -1°, solange Energie teuer ist.",
+          "price_low": "Bis zu diesem Preis gilt die Anpassung für niedrigen Preis.",
+          "price_low_offset": "Meist positiv, z. B. +1°, solange Energie günstig ist (Elektroheizung, Wärmepumpe).",
+          "pv_threshold": "Überschuss, ab dem die Anpassung gilt.",
+          "pv_offset": "Grad, die bei Überschuss addiert werden (z. B. +1)."
+        }
+      },
+      "boiler_details": {
+        "title": "Wärmequelle",
+        "data": {
+          "boiler_min_rooms": "Räume nötig, um die Wärmequelle zu starten",
+          "boiler_min_on": "Mindestlaufzeit der Wärmequelle",
+          "boiler_min_off": "Mindestpause der Wärmequelle",
+          "keep_last_open": "Letztes Heizkörperthermostat offen lassen",
+          "circuits": "Kreisrelais",
+          "reference_room": "Referenzraum",
+          "boiler_boost": "Quelle über ihre Temperatur starten und stoppen",
+          "boiler_idle_temp": "Ruhetemperatur der Wärmequelle"
+        },
+        "data_description": {
+          "boiler_min_rooms": "Wie viele Räume Wärme anfordern müssen, um sie zu starten. 1 = ein beliebiger Raum. Nebenräume („Kann die Wärmequelle des Hauses starten“ aus) zählen nicht.",
+          "boiler_min_on": "Mindestlaufzeit gegen kurzes Takten. 0 (Standard) = die Wärmequelle stoppt, sobald kein Raum mehr Wärme anfordert. Eine längere Zeit braucht einen Bypass oder einen Heizkörper ohne Thermostat.",
+          "boiler_min_off": "Mindestpause zwischen zwei Starts.",
+          "keep_last_open": "Wenn kein Raum mehr Wärme anfordert, bleiben die Heizkörperthermostate des letzten anfordernden Raums offen (sie bekommen die Höchsttemperatur des Raums oder bleiben an). So hat die Restwärme in Wärmequelle und Leitungen einen Weg, wie mit einem Bypass, und das Ventil bewegt sich in der Nacht nicht noch einmal. Das gilt, bis ein anderer Raum Wärme anfordert, eine stärkere Regel den Raum übernimmt (Fenster, manuelle Änderung, Pause, Modus, warm draußen) oder der Raum selbst Wärme braucht. Der Raum fordert währenddessen keine Wärme an, kann aber wärmer werden als seine Zieltemperatur, und sein Lernen überspringt diese Zeit. Standardmäßig aus.",
+          "circuits": "Nur bei mehreren Heizkreisen am Kessel (z. B. Fußbodenheizung und Heizkörper), jeder mit eigenem Pumpen- oder Zonenventilrelais. Ein Raum an der Wärmequelle wählt dann seinen Kreis (in seinen Einstellungen): Fordert er Wärme an, wird zuerst sein Kreisrelais eingeschaltet, dann der Kessel; braucht ihn kein Raum mehr, stoppt zuerst der Kessel, dann das Kreisrelais. Für einen Raum, dessen Kreis aus ist, startet der Kessel nicht. Leer (Standard): keine Kreise, nichts ändert sich.",
+          "reference_room": "Nur dieser Raum entscheidet, wann sie läuft; die anderen öffnen oder schließen nur ihre Ventile. Leer lassen, um die Anzahl der Räume zu nutzen. Nebenräume werden nicht angeboten.",
+          "boiler_boost": "Ein Thermostat als Wärmequelle (z. B. Hive, Nest, Tado, ein Generic Thermostat) startet den Kessel nur nach seiner eigenen Zieltemperatur und seinem eigenen Sensor. An (Standard): Es bleibt im Heizmodus; zum Starten bekommt es die Höchsttemperatur des Hauses, zum Stoppen die Ruhetemperatur (standardmäßig die Frostschutztemperatur des Hauses) – so schützt es weiter vor Frost, falls Home Assistant ausfällt. Eine von Hand gesetzte Zieltemperatur wird zurückgenommen. Aus: Nur sein Modus wird umgeschaltet (Heizen / Aus). Ein Thermostat ohne Zieltemperatur wird immer über den Modus geschaltet. Nicht dasselbe wie „Nach den Raumsensoren heizen“ der Zone für das ganze Haus: Das ist für ein Thermostat, das selbst die ganze Wohnung heizt.",
+          "boiler_idle_temp": "Nur mit „Quelle über ihre Temperatur starten und stoppen“: was das Thermostat bekommt, solange kein Raum Wärme anfordert. Leer (Standard): die Frostschutztemperatur des Hauses, damit der Kessel aus bleibt. Ein höherer Wert (z. B. 17,5 °C) lässt das Thermostat seinen eigenen Bereich nach seinem eigenen Sensor auf dieser Temperatur halten: nützlich, wenn es auch Heizkörper ohne Thermostat heizt. Muss unter der Höchsttemperatur des Hauses liegen."
+        }
+      },
+      "behavior_details": {
+        "title": "Manuelle Änderungen",
+        "data": {
+          "override_hours": "Feste Dauer"
+        },
+        "data_description": {
+          "override_hours": "Wie lange eine manuelle Änderung gilt."
+        }
+      },
+      "heating_boost": {
+        "title": "Heizen nach den Raumsensoren",
+        "description": "Solange das Haus Wärme anfordert, bekommt das Thermostat (oder bekommen die Heizkörperthermostate) die Temperatur unten, sonst die Zieltemperatur. Das Haus fordert Wärme von Zieltemperatur minus Hysterese bis Zieltemperatur plus Hysterese an, gemessen von seinen Sensoren.",
+        "data": {
+          "temperature_sensors": "Temperatursensoren",
+          "trv_boost_temperature": "Temperatur beim Heizen",
+          "hysteresis": "Hysterese",
+          "inertia_control": "Gelernte Trägheit nutzen"
+        },
+        "data_description": {
+          "temperature_sensors": "Sensoren in den Räumen des Hauses: Nach ihnen wird der Wärmebedarf entschieden, nicht nach dem Sensor des Thermostats oder der Heizkörperthermostate.",
+          "trv_boost_temperature": "Wird an das Thermostat (oder die Heizkörperthermostate) geschickt, solange das Haus Wärme anfordert – nie unter der Zieltemperatur und nie über der Höchsttemperatur des Hauses oder des Geräts. Leer = Höchsttemperatur des Hauses.",
+          "hysteresis": "Das Haus fordert Wärme unter Zieltemperatur minus diesem Wert an und hört über Zieltemperatur plus diesem Wert auf, gemessen von seinen Sensoren.",
+          "inertia_control": "Sobald das Haus gelernt hat, wie träge seine Heizung reagiert, endet die höhere Temperatur etwas früher, wenn die bereits abgegebene Wärme das Haus von selbst an die Obergrenze der Hysterese bringt, und beginnt etwas früher, wenn das Haus sonst unter die Untergrenze fiele, bevor die Wärme ankommt. Die Grenzen bleiben. Aus: Nur die Hysterese entscheidet."
+        }
+      }
+    },
+    "error": {
+      "invalid_month_day": "Nutze das Format MM-TT, z. B. 10-15.",
+      "no_devices": "Wähle mindestens ein Gerät aus.",
+      "sensor_required": "Relais brauchen einen Temperatursensor im Raum.",
+      "outdoor_required": "Braucht einen Außentemperatursensor oder eine Wetter-Entität (oben).",
+      "weather_required": "Die Vorhersage braucht eine Wetter-Entität (oben).",
+      "cutoff_required": "Die Vorhersage funktioniert mit der Abschaltung: Schalte „Heizung aus, wenn es draußen warm ist“ ein.",
+      "entity_in_room": "{entity} wird bereits von {owner} gesteuert. Ein Gerät kann nur von einem Raum gesteuert werden.",
+      "entity_is_source": "{entity} ist die Wärmequelle von {owner}. Es kann nicht zusätzlich Gerät eines Raums sein.",
+      "entity_is_gt_heater": "{entity} ist das Relais eines Generic Thermostats von {owner}. Es kann hier nicht zusätzlich gesteuert werden.",
+      "outdoor_is_room_sensor": "{entity} ist ein Temperatursensor von {owner}. Der Außensensor muss ein anderer Sensor sein.",
+      "room_sensor_is_outdoor": "{entity} ist der Außensensor von {owner}. Wähle einen Sensor im Raum.",
+      "boost_sensor_required": "Heizen nach den Raumsensoren braucht einen Temperatursensor.",
+      "boost_temperature_only": "Heizen nach den Raumsensoren funktioniert nur mit dem Befehl Temperatur.",
+      "invalid_recipient": "„{recipient}“ geht nicht: Schreibe einen Benachrichtigungsdienst (notify.name), optional gefolgt von E-Mail-Adressen, z. B. notify.me_gmail_com: ana@example.com, ion@example.com.",
+      "idle_not_below_max": "Die Ruhetemperatur muss unter der Höchsttemperatur des Hauses liegen.",
+      "entity_is_circuit": "{entity} ist ein Kreisrelais von {owner}. Es kann nicht zusätzlich Gerät eines Raums oder ein anderer Kreis sein.",
+      "circuit_is_source": "Die Wärmequelle kann nicht zugleich ein Kreisrelais sein."
+    }
+  },
+  "config_subentries": {
+    "room": {
+      "entry_type": "Raum",
+      "initiate_flow": {
+        "user": "Raum hinzufügen",
+        "reconfigure": "Raum neu konfigurieren"
+      },
+      "step": {
+        "basics": {
+          "title": "Raum",
+          "data": {
+            "name": "Name",
+            "area": "Bereich",
+            "source": "Beheizt durch"
+          },
+          "data_description": {
+            "name": "Wird an den Geräten und in der Karte angezeigt.",
+            "area": "Optional; verknüpft den Raum mit einem Bereich in Home Assistant.",
+            "source": "Generic Thermostat: Es behält seine eigenen Presets und Temperaturen, die Integration wählt sie nur aus. Andere Thermostate / Heizkörperthermostate: Den Befehl legst du im nächsten Schritt fest. Relais: Die Integration schaltet es selbst ein und aus."
+          }
+        },
+        "devices": {
+          "title": "Geräte",
+          "data": {
+            "climates": "Thermostate",
+            "switches": "Schalter (Relais)",
+            "command_mode": "Befehl",
+            "trv_boost": "Nach dem Raumsensor heizen",
+            "use_house_source": "Heizt mit der Wärmequelle des Hauses"
+          },
+          "data_description": {
+            "climates": "Die Thermostate dieses Raums. Mehrere Thermostate in einem Raum bekommen alle denselben Befehl.",
+            "switches": "Die Relais, die diesen Raum heizen.",
+            "command_mode": "Temperatur: Die Integration schickt die Temperatur jeder Stufe (die meisten Heizkörperthermostate); ein Heizkörperthermostat im Automatikbetrieb (eigener Zeitplan) wird auf Heizen gestellt. Preset: Jede Stufe nutzt ein Preset des Thermostats, mit dessen Temperatur. Ein / Aus: Das Thermostat wird nur ein- und ausgeschaltet, die Integration hält die Temperatur.",
+            "trv_boost": "Solange der Raum Wärme anfordert, bekommen die Heizkörperthermostate die Temperatur beim Heizen (standardmäßig die Höchsttemperatur des Hauses) und bleiben offen, bis der Raum warm ist; sonst bekommen sie die Zieltemperatur. Der Wärmebedarf kommt dann vom Raumsensor, mit der Hysterese. Braucht einen Temperatursensor im Raum. Nur mit dem Befehl Temperatur.",
+            "use_house_source": "An: Die Wärme des Raums kommt von der Wärmequelle des Hauses (Heizkörper am Kessel). Er startet den Kessel, wenn er Wärme anfordert (außer er wird im nächsten Schritt zum Nebenraum), und heizt nur, solange der Kessel läuft. Aus: Der Raum hat seine eigene Wärme (Elektroheizung, Wärmepumpe, Klimaanlage). Er startet den Kessel nicht und heizt, solange sein eigenes Gerät läuft."
+          }
+        },
+        "house_source": {
+          "title": "Wärmequelle des Hauses",
+          "data": {
+            "starts_house_source": "Kann die Wärmequelle des Hauses starten",
+            "circuit": "Kreis",
+            "top_up": "Mitheizen, solange der Kessel läuft"
+          },
+          "data_description": {
+            "starts_house_source": "An (Standard): Fordert dieser Raum Wärme an, startet er die Wärmequelle des Hauses (den Kessel), wie jeder Raum. Aus: ein Nebenraum. Er startet den Kessel nie für sich selbst; seine Heizkörperthermostate, Ventile oder Relais öffnen trotzdem, wenn er unter seiner Zieltemperatur ist, also bekommt er nur Wärme, solange der Kessel für einen anderen Raum läuft. Gut für Räume, die nicht kalt sein sollen, aber nicht zu einer bestimmten Zeit warm sein müssen: Wintergarten, Gästezimmer, Flur, Abstellraum. An milden Tagen läuft der Kessel vielleicht wenig, dann bleibt der Raum eventuell stundenlang unter seiner Zieltemperatur. Der Frostschutz startet den Kessel zur Sicherheit trotzdem für ihn. Er zählt nicht zu den Räumen, die zum Starten der Wärmequelle nötig sind.",
+            "circuit": "Der Heizkreis dieses Raums (sein Pumpen- oder Zonenventilrelais), einer der Kreise des Hauses. Sein Relais wird vor dem Kessel eingeschaltet, wenn der Raum Wärme anfordert, und nach dem Stopp des Kessels ausgeschaltet, wenn kein Raum des Kreises ihn braucht. Leer: Der Raum hat keinen Kreis.",
+            "top_up": "Aus (Standard). An: Solange der Kessel für andere Räume läuft und dieser Raum knapp unter seiner Zieltemperatur liegt (innerhalb seiner Hysterese, standardmäßig 0,3 °C, er fordert also noch keine Wärme an), öffnen seine Heizkörperthermostate oder sein Relais und er heizt bis zur Zieltemperatur. Er würde sonst bald selbst anfordern und den Kessel wieder starten: So startet der Kessel seltener. Er startet den Kessel nie und hält ihn nicht am Laufen, zählt nicht zu den nötigen Räumen und heizt mit einem Kreis nur, solange dieser Kreis schon offen ist. Nicht während einer manuellen Änderung, bei offenem Fenster, in der Pause oder beim optimalen Stopp."
+          }
+        },
+        "control_on_off": {
+          "title": "Ein / Aus-Steuerung",
+          "description": "Die Integration schaltet die Heizung rund um die Zieltemperatur ein und aus.",
+          "data": {
+            "hysteresis": "Hysterese",
+            "min_on_minutes": "Mindestlaufzeit",
+            "min_off_minutes": "Mindestpause",
+            "inertia_control": "Gelernte Trägheit nutzen"
+          },
+          "data_description": {
+            "hysteresis": "Die Heizung startet unter Zieltemperatur minus diesem Wert und stoppt über Zieltemperatur plus diesem Wert.",
+            "min_on_minutes": "Wie lange mindestens geheizt wird. 0 für Heizgeräte, denen kurze Takte nichts ausmachen.",
+            "min_off_minutes": "Wie lange mindestens zwischen zwei Starts pausiert wird.",
+            "inertia_control": "Sobald der Raum gelernt hat, wie träge seine Heizung reagiert, stoppt sie etwas früher, wenn die bereits abgegebene Wärme den Raum ohnehin an die Obergrenze der Hysterese bringt, und startet etwas früher, wenn der Raum sonst unter die Untergrenze fiele, bevor die Wärme ankommt. Die Grenzen selbst bleiben. Am nützlichsten bei trägen Heizungen (Gussheizkörper, Fußbodenheizung). Aus: Nur die Hysterese entscheidet."
+          }
+        },
+        "control_thermostat": {
+          "title": "Thermostat",
+          "description": "Das Thermostat hält die Temperatur selbst; die Integration schickt nur die Stufe oder die Temperatur.",
+          "data": {
+            "hysteresis": "Hysterese"
+          },
+          "data_description": {
+            "hysteresis": "Dieses Thermostat meldet nicht, wann es heizt (kein hvac_action): Es gilt als heizend von diesem Abstand unter seiner Solltemperatur bis zu diesem Abstand darüber, wie ein Relais. Wird für den Wärmebedarf, den Kessel, die Heizzeit, das Lernen und als Komfortgrenze für den optimalen Stopp genutzt."
+          }
+        },
+        "levels": {
+          "title": "Stufen",
+          "data": {
+            "nearby_mode": "Wenn niemand zu Hause, aber jemand in der Nähe ist",
+            "nearby_not_above_schedule": "Nicht über dem Zeitplan",
+            "name_home": "Name der Stufe „home“",
+            "name_sleep": "Name der Stufe „sleep“",
+            "name_eco": "Name der Stufe „eco“",
+            "name_away": "Name der Stufe „away“",
+            "name_comfort": "Name der Stufe „comfort“",
+            "name_activity": "Name der Stufe „activity“",
+            "device_home": "Thermostat-Preset für „home“",
+            "device_sleep": "Thermostat-Preset für „sleep“",
+            "device_eco": "Thermostat-Preset für „eco“",
+            "device_away": "Thermostat-Preset für „away“",
+            "device_comfort": "Thermostat-Preset für „comfort“",
+            "device_activity": "Thermostat-Preset für „activity“",
+            "temp_home": "Temperatur von „home“",
+            "temp_sleep": "Temperatur von „sleep“",
+            "temp_eco": "Temperatur von „eco“",
+            "temp_away": "Temperatur von „away“",
+            "temp_comfort": "Temperatur von „comfort“",
+            "temp_activity": "Temperatur von „activity“"
+          },
+          "description": "Die Stufen haben feste Rollen: home, sleep, eco (in der Nähe), away (weit weg / Urlaub), comfort und activity.",
+          "data_description": {
+            "nearby_mode": "Eco-Preset: nutzt die Stufe eco. Feste Temperatur: Die Temperatur wählst du auf der nächsten Seite (mit Generic Thermostat wird das Preset zu none).",
+            "nearby_not_above_schedule": "Aktiviert: Liegt der Zeitplan niedriger als die Stufe oder Temperatur für „in der Nähe“, gilt der niedrigere Wert (nachts in der Stadt zu sein heizt nicht mehr, als zu Hause zu sein). Deaktiviert: Es gilt die Stufe oder Temperatur für „in der Nähe“.",
+            "name_home": "So heißt diese Stufe im Zeitplan und in der Karte. Lass den Standardnamen, wenn du keinen anderen brauchst.",
+            "name_sleep": "So heißt diese Stufe im Zeitplan und in der Karte. Lass den Standardnamen, wenn du keinen anderen brauchst.",
+            "name_eco": "So heißt diese Stufe im Zeitplan und in der Karte. Lass den Standardnamen, wenn du keinen anderen brauchst.",
+            "name_away": "So heißt diese Stufe im Zeitplan und in der Karte. Lass den Standardnamen, wenn du keinen anderen brauchst.",
+            "name_comfort": "So heißt diese Stufe im Zeitplan und in der Karte. Lass den Standardnamen, wenn du keinen anderen brauchst.",
+            "name_activity": "So heißt diese Stufe im Zeitplan und in der Karte. Lass den Standardnamen, wenn du keinen anderen brauchst.",
+            "device_home": "Preset des Thermostats für diese Stufe (gefundene Presets: {presets}); das Thermostat behält seine Temperatur. Leer lassen, wenn das Thermostat kein solches Preset hat: Dann wird stattdessen die Temperatur der Stufe unten gesendet (sie wird auch angezeigt, wenn das Thermostat die Preset-Temperatur nicht meldet).",
+            "device_sleep": "Preset des Thermostats für diese Stufe (gefundene Presets: {presets}); das Thermostat behält seine Temperatur. Leer lassen, wenn das Thermostat kein solches Preset hat: Dann wird stattdessen die Temperatur der Stufe unten gesendet (sie wird auch angezeigt, wenn das Thermostat die Preset-Temperatur nicht meldet).",
+            "device_eco": "Preset des Thermostats für diese Stufe (gefundene Presets: {presets}); das Thermostat behält seine Temperatur. Leer lassen, wenn das Thermostat kein solches Preset hat: Dann wird stattdessen die Temperatur der Stufe unten gesendet (sie wird auch angezeigt, wenn das Thermostat die Preset-Temperatur nicht meldet).",
+            "device_away": "Preset des Thermostats für diese Stufe (gefundene Presets: {presets}); das Thermostat behält seine Temperatur. Leer lassen, wenn das Thermostat kein solches Preset hat: Dann wird stattdessen die Temperatur der Stufe unten gesendet (sie wird auch angezeigt, wenn das Thermostat die Preset-Temperatur nicht meldet).",
+            "device_comfort": "Preset des Thermostats für diese Stufe (gefundene Presets: {presets}); das Thermostat behält seine Temperatur. Leer lassen, wenn das Thermostat kein solches Preset hat: Dann wird stattdessen die Temperatur der Stufe unten gesendet (sie wird auch angezeigt, wenn das Thermostat die Preset-Temperatur nicht meldet).",
+            "device_activity": "Preset des Thermostats für diese Stufe (gefundene Presets: {presets}); das Thermostat behält seine Temperatur. Leer lassen, wenn das Thermostat kein solches Preset hat: Dann wird stattdessen die Temperatur der Stufe unten gesendet (sie wird auch angezeigt, wenn das Thermostat die Preset-Temperatur nicht meldet).",
+            "temp_home": "Temperatur dieser Stufe. Lässt sich später in der Karte ändern.",
+            "temp_sleep": "Temperatur dieser Stufe. Lässt sich später in der Karte ändern.",
+            "temp_eco": "Temperatur dieser Stufe. Lässt sich später in der Karte ändern.",
+            "temp_away": "Temperatur dieser Stufe. Lässt sich später in der Karte ändern.",
+            "temp_comfort": "Temperatur dieser Stufe. Lässt sich später in der Karte ändern.",
+            "temp_activity": "Temperatur dieser Stufe. Lässt sich später in der Karte ändern."
+          }
+        },
+        "sensors": {
+          "title": "Sensoren",
+          "data": {
+            "temperature_sensors": "Temperatursensoren",
+            "calibration_mode": "Kalibrierung der Heizkörperthermostate",
+            "occupancy_sensors": "Belegungssensoren",
+            "humidity_sensor": "Feuchtigkeitssensor"
+          },
+          "data_description": {
+            "temperature_sensors": "Sensoren im Raum, die statt des Thermostatsensors genutzt werden (genauer, wenn das Thermostat neben einer Wärmequelle sitzt). Leer lassen, um den Thermostatsensor zu nutzen; für Relais nötig, da sie keinen Sensor haben.",
+            "calibration_mode": "Braucht oben einen Raumtemperatursensor. Offset: korrigiert den Sensor des Heizkörperthermostats. Externe Temperatur: schreibt die Raumtemperatur ins Heizkörperthermostat (wenn es das unterstützt). Sonst aus.",
+            "occupancy_sensors": "Bewegungs- / Präsenzsensoren des Raums: Ist der Raum eine Weile leer, geht er auf Eco, auch wenn jemand zu Hause ist. Leer lassen für Räume, die nur dem Zeitplan folgen sollen.",
+            "humidity_sensor": "Nur für die Schimmelwarnung: Die Feuchtigkeit im Raum ergibt zusammen mit der Außentemperatur des Hauses die Feuchtigkeit an der kältesten Wand. Ohne ihn (oder ohne Außentemperatur) gibt es keine Schimmelwarnung."
+          }
+        },
+        "sensors_gt": {
+          "title": "Sensoren",
+          "description": "Ein Generic Thermostat regelt nach dem Sensor in seiner eigenen Konfiguration, also nutzt die Integration diesen auch. Für einen anderen Sensor änderst du ihn in den Einstellungen des Generic Thermostats.",
+          "data": {
+            "occupancy_sensors": "Belegungssensoren",
+            "humidity_sensor": "Feuchtigkeitssensor"
+          },
+          "data_description": {
+            "occupancy_sensors": "Bewegungs- / Präsenzsensoren des Raums: Ist der Raum eine Weile leer, geht er auf Eco, auch wenn jemand zu Hause ist. Leer lassen für Räume, die nur dem Zeitplan folgen sollen.",
+            "humidity_sensor": "Nur für die Schimmelwarnung: Die Feuchtigkeit im Raum ergibt zusammen mit der Außentemperatur des Hauses die Feuchtigkeit an der kältesten Wand. Ohne ihn (oder ohne Außentemperatur) gibt es keine Schimmelwarnung."
+          }
+        },
+        "windows": {
+          "title": "Fenster und Türen",
+          "data": {
+            "window_sensors": "Fenstersensoren",
+            "linked_window_sensors": "Fenster anderer Räume",
+            "window_drop_detect": "Offene Fenster an der Temperatur erkennen"
+          },
+          "data_description": {
+            "window_sensors": "Fenster und Türen dieses Raums. Leer lassen, wenn es keine gibt (die Erkennung am Temperaturabfall unten kann helfen).",
+            "linked_window_sensors": "Fenster anderer Räume, die diesen Raum mit abkühlen, z. B. die Balkontür im Wohnzimmer für den Flur.",
+            "window_drop_detect": "Behandelt einen schnellen Temperaturabfall 15 Minuten lang als offenes Fenster. Nützlich für Räume ohne Fenstersensoren."
+          }
+        },
+        "schedule": {
+          "title": "Zeitplan",
+          "data": {
+            "schedule_source": "Quelle des Zeitplans",
+            "optimal_start": "Optimaler Start",
+            "optimal_stop": "Optimaler Stopp"
+          },
+          "data_description": {
+            "schedule_source": "Interner Zeitplan: hier geschrieben oder in der Karte bearbeitet. Zeitplan-Helfer: Ein Zeitplan-Helfer von Home Assistant entscheidet zwischen zwei Stufen.",
+            "optimal_start": "Beginnt früher zu heizen, damit die nächste Stufe pünktlich erreicht ist. Wie schnell geheizt wird, lernt die Integration in wenigen Tagen.",
+            "optimal_stop": "Senkt die Stufe vor der nächsten kälteren so früh, wie der Raum abkühlen kann, ohne den Komfort der aktuellen Stufe zu verlassen. Das Abkühlen wird aus den Zeiten ohne Wärmebedarf gelernt. Braucht eine Außentemperatur (Sensor oder Wetter) in den Hauseinstellungen; erscheint nur dann."
+          }
+        },
+        "extras": {
+          "title": "Extras",
+          "data": {
+            "solar_offset": "Sonneneinstrahlung",
+            "valve_exercise": "Ventilbewegung"
+          },
+          "data_description": {
+            "solar_offset": "Ein negativer Wert (z. B. -1) senkt die Zieltemperatur, solange die Sonne scheint – für Räume, die von der Sonne warm werden. Nutzt die Wetter-Entität des Hauses (erscheint nur, wenn eine gesetzt ist). 0 = aus. Unabhängig davon lernt der Raum für den optimalen Start und Stopp selbst, wie stark die Sonne ihn wärmt.",
+            "valve_exercise": "Öffnet die Heizkörperthermostate einmal pro Woche 5 Minuten lang ganz, gegen Verkalkung, in jedem Modus (auch im Sommer). Eine Pause, eine manuelle Änderung oder ein offenes Fenster verschiebt sie auf später am selben Tag; sie fordert keine Wärme an."
+          }
+        },
+        "levels_nearby": {
+          "title": "In der Nähe",
+          "data": {
+            "nearby_temp": "Feste Temperatur in der Nähe"
+          },
+          "data_description": {
+            "nearby_temp": "Wird gesendet, solange niemand zu Hause, aber jemand in der Nähe ist. Lässt sich später in der Karte ändern."
+          }
+        },
+        "sensors_details": {
+          "title": "Sensoren: Details",
+          "data": {
+            "temperature_aggregation": "Mehrere Sensoren",
+            "calibration_entities": "Kalibrierungs-Entitäten",
+            "occupancy_minutes": "Eco nach keiner Belegung seit",
+            "occupancy_return_minutes": "Zurück aus Eco nach Anwesenheit von",
+            "hysteresis": "Hysterese"
+          },
+          "data_description": {
+            "temperature_aggregation": "Bei mehreren Sensoren: Mittelwert, der kälteste oder der Median.",
+            "calibration_entities": "Die number-Entitäten des Heizkörperthermostats (Offset oder externe Temperatur).",
+            "occupancy_minutes": "Wie lange der Raum leer sein muss, bevor er auf Eco geht.",
+            "occupancy_return_minutes": "Wie lange jemand ohne Unterbrechung anwesend sein muss, bevor ein Raum, der wegen fehlender Belegung auf Eco ist, wieder seinem Zeitplan folgt. 0 = sofort (wie bisher). Ein kürzerer Besuch (jemand holt etwas und geht) lässt den Raum auf Eco, und die Zählung beginnt bei der nächsten Anwesenheit neu. Anwesenheit zählt nur ohne Unterbrechung: Ein Bewegungsmelder, der zwischen Bewegungen ausgeht, startet die Zählung neu. Ein Präsenzsensor (mmWave) oder ein Bewegungsmelder mit langer Nachlaufzeit passt besser.",
+            "hysteresis": "Mit einem Raumsensor entscheidet sie über den Frostschutz: Darunter werden die Heizkörperthermostate zum Öffnen hochgesetzt, bis Frostschutz plus diesem Wert. Mit „Mitheizen, solange der Kessel läuft“: Solange der Kessel für andere Räume läuft, heizt der Raum mit, wenn er weniger als diesen Wert unter seiner Zieltemperatur liegt (er fordert noch keine Wärme an)."
+          }
+        },
+        "windows_details": {
+          "title": "Fenster: Verzögerungen und Aktion",
+          "data": {
+            "window_open_delay": "Verzögerung beim Öffnen",
+            "window_close_delay": "Verzögerung beim Schließen",
+            "window_action": "Wenn ein Fenster offen ist",
+            "window_drop_degrees": "Temperaturabfall",
+            "window_drop_minutes": "Innerhalb von"
+          },
+          "data_description": {
+            "window_open_delay": "Wie lange ein Fenster offen sein muss, bevor die Heizung reagiert. Kurzes Lüften darunter wird ignoriert.",
+            "window_close_delay": "Wie lange nach dem Schließen gewartet wird, bevor wieder geheizt wird.",
+            "window_action": "Frostschutz hält eine Mindesttemperatur. Ausschalten stoppt die Heizung.",
+            "window_drop_degrees": "Abfall, der als offenes Fenster zählt.",
+            "window_drop_minutes": "Zeit, in der der Abfall passieren muss."
+          }
+        },
+        "schedule_internal": {
+          "title": "Zeitplan",
+          "data": {
+            "schedule": "Zeitplan"
+          },
+          "description": "Ein Profil pro Zeile: `profil: HH:MM preset, HH:MM preset`. An welchen Tagen ein Profil gilt und ob es aktiv ist, stellst du in der Karte ein (Zeitplan). Ältere Profile mit dem Namen workday, weekend oder mon…sun behalten ihre Tage. {error}",
+          "data_description": {
+            "schedule": "z. B. `workday: 00:00 sleep, 06:00 home, 22:00 sleep`. In der Karte einfacher zu bearbeiten."
+          }
+        },
+        "schedule_helper": {
+          "title": "Zeitplan-Helfer",
+          "data": {
+            "schedule_helper": "Zeitplan-Helfer",
+            "helper_on_preset": "Stufe, solange der Helfer an ist",
+            "helper_off_preset": "Stufe, solange der Helfer aus ist"
+          },
+          "data_description": {
+            "schedule_helper": "Ein Zeitplan-Helfer von Home Assistant (Einstellungen → Helfer).",
+            "helper_on_preset": "Stufe, solange der Helfer an ist.",
+            "helper_off_preset": "Stufe, solange der Helfer aus ist."
+          }
+        },
+        "schedule_optimal": {
+          "title": "Optimaler Start / Stopp",
+          "data": {
+            "optimal_start_max_minutes": "Höchstens so früh starten",
+            "optimal_stop_minutes": "Höchstens so früh stoppen",
+            "stop_tolerance": "Toleranz des optimalen Stopps"
+          },
+          "data_description": {
+            "optimal_start_max_minutes": "Startet nie früher als so.",
+            "optimal_stop_minutes": "Stoppt nie früher als so. Bis das Abkühlen gelernt ist, beginnt die niedrigere Stufe so früh.",
+            "stop_tolerance": "Für Thermostate, die hvac_action melden: wie weit der Raum vor dem geplanten Wechsel unter die aktuelle Stufe fallen darf (sein Komfort). 0 = der Raum darf nicht unter die Stufe fallen, er stoppt also nur früher, wenn er wärmer als die Stufe ist."
+          }
+        },
+        "extras_valves": {
+          "title": "Ventilbewegung",
+          "data": {
+            "valve_exercise_day": "Tag",
+            "valve_exercise_time": "Uhrzeit"
+          },
+          "data_description": {
+            "valve_exercise_day": "Tag der Ventilbewegung.",
+            "valve_exercise_time": "Uhrzeit der Ventilbewegung (am besten, wenn niemand Wärme braucht)."
+          }
+        },
+        "control_boost": {
+          "title": "Heizen nach dem Raumsensor",
+          "description": "Solange der Raum Wärme anfordert, bekommen die Heizkörperthermostate die Temperatur beim Heizen, sonst die Zieltemperatur. Der Raum fordert Wärme von Zieltemperatur minus Hysterese bis Zieltemperatur plus Hysterese an, gemessen vom Raumsensor.",
+          "data": {
+            "trv_boost_temperature": "Temperatur beim Heizen",
+            "hysteresis": "Hysterese",
+            "inertia_control": "Gelernte Trägheit nutzen"
+          },
+          "data_description": {
+            "trv_boost_temperature": "Wird an die Heizkörperthermostate geschickt, solange der Raum Wärme anfordert – nie unter der Zieltemperatur und nie über der Höchsttemperatur des Hauses oder der Heizkörperthermostate. Leer = Höchsttemperatur des Hauses.",
+            "hysteresis": "Der Raum fordert Wärme unter Zieltemperatur minus diesem Wert an und hört über Zieltemperatur plus diesem Wert auf, gemessen vom Raumsensor.",
+            "inertia_control": "Sobald der Raum gelernt hat, wie träge seine Heizung reagiert, endet das Heizen etwas früher, wenn die bereits abgegebene Wärme den Raum von selbst an die Obergrenze der Hysterese bringt, und beginnt etwas früher, wenn der Raum sonst unter die Untergrenze fiele, bevor die Wärme ankommt. Die Grenzen bleiben. Aus: Nur die Hysterese entscheidet."
+          }
+        }
+      },
+      "abort": {
+        "reconfigure_successful": "Gespeichert."
+      },
+      "error": {
+        "no_devices": "Wähle mindestens ein Gerät aus.",
+        "duplicate_names": "Zwei Stufen haben denselben Namen.",
+        "invalid_schedule": "Ungültiger Zeitplan.",
+        "helper_required": "Wähle den Zeitplan-Helfer aus.",
+        "sensor_required": "Relais brauchen einen Temperatursensor im Raum.",
+        "entity_in_room": "{entity} wird bereits von {owner} gesteuert. Ein Gerät kann nur von einem Raum gesteuert werden.",
+        "entity_is_source": "{entity} ist die Wärmequelle von {owner}. Es kann nicht zusätzlich Gerät eines Raums sein.",
+        "entity_is_gt_heater": "{entity} ist das Relais eines Generic Thermostats von {owner}. Es kann hier nicht zusätzlich gesteuert werden.",
+        "room_sensor_is_outdoor": "{entity} ist der Außensensor von {owner}. Wähle einen Sensor im Raum.",
+        "humidity_sensor_is_outdoor": "{entity} gehört zum Gerät des Außensensors oder der Wetter-Entität von {owner}: Es misst draußen. Wähle einen Feuchtigkeitssensor im Raum.",
+        "boost_sensor_required": "Heizen nach dem Raumsensor braucht einen Temperatursensor im Raum.",
+        "boost_temperature_only": "Heizen nach dem Raumsensor funktioniert nur mit dem Befehl Temperatur.",
+        "invalid_level_name": "Der Stufenname „{name}“ geht im Zeitplan nicht: Nutze Buchstaben, Ziffern, Leerzeichen, „_“ oder „-“ (kein „,“ „:“ „#“).",
+        "level_name_is_key": "Der Name „{name}“ ist im Zeitplan schon der Name einer anderen Stufe (home, sleep, eco, away, comfort, activity, frost): Wähle einen anderen.",
+        "calibration_sensor_required": "Die Kalibrierung schreibt die Raumtemperatur ins Heizkörperthermostat und braucht daher einen Temperatursensor im Raum. Füge einen hinzu oder stelle die Kalibrierung auf Aus.",
+        "calibration_entities_required": "Wähle die number-Entitäten des Heizkörperthermostats, in die die Kalibrierung schreibt (Offset oder externe Temperatur), oder stelle die Kalibrierung auf der vorigen Seite auf Aus.",
+        "entity_is_circuit": "{entity} ist ein Kreisrelais von {owner}. Es kann nicht zusätzlich Gerät eines Raums oder ein anderer Kreis sein."
+      }
+    },
+    "scenario": {
+      "entry_type": "Szenario",
+      "initiate_flow": {
+        "user": "Szenario hinzufügen",
+        "reconfigure": "Szenario neu konfigurieren"
+      },
+      "step": {
+        "rooms": {
+          "title": "Szenario",
+          "description": "Ein Szenario schaltet ausgewählte Profile in mehreren Räumen auf einmal ein, über die Auswahl *Szenario* des Hauses (oder eine Automation). Es bringt nichts Eigenes mit: Es macht in jedem Raum genau das, was dessen Profilauswahl macht.",
+          "data": {
+            "name": "Name",
+            "rooms": "Räume"
+          },
+          "data_description": {
+            "name": "Erscheint in der Szenario-Auswahl des Hauses, z. B. Homeoffice.",
+            "rooms": "Nur Räume mit eigenem Zeitplan. Nicht ausgewählte Räume behalten ihre Profile."
+          }
+        },
+        "profiles": {
+          "title": "Profile von {scenario}",
+          "description": "Für jeden Raum die Profile, die eingeschaltet werden. Aktive Profile derselben Tage werden ausgeschaltet, wie wenn du eines in der Karte einschaltest. Die Profile eines Raums dürfen sich keine Tage teilen."
+        }
+      },
+      "error": {
+        "name_required": "Gib einen Namen ein.",
+        "name_taken": "Ein anderes Szenario dieses Hauses hat diesen Namen schon.",
+        "rooms_required": "Wähle mindestens einen Raum.",
+        "profiles_required": "Wähle mindestens ein Profil.",
+        "profiles_overlap": "Diese Profile teilen sich Tage: {overlap}. Wähle Profile für unterschiedliche Tage."
+      },
+      "abort": {
+        "reconfigure_successful": "Das Szenario wurde gespeichert.",
+        "house_not_loaded": "Das Haus läuft nicht; Szenarien lassen sich bearbeiten, sobald es gestartet ist.",
+        "no_rooms": "In diesem Haus gibt es keinen Raum mit eigenem Zeitplan."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "presence": {
+        "name": "Anwesenheit",
+        "state": {
+          "home": "Zuhause",
+          "nearby": "In der Nähe",
+          "far": "Weit weg"
+        }
+      },
+      "outdoor_average": {
+        "name": "Außenmittelwert"
+      },
+      "heating_runtime": {
+        "name": "Heizzeit"
+      },
+      "decision": {
+        "name": "Entscheidung",
+        "state": {
+          "starting": "Startet",
+          "frost_protection": "Frostschutz",
+          "maximum_temperature": "Höchsttemperatur",
+          "pause": "Pause",
+          "mode_off": "Modus aus",
+          "summer": "Sommermodus",
+          "out_of_season": "Außerhalb der Heizperiode",
+          "valve_exercise": "Ventilbewegung",
+          "window_open": "Fenster offen",
+          "manual_override": "Manuelle Änderung",
+          "vacation": "Urlaub",
+          "house_away": "Modus abwesend",
+          "presence_far": "Weit weg",
+          "presence_nearby": "In der Nähe",
+          "room_unoccupied": "Raum unbelegt",
+          "sensor_fallback": "Sensor nicht verfügbar",
+          "schedule": "Zeitplan",
+          "optimal_start": "Optimaler Start",
+          "optimal_stop": "Optimaler Stopp",
+          "outdoor_cutoff": "Warm draußen"
+        }
+      },
+      "target_temperature": {
+        "name": "Zieltemperatur"
+      },
+      "room_temperature": {
+        "name": "Raumtemperatur"
+      },
+      "next_change": {
+        "name": "Nächste Änderung"
+      },
+      "heating_rate": {
+        "name": "Aufheizrate"
+      },
+      "cooling_rate": {
+        "name": "Abkühlrate"
+      }
+    },
+    "binary_sensor": {
+      "heating_season": {
+        "name": "Heizperiode"
+      },
+      "outdoor_cutoff": {
+        "name": "Warm draußen"
+      },
+      "heat_demand": {
+        "name": "Wärmebedarf"
+      },
+      "window_open": {
+        "name": "Fenster offen"
+      },
+      "manual_override": {
+        "name": "Manuelle Änderung"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Modus",
+        "state": {
+          "auto": "Auto",
+          "away": "Abwesend",
+          "vacation": "Urlaub",
+          "off": "Aus",
+          "summer": "Sommer"
+        }
+      },
+      "scenario": {
+        "name": "Szenario"
+      },
+      "schedule_profile": {
+        "name": "Zeitplan-Profil",
+        "state_attributes": {
+          "today": {
+            "name": "Heute genutzt"
+          }
+        }
+      }
+    },
+    "switch": {
+      "pause": {
+        "name": "Pause"
+      },
+      "guest_mode": {
+        "name": "Gastmodus"
+      },
+      "child_lock": {
+        "name": "Kindersicherung"
+      }
+    },
+    "number": {
+      "level_home": {
+        "name": "Stufe Home"
+      },
+      "level_sleep": {
+        "name": "Stufe Sleep"
+      },
+      "level_eco": {
+        "name": "Stufe Eco"
+      },
+      "level_away": {
+        "name": "Stufe Away"
+      },
+      "level_comfort": {
+        "name": "Stufe Comfort"
+      },
+      "level_activity": {
+        "name": "Stufe Activity"
+      },
+      "level_nearby": {
+        "name": "Temperatur in der Nähe"
+      },
+      "level_custom": {
+        "name": "Stufe {name}"
+      }
+    },
+    "datetime": {
+      "vacation_start": {
+        "name": "Urlaubsbeginn"
+      },
+      "vacation_end": {
+        "name": "Urlaubsende"
+      }
+    },
+    "button": {
+      "clear_overrides": {
+        "name": "Manuelle Änderungen löschen"
+      },
+      "reevaluate": {
+        "name": "Neu bewerten"
+      },
+      "clear_vacation": {
+        "name": "Urlaub löschen"
+      },
+      "clear_override": {
+        "name": "Manuelle Änderung löschen"
+      },
+      "reset_learning": {
+        "name": "Gelerntes zurücksetzen"
+      }
+    }
+  },
+  "selector": {
+    "home_rule": {
+      "options": {
+        "any": "Mindestens eine Person ist zu Hause",
+        "all": "Alle sind zu Hause"
+      }
+    },
+    "season_mode": {
+      "options": {
+        "always": "Immer",
+        "dates": "Zwischen Daten",
+        "auto": "Automatisch (Außentemperatur)"
+      }
+    },
+    "override_mode": {
+      "options": {
+        "fixed": "Feste Dauer",
+        "until_next_reevaluation": "Bis zur nächsten Neubewertung"
+      }
+    },
+    "override_scope": {
+      "options": {
+        "room": "Nur dieser Raum",
+        "house": "Ganzes Haus"
+      }
+    },
+    "source": {
+      "options": {
+        "generic_thermostat": "Generic Thermostat",
+        "climate": "Andere Thermostate / Heizkörperthermostate",
+        "switch": "Schalter (Relais)"
+      }
+    },
+    "house_source": {
+      "options": {
+        "generic_thermostat": "Generic Thermostat",
+        "climate": "Ein anderes Thermostat für die ganze Wohnung",
+        "switch": "Schalter (Relais)",
+        "none": "Jeder Raum heizt separat (Heizkörperthermostate, Heizgeräte, Klimaanlage)"
+      }
+    },
+    "command_mode": {
+      "options": {
+        "temperature": "Temperatur",
+        "preset": "Preset",
+        "hvac_mode": "Ein / Aus (HVAC-Modus)"
+      }
+    },
+    "nearby_mode": {
+      "options": {
+        "preset": "Eco-Preset",
+        "temperature": "Feste Temperatur"
+      }
+    },
+    "aggregation": {
+      "options": {
+        "mean": "Mittelwert",
+        "min": "Minimum",
+        "median": "Median"
+      }
+    },
+    "calibration": {
+      "options": {
+        "off": "Aus",
+        "offset": "Offset",
+        "external": "Eingang für externe Temperatur"
+      }
+    },
+    "window_action": {
+      "options": {
+        "frost": "Frostschutz",
+        "off": "Ausschalten"
+      }
+    },
+    "schedule_source": {
+      "options": {
+        "internal": "Interner Zeitplan",
+        "helper": "Zeitplan-Helfer"
+      }
+    },
+    "preset": {
+      "options": {
+        "home": "Home",
+        "sleep": "Sleep",
+        "eco": "Eco",
+        "away": "Away",
+        "comfort": "Comfort",
+        "activity": "Activity"
+      }
+    },
+    "weekday": {
+      "options": {
+        "mon": "Montag",
+        "tue": "Dienstag",
+        "wed": "Mittwoch",
+        "thu": "Donnerstag",
+        "fri": "Freitag",
+        "sat": "Samstag",
+        "sun": "Sonntag"
+      }
+    },
+    "temperature_unit": {
+      "options": {
+        "celsius": "Celsius (°C)",
+        "fahrenheit": "Fahrenheit (°F)"
+      }
+    }
+  },
+  "services": {
+    "set_override": {
+      "name": "Manuelle Änderung setzen",
+      "description": "Setzt eine Stufe oder eine Temperatur und hält sie als manuelle Änderung.",
+      "fields": {
+        "room": {
+          "name": "Raum",
+          "description": "Name oder ID des Raums."
+        },
+        "entity_id": {
+          "name": "Entitäten",
+          "description": "Eine beliebige Entität des Raums (oder sein Thermostat)."
+        },
+        "preset": {
+          "name": "Preset",
+          "description": "Stufe, die gesetzt wird."
+        },
+        "temperature": {
+          "name": "Temperatur",
+          "description": "Temperatur, die gesetzt wird, in der Einheit des Hauses (°C oder °F)."
+        },
+        "duration_hours": {
+          "name": "Dauer",
+          "description": "Stunden; leer = die eingestellte Regel für manuelle Änderungen."
+        }
+      }
+    },
+    "clear_override": {
+      "name": "Manuelle Änderung löschen",
+      "description": "Zurück zur automatischen Steuerung (alle Räume, wenn keiner angegeben ist).",
+      "fields": {
+        "room": {
+          "name": "Raum",
+          "description": "Name oder ID des Raums."
+        },
+        "entity_id": {
+          "name": "Entitäten",
+          "description": "Eine beliebige Entität des Raums (oder sein Thermostat)."
+        }
+      }
+    },
+    "set_vacation": {
+      "name": "Urlaub setzen",
+      "description": "Setzt den Urlaubszeitraum; leere Werte löschen ihn.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Haus",
+          "description": "Nur bei mehreren Häusern nötig."
+        },
+        "start": {
+          "name": "Urlaubsbeginn",
+          "description": "Beginn des Urlaubs."
+        },
+        "end": {
+          "name": "Urlaubsende",
+          "description": "Ende des Urlaubs (das Vorheizen beginnt früher)."
+        }
+      }
+    },
+    "reevaluate": {
+      "name": "Neu bewerten",
+      "description": "Alle Räume jetzt neu bewerten.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Haus",
+          "description": "Nur bei mehreren Häusern nötig."
+        }
+      }
+    },
+    "set_schedule": {
+      "name": "Zeitplan setzen",
+      "description": "Ersetzt den Zeitplan eines Raums.",
+      "fields": {
+        "room": {
+          "name": "Raum",
+          "description": "Name oder ID des Raums."
+        },
+        "entity_id": {
+          "name": "Entitäten",
+          "description": "Eine beliebige Entität des Raums (oder sein Thermostat)."
+        },
+        "schedule": {
+          "name": "Zeitplan",
+          "description": "z. B. `workday: 00:00 sleep, 06:00 home, 22:00 sleep`"
+        },
+        "profiles": {
+          "name": "Profile",
+          "description": "Profile als Objekt: Profilname -> Liste aus Uhrzeit und Preset (von der Karte genutzt)."
+        },
+        "profile_days": {
+          "name": "Profiltage",
+          "description": "Tage und An / Aus jedes Profils: Profilname -> days (all, workday, weekend oder eine Liste aus mon … sun) und enabled (true / false). Von der Karte genutzt. Aktive Profile dürfen sich nicht überschneiden."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "house_not_found": {
+      "message": "Kein Smart-Heating-Control-Haus mit der ID {entry}."
+    },
+    "house_ambiguous": {
+      "message": "Es sind mehrere Häuser eingerichtet; gib config_entry_id an."
+    },
+    "room_not_found": {
+      "message": "Kein passender Raum."
+    },
+    "preset_or_temperature": {
+      "message": "Gib entweder ein Preset oder eine Temperatur an."
+    },
+    "unknown_preset": {
+      "message": "Unbekanntes Preset {preset}."
+    },
+    "vacation_order": {
+      "message": "Das Ende muss nach dem Beginn liegen."
+    },
+    "schedule_or_profiles": {
+      "message": "Gib entweder schedule oder profiles an."
+    },
+    "schedule_external": {
+      "message": "Dieser Raum nutzt einen Zeitplan-Helfer; bearbeite stattdessen den Helfer."
+    },
+    "invalid_schedule": {
+      "message": "Ungültiger Zeitplan: {error}"
+    },
+    "temperature_invalid": {
+      "message": "Die Temperatur muss eine Zahl sein."
+    },
+    "duration_invalid": {
+      "message": "Die Dauer muss zwischen {min} und {max} Stunden liegen."
+    }
+  },
+  "issues": {
+    "scenario_problem": {
+      "title": "Szenario {scenario} lässt sich nicht vollständig anwenden",
+      "description": "Im Haus {house} hat das Szenario **{scenario}** Räume, die beim Auswählen übersprungen werden: {details}.\n\nKonfiguriere das Szenario neu (Einstellungen → Geräte & Dienste → Smart Heating Control) oder lösche es. Diese Meldung verschwindet von selbst, sobald es behoben ist."
+    }
+  }
+}

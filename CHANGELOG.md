@@ -63,6 +63,12 @@ which the reference room could not.
   catches the heat while the boiler runs for other rooms, so the room does not
   stay below its target until the next start.
 
+- 🌍 **German, Dutch, French and Italian** for the integration (settings,
+  entities, services, the notifications and the Repairs details) and the card
+  (also its editor), besides English and Romanian;
+  the documentation stays in English and Romanian. Help review them in #12.
+  The READMEs are in the six languages, with the card demo playing on top.
+
 ### Fixed
 
 - ⏸️ A change made on the devices in a pause (a heat pump making hot water,

@@ -43,6 +43,30 @@ _TEXTS: dict[str, dict[str, str]] = {
         "overlap": "{room}: {profiles} au zile comune",
         "helper": "{room}: camera nu are program propriu",
     },
+    "de": {
+        "empty": "es hat keine Räume",
+        "missing": "{room}: kein Profil {profile}",
+        "overlap": "{room}: {profiles} teilen sich Tage",
+        "helper": "{room}: Der Raum hat keinen eigenen Zeitplan",
+    },
+    "nl": {
+        "empty": "het heeft geen kamers",
+        "missing": "{room}: geen profiel {profile}",
+        "overlap": "{room}: {profiles} delen dagen",
+        "helper": "{room}: de kamer heeft geen eigen schema",
+    },
+    "fr": {
+        "empty": "il n'a aucune pièce",
+        "missing": "{room} : pas de profil {profile}",
+        "overlap": "{room} : {profiles} partagent des jours",
+        "helper": "{room} : la pièce n'a pas de planning propre",
+    },
+    "it": {
+        "empty": "non ha stanze",
+        "missing": "{room}: nessun profilo {profile}",
+        "overlap": "{room}: {profiles} hanno giorni in comune",
+        "helper": "{room}: la stanza non ha un programma proprio",
+    },
 }
 
 
@@ -151,8 +175,7 @@ def check(house: House) -> None:
     """Drop deleted rooms from the scenarios; tell their problems in Repairs."""
     hass = house.hass
     entry = house.entry
-    language = "ro" if str(hass.config.language or "").lower().startswith("ro") else "en"
-    texts = _TEXTS[language]
+    texts = _TEXTS.get(str(hass.config.language or "").lower()[:2], _TEXTS["en"])
     current: set[str] = set()
     for sub in scenario_subentries(house):
         rooms = scenario_rooms(sub)

@@ -257,3 +257,33 @@ test("set for a while: after Apply the field lets go of the focus, so the card i
   eq(await p.evaluate(() => card.shadowRoot.activeElement?.tagName || null), null, "no focused field");
   eq(await p.evaluate(() => card.shadowRoot.querySelector('input[data-quick="hours"]').value), "", "hours cleared");
 });
+
+test("every language has every text of English, with the same placeholders", async (p) => {
+  await mount(p, {}, { rooms: R });
+  const problems = await p.evaluate(() => {
+    const ph = (s) => (String(s).match(/\{[a-z_]+\}/g) || []).sort().join(",");
+    const out = [];
+    for (const [lang, texts] of Object.entries(TEXT)) {
+      for (const [key, value] of Object.entries(TEXT.en)) {
+        if (!(key in texts)) out.push(`${lang}: ${key} missing`);
+        else if (ph(texts[key]) !== ph(value)) out.push(`${lang}: ${key} placeholders`);
+      }
+    }
+    for (const lang of Object.keys(TEXT)) {
+      for (const key of Object.keys(EDITOR_LABELS.en)) {
+        if (!EDITOR_LABELS[lang] || !(key in EDITOR_LABELS[lang])) out.push(`editor ${lang}: ${key}`);
+      }
+    }
+    return out;
+  });
+  eq(problems.join("; "), "", "texts");
+});
+
+test("the card speaks German, Dutch, French and Italian", async (p) => {
+  const titles = { de: "Heizung", nl: "Verwarming", fr: "Chauffage", it: "Riscaldamento" };
+  for (const [lang, title] of Object.entries(titles)) {
+    await mount(p, {}, { rooms: R, lang });
+    const text = await p.evaluate(() => card.shadowRoot.textContent);
+    ok(text.includes(title), `${lang}: ${title}`);
+  }
+});

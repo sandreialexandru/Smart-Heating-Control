@@ -1,0 +1,1211 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Smart Heating Control",
+        "description": "Créez la maison. Les pièces s'ajoutent ensuite avec « Ajouter une pièce » ; toutes les autres options se trouvent dans les options de l'intégration.",
+        "data": {
+          "temperature_unit": "Unité de température",
+          "name": "Nom",
+          "persons": "Personnes",
+          "nearby_zones": "Zones à proximité",
+          "home_rule": "La maison est « À la maison » quand"
+        },
+        "data_description": {
+          "temperature_unit": "Toutes les températures de cette maison sont saisies et affichées dans cette unité. Vous pourrez la changer plus tard avec Reconfigurer ; les valeurs sont converties.",
+          "name": "Affiché sur les appareils et dans la carte.",
+          "persons": "Personnes dont la position décide si la maison est à la maison / à proximité / loin. Ne laissez vide que si la présence ne doit pas compter : la maison est alors toujours « à la maison » et seul le planning décide.",
+          "nearby_zones": "Zones où la maison est « à proximité » (éco), par exemple votre ville. Hors de la maison et de toutes les zones = « loin » (absent). Laissez vide si vous voulez seulement à la maison / loin.",
+          "home_rule": "« Au moins une personne » convient à la plupart des foyers. « Tout le monde » baisse le chauffage dès qu'une personne s'en va."
+        }
+      },
+      "reconfigure": {
+        "title": "Unité de température",
+        "description": "Toutes les températures de cette maison (réglages, niveaux, carte) sont affichées dans cette unité. Les valeurs sont converties, rien n'est à ressaisir.",
+        "data": {
+          "temperature_unit": "Unité de température"
+        },
+        "data_description": {
+          "temperature_unit": "Toutes les températures de cette maison sont saisies et affichées dans cette unité. Vous pourrez la changer plus tard avec Reconfigurer ; les valeurs sont converties."
+        }
+      },
+      "heating": {
+        "title": "Chauffage de toute la maison",
+        "data": {
+          "source": "Chauffé par"
+        },
+        "description": "Le thermostat (ou le relais) unique qui chauffe tout le logement. Il devient la zone {zone} et fonctionne avec toutes les options de la maison. Si les pièces chauffent séparément (têtes thermostatiques, radiateurs électriques, climatiseurs), choisissez « Chaque pièce chauffe séparément » et ajoutez chaque pièce avec « Ajouter une pièce ».",
+        "data_description": {
+          "source": "Ce qui chauffe toute la maison : un Generic Thermostat, un autre thermostat (Nest, Tado, Hive…) ou un relais qui démarre la chaudière. « Chaque pièce chauffe séparément » quand aucun appareil ne chauffe seul tout le logement : têtes thermostatiques ou vannes sur les radiateurs, radiateurs électriques, climatiseurs, zones de plancher chauffant. Chaque pièce est alors ajoutée avec son propre appareil et, avec des têtes thermostatiques, le relais de la chaudière (ou le thermostat qui la démarre) est choisi comme source de chaleur."
+        }
+      },
+      "heating_devices": {
+        "title": "Appareils",
+        "data": {
+          "climates": "Thermostats",
+          "switches": "Interrupteurs (relais)",
+          "command_mode": "Commande",
+          "trv_boost": "Chauffer selon les capteurs de la pièce"
+        },
+        "data_description": {
+          "climates": "Le thermostat qui commande la chaudière, par exemple l'entité Generic Thermostat (climate.climate).",
+          "switches": "Seulement si un relais chauffe directement la maison, sans thermostat.",
+          "command_mode": "Seulement pour les thermostats autres que Generic Thermostat. La différence est expliquée dans les réglages des pièces.",
+          "trv_boost": "Tant que la maison demande de la chaleur (d'après ses capteurs de température, avec l'hystérésis), le thermostat ou les têtes thermostatiques reçoivent la Température pendant la chauffe (par défaut la température maximale de la maison) et continuent de chauffer jusqu'à ce que la maison soit chaude ; le reste du temps, ils reçoivent la consigne. Utile quand l'appareil mesure au mauvais endroit (un thermostat dans le couloir, une tête collée au radiateur). Nécessite un capteur de température. Seulement avec la commande Température. À ne pas confondre avec « Démarrer et arrêter la source par sa température » : celle-ci concerne un thermostat qui ne fait que démarrer la chaudière pour des pièces équipées de leurs propres têtes (choisissez alors « Chaque pièce chauffe séparément » et sélectionnez le thermostat comme source de chaleur)."
+        }
+      },
+      "heating_on_off": {
+        "title": "Commande marche / arrêt",
+        "data": {
+          "temperature_sensors": "Capteurs de température",
+          "hysteresis": "Hystérésis",
+          "min_on_minutes": "Durée minimale de marche",
+          "min_off_minutes": "Durée minimale d'arrêt",
+          "inertia_control": "Utiliser l'inertie apprise"
+        },
+        "description": "L'intégration allume et éteint le chauffage autour de la consigne.",
+        "data_description": {
+          "temperature_sensors": "Capteurs dans la pièce, utilisés à la place du capteur du thermostat (plus précis quand le thermostat est près d'une source de chaleur). Laissez vide pour utiliser le capteur du thermostat ; obligatoire pour les relais, qui n'ont pas de capteur.",
+          "hysteresis": "Le chauffage démarre sous la consigne moins cette valeur et s'arrête au-dessus de la consigne plus cette valeur.",
+          "min_on_minutes": "Durée minimale de marche. 0 pour les appareils que les cycles courts ne dérangent pas.",
+          "min_off_minutes": "Durée minimale d'arrêt entre deux démarrages.",
+          "inertia_control": "Une fois que la pièce a appris la lenteur de son chauffage, celui-ci s'arrête un peu plus tôt quand la chaleur déjà fournie suffira à amener la pièce en haut de la bande d'hystérésis, et démarre un peu plus tôt quand la pièce descendrait sinon sous le bas de la bande avant que la chaleur n'arrive. La bande reste la limite. Surtout utile pour les chauffages lents (radiateurs en fonte, plancher chauffant). Désactivé : seule l'hystérésis décide."
+        }
+      },
+      "heating_thermostat": {
+        "title": "Thermostat",
+        "data": {
+          "hysteresis": "Hystérésis"
+        },
+        "description": "Le thermostat maintient lui-même la température ; l'intégration n'envoie que le niveau ou la température.",
+        "data_description": {
+          "hysteresis": "Ce thermostat n'indique pas quand il chauffe (pas de hvac_action) : il est considéré comme en chauffe de cet écart sous sa consigne jusqu'à cet écart au-dessus, comme un relais. Sert pour la demande de chaleur, la chaudière, le temps de chauffe, l'apprentissage et comme marge de confort de l'arrêt optimal."
+        }
+      },
+      "heating_boost": {
+        "title": "Chauffage selon les capteurs de la pièce",
+        "description": "Tant que la maison demande de la chaleur, le thermostat (ou les têtes thermostatiques) reçoit la température ci-dessous, le reste du temps la consigne. La maison demande de la chaleur de la consigne moins l'hystérésis jusqu'à la consigne plus l'hystérésis, mesurée par ses capteurs.",
+        "data": {
+          "temperature_sensors": "Capteurs de température",
+          "trv_boost_temperature": "Température pendant la chauffe",
+          "hysteresis": "Hystérésis",
+          "inertia_control": "Utiliser l'inertie apprise"
+        },
+        "data_description": {
+          "temperature_sensors": "Capteurs dans les pièces de la maison : la demande de chaleur se décide d'après eux, pas d'après le capteur du thermostat ou des têtes thermostatiques.",
+          "trv_boost_temperature": "Envoyée au thermostat (ou aux têtes thermostatiques) tant que la maison demande de la chaleur, jamais sous la consigne et jamais au-dessus de la température maximale de la maison ou de l'appareil. Vide = température maximale de la maison.",
+          "hysteresis": "La maison demande de la chaleur sous la consigne moins cette valeur et s'arrête au-dessus de la consigne plus cette valeur, mesurée par ses capteurs.",
+          "inertia_control": "Une fois que la maison a appris la lenteur de son chauffage, la température plus élevée prend fin un peu plus tôt quand la chaleur déjà fournie amènera d'elle-même la maison en haut de la bande d'hystérésis, et commence un peu plus tôt quand la maison descendrait sinon sous le bas de la bande avant que la chaleur n'arrive. La bande reste la limite. Désactivé : seule l'hystérésis décide."
+        }
+      }
+    },
+    "error": {
+      "no_devices": "Sélectionnez au moins un appareil.",
+      "sensor_required": "Les relais ont besoin d'un capteur de température dans la pièce.",
+      "entity_in_room": "{entity} est déjà commandé par {owner}. Un appareil ne peut être commandé que par une seule pièce.",
+      "entity_is_source": "{entity} est la source de chaleur de {owner}. Il ne peut pas aussi être un appareil d'une pièce.",
+      "entity_is_gt_heater": "{entity} est le relais d'un Generic Thermostat utilisé par {owner}. Il ne peut pas aussi être commandé ici.",
+      "room_sensor_is_outdoor": "{entity} est le capteur extérieur de {owner}. Choisissez un capteur dans la pièce.",
+      "boost_sensor_required": "Le chauffage selon les capteurs de la pièce nécessite un capteur de température.",
+      "boost_temperature_only": "Le chauffage selon les capteurs de la pièce ne fonctionne qu'avec la commande Température.",
+      "entity_is_circuit": "{entity} est un relais de circuit de {owner}. Il ne peut pas aussi être un appareil d'une pièce ou un autre circuit."
+    },
+    "abort": {
+      "reconfigure_successful": "Enregistré."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options de Smart Heating Control",
+        "menu_options": {
+          "heating": "Chauffage de toute la maison",
+          "presence": "Présence",
+          "calendar": "Jours ouvrés et calendrier",
+          "weather": "Météo et saison",
+          "energy": "Énergie",
+          "boiler": "Source de chaleur et demande de chaleur",
+          "behavior": "Modifications manuelles, vacances et limites",
+          "alerts": "Alertes"
+        }
+      },
+      "presence": {
+        "title": "Présence",
+        "data": {
+          "persons": "Personnes",
+          "home_rule": "La maison est « À la maison » quand",
+          "nearby_zones": "Zones à proximité",
+          "nearby_geometric": "Utiliser les coordonnées pour les zones à proximité",
+          "departure_delay": "Délai de départ",
+          "arrival_delay": "Délai d'arrivée",
+          "presence_sensors": "Capteurs de présence",
+          "guest_expire_hours": "Le mode invité s'arrête après",
+          "proximity_distance": "Capteur de distance Proximity",
+          "proximity_direction": "Capteur de direction Proximity",
+          "travel_time": "Capteurs de temps de trajet"
+        },
+        "data_description": {
+          "persons": "Personnes dont la position décide si la maison est à la maison / à proximité / loin. Ne laissez vide que si la présence ne doit pas compter : la maison est alors toujours « à la maison » et seul le planning décide.",
+          "home_rule": "« Au moins une personne » convient à la plupart des foyers. « Tout le monde » baisse le chauffage dès qu'une personne s'en va.",
+          "nearby_zones": "Zones où la maison est « à proximité » (éco), par exemple votre ville. Hors de la maison et de toutes les zones = « loin » (absent). Laissez vide si vous voulez seulement à la maison / loin.",
+          "nearby_geometric": "Utilise les coordonnées GPS : une personne dans une zone située à l'intérieur d'une zone à proximité (par exemple Bureau dans la ville) compte comme à proximité. Désactivez si les personnes n'ont pas de position GPS.",
+          "departure_delay": "Combien de temps tout le monde doit être parti avant que le chauffage ne baisse. Évite de réagir aux courtes sorties (courses, promener le chien).",
+          "arrival_delay": "En général 0 : le chauffage revient dès que quelqu'un est à la maison. N'augmentez que si le GPS indique parfois « à la maison » par erreur.",
+          "presence_sensors": "Maintiennent la maison « à la maison » tant qu'ils sont actifs (mmWave, mouvement, un interrupteur pour les personnes sans téléphone). Laissez vide si tout le monde a l'application Companion.",
+          "guest_expire_hours": "Le mode invité maintient la maison « à la maison » et s'arrête tout seul après ce nombre d'heures. 0 = seulement manuellement.",
+          "proximity_distance": "Capteur de distance de l'intégration Proximity, pour préchauffer sur le chemin du retour (recommandé, avec le capteur de direction). Avec plusieurs personnes, son capteur de distance la plus proche. Laissez vide sans Proximity.",
+          "proximity_direction": "Capteur de direction de Proximity (avec plusieurs personnes, la direction de la plus proche). Seule la direction indique que quelqu'un rentre ; elle s'applique aussi au temps de trajet.",
+          "travel_time": "Temps de trajet jusqu'à la maison (Waze, Google Travel Time), un capteur par personne : c'est le trajet le plus court qui compte (pas celui d'une personne déjà à la maison, environ 0 minute). Il dit seulement à quelle distance se trouve quelqu'un, pas s'il rentre : une personne qui reste à proximité garde la maison au chaud. Proximity est recommandé à la place, car il connaît la direction."
+        }
+      },
+      "calendar": {
+        "title": "Jours ouvrés et calendrier",
+        "data": {
+          "workday_sensor": "Capteur de jour ouvré",
+          "calendar": "Calendrier",
+          "day_boundary": "La journée du planning commence à"
+        },
+        "data_description": {
+          "workday_sensor": "Capteur de l'intégration Workday, pour que les jours fériés utilisent le profil du week-end. Sans lui, du lundi au vendredi sont des jours ouvrés.",
+          "calendar": "Facultatif. Un événement portant le nom d'un profil (par exemple home_office) ou d'un niveau (par exemple away) l'applique pendant toute sa durée. Laissez vide si vous ne planifiez pas vos journées dans un calendrier.",
+          "day_boundary": "Laissez 00:00. Ne changez que pour le travail de nuit, afin qu'une nuit appartienne à la veille."
+        }
+      },
+      "weather": {
+        "title": "Météo et saison",
+        "data": {
+          "outdoor_sensor": "Capteur de température extérieure",
+          "weather": "Entité météo",
+          "cutoff_enabled": "Couper le chauffage quand il fait doux dehors",
+          "forecast_enabled": "Utiliser les prévisions",
+          "season_mode": "Saison de chauffe",
+          "compensation_enabled": "Compensation extérieure",
+          "window_ignore_above": "Ignorer les fenêtres au-dessus de"
+        },
+        "data_description": {
+          "outdoor_sensor": "Température extérieure pour la coupure, la saison et la compensation. Si vide, la température de l'entité météo est utilisée.",
+          "weather": "Utilisée pour les prévisions, les apports solaires et comme température extérieure en l'absence de capteur.",
+          "cutoff_enabled": "Arrête le chauffage quand la moyenne extérieure atteint la température de coupure. Nécessite un capteur extérieur ou une entité météo.",
+          "forecast_enabled": "Utilise la moyenne des prévisions sur les prochaines Heures de prévision, jamais une heure isolée. Chauffage coupé par la moyenne extérieure : il peut repartir quand cette moyenne est inférieure ou égale à la coupure moins l'hystérésis. Chauffage en marche : il est coupé plus tôt quand cette moyenne atteint la coupure, et reste coupé jusqu'à ce qu'elle redescende à la coupure moins l'hystérésis. Nécessite une entité météo avec prévisions horaires et la coupure activée.",
+          "season_mode": "« Toujours » si vous changez de saison avec le mode Été. « Entre deux dates » ou « Automatique » pour arrêter tout seul de chauffer hors saison. « Automatique » nécessite un capteur extérieur ou une entité météo.",
+          "compensation_enabled": "Relève un peu la consigne quand il fait très froid dehors (les murs sont plus froids). Nécessite un capteur extérieur ou une entité météo. Laissez désactivé si les pièces tiennent bien la température.",
+          "window_ignore_above": "Les fenêtres ouvertes ne baissent pas le chauffage quand il fait aussi doux dehors. Nécessite un capteur extérieur ou une entité météo. Laissez vide pour toujours réagir."
+        }
+      },
+      "energy": {
+        "title": "Énergie",
+        "data": {
+          "price_sensor": "Capteur de prix de l'énergie",
+          "pv_sensor": "Capteur de surplus photovoltaïque"
+        },
+        "data_description": {
+          "price_sensor": "Capteur de prix de l'énergie (tarif dynamique). Laissez vide avec un prix fixe.",
+          "pv_sensor": "Puissance injectée sur le réseau (W). Utile seulement avec un chauffage électrique ou une pompe à chaleur."
+        }
+      },
+      "boiler": {
+        "title": "Source de chaleur et demande de chaleur",
+        "data": {
+          "boiler_entity": "Source de chaleur"
+        },
+        "data_description": {
+          "boiler_entity": "La chaudière (ou le relais qui démarre la source de chaleur) quand les pièces ne peuvent pas la démarrer elles-mêmes (têtes thermostatiques, vannes de zone). L'intégration la démarre quand des pièces demandent de la chaleur, et l'apprentissage et le temps de chauffe ne comptent que pendant qu'elle fonctionne. Jamais le relais qu'utilise déjà un Generic Thermostat. Avec des têtes thermostatiques et une chaudière démarrée par un thermostat hors de Home Assistant, l'apprentissage n'est pas fiable : le démarrage et l'arrêt optimaux sont déconseillés."
+        },
+        "description": "Seulement pour les maisons où les pièces ne peuvent pas démarrer elles-mêmes la source de chaleur (têtes thermostatiques ou vannes de zone) : l'intégration la démarre alors quand des pièces demandent de la chaleur, et une pièce chauffe (pour l'apprentissage et le temps de chauffe) seulement pendant qu'elle fonctionne.\n\n⚠️ Avec une tête thermostatique sur chaque radiateur, l'installation doit laisser passer l'eau (un by-pass automatique, une chaudière avec by-pass interne ou un radiateur sans tête) : les têtes se ferment à leur consigne, et la source de chaleur peut tourner jusqu'à la fin de sa durée minimale de marche."
+      },
+      "behavior": {
+        "title": "Modifications manuelles, vacances et limites",
+        "data": {
+          "override_mode": "Les modifications manuelles durent",
+          "override_scope": "Une modification manuelle s'applique à",
+          "vacation_preheat_hours": "Préchauffer avant la fin des vacances",
+          "auto_vacation_hours": "Vacances automatiques quand tout le monde est loin depuis",
+          "frost_temp": "Hors-gel",
+          "max_temp": "Température maximale",
+          "reevaluation_minutes": "Vérification périodique toutes les"
+        },
+        "data_description": {
+          "override_mode": "Une seule règle pour toutes les modifications manuelles. « Durée fixe » la garde pendant les heures ci-dessous. « Jusqu'à la prochaine réévaluation » prend fin quand le planning, la présence, une fenêtre ou le mode change ; la vérification périodique n'y met pas fin.",
+          "override_scope": "« Seulement cette pièce » convient à la plupart des foyers. « Toute la maison » copie une modification manuelle dans toutes les pièces ; à n'utiliser que si chaque pièce a ses propres vannes.",
+          "vacation_preheat_hours": "Le planning reprend ce nombre d'heures avant la fin des vacances, pour que la maison soit chaude à votre arrivée.",
+          "auto_vacation_hours": "Active les vacances tout seul quand tout le monde est loin depuis aussi longtemps. 0 = seulement manuellement.",
+          "frost_temp": "Utilisé avec une fenêtre ouverte ou en mode Arrêt. Les pièces avec Generic Thermostat utilisent sa température minimale à la place.",
+          "max_temp": "Aucun niveau, ajustement ou modification manuelle de l'intégration ne dépasse cette valeur.",
+          "reevaluation_minutes": "Vérification de sécurité qui renvoie la décision si un appareil l'a perdue. Les changements sont de toute façon appliqués immédiatement ; 5 à 15 minutes conviennent."
+        }
+      },
+      "alerts": {
+        "title": "Alertes",
+        "data": {
+          "notify_critical": "Alertes importantes à",
+          "notify_warning": "Avertissements à",
+          "notify_info": "Informations à",
+          "notify_resolved": "Prévenir quand une alerte prend fin",
+          "quiet_start": "Heures calmes à partir de",
+          "quiet_end": "Heures calmes jusqu'à",
+          "pause_remind_hours": "Rappeler quand la pause dure plus de",
+          "alert_window_minutes": "Alerter quand une fenêtre reste ouverte plus de",
+          "alert_unavailable_minutes": "Alerter quand un appareil est indisponible plus de",
+          "alert_silent_hours": "Alerter quand un capteur de température n'envoie rien pendant",
+          "alert_no_effect_hours": "Alerter quand le chauffage reste sans effet pendant",
+          "battery_threshold": "Batterie faible sous",
+          "verify_commands": "Vérifier les commandes",
+          "room_diff_alert": "Alerter quand une pièce reste plus froide de"
+        },
+        "data_description": {
+          "notify_critical": "Plus de chauffage : la source de chaleur ou un thermostat est indisponible. Envoyé tout de suite, même pendant les heures calmes. Choisissez des téléphones (notify.mobile_app_...) ou d'autres services de notification. Pour l'e-mail, écrivez les adresses après le service, par exemple notify.me_gmail_com: ana@example.com, ion@example.com (Google Mail en a besoin). Laissez vide pour des notifications dans Home Assistant.",
+          "notify_warning": "Quelque chose à vérifier : une fenêtre ouverte, une batterie faible, un capteur en panne, le hors-gel dans une pièce, une pause oubliée, une pièce plus froide que les autres, un réglage qui ne fonctionne pas. E-mail : les adresses après le service, comme ci-dessus. Laissez vide pour des notifications dans Home Assistant.",
+          "notify_info": "Ce que la maison a fait toute seule : la saison de chauffe a commencé ou s'est terminée, des vacances prévues ont commencé, la maison se réchauffe pour votre retour, les vacances automatiques ont commencé ou pris fin, le mode invité s'est arrêté tout seul. Laissez vide pour ne pas être prévenu.",
+          "notify_resolved": "Un message quand un appareil refonctionne, qu'une fenêtre est fermée ou qu'une batterie a été changée (seulement pour les alertes envoyées aux destinataires ci-dessus). Sur un téléphone, il remplace l'alerte.",
+          "quiet_start": "À partir de cette heure, seules les alertes importantes sont envoyées ; les autres attendent la fin des heures calmes et ne partent que si elles sont encore valables. Laissez les deux vides pour ne pas avoir d'heures calmes.",
+          "quiet_end": "Fin des heures calmes (peut être le lendemain matin).",
+          "pause_remind_hours": "Un avertissement quand le chauffage reste en pause aussi longtemps, puis une fois par jour (une pause oubliée, c'est une maison froide). 0 = jamais.",
+          "alert_window_minutes": "Alerter quand une fenêtre reste ouverte aussi longtemps alors qu'il faut chauffer.",
+          "alert_unavailable_minutes": "Alerter quand un thermostat ou un capteur est indisponible aussi longtemps.",
+          "alert_silent_hours": "Alerter quand un capteur de température d'une pièce reste disponible mais n'a envoyé aucune valeur (pas même la même) depuis aussi longtemps : une pile vide ou un signal perdu laissent souvent affichée la dernière valeur. Un capteur muet est écarté jusqu'à ce qu'il se manifeste à nouveau, comme un capteur indisponible (on utilise alors les autres capteurs, sinon le thermostat, sinon éco). 0 = désactivé. Augmentez pour les capteurs qui n'envoient que lorsque la température change, et pour un capteur template ou de groupe (une moyenne), qui n'écrit une valeur que lorsqu'un de ses capteurs change.",
+          "alert_no_effect_hours": "Alerter quand une pièce chauffe aussi longtemps, nettement sous sa consigne, et que sa température monte bien moins que ce que prévoit son modèle appris : une vanne bloquée, une source de chaleur qui ne démarre pas, une fenêtre ouverte sans capteur. Seulement une fois que la pièce a appris son modèle (avant, un plancher chauffant lent ne se distingue pas d'un plancher bloqué). 0 = désactivé.",
+          "battery_threshold": "Alerter quand la batterie d'un appareil de la pièce (tête thermostatique, capteur) passe sous ce seuil.",
+          "verify_commands": "Vérifie au bout de 2 minutes que l'appareil a accepté la commande, réessaie une fois, puis alerte. Ne désactivez que si un appareil remonte son état lentement.",
+          "room_diff_alert": "Alerter quand une pièce reste autant sous sa consigne alors que les autres sont chaudes (vanne bloquée, fenêtre ouverte). 0 = désactivé ; utile seulement avec plusieurs pièces."
+        }
+      },
+      "heating": {
+        "title": "Chauffage de toute la maison",
+        "data": {
+          "source": "Chauffé par"
+        },
+        "description": "Le thermostat (ou le relais) unique qui chauffe tout le logement. Il devient la zone {zone} et fonctionne avec toutes les options de la maison. Si les pièces chauffent séparément (têtes thermostatiques, radiateurs électriques, climatiseurs), choisissez « Chaque pièce chauffe séparément » et ajoutez chaque pièce avec « Ajouter une pièce ».",
+        "data_description": {
+          "source": "Ce qui chauffe toute la maison : un Generic Thermostat, un autre thermostat (Nest, Tado, Hive…) ou un relais qui démarre la chaudière. « Chaque pièce chauffe séparément » quand aucun appareil ne chauffe seul tout le logement : têtes thermostatiques ou vannes sur les radiateurs, radiateurs électriques, climatiseurs, zones de plancher chauffant. Chaque pièce est alors ajoutée avec son propre appareil et, avec des têtes thermostatiques, le relais de la chaudière (ou le thermostat qui la démarre) est choisi comme source de chaleur."
+        }
+      },
+      "heating_devices": {
+        "title": "Appareils",
+        "data": {
+          "climates": "Thermostats",
+          "switches": "Interrupteurs (relais)",
+          "command_mode": "Commande",
+          "trv_boost": "Chauffer selon les capteurs de la pièce"
+        },
+        "data_description": {
+          "climates": "Le thermostat qui commande la chaudière, par exemple l'entité Generic Thermostat (climate.climate).",
+          "switches": "Seulement si un relais chauffe directement la maison, sans thermostat.",
+          "command_mode": "Seulement pour les thermostats autres que Generic Thermostat. La différence est expliquée dans les réglages des pièces.",
+          "trv_boost": "Tant que la maison demande de la chaleur (d'après ses capteurs de température, avec l'hystérésis), le thermostat ou les têtes thermostatiques reçoivent la Température pendant la chauffe (par défaut la température maximale de la maison) et continuent de chauffer jusqu'à ce que la maison soit chaude ; le reste du temps, ils reçoivent la consigne. Utile quand l'appareil mesure au mauvais endroit (un thermostat dans le couloir, une tête collée au radiateur). Nécessite un capteur de température. Seulement avec la commande Température. À ne pas confondre avec « Démarrer et arrêter la source par sa température » : celle-ci concerne un thermostat qui ne fait que démarrer la chaudière pour des pièces équipées de leurs propres têtes (choisissez alors « Chaque pièce chauffe séparément » et sélectionnez le thermostat comme source de chaleur)."
+        }
+      },
+      "heating_on_off": {
+        "title": "Commande marche / arrêt",
+        "data": {
+          "temperature_sensors": "Capteurs de température",
+          "hysteresis": "Hystérésis",
+          "min_on_minutes": "Durée minimale de marche",
+          "min_off_minutes": "Durée minimale d'arrêt",
+          "inertia_control": "Utiliser l'inertie apprise"
+        },
+        "description": "L'intégration allume et éteint le chauffage autour de la consigne.",
+        "data_description": {
+          "temperature_sensors": "Capteurs dans la pièce, utilisés à la place du capteur du thermostat (plus précis quand le thermostat est près d'une source de chaleur). Laissez vide pour utiliser le capteur du thermostat ; obligatoire pour les relais, qui n'ont pas de capteur.",
+          "hysteresis": "Le chauffage démarre sous la consigne moins cette valeur et s'arrête au-dessus de la consigne plus cette valeur.",
+          "min_on_minutes": "Durée minimale de marche. 0 pour les appareils que les cycles courts ne dérangent pas.",
+          "min_off_minutes": "Durée minimale d'arrêt entre deux démarrages.",
+          "inertia_control": "Une fois que la pièce a appris la lenteur de son chauffage, celui-ci s'arrête un peu plus tôt quand la chaleur déjà fournie suffira à amener la pièce en haut de la bande d'hystérésis, et démarre un peu plus tôt quand la pièce descendrait sinon sous le bas de la bande avant que la chaleur n'arrive. La bande reste la limite. Surtout utile pour les chauffages lents (radiateurs en fonte, plancher chauffant). Désactivé : seule l'hystérésis décide."
+        }
+      },
+      "heating_thermostat": {
+        "title": "Thermostat",
+        "data": {
+          "hysteresis": "Hystérésis"
+        },
+        "description": "Le thermostat maintient lui-même la température ; l'intégration n'envoie que le niveau ou la température.",
+        "data_description": {
+          "hysteresis": "Ce thermostat n'indique pas quand il chauffe (pas de hvac_action) : il est considéré comme en chauffe de cet écart sous sa consigne jusqu'à cet écart au-dessus, comme un relais. Sert pour la demande de chaleur, la chaudière, le temps de chauffe, l'apprentissage et comme marge de confort de l'arrêt optimal."
+        }
+      },
+      "presence_details": {
+        "title": "Préchauffage sur le chemin du retour",
+        "data": {
+          "arrival_distance": "Préchauffer sous la distance de",
+          "arrival_minutes": "Préchauffer sous le temps de trajet de"
+        },
+        "data_description": {
+          "arrival_distance": "Le préchauffage démarre quand quelqu'un est plus près que cette distance (avec le capteur de distance).",
+          "arrival_minutes": "Le préchauffage démarre quand quelqu'un est à moins de ce nombre de minutes (avec le capteur de temps de trajet)."
+        }
+      },
+      "weather_details": {
+        "title": "Valeurs météo et saison",
+        "data": {
+          "cutoff_temp": "Température extérieure de coupure",
+          "cutoff_hysteresis": "Hystérésis de la coupure",
+          "cutoff_avg_hours": "Moyenne sur",
+          "forecast_hours": "Heures de prévision",
+          "season_start": "Début de la saison (MM-JJ)",
+          "season_end": "Fin de la saison (MM-JJ)",
+          "season_days": "Saison automatique : jours consécutifs",
+          "season_temp": "Seuil de la saison automatique",
+          "compensation_below": "Compenser sous",
+          "compensation_offset": "Compensation"
+        },
+        "data_description": {
+          "cutoff_temp": "Le chauffage s'arrête quand la moyenne extérieure atteint ou dépasse cette température.",
+          "cutoff_hysteresis": "Le chauffage ne redémarre qu'à la coupure moins cette valeur ou en dessous, pour ne pas basculer sans cesse autour de la coupure. La moyenne des prévisions utilise la même limite.",
+          "cutoff_avg_hours": "La coupure utilise la moyenne des dernières heures, pour qu'un après-midi ensoleillé n'arrête pas le chauffage.",
+          "forecast_hours": "Heures de prévision dans la moyenne (chaque valeur pour son heure, la valeur mesurée jusqu'à la prochaine heure prévue). Plus d'heures coupent le chauffage plus tôt avant une période douce.",
+          "season_start": "Premier jour de la saison : mois et jour, par exemple 10-15.",
+          "season_end": "Dernier jour de la saison : mois et jour, par exemple 04-15.",
+          "season_days": "Jours d'affilée sous (ou au-dessus) du seuil avant que la saison commence (ou se termine).",
+          "season_temp": "Moyenne journalière de la température extérieure qui fait commencer ou finir la saison.",
+          "compensation_below": "Température extérieure sous laquelle la compensation est ajoutée.",
+          "compensation_offset": "Degrés ajoutés à la consigne (par exemple 0,5)."
+        }
+      },
+      "energy_details": {
+        "title": "Seuils d'énergie",
+        "data": {
+          "price_high": "Prix élevé à partir de",
+          "price_high_offset": "Ajustement en prix élevé",
+          "price_low": "Prix bas jusqu'à",
+          "price_low_offset": "Ajustement en prix bas",
+          "pv_threshold": "Surplus à partir de",
+          "pv_offset": "Ajustement avec surplus"
+        },
+        "data_description": {
+          "price_high": "À partir de ce prix, l'ajustement de prix élevé s'applique.",
+          "price_high_offset": "En général négatif, par exemple -1° quand l'énergie est chère.",
+          "price_low": "Jusqu'à ce prix, l'ajustement de prix bas s'applique.",
+          "price_low_offset": "En général positif, par exemple +1° quand l'énergie est bon marché (chauffage électrique, pompe à chaleur).",
+          "pv_threshold": "Surplus à partir duquel l'ajustement s'applique.",
+          "pv_offset": "Degrés ajoutés tant qu'il y a du surplus (par exemple +1)."
+        }
+      },
+      "boiler_details": {
+        "title": "Source de chaleur",
+        "data": {
+          "boiler_min_rooms": "Pièces nécessaires pour démarrer la source de chaleur",
+          "boiler_min_on": "Durée minimale de marche de la source",
+          "boiler_min_off": "Durée minimale d'arrêt de la source",
+          "keep_last_open": "Garder ouverte la dernière tête thermostatique",
+          "circuits": "Relais de circuit",
+          "reference_room": "Pièce de référence",
+          "boiler_boost": "Démarrer et arrêter la source par sa température",
+          "boiler_idle_temp": "Température de veille de la source"
+        },
+        "data_description": {
+          "boiler_min_rooms": "Combien de pièces doivent demander de la chaleur pour la démarrer. 1 = n'importe quelle pièce. Les pièces secondaires (Peut démarrer la source de chaleur de la maison désactivé) ne comptent pas.",
+          "boiler_min_on": "Durée minimale de fonctionnement, contre les cycles courts. 0 (par défaut) = la source s'arrête dès qu'aucune pièce ne demande de chaleur. Une durée plus longue nécessite un by-pass ou un radiateur sans tête thermostatique.",
+          "boiler_min_off": "Pause minimale entre deux démarrages.",
+          "keep_last_open": "Quand plus aucune pièce ne demande de chaleur, les têtes thermostatiques de la dernière pièce qui en demandait restent ouvertes (elles reçoivent la température maximale de la pièce, ou restent allumées). La chaleur restant dans la source et les tuyaux a ainsi un passage, comme avec un by-pass, et la vanne ne bouge plus de la nuit. Jusqu'à ce qu'une autre pièce demande de la chaleur, qu'une règle plus forte prenne la main sur la pièce (fenêtre, modification manuelle, pause, mode, douceur extérieure) ou que la pièce ait elle-même besoin de chaleur. Pendant ce temps, la pièce ne demande pas de chaleur, mais elle peut dépasser sa consigne, et son apprentissage ignore cette période. Désactivé par défaut.",
+          "circuits": "Seulement avec plusieurs circuits de chauffage sur la chaudière (par exemple plancher chauffant et radiateurs), chacun avec son propre relais de circulateur ou de vanne de zone. Une pièce sur la source de chaleur choisit alors son circuit (dans ses réglages) : quand elle demande de la chaleur, son relais de circuit s'allume d'abord, puis la chaudière ; quand plus aucune pièce n'en a besoin, la chaudière s'arrête d'abord, puis le relais. La chaudière ne démarre pas pour une pièce dont le circuit est éteint. Vide (par défaut) : pas de circuits, rien ne change.",
+          "reference_room": "Seule cette pièce décide quand elle fonctionne ; les autres ne font qu'ouvrir ou fermer leurs vannes. Laissez vide pour utiliser le nombre de pièces. Les pièces secondaires ne sont pas proposées.",
+          "boiler_boost": "Un thermostat utilisé comme source de chaleur (par exemple Hive, Nest, Tado, un Generic Thermostat) ne démarre la chaudière que d'après sa propre consigne et son propre capteur. Activé (par défaut) : il reste en mode chauffage ; pour démarrer, il reçoit la température maximale de la maison, pour s'arrêter la température de veille (par défaut celle du hors-gel de la maison), ce qui le laisse protéger contre le gel si Home Assistant s'arrête. Une consigne qu'on lui donne à la main est annulée. Désactivé : seul son mode est basculé (chauffage / arrêt). Un thermostat sans consigne est toujours commandé par son mode. À ne pas confondre avec « Chauffer selon les capteurs de la pièce » de la zone de toute la maison : celle-ci concerne un thermostat qui chauffe lui-même tout le logement.",
+          "boiler_idle_temp": "Seulement avec « Démarrer et arrêter la source par sa température » : ce que reçoit le thermostat tant qu'aucune pièce ne demande de chaleur. Vide (par défaut) : la température hors-gel de la maison, pour que la chaudière reste éteinte. Une valeur plus haute (par exemple 17,5 °C) laisse le thermostat maintenir sa propre zone à cette température, d'après son propre capteur : utile s'il chauffe aussi des radiateurs sans tête thermostatique. Elle doit être inférieure à la température maximale de la maison."
+        }
+      },
+      "behavior_details": {
+        "title": "Modifications manuelles",
+        "data": {
+          "override_hours": "Durée fixe"
+        },
+        "data_description": {
+          "override_hours": "Combien de temps une modification manuelle est gardée."
+        }
+      },
+      "heating_boost": {
+        "title": "Chauffage selon les capteurs de la pièce",
+        "description": "Tant que la maison demande de la chaleur, le thermostat (ou les têtes thermostatiques) reçoit la température ci-dessous, le reste du temps la consigne. La maison demande de la chaleur de la consigne moins l'hystérésis jusqu'à la consigne plus l'hystérésis, mesurée par ses capteurs.",
+        "data": {
+          "temperature_sensors": "Capteurs de température",
+          "trv_boost_temperature": "Température pendant la chauffe",
+          "hysteresis": "Hystérésis",
+          "inertia_control": "Utiliser l'inertie apprise"
+        },
+        "data_description": {
+          "temperature_sensors": "Capteurs dans les pièces de la maison : la demande de chaleur se décide d'après eux, pas d'après le capteur du thermostat ou des têtes thermostatiques.",
+          "trv_boost_temperature": "Envoyée au thermostat (ou aux têtes thermostatiques) tant que la maison demande de la chaleur, jamais sous la consigne et jamais au-dessus de la température maximale de la maison ou de l'appareil. Vide = température maximale de la maison.",
+          "hysteresis": "La maison demande de la chaleur sous la consigne moins cette valeur et s'arrête au-dessus de la consigne plus cette valeur, mesurée par ses capteurs.",
+          "inertia_control": "Une fois que la maison a appris la lenteur de son chauffage, la température plus élevée prend fin un peu plus tôt quand la chaleur déjà fournie amènera d'elle-même la maison en haut de la bande d'hystérésis, et commence un peu plus tôt quand la maison descendrait sinon sous le bas de la bande avant que la chaleur n'arrive. La bande reste la limite. Désactivé : seule l'hystérésis décide."
+        }
+      }
+    },
+    "error": {
+      "invalid_month_day": "Utilisez le format MM-JJ, par exemple 10-15.",
+      "no_devices": "Sélectionnez au moins un appareil.",
+      "sensor_required": "Les relais ont besoin d'un capteur de température dans la pièce.",
+      "outdoor_required": "Nécessite un capteur de température extérieure ou une entité météo (ci-dessus).",
+      "weather_required": "Les prévisions nécessitent une entité météo (ci-dessus).",
+      "cutoff_required": "Les prévisions fonctionnent avec la coupure : activez « Couper le chauffage quand il fait doux dehors ».",
+      "entity_in_room": "{entity} est déjà commandé par {owner}. Un appareil ne peut être commandé que par une seule pièce.",
+      "entity_is_source": "{entity} est la source de chaleur de {owner}. Il ne peut pas aussi être un appareil d'une pièce.",
+      "entity_is_gt_heater": "{entity} est le relais d'un Generic Thermostat utilisé par {owner}. Il ne peut pas aussi être commandé ici.",
+      "outdoor_is_room_sensor": "{entity} est un capteur de température de {owner}. Le capteur extérieur doit être un autre capteur.",
+      "room_sensor_is_outdoor": "{entity} est le capteur extérieur de {owner}. Choisissez un capteur dans la pièce.",
+      "boost_sensor_required": "Le chauffage selon les capteurs de la pièce nécessite un capteur de température.",
+      "boost_temperature_only": "Le chauffage selon les capteurs de la pièce ne fonctionne qu'avec la commande Température.",
+      "invalid_recipient": "« {recipient} » n'est pas utilisable : écrivez un service de notification (notify.nom), éventuellement suivi d'adresses e-mail, par exemple notify.me_gmail_com: ana@example.com, ion@example.com.",
+      "idle_not_below_max": "La température de veille doit être inférieure à la température maximale de la maison.",
+      "entity_is_circuit": "{entity} est un relais de circuit de {owner}. Il ne peut pas aussi être un appareil d'une pièce ou un autre circuit.",
+      "circuit_is_source": "La source de chaleur ne peut pas aussi être un relais de circuit."
+    }
+  },
+  "config_subentries": {
+    "room": {
+      "entry_type": "Pièce",
+      "initiate_flow": {
+        "user": "Ajouter une pièce",
+        "reconfigure": "Reconfigurer la pièce"
+      },
+      "step": {
+        "basics": {
+          "title": "Pièce",
+          "data": {
+            "name": "Nom",
+            "area": "Pièce Home Assistant",
+            "source": "Chauffé par"
+          },
+          "data_description": {
+            "name": "Affiché sur les appareils et dans la carte.",
+            "area": "Facultatif ; relie la pièce à une pièce (area) de Home Assistant.",
+            "source": "Generic Thermostat : il garde ses propres préréglages et températures, l'intégration ne fait que les choisir. Autres thermostats / têtes thermostatiques : la commande se règle à l'étape suivante. Relais : l'intégration l'allume et l'éteint elle-même."
+          }
+        },
+        "devices": {
+          "title": "Appareils",
+          "data": {
+            "climates": "Thermostats",
+            "switches": "Interrupteurs (relais)",
+            "command_mode": "Commande",
+            "trv_boost": "Chauffer selon le capteur de la pièce",
+            "use_house_source": "Chauffe avec la source de chaleur de la maison"
+          },
+          "data_description": {
+            "climates": "Les thermostats de cette pièce. Plusieurs thermostats dans une pièce reçoivent tous la même commande.",
+            "switches": "Les relais qui chauffent cette pièce.",
+            "command_mode": "Température : l'intégration envoie la température de chaque niveau (la plupart des têtes thermostatiques) ; une tête en mode auto (son propre programme) est passée en chauffage. Préréglage : chaque niveau utilise un préréglage du thermostat, avec la température du thermostat. Marche / arrêt : le thermostat est seulement allumé et éteint, l'intégration tient la température.",
+            "trv_boost": "Tant que la pièce demande de la chaleur, les têtes thermostatiques reçoivent la Température pendant la chauffe (par défaut la température maximale de la maison) et restent ouvertes jusqu'à ce que la pièce soit chaude ; le reste du temps, elles reçoivent la consigne. La demande de chaleur vient alors du capteur de la pièce, avec l'hystérésis. Nécessite un capteur de température dans la pièce. Seulement avec la commande Température.",
+            "use_house_source": "Activé : la chaleur de la pièce vient de la source de chaleur de la maison (radiateurs sur la chaudière). Elle démarre la chaudière quand elle demande de la chaleur (sauf si elle devient une pièce secondaire à l'étape suivante) et ne chauffe que pendant que la chaudière tourne. Désactivé : la pièce a son propre chauffage (radiateur électrique, pompe à chaleur, climatiseur). Elle ne démarre pas la chaudière et chauffe pendant que son propre appareil fonctionne."
+          }
+        },
+        "house_source": {
+          "title": "Source de chaleur de la maison",
+          "data": {
+            "starts_house_source": "Peut démarrer la source de chaleur de la maison",
+            "circuit": "Circuit",
+            "top_up": "Profiter de la chaudière déjà en marche"
+          },
+          "data_description": {
+            "starts_house_source": "Activé (par défaut) : quand cette pièce demande de la chaleur, elle démarre la source de chaleur de la maison (la chaudière), comme toutes les pièces. Désactivé : une pièce secondaire. Elle ne démarre jamais la chaudière pour elle-même ; ses têtes, vannes ou relais s'ouvrent quand même sous sa consigne, donc elle ne reçoit de la chaleur que lorsque la chaudière tourne pour une autre pièce. Idéal pour les pièces qui ne doivent pas être froides mais n'ont pas besoin d'être chaudes à heure fixe : véranda, chambre d'amis, couloir, cellier. Par temps doux, la chaudière tourne peu, la pièce peut donc rester des heures sous sa consigne. Par sécurité, le hors-gel démarre quand même la chaudière pour elle. Elle ne compte pas dans les pièces nécessaires pour démarrer la source de chaleur.",
+            "circuit": "Le circuit de chauffage de cette pièce (son relais de circulateur ou de vanne de zone), parmi ceux de la maison. Son relais s'allume avant la chaudière quand la pièce demande de la chaleur, et s'éteint après l'arrêt de la chaudière quand aucune pièce du circuit n'en a besoin. Vide : la pièce n'a pas de circuit.",
+            "top_up": "Désactivé (par défaut). Activé : tant que la chaudière tourne pour d'autres pièces et que cette pièce est un peu sous sa consigne (dans son hystérésis, 0,3 °C par défaut, donc elle ne demande pas encore de chaleur), ses têtes ou son relais s'ouvrent et elle chauffe jusqu'à sa consigne. Elle aurait bientôt demandé elle-même et redémarré la chaudière : ainsi, la chaudière démarre moins souvent. Elle ne démarre jamais la chaudière et ne la maintient pas en marche, ne compte pas dans les pièces nécessaires et, avec un circuit, ne chauffe que si ce circuit est déjà ouvert. Pas pendant une modification manuelle, avec une fenêtre ouverte, en pause ou pendant l'arrêt optimal."
+          }
+        },
+        "control_on_off": {
+          "title": "Commande marche / arrêt",
+          "description": "L'intégration allume et éteint le chauffage autour de la consigne.",
+          "data": {
+            "hysteresis": "Hystérésis",
+            "min_on_minutes": "Durée minimale de marche",
+            "min_off_minutes": "Durée minimale d'arrêt",
+            "inertia_control": "Utiliser l'inertie apprise"
+          },
+          "data_description": {
+            "hysteresis": "Le chauffage démarre sous la consigne moins cette valeur et s'arrête au-dessus de la consigne plus cette valeur.",
+            "min_on_minutes": "Durée minimale de marche. 0 pour les appareils que les cycles courts ne dérangent pas.",
+            "min_off_minutes": "Durée minimale d'arrêt entre deux démarrages.",
+            "inertia_control": "Une fois que la pièce a appris la lenteur de son chauffage, celui-ci s'arrête un peu plus tôt quand la chaleur déjà fournie suffira à amener la pièce en haut de la bande d'hystérésis, et démarre un peu plus tôt quand la pièce descendrait sinon sous le bas de la bande avant que la chaleur n'arrive. La bande reste la limite. Surtout utile pour les chauffages lents (radiateurs en fonte, plancher chauffant). Désactivé : seule l'hystérésis décide."
+          }
+        },
+        "control_thermostat": {
+          "title": "Thermostat",
+          "description": "Le thermostat maintient lui-même la température ; l'intégration n'envoie que le niveau ou la température.",
+          "data": {
+            "hysteresis": "Hystérésis"
+          },
+          "data_description": {
+            "hysteresis": "Ce thermostat n'indique pas quand il chauffe (pas de hvac_action) : il est considéré comme en chauffe de cet écart sous sa consigne jusqu'à cet écart au-dessus, comme un relais. Sert pour la demande de chaleur, la chaudière, le temps de chauffe, l'apprentissage et comme marge de confort de l'arrêt optimal."
+          }
+        },
+        "levels": {
+          "title": "Niveaux",
+          "data": {
+            "nearby_mode": "Quand personne n'est à la maison mais que quelqu'un est à proximité",
+            "nearby_not_above_schedule": "Pas au-dessus du planning",
+            "name_home": "Nom du niveau « home »",
+            "name_sleep": "Nom du niveau « sleep »",
+            "name_eco": "Nom du niveau « eco »",
+            "name_away": "Nom du niveau « away »",
+            "name_comfort": "Nom du niveau « comfort »",
+            "name_activity": "Nom du niveau « activity »",
+            "device_home": "Préréglage du thermostat pour « home »",
+            "device_sleep": "Préréglage du thermostat pour « sleep »",
+            "device_eco": "Préréglage du thermostat pour « eco »",
+            "device_away": "Préréglage du thermostat pour « away »",
+            "device_comfort": "Préréglage du thermostat pour « comfort »",
+            "device_activity": "Préréglage du thermostat pour « activity »",
+            "temp_home": "Température de « home »",
+            "temp_sleep": "Température de « sleep »",
+            "temp_eco": "Température de « eco »",
+            "temp_away": "Température de « away »",
+            "temp_comfort": "Température de « comfort »",
+            "temp_activity": "Température de « activity »"
+          },
+          "description": "Les niveaux ont des rôles fixes : home, sleep, eco (à proximité), away (loin / vacances), comfort et activity.",
+          "data_description": {
+            "nearby_mode": "Préréglage Eco : utilise le niveau eco. Température fixe : la température se choisit à la page suivante (avec Generic Thermostat, le préréglage devient none).",
+            "nearby_not_above_schedule": "Coché : quand le planning est plus bas que le niveau ou la température « à proximité », c'est le plus bas qui s'applique (être en ville la nuit ne chauffe pas plus qu'être à la maison). Décoché : le niveau ou la température « à proximité » s'applique.",
+            "name_home": "Le nom de ce niveau dans le planning et dans la carte. Gardez le nom par défaut si vous n'en avez pas besoin d'un autre.",
+            "name_sleep": "Le nom de ce niveau dans le planning et dans la carte. Gardez le nom par défaut si vous n'en avez pas besoin d'un autre.",
+            "name_eco": "Le nom de ce niveau dans le planning et dans la carte. Gardez le nom par défaut si vous n'en avez pas besoin d'un autre.",
+            "name_away": "Le nom de ce niveau dans le planning et dans la carte. Gardez le nom par défaut si vous n'en avez pas besoin d'un autre.",
+            "name_comfort": "Le nom de ce niveau dans le planning et dans la carte. Gardez le nom par défaut si vous n'en avez pas besoin d'un autre.",
+            "name_activity": "Le nom de ce niveau dans le planning et dans la carte. Gardez le nom par défaut si vous n'en avez pas besoin d'un autre.",
+            "device_home": "Préréglage du thermostat utilisé pour ce niveau (préréglages trouvés : {presets}) ; le thermostat garde sa propre température. Laissez vide si le thermostat n'a pas ce préréglage : la température du niveau ci-dessous est envoyée à la place (elle est aussi affichée quand le thermostat n'indique pas la température du préréglage).",
+            "device_sleep": "Préréglage du thermostat utilisé pour ce niveau (préréglages trouvés : {presets}) ; le thermostat garde sa propre température. Laissez vide si le thermostat n'a pas ce préréglage : la température du niveau ci-dessous est envoyée à la place (elle est aussi affichée quand le thermostat n'indique pas la température du préréglage).",
+            "device_eco": "Préréglage du thermostat utilisé pour ce niveau (préréglages trouvés : {presets}) ; le thermostat garde sa propre température. Laissez vide si le thermostat n'a pas ce préréglage : la température du niveau ci-dessous est envoyée à la place (elle est aussi affichée quand le thermostat n'indique pas la température du préréglage).",
+            "device_away": "Préréglage du thermostat utilisé pour ce niveau (préréglages trouvés : {presets}) ; le thermostat garde sa propre température. Laissez vide si le thermostat n'a pas ce préréglage : la température du niveau ci-dessous est envoyée à la place (elle est aussi affichée quand le thermostat n'indique pas la température du préréglage).",
+            "device_comfort": "Préréglage du thermostat utilisé pour ce niveau (préréglages trouvés : {presets}) ; le thermostat garde sa propre température. Laissez vide si le thermostat n'a pas ce préréglage : la température du niveau ci-dessous est envoyée à la place (elle est aussi affichée quand le thermostat n'indique pas la température du préréglage).",
+            "device_activity": "Préréglage du thermostat utilisé pour ce niveau (préréglages trouvés : {presets}) ; le thermostat garde sa propre température. Laissez vide si le thermostat n'a pas ce préréglage : la température du niveau ci-dessous est envoyée à la place (elle est aussi affichée quand le thermostat n'indique pas la température du préréglage).",
+            "temp_home": "Température de ce niveau. Modifiable plus tard depuis la carte.",
+            "temp_sleep": "Température de ce niveau. Modifiable plus tard depuis la carte.",
+            "temp_eco": "Température de ce niveau. Modifiable plus tard depuis la carte.",
+            "temp_away": "Température de ce niveau. Modifiable plus tard depuis la carte.",
+            "temp_comfort": "Température de ce niveau. Modifiable plus tard depuis la carte.",
+            "temp_activity": "Température de ce niveau. Modifiable plus tard depuis la carte."
+          }
+        },
+        "sensors": {
+          "title": "Capteurs",
+          "data": {
+            "temperature_sensors": "Capteurs de température",
+            "calibration_mode": "Calibrage des têtes thermostatiques",
+            "occupancy_sensors": "Capteurs d'occupation",
+            "humidity_sensor": "Capteur d'humidité"
+          },
+          "data_description": {
+            "temperature_sensors": "Capteurs dans la pièce, utilisés à la place du capteur du thermostat (plus précis quand le thermostat est près d'une source de chaleur). Laissez vide pour utiliser le capteur du thermostat ; obligatoire pour les relais, qui n'ont pas de capteur.",
+            "calibration_mode": "Nécessite un capteur de température de la pièce ci-dessus. Décalage : corrige le capteur de la tête. Température externe : écrit la température de la pièce dans la tête (si elle le permet). Sinon désactivé.",
+            "occupancy_sensors": "Capteurs de mouvement / présence de la pièce : quand la pièce reste vide un moment, elle passe en éco même si quelqu'un est à la maison. Laissez vide pour les pièces qui doivent suivre seulement le planning.",
+            "humidity_sensor": "Seulement pour l'alerte de risque de moisissure : l'humidité de la pièce, avec la température extérieure de la maison, donne l'humidité au mur le plus froid. Sans lui (ou sans température extérieure), pas d'alerte de moisissure."
+          }
+        },
+        "sensors_gt": {
+          "title": "Capteurs",
+          "description": "Un Generic Thermostat régule d'après le capteur de sa propre configuration, l'intégration utilise donc le même. Pour en utiliser un autre, changez-le dans les réglages du Generic Thermostat.",
+          "data": {
+            "occupancy_sensors": "Capteurs d'occupation",
+            "humidity_sensor": "Capteur d'humidité"
+          },
+          "data_description": {
+            "occupancy_sensors": "Capteurs de mouvement / présence de la pièce : quand la pièce reste vide un moment, elle passe en éco même si quelqu'un est à la maison. Laissez vide pour les pièces qui doivent suivre seulement le planning.",
+            "humidity_sensor": "Seulement pour l'alerte de risque de moisissure : l'humidité de la pièce, avec la température extérieure de la maison, donne l'humidité au mur le plus froid. Sans lui (ou sans température extérieure), pas d'alerte de moisissure."
+          }
+        },
+        "windows": {
+          "title": "Fenêtres et portes",
+          "data": {
+            "window_sensors": "Capteurs de fenêtre",
+            "linked_window_sensors": "Fenêtres d'autres pièces",
+            "window_drop_detect": "Détecter les fenêtres ouvertes par la température"
+          },
+          "data_description": {
+            "window_sensors": "Fenêtres et portes de cette pièce. Laissez vide s'il n'y en a pas (la détection par chute de température ci-dessous peut aider).",
+            "linked_window_sensors": "Fenêtres d'autres pièces qui refroidissent aussi celle-ci, par exemple la porte du balcon du salon pour le couloir.",
+            "window_drop_detect": "Considère une chute rapide de température comme une fenêtre ouverte pendant 15 minutes. Utile pour les pièces sans capteur de fenêtre."
+          }
+        },
+        "schedule": {
+          "title": "Planning",
+          "data": {
+            "schedule_source": "Source du planning",
+            "optimal_start": "Démarrage optimal",
+            "optimal_stop": "Arrêt optimal"
+          },
+          "data_description": {
+            "schedule_source": "Planning interne : écrit ici ou modifié depuis la carte. Assistant Programmation : une entrée Programmation de Home Assistant choisit entre deux niveaux.",
+            "optimal_start": "Commence à chauffer plus tôt pour que le niveau suivant soit atteint à l'heure. La vitesse de chauffe est apprise en quelques jours.",
+            "optimal_stop": "Baisse le niveau avant le suivant, plus froid, dès que la pièce peut refroidir sans sortir du confort du niveau actuel. Le refroidissement est appris pendant les périodes sans demande de chaleur. Nécessite une température extérieure (capteur ou météo) dans les réglages de la maison ; n'apparaît qu'à cette condition."
+          }
+        },
+        "extras": {
+          "title": "Extras",
+          "data": {
+            "solar_offset": "Apports solaires",
+            "valve_exercise": "Dégommage des vannes"
+          },
+          "data_description": {
+            "solar_offset": "Une valeur négative (par exemple -1) baisse la consigne tant que le soleil brille, pour les pièces que le soleil réchauffe. Utilise l'entité météo de la maison (n'apparaît que si elle est définie). 0 = désactivé. Indépendamment de cela, la pièce apprend toute seule combien le soleil la réchauffe, pour le démarrage et l'arrêt optimaux.",
+            "valve_exercise": "Ouvre complètement les têtes thermostatiques 5 minutes une fois par semaine, contre le calcaire, dans tous les modes (même en été). Une pause, une modification manuelle ou une fenêtre ouverte le reporte plus tard dans la journée ; il ne demande pas de chaleur."
+          }
+        },
+        "levels_nearby": {
+          "title": "À proximité",
+          "data": {
+            "nearby_temp": "Température fixe à proximité"
+          },
+          "data_description": {
+            "nearby_temp": "Température envoyée quand personne n'est à la maison et que quelqu'un est à proximité. Modifiable plus tard depuis la carte."
+          }
+        },
+        "sensors_details": {
+          "title": "Capteurs : détails",
+          "data": {
+            "temperature_aggregation": "Plusieurs capteurs",
+            "calibration_entities": "Entités de calibrage",
+            "occupancy_minutes": "Éco après absence d'occupation pendant",
+            "occupancy_return_minutes": "Retour d'éco après une présence de",
+            "hysteresis": "Hystérésis"
+          },
+          "data_description": {
+            "temperature_aggregation": "Avec plusieurs capteurs : moyenne, le plus froid ou la médiane.",
+            "calibration_entities": "Les entités number de la tête thermostatique (décalage ou température externe).",
+            "occupancy_minutes": "Combien de temps la pièce doit rester vide avant de passer en éco.",
+            "occupancy_return_minutes": "Combien de temps quelqu'un doit être présent sans interruption avant qu'une pièce passée en éco faute d'occupation reprenne son planning. 0 = tout de suite (comme avant). Une visite plus courte (quelqu'un prend quelque chose et repart) laisse la pièce en éco, et le décompte reprend à zéro à la présence suivante. La présence ne compte que sans interruption : un détecteur de mouvement qui s'éteint entre deux mouvements relance le décompte. Un capteur de présence (mmWave) ou un détecteur de mouvement avec un long délai de retombée convient mieux.",
+            "hysteresis": "Avec un capteur de pièce, elle décide du hors-gel : en dessous, les têtes thermostatiques sont forcées à s'ouvrir, jusqu'au hors-gel plus cette valeur. Avec « Profiter de la chaudière déjà en marche » : tant que la chaudière tourne pour d'autres pièces, la pièce en profite quand elle est sous sa consigne de moins que cette valeur (elle ne demande pas encore de chaleur)."
+          }
+        },
+        "windows_details": {
+          "title": "Fenêtres : délais et action",
+          "data": {
+            "window_open_delay": "Délai à l'ouverture",
+            "window_close_delay": "Délai à la fermeture",
+            "window_action": "Quand une fenêtre est ouverte",
+            "window_drop_degrees": "Chute de température",
+            "window_drop_minutes": "En moins de"
+          },
+          "data_description": {
+            "window_open_delay": "Combien de temps une fenêtre doit rester ouverte avant que le chauffage réagisse. Une aération plus courte est ignorée.",
+            "window_close_delay": "Combien de temps attendre après la fermeture avant de chauffer à nouveau.",
+            "window_action": "Le hors-gel garde une température minimale. Éteindre arrête le chauffage.",
+            "window_drop_degrees": "Chute qui compte comme une fenêtre ouverte.",
+            "window_drop_minutes": "Temps pendant lequel la chute doit se produire."
+          }
+        },
+        "schedule_internal": {
+          "title": "Planning",
+          "data": {
+            "schedule": "Planning"
+          },
+          "description": "Un profil par ligne : `profil: HH:MM preset, HH:MM preset`. Les jours de chaque profil, et s'il est actif, se règlent dans la carte (Planning). Les anciens profils nommés workday, weekend ou mon…sun gardent leurs jours. {error}",
+          "data_description": {
+            "schedule": "par exemple `workday: 00:00 sleep, 06:00 home, 22:00 sleep`. Plus simple à modifier depuis la carte."
+          }
+        },
+        "schedule_helper": {
+          "title": "Assistant Programmation",
+          "data": {
+            "schedule_helper": "Assistant Programmation",
+            "helper_on_preset": "Niveau quand l'assistant est actif",
+            "helper_off_preset": "Niveau quand l'assistant est inactif"
+          },
+          "data_description": {
+            "schedule_helper": "Une entrée Programmation de Home Assistant (Paramètres → Entrées).",
+            "helper_on_preset": "Niveau quand l'assistant est actif.",
+            "helper_off_preset": "Niveau quand l'assistant est inactif."
+          }
+        },
+        "schedule_optimal": {
+          "title": "Démarrage / arrêt optimal",
+          "data": {
+            "optimal_start_max_minutes": "Démarrage anticipé maximal",
+            "optimal_stop_minutes": "Arrêt anticipé maximal",
+            "stop_tolerance": "Tolérance de l'arrêt optimal"
+          },
+          "data_description": {
+            "optimal_start_max_minutes": "Ne démarre jamais plus tôt que cela.",
+            "optimal_stop_minutes": "Ne s'arrête jamais plus tôt que cela. Tant que le refroidissement n'est pas appris, le niveau plus bas commence aussi tôt.",
+            "stop_tolerance": "Pour les thermostats qui indiquent hvac_action : de combien la pièce peut descendre sous le niveau actuel avant le changement prévu (son confort). 0 = la pièce ne doit pas descendre sous le niveau, elle ne s'arrête donc plus tôt que si elle est plus chaude que le niveau."
+          }
+        },
+        "extras_valves": {
+          "title": "Dégommage des vannes",
+          "data": {
+            "valve_exercise_day": "Jour",
+            "valve_exercise_time": "Heure"
+          },
+          "data_description": {
+            "valve_exercise_day": "Jour du dégommage des vannes.",
+            "valve_exercise_time": "Heure du dégommage (idéalement quand personne n'a besoin de chaleur)."
+          }
+        },
+        "control_boost": {
+          "title": "Chauffage selon le capteur de la pièce",
+          "description": "Tant que la pièce demande de la chaleur, les têtes thermostatiques reçoivent la température pendant la chauffe, le reste du temps la consigne. La pièce demande de la chaleur de la consigne moins l'hystérésis jusqu'à la consigne plus l'hystérésis, mesurée par le capteur de la pièce.",
+          "data": {
+            "trv_boost_temperature": "Température pendant la chauffe",
+            "hysteresis": "Hystérésis",
+            "inertia_control": "Utiliser l'inertie apprise"
+          },
+          "data_description": {
+            "trv_boost_temperature": "Envoyée aux têtes thermostatiques tant que la pièce demande de la chaleur, jamais sous la consigne et jamais au-dessus de la température maximale de la maison ou des têtes. Vide = température maximale de la maison.",
+            "hysteresis": "La pièce demande de la chaleur sous la consigne moins cette valeur et s'arrête au-dessus de la consigne plus cette valeur, mesurée par le capteur de la pièce.",
+            "inertia_control": "Une fois que la pièce a appris la lenteur de son chauffage, la chauffe prend fin un peu plus tôt quand la chaleur déjà fournie amènera d'elle-même la pièce en haut de la bande d'hystérésis, et commence un peu plus tôt quand la pièce descendrait sinon sous le bas de la bande avant que la chaleur n'arrive. La bande reste la limite. Désactivé : seule l'hystérésis décide."
+          }
+        }
+      },
+      "abort": {
+        "reconfigure_successful": "Enregistré."
+      },
+      "error": {
+        "no_devices": "Sélectionnez au moins un appareil.",
+        "duplicate_names": "Deux niveaux portent le même nom.",
+        "invalid_schedule": "Planning invalide.",
+        "helper_required": "Sélectionnez l'assistant Programmation.",
+        "sensor_required": "Les relais ont besoin d'un capteur de température dans la pièce.",
+        "entity_in_room": "{entity} est déjà commandé par {owner}. Un appareil ne peut être commandé que par une seule pièce.",
+        "entity_is_source": "{entity} est la source de chaleur de {owner}. Il ne peut pas aussi être un appareil d'une pièce.",
+        "entity_is_gt_heater": "{entity} est le relais d'un Generic Thermostat utilisé par {owner}. Il ne peut pas aussi être commandé ici.",
+        "room_sensor_is_outdoor": "{entity} est le capteur extérieur de {owner}. Choisissez un capteur dans la pièce.",
+        "humidity_sensor_is_outdoor": "{entity} appartient à l'appareil du capteur extérieur ou de l'entité météo de {owner} : il mesure dehors. Choisissez un capteur d'humidité dans la pièce.",
+        "boost_sensor_required": "Le chauffage selon le capteur de la pièce nécessite un capteur de température dans la pièce.",
+        "boost_temperature_only": "Le chauffage selon le capteur de la pièce ne fonctionne qu'avec la commande Température.",
+        "invalid_level_name": "Le nom de niveau « {name} » n'est pas utilisable dans le planning : utilisez des lettres, des chiffres, des espaces, « _ » ou « - » (pas de « , » « : » « # »).",
+        "level_name_is_key": "Le nom « {name} » est déjà celui d'un autre niveau dans le planning (home, sleep, eco, away, comfort, activity, frost) : choisissez-en un autre.",
+        "calibration_sensor_required": "Le calibrage écrit la température de la pièce dans la tête thermostatique : il lui faut donc un capteur de température dans la pièce. Ajoutez-en un, ou réglez le calibrage sur Désactivé.",
+        "calibration_entities_required": "Choisissez les entités number de la tête dans lesquelles le calibrage écrit (le décalage ou la température externe), ou réglez le calibrage sur Désactivé à la page précédente.",
+        "entity_is_circuit": "{entity} est un relais de circuit de {owner}. Il ne peut pas aussi être un appareil d'une pièce ou un autre circuit."
+      }
+    },
+    "scenario": {
+      "entry_type": "Scénario",
+      "initiate_flow": {
+        "user": "Ajouter un scénario",
+        "reconfigure": "Reconfigurer le scénario"
+      },
+      "step": {
+        "rooms": {
+          "title": "Scénario",
+          "description": "Un scénario active d'un coup des profils choisis dans plusieurs pièces, depuis la liste *Scénario* de la maison (ou une automatisation). Il n'ajoute rien de lui-même : le choisir fait dans chaque pièce ce que fait sa liste de profils.",
+          "data": {
+            "name": "Nom",
+            "rooms": "Pièces"
+          },
+          "data_description": {
+            "name": "Affiché dans la liste Scénario de la maison, par exemple Télétravail.",
+            "rooms": "Seulement les pièces avec leur propre planning. Les pièces non choisies gardent leurs profils."
+          }
+        },
+        "profiles": {
+          "title": "Profils de {scenario}",
+          "description": "Pour chaque pièce, les profils à activer. Les profils actifs des mêmes jours sont désactivés, comme quand vous en activez un dans la carte. Les profils d'une pièce ne doivent pas partager de jours."
+        }
+      },
+      "error": {
+        "name_required": "Saisissez un nom.",
+        "name_taken": "Un autre scénario de cette maison porte déjà ce nom.",
+        "rooms_required": "Choisissez au moins une pièce.",
+        "profiles_required": "Choisissez au moins un profil.",
+        "profiles_overlap": "Ces profils partagent des jours : {overlap}. Choisissez des profils pour des jours différents."
+      },
+      "abort": {
+        "reconfigure_successful": "Le scénario a été enregistré.",
+        "house_not_loaded": "La maison ne tourne pas ; les scénarios pourront être modifiés une fois qu'elle aura démarré.",
+        "no_rooms": "Aucune pièce de cette maison n'a son propre planning."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "presence": {
+        "name": "Présence",
+        "state": {
+          "home": "À la maison",
+          "nearby": "À proximité",
+          "far": "Loin"
+        }
+      },
+      "outdoor_average": {
+        "name": "Moyenne extérieure"
+      },
+      "heating_runtime": {
+        "name": "Temps de chauffe"
+      },
+      "decision": {
+        "name": "Décision",
+        "state": {
+          "starting": "Démarrage",
+          "frost_protection": "Hors-gel",
+          "maximum_temperature": "Température maximale",
+          "pause": "Pause",
+          "mode_off": "Mode arrêt",
+          "summer": "Mode été",
+          "out_of_season": "Hors saison",
+          "valve_exercise": "Dégommage des vannes",
+          "window_open": "Fenêtre ouverte",
+          "manual_override": "Modification manuelle",
+          "vacation": "Vacances",
+          "house_away": "Mode absent",
+          "presence_far": "Loin",
+          "presence_nearby": "À proximité",
+          "room_unoccupied": "Pièce inoccupée",
+          "sensor_fallback": "Capteur indisponible",
+          "schedule": "Planning",
+          "optimal_start": "Démarrage optimal",
+          "optimal_stop": "Arrêt optimal",
+          "outdoor_cutoff": "Doux dehors"
+        }
+      },
+      "target_temperature": {
+        "name": "Température de consigne"
+      },
+      "room_temperature": {
+        "name": "Température de la pièce"
+      },
+      "next_change": {
+        "name": "Prochain changement"
+      },
+      "heating_rate": {
+        "name": "Vitesse de chauffe"
+      },
+      "cooling_rate": {
+        "name": "Vitesse de refroidissement"
+      }
+    },
+    "binary_sensor": {
+      "heating_season": {
+        "name": "Saison de chauffe"
+      },
+      "outdoor_cutoff": {
+        "name": "Doux dehors"
+      },
+      "heat_demand": {
+        "name": "Demande de chaleur"
+      },
+      "window_open": {
+        "name": "Fenêtre ouverte"
+      },
+      "manual_override": {
+        "name": "Modification manuelle"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "Auto",
+          "away": "Absent",
+          "vacation": "Vacances",
+          "off": "Arrêt",
+          "summer": "Été"
+        }
+      },
+      "scenario": {
+        "name": "Scénario"
+      },
+      "schedule_profile": {
+        "name": "Profil du planning",
+        "state_attributes": {
+          "today": {
+            "name": "Utilisé aujourd'hui"
+          }
+        }
+      }
+    },
+    "switch": {
+      "pause": {
+        "name": "Pause"
+      },
+      "guest_mode": {
+        "name": "Mode invité"
+      },
+      "child_lock": {
+        "name": "Sécurité enfant"
+      }
+    },
+    "number": {
+      "level_home": {
+        "name": "Niveau Home"
+      },
+      "level_sleep": {
+        "name": "Niveau Sleep"
+      },
+      "level_eco": {
+        "name": "Niveau Eco"
+      },
+      "level_away": {
+        "name": "Niveau Away"
+      },
+      "level_comfort": {
+        "name": "Niveau Comfort"
+      },
+      "level_activity": {
+        "name": "Niveau Activity"
+      },
+      "level_nearby": {
+        "name": "Température à proximité"
+      },
+      "level_custom": {
+        "name": "Niveau {name}"
+      }
+    },
+    "datetime": {
+      "vacation_start": {
+        "name": "Début des vacances"
+      },
+      "vacation_end": {
+        "name": "Fin des vacances"
+      }
+    },
+    "button": {
+      "clear_overrides": {
+        "name": "Effacer les modifications manuelles"
+      },
+      "reevaluate": {
+        "name": "Réévaluer"
+      },
+      "clear_vacation": {
+        "name": "Effacer les vacances"
+      },
+      "clear_override": {
+        "name": "Effacer la modification manuelle"
+      },
+      "reset_learning": {
+        "name": "Réinitialiser l'apprentissage"
+      }
+    }
+  },
+  "selector": {
+    "home_rule": {
+      "options": {
+        "any": "Au moins une personne est à la maison",
+        "all": "Tout le monde est à la maison"
+      }
+    },
+    "season_mode": {
+      "options": {
+        "always": "Toujours",
+        "dates": "Entre deux dates",
+        "auto": "Automatique (température extérieure)"
+      }
+    },
+    "override_mode": {
+      "options": {
+        "fixed": "Durée fixe",
+        "until_next_reevaluation": "Jusqu'à la prochaine réévaluation"
+      }
+    },
+    "override_scope": {
+      "options": {
+        "room": "Seulement cette pièce",
+        "house": "Toute la maison"
+      }
+    },
+    "source": {
+      "options": {
+        "generic_thermostat": "Generic Thermostat",
+        "climate": "Autres thermostats / têtes thermostatiques",
+        "switch": "Interrupteur (relais)"
+      }
+    },
+    "house_source": {
+      "options": {
+        "generic_thermostat": "Generic Thermostat",
+        "climate": "Un autre thermostat pour tout le logement",
+        "switch": "Interrupteur (relais)",
+        "none": "Chaque pièce chauffe séparément (têtes thermostatiques, radiateurs, clim)"
+      }
+    },
+    "command_mode": {
+      "options": {
+        "temperature": "Température",
+        "preset": "Préréglage",
+        "hvac_mode": "Marche / arrêt (mode HVAC)"
+      }
+    },
+    "nearby_mode": {
+      "options": {
+        "preset": "Préréglage Eco",
+        "temperature": "Température fixe"
+      }
+    },
+    "aggregation": {
+      "options": {
+        "mean": "Moyenne",
+        "min": "Minimum",
+        "median": "Médiane"
+      }
+    },
+    "calibration": {
+      "options": {
+        "off": "Arrêt",
+        "offset": "Décalage",
+        "external": "Entrée de température externe"
+      }
+    },
+    "window_action": {
+      "options": {
+        "frost": "Hors-gel",
+        "off": "Éteindre"
+      }
+    },
+    "schedule_source": {
+      "options": {
+        "internal": "Planning interne",
+        "helper": "Assistant Programmation"
+      }
+    },
+    "preset": {
+      "options": {
+        "home": "Home",
+        "sleep": "Sleep",
+        "eco": "Eco",
+        "away": "Away",
+        "comfort": "Comfort",
+        "activity": "Activity"
+      }
+    },
+    "weekday": {
+      "options": {
+        "mon": "Lundi",
+        "tue": "Mardi",
+        "wed": "Mercredi",
+        "thu": "Jeudi",
+        "fri": "Vendredi",
+        "sat": "Samedi",
+        "sun": "Dimanche"
+      }
+    },
+    "temperature_unit": {
+      "options": {
+        "celsius": "Celsius (°C)",
+        "fahrenheit": "Fahrenheit (°F)"
+      }
+    }
+  },
+  "services": {
+    "set_override": {
+      "name": "Définir une modification manuelle",
+      "description": "Définit un niveau ou une température et le garde comme modification manuelle.",
+      "fields": {
+        "room": {
+          "name": "Pièce",
+          "description": "Nom ou identifiant de la pièce."
+        },
+        "entity_id": {
+          "name": "Entités",
+          "description": "N'importe quelle entité de la pièce (ou son thermostat)."
+        },
+        "preset": {
+          "name": "Préréglage",
+          "description": "Niveau à appliquer."
+        },
+        "temperature": {
+          "name": "Température",
+          "description": "Température à appliquer, dans l'unité de la maison (°C ou °F)."
+        },
+        "duration_hours": {
+          "name": "Durée",
+          "description": "Heures ; vide = la règle définie pour les modifications manuelles."
+        }
+      }
+    },
+    "clear_override": {
+      "name": "Effacer la modification manuelle",
+      "description": "Revenir à la régulation automatique (toutes les pièces si aucune n'est indiquée).",
+      "fields": {
+        "room": {
+          "name": "Pièce",
+          "description": "Nom ou identifiant de la pièce."
+        },
+        "entity_id": {
+          "name": "Entités",
+          "description": "N'importe quelle entité de la pièce (ou son thermostat)."
+        }
+      }
+    },
+    "set_vacation": {
+      "name": "Définir les vacances",
+      "description": "Définit la période de vacances ; des valeurs vides l'effacent.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Maison",
+          "description": "Nécessaire seulement avec plusieurs maisons."
+        },
+        "start": {
+          "name": "Début des vacances",
+          "description": "Début des vacances."
+        },
+        "end": {
+          "name": "Fin des vacances",
+          "description": "Fin des vacances (le préchauffage commence plus tôt)."
+        }
+      }
+    },
+    "reevaluate": {
+      "name": "Réévaluer",
+      "description": "Réévaluer toutes les pièces maintenant.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Maison",
+          "description": "Nécessaire seulement avec plusieurs maisons."
+        }
+      }
+    },
+    "set_schedule": {
+      "name": "Définir le planning",
+      "description": "Remplace le planning d'une pièce.",
+      "fields": {
+        "room": {
+          "name": "Pièce",
+          "description": "Nom ou identifiant de la pièce."
+        },
+        "entity_id": {
+          "name": "Entités",
+          "description": "N'importe quelle entité de la pièce (ou son thermostat)."
+        },
+        "schedule": {
+          "name": "Planning",
+          "description": "par exemple `workday: 00:00 sleep, 06:00 home, 22:00 sleep`"
+        },
+        "profiles": {
+          "name": "Profils",
+          "description": "Profils sous forme d'objet : nom du profil -> liste d'heures et de préréglages (utilisé par la carte)."
+        },
+        "profile_days": {
+          "name": "Jours des profils",
+          "description": "Jours et activation de chaque profil : nom du profil -> days (all, workday, weekend, ou une liste de mon … sun) et enabled (true / false). Utilisé par la carte. Les profils actifs ne peuvent pas se chevaucher."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "house_not_found": {
+      "message": "Aucune maison Smart Heating Control avec l'identifiant {entry}."
+    },
+    "house_ambiguous": {
+      "message": "Plusieurs maisons sont configurées ; indiquez config_entry_id."
+    },
+    "room_not_found": {
+      "message": "Aucune pièce correspondante."
+    },
+    "preset_or_temperature": {
+      "message": "Indiquez soit un préréglage, soit une température."
+    },
+    "unknown_preset": {
+      "message": "Préréglage inconnu : {preset}."
+    },
+    "vacation_order": {
+      "message": "La fin doit être après le début."
+    },
+    "schedule_or_profiles": {
+      "message": "Indiquez soit schedule, soit profiles."
+    },
+    "schedule_external": {
+      "message": "Cette pièce utilise un assistant Programmation ; modifiez plutôt l'assistant."
+    },
+    "invalid_schedule": {
+      "message": "Planning invalide : {error}"
+    },
+    "temperature_invalid": {
+      "message": "La température doit être un nombre."
+    },
+    "duration_invalid": {
+      "message": "La durée doit être comprise entre {min} et {max} heures."
+    }
+  },
+  "issues": {
+    "scenario_problem": {
+      "title": "Le scénario {scenario} ne peut pas être entièrement appliqué",
+      "description": "Dans la maison {house}, le scénario **{scenario}** contient des pièces ignorées quand on le choisit : {details}.\n\nReconfigurez le scénario (Paramètres → Appareils et services → Smart Heating Control) ou supprimez-le. Ce message disparaît tout seul une fois le problème réglé."
+    }
+  }
+}

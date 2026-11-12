@@ -2,7 +2,7 @@
 
 # Smart Heating Control
 
-**English** | [Română](README.ro.md)
+**English** | [Română](README.ro.md) | [Deutsch](README.de.md) | [Nederlands](README.nl.md) | [Français](README.fr.md) | [Italiano](README.it.md)
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/)
 [![Validate](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml/badge.svg)](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml)
@@ -10,7 +10,7 @@
 
 **Like Smart Heating Control? Support its development:**
 
-[![Support on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/sandreialexandru)
+<a href="https://ko-fi.com/sandreialexandru"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support on Ko-fi" height="44"></a>
 
 **Heating for Home Assistant that knows who is home, learns how every room
 heats and tells you why it does what it does.**
@@ -19,9 +19,9 @@ Warm when you get home, cool when nobody is there, never wasting heat on an
 open window, and no rules to write. It works with what you already have:
 Generic Thermostat, TRVs, smart thermostats or a plain relay.
 
-https://github.com/user-attachments/assets/31181198-e0fa-4510-bbfa-af9f790a19c7
+<p align="center"><a href="https://github.com/user-attachments/assets/31181198-e0fa-4510-bbfa-af9f790a19c7"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-demo.gif" alt="The card in use · invented people and data" width="440"></a></p>
 
-<p align="center"><sub>The card in use · invented people and data</sub></p>
+<p align="center"><sub>The card in use · invented people and data · <a href="https://github.com/user-attachments/assets/31181198-e0fa-4510-bbfa-af9f790a19c7">the video in better quality</a></sub></p>
 
 ## What it does
 
@@ -66,7 +66,7 @@ decisions.
 
 **Fits your house.** Generic Thermostat (only the preset is chosen; your
 thermostat keeps working as before), TRVs with calibration from a room sensor,
-other thermostats, relays. °C or °F per house. English and Romanian.
+other thermostats, relays. °C or °F per house. In English, Romanian, German, Dutch, French and Italian.
 
 ## The card
 
@@ -140,7 +140,9 @@ Download the file and open it in a browser.
 
 ## Translations
 
-English and Romanian: the integration, the card and the documentation.
+The integration and the card: English, Romanian, German, Dutch, French and Italian. The documentation: English and Romanian.
+
+The German, Dutch, French and Italian texts are new: if you speak one of them, help make them sound right in [this issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues/12).
 
 ## Support
 

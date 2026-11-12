@@ -72,3 +72,16 @@ test("schedule editor: a typed time and then Save at once (a real click) saves t
   ok(s && s.service === "set_schedule", "saved: " + JSON.stringify(s && s.service));
   ok(JSON.stringify(s.data.profiles.workday).includes("07:30"), "with the new time: " + JSON.stringify(s.data.profiles.workday));
 });
+
+test("editor: the periods of the heating time in the language of the user", async (p) => {
+  const labels = await p.evaluate(() => {
+    document.querySelector("home-assistant")?.remove();
+    const ha = document.createElement("home-assistant");
+    ha.hass = { locale: { language: "de" } };
+    document.body.appendChild(ha);
+    const form = customElements.get("smart-heating-control-card").getConfigForm();
+    ha.remove();
+    return form.schema.find((f) => f.name === "runtime_period").selector.select.options.map((o) => o.label);
+  });
+  eq(labels, ["Tag", "Woche", "Monat"], "German periods");
+});

@@ -22,7 +22,6 @@ from .const import (
     CONF_HYSTERESIS,
     CONF_LINKED_WINDOW_SENSORS,
     CONF_OCCUPANCY_SENSORS,
-    CONF_REFERENCE_ROOM,
     CONF_TEMP_SENSORS,
     CONF_WINDOW_SENSORS,
     PRESETS,
@@ -69,11 +68,7 @@ class RoomStatus:
         if self.heat_demand and self.uses_house_source:
             if configured and source_on is None:
                 return {"code": "source_unknown"}
-            # The reference room counts only when it may start the heat source.
-            reference = house.options.get(CONF_REFERENCE_ROOM)
-            if reference not in house.rooms or not house.rooms[reference].starts_house_source:
-                reference = None
-            if not self.starts_house_source and not reference:
+            if not self.starts_house_source:
                 # A secondary room: it waits for a room that starts the heat source.
                 return {"code": "secondary"}
             if self.circuit is not None and house.circuit_on(self.circuit) is not True:
@@ -81,13 +76,11 @@ class RoomStatus:
                 return {"code": "circuit_closed", "entity": self.circuit}
             if house.source_waiting:
                 return {"code": f"source_{house.source_waiting}"}
-            if reference and reference != self.id and not house.rooms[reference].heat_demand:
-                return {"code": "reference_room", "room": house.rooms[reference].name}
             needed = max(1, int(house.options[CONF_BOILER_MIN_ROOMS]))
             count = sum(
                 1 for room in house.rooms.values() if room.heat_demand and room.starts_house_source
             )
-            if not reference and count < needed:
+            if count < needed:
                 return {"code": "rooms_needed", "count": count, "needed": needed}
             return {"code": "source_off"}
         if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost:

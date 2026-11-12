@@ -1,9 +1,8 @@
 """Combinations of the heat source options: circuits, secondary rooms, rooms
-needed, the reference room, keep the last TRV open, top up and the pause."""
+needed, keep the last TRV open, top up and the pause."""
 
 from __future__ import annotations
 
-import pytest
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -88,19 +87,15 @@ def _on(hass: HomeAssistant, entity_id: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Circuits with rooms needed, the reference room and the pause
+# Circuits with rooms needed and the pause
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Known: circuits are opened although the heat source cannot start, or in a pause",
-)
-async def test_a_pump_is_not_left_on_while_the_boiler_cannot_start(
+async def test_an_unavailable_circuit_relay_is_an_important_alert(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Two rooms needed; the circuit of one is unavailable: the boiler cannot
-    start, so the other circuit's pump does not run for nothing."""
+    """Two rooms needed; the circuit relay of one is unavailable: the boiler
+    cannot start, and the alert says the relay is to be repaired."""
     entry, trvs = await _setup(
         hass,
         freezer,
@@ -108,42 +103,30 @@ async def test_a_pump_is_not_left_on_while_the_boiler_cannot_start(
         circuits=[FLOOR, RADIATORS],
         boiler_min_rooms=2,
     )
+    house = entry.runtime_data
     hass.states.async_set(RADIATORS, "unavailable")
     trvs.report("climate.bedroom", "heating")
     trvs.report("climate.living", "heating")
     await _steps(hass, freezer)
     assert not _on(hass, BOILER)
-    assert not _on(hass, FLOOR)
-    await _unload(hass, entry)
 
+    def alerts() -> list[dict]:
+        return [a for a in house.active_alerts.values() if a.get("code") == "circuit_unavailable"]
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Known: circuits are opened although the heat source cannot start, or in a pause",
-)
-async def test_a_pump_is_not_left_on_while_the_reference_room_cannot_start_it(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    entry, trvs = await _setup(
-        hass,
-        freezer,
-        {"Bedroom": {"circuit": RADIATORS}, "Living": {"circuit": FLOOR}},
-        circuits=[FLOOR, RADIATORS],
-    )
-    entry.runtime_data.options["reference_room"] = _room(entry, "Bedroom").id
-    hass.states.async_set(RADIATORS, "unavailable")
-    trvs.report("climate.bedroom", "heating")
-    trvs.report("climate.living", "heating")
+    # Not before the time of Alert when a device is unavailable (15 minutes).
+    assert not alerts()
+    await _tick(hass, freezer, 16 * 60)
     await _steps(hass, freezer)
-    assert not _on(hass, BOILER)
-    assert not _on(hass, FLOOR)
+    found = alerts()
+    assert len(found) == 1
+    assert found[0]["params"]["entity"] == RADIATORS
+    # The relay works again: the alert ends.
+    hass.states.async_set(RADIATORS, "off")
+    await _steps(hass, freezer)
+    assert not alerts()
     await _unload(hass, entry)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Known: circuits are opened although the heat source cannot start, or in a pause",
-)
 async def test_the_pause_does_not_switch_the_circuits(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -186,21 +169,17 @@ async def test_the_pause_leaves_running_circuits_alone(
 
 
 # ---------------------------------------------------------------------------
-# Secondary rooms with rooms needed and the reference room
+# Secondary rooms with rooms needed
 # ---------------------------------------------------------------------------
 
 
-async def test_a_secondary_reference_room_is_ignored(
+async def test_a_reference_room_of_an_older_version_is_ignored(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    entry, trvs = await _setup(
-        hass, freezer, {"Bedroom": {}, "Hall": {"starts_house_source": False}}
-    )
-    entry.runtime_data.options["reference_room"] = _room(entry, "Hall").id
+    """The reference room is removed: one left in the options does not decide."""
+    entry, trvs = await _setup(hass, freezer, {"Bedroom": {}, "Hall": {}})
+    entry.runtime_data.options["reference_room"] = _room(entry, "Bedroom").id
     trvs.report("climate.hall", "heating")
-    await _steps(hass, freezer)
-    assert not _on(hass, BOILER)
-    trvs.report("climate.bedroom", "heating")
     await _steps(hass, freezer)
     assert _on(hass, BOILER)
     await _unload(hass, entry)

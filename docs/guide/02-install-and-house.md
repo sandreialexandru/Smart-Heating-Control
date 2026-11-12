@@ -299,7 +299,6 @@ The second form, only with a heat source:
 | Heat source minimum on / off time | 0 / 0 min | 0 = the source follows the heat demand at once. A larger value protects a boiler without its own anti-cycling from short cycles. |
 | Start and stop the source by its temperature | on | Only for a thermostat (`climate`) as the source: the maximum temperature of the house to start it, the frost protection of the house to stop it, always in its heat mode. Off: only its mode is switched. |
 | Heat source idle temperature | – (frost protection) | Only with *Start and stop the source by its temperature*: what the thermostat gets while no room asks, e.g. 17.5 °C when it also heats radiators without TRVs. Below the maximum of the house. |
-| Reference room | – | Only this room decides when the source runs; the others only open or close their valves. |
 | Circuit relays | – | Only with several heating circuits on the boiler (floor heating and radiators, say), each with its own pump or zone valve relay. Each room then picks its circuit; the relay is turned on before the boiler and off after it. See [chapter 8](08-heat-source-and-energy.md#heating-circuits). |
 
 Details: [chapter 8](08-heat-source-and-energy.md).

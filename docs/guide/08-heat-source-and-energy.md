@@ -68,12 +68,15 @@ target, which must be above its sensor.
 It **starts** the source when:
 
 - at least *Rooms needed to start the heat source* rooms ask for heat (1 by
-  default, i.e. any), or
-- with a *Reference room* set, when that room asks for heat (the others only
-  open or close their valves), or
+  default, i.e. any; [secondary rooms](#when-a-room-heats) do not count), or
 - a room is in **frost protection** and needs heat. Frost protection starts the
-  source alone, without the rooms needed, without the reference room and even in
-  a pause.
+  source alone, without the rooms needed and even in a pause.
+
+> **Only one room should start the boiler** (e.g. the living room with the
+> thermostat it always had): leave *Can start the house heat source* on for
+> that room and turn it off for the others, which become secondary rooms. Several
+> rooms can start it too (the living room and the bedroom), the rest secondary.
+> This replaces the *Reference room* of versions before 2.6.5.
 
 It **stops** the source when the condition is no longer met.
 
@@ -128,6 +131,10 @@ by default), so it does not ask for heat yet, opens its TRVs or relay and heats
 up to its target. It would ask soon and start the boiler again; this way the
 boiler starts less often.
 
+For a **secondary room**, which never starts the boiler, it is for comfort: the
+room catches the heat while the boiler runs for other rooms, so it does not
+stay below its target until another room starts the boiler again.
+
 - The TRVs get the maximum temperature of the room, as when kept open; a relay
   is turned on. The target of the room stays the one of its rule (the card
   shows the reason *Topped up while the heat source runs for other rooms*).
@@ -145,9 +152,11 @@ boiler starts less often.
   it goes on topped up at once: its TRVs stay open, without getting the
   target in between.
 
-**In a pause** the integration does not control the source, with one exception:
-it starts it for frost protection and stops it again when no longer needed
-(also after a restart during the pause).
+**In a pause** the integration does not control the source nor the circuit
+relays, with one exception: frost protection, for which it turns on the circuit
+of the room and the source and turns them off again when no longer needed (also
+after a restart during the pause). A circuit already on or off when the pause
+began is left as it is.
 
 **Rooms needed example.** You have four TRV rooms and *Rooms needed* 2. Only the
 bedroom asks for heat: the boiler does not start, and the card shows in the
@@ -182,8 +191,14 @@ What the integration does:
 - Frost protection opens the circuit and starts the boiler.
 - *Keep the last TRV open* keeps the TRVs of that room open, but its circuit
   closes once the boiler is off, so a pump does not run all night.
-- A room waiting for *Rooms needed* or for the *Reference room* does not open
-  its circuit: the circuits open only when the boiler is to start.
+- A room waiting for *Rooms needed* does not open its circuit: the circuits
+  open only when the boiler is to start.
+- In a pause the circuits are not switched, except for frost protection.
+- A circuit relay unavailable longer than *Alert when a device is unavailable
+  longer than* is an important alert: the rooms of its circuit get no heat, and
+  with *Rooms needed* above 1 the boiler may not start for the other rooms
+  either (their pumps may then run without it). Repair the relay, or change the
+  circuits of the house.
 - No delays: the relay does not wait for a pump to run up or a valve to
   open. A zone valve with an end switch that starts the boiler by itself
   needs no circuit here.
@@ -201,15 +216,14 @@ runs**:
 **Rooms with their own heat.** In a house with a *Heat source*, a room heated
 otherwise (an electric heater, a heat pump, an air conditioner) has *Heats from
 the heat source of the house* off, in its devices step. It then does not start
-the boiler (neither for *Rooms needed* nor for frost protection), cannot be the
-*Reference room*, and heats while its own device runs.
+the boiler (neither for *Rooms needed* nor for frost protection) and heats while
+its own device runs.
 
 **Secondary rooms.** A room on the boiler can be made secondary: in the step
 after its devices, *Can start the house heat source* off (on by default; asked
 only when the room heats from the heat source of the house). A secondary room
-never starts the boiler for itself, does not count for *Rooms needed*, cannot be
-the *Reference room* and is not the cold room of the *Alert when a room stays
-colder than*; its
+never starts the boiler for itself, does not count for *Rooms needed* and is
+not the cold room of the *Alert when a room stays colder than*; its
 TRVs, valves or relays still open while it is below its target, so it takes
 heat only while the boiler runs for another room. Good for rooms that should
 not be cold but need not be warm at a set time: enclosed balconies, a guest
@@ -238,7 +252,6 @@ attribute:
 | waiting for other rooms: X of Y ask for heat | *Rooms needed* |
 | a secondary room: it takes heat when another room starts the heat source | *Can start the house heat source* off |
 | its circuit (…) is off: the pump or valve does not run | the circuit relay of the room is off or unavailable, see [Heating circuits](#heating-circuits) |
-| waiting for the reference room … | *Reference room* |
 | the heat source is off / its state is unknown | the boiler does not run or nobody knows |
 | the thermostat is off | the room thermostat is `off` |
 
@@ -247,6 +260,8 @@ attribute:
 - **The heat source is unavailable** longer than *Alert when a device is
   unavailable longer than* (15 minutes by default): then nothing heats, not even
   frost protection.
+- **A circuit relay is unavailable** longer than the same time: the rooms of its
+  circuit get no heat (see [Heating circuits](#heating-circuits)).
 - **Alert when a room stays colder than** (in the *Alerts* options, 0 = off by
   default, shown only with more than one room): a room stays this many degrees
   below its target while others are warm (stuck valve, window left open).

@@ -540,7 +540,7 @@ learned an east sun that was not there in 2 of 3 runs. So there is one term.
   Assistant**: the integration cannot tell when the boiler really runs; the
   learning is not reliable and optimal start / stop are not recommended.
 - **Waits before the heat source starts** (the minimum on / off times, the
-  *Rooms needed to start the heat source*, the reference room) are not
+  *Rooms needed to start the heat source*, a secondary room) are not
   heating: the start can be late by that wait.
 - **Learning saved before 2.6** (heating and cooling episodes) does not fit the
   new model and is discarded: every room learns again after the update, within

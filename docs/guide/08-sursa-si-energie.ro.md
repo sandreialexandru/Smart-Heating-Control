@@ -67,12 +67,17 @@ trebuie să fie peste senzorul lui.
 **Pornește** sursa când:
 
 - cer căldură cel puțin *Camere necesare pentru pornirea sursei* camere
-  (implicit 1, adică oricare), sau
-- cu o *Cameră de referință* setată, când cere căldură acea cameră (celelalte
-  doar își deschid sau închid robinetele), sau
+  (implicit 1, adică oricare; [camerele secundare](#când-încălzește-o-cameră) nu
+  se numără), sau
 - o cameră e în **antiîngheț** și are nevoie de căldură. Antiînghețul pornește
-  sursa singur, fără camerele necesare, fără camera de referință și chiar în
-  pauză.
+  sursa singur, fără camerele necesare și chiar în pauză.
+
+> **Doar o cameră trebuie să pornească centrala** (de exemplu living-ul, cu
+> termostatul pe care l-a avut mereu): *Poate porni sursa de căldură a casei*
+> rămâne pornit la acea cameră și se oprește la celelalte, care devin camere
+> secundare. Pot porni centrala și mai multe camere (living-ul și dormitorul),
+> restul secundare. Asta înlocuiește *Camera de referință* din versiunile
+> dinainte de 2.6.5.
 
 **Oprește** sursa când nu mai e îndeplinită condiția.
 
@@ -129,6 +134,10 @@ alte camere, o cameră care e puțin sub țintă, în histerezisul ei (implicit
 încălzește până la țintă. Ar cere curând și ar porni din nou centrala; așa
 centrala pornește mai rar.
 
+La o **cameră secundară**, care nu pornește niciodată centrala, folosește la
+confort: camera prinde căldura cât centrala merge pentru alte camere, ca să nu
+rămână sub țintă până când altă cameră pornește din nou centrala.
+
 - TRV-urile primesc temperatura maximă a camerei, ca la ținerea deschisă;
   releul e pornit. Ținta camerei rămâne cea a regulii ei (cardul arată motivul
   *Încălzită la ocazie: centrala merge deja pentru alte camere*).
@@ -147,9 +156,10 @@ centrala pornește mai rar.
   histerezis, trece direct la încălzirea la ocazie: TRV-urile ei rămân
   deschise, fără să primească ținta între timp.
 
-**În pauză** integrarea nu comandă sursa, cu o singură excepție: o pornește
-pentru antiîngheț și o oprește din nou când nu mai e nevoie (și după o
-repornire în timpul pauzei).
+**În pauză** integrarea nu comandă nici sursa, nici releele circuitelor, cu o
+singură excepție: antiînghețul, pentru care pornește circuitul camerei și sursa
+și le oprește din nou când nu mai e nevoie (și după o repornire în timpul
+pauzei). Un circuit deja pornit sau oprit la începutul pauzei rămâne cum e.
 
 **Exemplu cu camere necesare.** Patru camere cu TRV și *Camere necesare*
 2. Doar dormitorul cere căldură: centrala nu pornește, iar cardul arată în
@@ -185,9 +195,14 @@ Ce face integrarea:
 - *Ține deschis ultimul TRV* ține deschise TRV-urile acelei camere, dar
   circuitul ei se închide după ce se oprește centrala, ca o pompă să nu meargă
   toată noaptea.
-- O cameră care așteaptă *Camere necesare* sau *Camera de referință* nu își
-  deschide circuitul: circuitele se deschid doar când urmează să pornească
-  centrala.
+- O cameră care așteaptă *Camere necesare* nu își deschide circuitul:
+  circuitele se deschid doar când urmează să pornească centrala.
+- În pauză circuitele nu sunt comutate, cu excepția antiînghețului.
+- Un releu de circuit indisponibil mai mult de *Alertă când un dispozitiv e
+  indisponibil mai mult de* e o alertă importantă: camerele circuitului lui nu
+  primesc căldură, iar cu *Camere necesare* peste 1 centrala poate să nu
+  pornească nici pentru celelalte camere (pompele lor pot merge atunci fără
+  ea). Releul trebuie reparat sau circuitele casei schimbate.
 - Fără întârzieri: releul nu așteaptă pornirea pompei sau deschiderea
   ventilului. Un ventil de zonă cu contact de capăt care pornește singur
   centrala nu are nevoie de circuit aici.
@@ -205,14 +220,14 @@ merge sursa ei**:
 **Camere cu încălzirea lor.** Într-o casă cu *Sursă de căldură*, o cameră
 încălzită altfel (radiator electric, pompă de căldură, aer condiționat) are *Se
 încălzește de la sursa de căldură a casei* oprit, la pasul dispozitivelor. Atunci
-nu pornește centrala (nici la *Camere necesare*, nici pentru antiîngheț), nu
-poate fi *Cameră de referință* și încălzește cât merge propriul dispozitiv.
+nu pornește centrala (nici la *Camere necesare*, nici pentru antiîngheț) și
+încălzește cât merge propriul dispozitiv.
 
 **Camere secundare.** O cameră pe centrală poate fi făcută secundară: la pasul de
 după dispozitivele ei, *Poate porni sursa de căldură a casei* oprit (implicit
 pornit; apare doar când camera se încălzește de la sursa casei). O cameră
 secundară nu pornește niciodată centrala pentru ea, nu se numără la *Camere
-necesare*, nu poate fi *Cameră de referință* și nu e camera rece din *Alertă
+necesare* și nu e camera rece din *Alertă
 când o cameră rămâne mai rece cu*; TRV-urile, vanele sau releele ei se deschid totuși cât e sub țintă,
 deci primește căldură doar cât centrala merge pentru altă cameră. Potrivit
 pentru camere care nu trebuie să fie reci, dar nici calde la o oră anume:
@@ -241,7 +256,6 @@ Cardul spune de ce, iar senzorul *Decizie* are atributul `no_heat_reason`:
 | așteaptă alte camere: X din Y cer căldură | *Camere necesare* |
 | cameră secundară: primește căldură când altă cameră pornește sursa de căldură | *Poate porni sursa de căldură a casei* oprit |
 | circuitul ei (…) e oprit: pompa sau ventilul nu merge | releul circuitului camerei e oprit sau indisponibil, vezi [Circuite de încălzire](#circuite-de-încălzire) |
-| așteaptă camera de referință … | *Cameră de referință* |
 | sursa de căldură e oprită / starea ei e necunoscută | centrala nu merge sau nu se știe |
 | termostatul e oprit | termostatul camerei e pe `off` |
 
@@ -250,6 +264,9 @@ Cardul spune de ce, iar senzorul *Decizie* are atributul `no_heat_reason`:
 - **Sursa de căldură indisponibilă** mai mult de *Alertă când un dispozitiv e
   indisponibil mai mult de* (implicit 15 minute): atunci nu se încălzește
   deloc, nici pentru antiîngheț.
+- **Releu de circuit indisponibil** mai mult de același timp: camerele
+  circuitului lui nu primesc căldură (vezi [Circuite de
+  încălzire](#circuite-de-încălzire)).
 - **Alertă când o cameră rămâne mai rece cu** (la opțiunile *Alerte*, implicit
   0 = oprit, apare doar cu mai multe camere): o cameră rămâne cu atâtea grade sub
   țintă în timp ce altele sunt calde (robinet blocat, fereastră uitată deschisă).

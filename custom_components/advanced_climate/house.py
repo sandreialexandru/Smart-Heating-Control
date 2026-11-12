@@ -87,7 +87,6 @@ from .const import (
     CONF_PV_SENSOR,
     CONF_PV_THRESHOLD,
     CONF_REEVAL_MINUTES,
-    CONF_REFERENCE_ROOM,
     CONF_ROOM_DIFF_ALERT,
     CONF_SEASON_DAYS,
     CONF_SEASON_END,
@@ -212,6 +211,11 @@ class House:
         self.boiler_changed: datetime | None = None
         self._source_running_since: datetime | None = None
         self._frost_started = False  # heat source started for frost protection while paused
+        # Circuits turned on in a pause for frost protection: off again once it
+        # no longer needs them; the others are left alone in a pause.
+        self._pause_circuits: set[str] = set()
+        # Since when each circuit relay has been unavailable.
+        self._circuit_unavailable_since: dict[str, datetime] = {}
         self._source_wait_until: datetime | None = None
         self._source_unavailable_since: datetime | None = None
         self._outdoor_unavailable_since: datetime | None = None
@@ -1265,19 +1269,12 @@ class House:
         # and of them only those that may (not the secondary rooms).
         sourced = {rid: room for rid, room in self.rooms.items() if room.uses_house_source}
         starters = {rid: room for rid, room in sourced.items() if room.starts_house_source}
-        # The reference room must be one that may start the heat source.
-        reference = opts.get(CONF_REFERENCE_ROOM)
-        if reference not in starters:
-            reference = None
         needed = max(1, int(opts[CONF_BOILER_MIN_ROOMS]))
-        if reference:
-            demand = sourced[reference].heat_demand
-        else:
-            count = sum(1 for room in starters.values() if room.heat_demand)
-            demand = count >= needed if starters else False
+        count = sum(1 for room in starters.values() if room.heat_demand)
+        demand = count >= needed if starters else False
         # More rooms needed than the house has (rooms were removed): the heat
         # source would start only for frost protection.
-        if opts.get(CONF_BOILER_ENTITY) and not reference and needed > len(starters):
+        if opts.get(CONF_BOILER_ENTITY) and needed > len(starters):
             self.notify(
                 "boiler_min_rooms",
                 f"Rooms needed to start the heat source is {needed}, but the house has "
@@ -1289,7 +1286,7 @@ class House:
         else:
             self.clear_alert("boiler_min_rooms")
         # Frost protection of any room starts the heat source on its own (no
-        # rooms needed, no reference room, also while paused).
+        # rooms needed, also while paused).
         frost = any(room.frost_demand for room in sourced.values())
         # The house asks for heat also when a room with its own heat does; only
         # the rooms of the heat source switch the heat source.
@@ -1305,25 +1302,28 @@ class House:
         circuits = self.circuits
         if circuits:
             # Only when the heat source is to start: a room waiting for other
-            # rooms or for the reference room does not run its pump for nothing.
+            # rooms does not run its pump for nothing. In a pause something else
+            # controls the heating: only for frost protection.
             wanted = {
                 room.circuit
                 for room in sourced.values()
                 if room.circuit
                 and (
-                    (demand and room.heat_demand and room.starts_house_source) or room.frost_demand
+                    room.frost_demand
+                    or (
+                        not self.paused and demand and room.heat_demand and room.starts_house_source
+                    )
                 )
             }
-            await self._async_switch_circuits(sorted(wanted), True)
+            opened = await self._async_switch_circuits(sorted(wanted), True)
+            if self.paused:
+                self._pause_circuits |= set(opened)
 
             def open_path(room: Room) -> bool:
                 return room.circuit is None or self.circuit_on(room.circuit) is True
 
-            if reference:
-                demand = sourced[reference].heat_demand and open_path(sourced[reference])
-            else:
-                count = sum(1 for room in starters.values() if room.heat_demand and open_path(room))
-                demand = count >= needed if starters else False
+            count = sum(1 for room in starters.values() if room.heat_demand and open_path(room))
+            demand = count >= needed if starters else False
             frost = any(room.frost_demand and open_path(room) for room in sourced.values())
         demand = demand or frost
         # Heating time of the house: while the heat source runs (its real state),
@@ -1331,6 +1331,7 @@ class House:
         configured, source_on = self.heat_source_state()
         running = bool(source_on) if configured else any(r.heating for r in self.rooms.values())
         self._check_source_available(now, configured, source_on)
+        self._check_circuits_available(now)
         if self._source_running_since is not None:
             self.boiler_runtime_s += (now - self._source_running_since).total_seconds()
             self._source_running_since = None
@@ -1344,8 +1345,18 @@ class House:
             # Closed only once the heat source is off, or while another one stays open.
             _, running = self.heat_source_state()
             still = [c for c in circuits if c in wanted and self.circuit_on(c)]
-            if running is False or still:
-                await self._async_switch_circuits([c for c in circuits if c not in wanted], False)
+            if self.paused:
+                # Only those turned on in the pause for frost protection.
+                done = sorted(c for c in self._pause_circuits if c not in wanted)
+                if done and (running is False or still):
+                    await self._async_switch_circuits(done, False)
+                    self._pause_circuits -= set(done)
+            else:
+                self._pause_circuits = set()
+                if running is False or still:
+                    await self._async_switch_circuits(
+                        [c for c in circuits if c not in wanted], False
+                    )
 
     @property
     def circuits(self) -> list[str]:
@@ -1361,8 +1372,9 @@ class House:
             return None
         return state.state == STATE_ON  # type: ignore[union-attr]
 
-    async def _async_switch_circuits(self, entities: list[str], on: bool) -> None:
-        """Turn circuit relays on or off (those not already so)."""
+    async def _async_switch_circuits(self, entities: list[str], on: bool) -> list[str]:
+        """Turn circuit relays on or off (those not already so); those switched."""
+        switched: list[str] = []
         for entity_id in entities:
             state = self.circuit_on(entity_id)
             if state is None or state == on:
@@ -1377,6 +1389,9 @@ class House:
                 )
             except (HomeAssistantError, ValueError) as err:
                 _LOGGER.warning("Could not switch the circuit %s: %s", entity_id, err)
+            else:
+                switched.append(entity_id)
+        return switched
 
     async def _async_switch_source(self, now: datetime, demand: bool, frost: bool) -> None:
         """Start or stop the heat source, with its minimum on / off times."""
@@ -1545,6 +1560,33 @@ class House:
                 code="source_unavailable",
                 params={"entity": entity_id, "minutes": round(limit.total_seconds() / 60)},
             )
+
+    def _check_circuits_available(self, now: datetime) -> None:
+        """Alert when a circuit relay has been unavailable for the configured time.
+
+        The rooms of its circuit get no heat (the heat source is not started for
+        them), and with Rooms needed the heat source may not start for the
+        others either: the relay is to be repaired, or the circuits changed.
+        """
+        circuits = set(self.circuits)
+        for entity_id in list(self._circuit_unavailable_since):
+            if entity_id not in circuits or self.circuit_on(entity_id) is not None:
+                del self._circuit_unavailable_since[entity_id]
+                self.clear_alert(f"circuit_unavailable_{entity_id}")
+        limit = timedelta(minutes=self.alert_unavailable_minutes)
+        for entity_id in sorted(circuits):
+            if self.circuit_on(entity_id) is not None:
+                continue
+            since = self._circuit_unavailable_since.setdefault(entity_id, now)
+            if now - since >= limit:
+                self.notify(
+                    f"circuit_unavailable_{entity_id}",
+                    f"The circuit relay {entity_id} has been unavailable for more than "
+                    f"{limit.total_seconds() / 60:.0f} minutes: the rooms of its circuit "
+                    "get no heat.",
+                    code="circuit_unavailable",
+                    params={"entity": entity_id, "minutes": round(limit.total_seconds() / 60)},
+                )
 
     def _check_weather_alerts(self, now: datetime) -> None:
         """Weather functions without an outdoor temperature, and an unavailable outdoor source."""

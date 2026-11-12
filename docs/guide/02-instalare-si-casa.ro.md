@@ -299,7 +299,6 @@ Al doilea formular, doar cu o sursă de căldură:
 | Timp minim pornită / oprită | 0 / 0 min | 0 = sursa urmează imediat cererea de căldură. O valoare mai mare protejează de cicluri scurte o centrală fără protecție proprie. |
 | Pornește și oprește sursa prin temperatura ei | pornit | Doar pentru un termostat (`climate`) ca sursă: temperatura maximă a casei ca să pornească, antiînghețul casei ca să se oprească, mereu pe încălzire. Oprit: i se schimbă doar modul. |
 | Temperatura sursei în repaus | – (antiîngheț) | Doar cu *Pornește și oprește sursa prin temperatura ei*: ce primește termostatul cât nicio cameră nu cere căldură, de exemplu 17,5 °C când încălzește și calorifere fără TRV. Sub maximul casei. |
-| Cameră de referință | – | Doar această cameră decide când merge sursa; celelalte doar își deschid sau închid robinetele. |
 | Releele circuitelor | – | Doar cu mai multe circuite de încălzire pe centrală (de exemplu încălzire în pardoseală și calorifere), fiecare cu releul pompei sau al ventilului de zonă. Fiecare cameră își alege apoi circuitul; releul e pornit înaintea centralei și oprit după ea. Vezi [capitolul 8](08-sursa-si-energie.ro.md#circuite-de-încălzire). |
 
 Detalii: [capitolul 8](08-sursa-si-energie.ro.md).

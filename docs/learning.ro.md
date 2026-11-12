@@ -546,8 +546,8 @@ rulări. De aceea există un singur termen.
   Home Assistant**: integrarea nu poate ști când merge centrala; învățarea nu
   este de încredere, iar pornirea / oprirea anticipată nu sunt recomandate.
 - **Așteptările dinainte de pornirea sursei de căldură** (timpii minimi de
-  pornire / oprire, *Camere necesare pentru pornirea sursei*, camera de
-  referință) nu sunt încălzire: pornirea poate întârzia cu acea așteptare.
+  pornire / oprire, *Camere necesare pentru pornirea sursei*, o cameră
+  secundară) nu sunt încălzire: pornirea poate întârzia cu acea așteptare.
 - **Învățarea salvată înainte de 2.6** (episoade de încălzire și răcire) nu se
   potrivește noului model și se renunță la ea: după actualizare fiecare cameră
   învață din nou, în circa o zi. Învățarea din versiunile beta 2.6.0 se

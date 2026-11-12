@@ -297,10 +297,10 @@ async def test_no_heat_reason_of_a_relay_room(
     await _unload(hass, entry)
 
 
-async def test_no_heat_reason_waits_for_the_rooms_needed_or_the_reference_room(
+async def test_no_heat_reason_waits_for_the_rooms_needed(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """A room that wants heat while the house source waits for more rooms or the reference room."""
+    """A room that wants heat while the house source waits for more rooms."""
     entry, room, _ = await _room(hass, freezer, {"boiler_min_rooms": 2})
     house = entry.runtime_data
     room.heating = False
@@ -314,10 +314,10 @@ async def test_no_heat_reason_waits_for_the_rooms_needed_or_the_reference_room(
     # The state of the heat source is unknown.
     house.heat_source_state = lambda: (True, None)
     assert room.no_heat_reason() == {"code": "source_unknown"}
-    # The reference room is the room itself: it does not wait for itself.
+    # A reference room left in the options of an older version is ignored.
     house.heat_source_state = lambda: (True, False)
     house.options = {**house.options, "reference_room": room.id, "boiler_min_rooms": 3}
-    assert room.no_heat_reason() == {"code": "source_off"}
+    assert room.no_heat_reason() == {"code": "rooms_needed", "count": 1, "needed": 3}
     await _unload(hass, entry)
 
 

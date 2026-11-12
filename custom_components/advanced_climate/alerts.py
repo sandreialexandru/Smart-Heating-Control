@@ -18,6 +18,7 @@ CATEGORY_INFO = "info"
 CATEGORIES: dict[str, str] = {
     # No heating at all, or a room that cannot heat.
     "source_unavailable": CATEGORY_CRITICAL,
+    "circuit_unavailable": CATEGORY_CRITICAL,
     "device_unavailable": CATEGORY_CRITICAL,
     # Something to look at.
     "sensor_unavailable": CATEGORY_WARNING,
@@ -52,6 +53,7 @@ CATEGORIES: dict[str, str] = {
 # end because a setting changed, and no one waits for that.
 RESOLVABLE = {
     "source_unavailable",
+    "circuit_unavailable",
     "device_unavailable",
     "sensor_unavailable",
     "sensor_silent",
@@ -67,6 +69,7 @@ RESOLVABLE = {
 TEXTS: dict[str, dict[str, str]] = {
     "en": {
         "source_unavailable": "The heat source {entity} has been unavailable for more than {minutes} min: no heating, not even frost protection.",
+        "circuit_unavailable": "The circuit relay {entity} has been unavailable for more than {minutes} min: the rooms of its circuit get no heat. Repair the relay or change the circuits of the house.",
         "room_difference": "Some rooms stay cold while others are warm: {rooms}.",
         "preset_missing": "The level {level} is not available on {entity} and its temperature is unknown.",
         "not_accepted": "{entities} did not accept {target}.",
@@ -97,6 +100,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "vacation_preheat": "The vacation ends soon: the house is warmed up for your return.",
         # Resolved.
         "resolved_source_unavailable": "The heat source {entity} works again.",
+        "resolved_circuit_unavailable": "The circuit relay {entity} works again.",
         "resolved_device_unavailable": "{entity} is available again.",
         "resolved_sensor_unavailable": "The temperature sensors work again.",
         "resolved_sensor_silent": "{entity} sends the temperature again.",
@@ -118,6 +122,7 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "ro": {
         "source_unavailable": "Sursa de căldură {entity} e indisponibilă de peste {minutes} min: nu se încălzește, nici pentru antiîngheț.",
+        "circuit_unavailable": "Releul de circuit {entity} e indisponibil de peste {minutes} min: camerele circuitului lui nu primesc căldură. Trebuie reparat releul sau schimbate circuitele casei.",
         "room_difference": "Unele camere rămân reci, altele sunt calde: {rooms}.",
         "preset_missing": "Nivelul {level} nu există pe {entity} și temperatura lui e necunoscută.",
         "not_accepted": "{entities} nu a acceptat {target}.",
@@ -147,6 +152,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "vacation_started": "A început vacanța: toate camerele sunt pe away.",
         "vacation_preheat": "Vacanța se termină curând: casa se încălzește pentru întoarcerea voastră.",
         "resolved_source_unavailable": "Sursa de căldură {entity} funcționează din nou.",
+        "resolved_circuit_unavailable": "Releul de circuit {entity} funcționează din nou.",
         "resolved_device_unavailable": "{entity} e din nou disponibil.",
         "resolved_sensor_unavailable": "Senzorii de temperatură funcționează din nou.",
         "resolved_sensor_silent": "{entity} trimite din nou temperatura.",

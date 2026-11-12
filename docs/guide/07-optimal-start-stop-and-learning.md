@@ -108,8 +108,8 @@ periodic check.
 
 **Beware of waits that are not learned.** The learned minutes start when the
 room really heats. The time the room asks for heat while the source waits (the
-minimum off time, *Rooms needed to start the heat source* above 1, the reference
-room) is not part of the learning. With such waits, the optimal start may reach
+minimum off time, *Rooms needed to start the heat source* above 1, a secondary
+room waiting for another room) is not part of the learning. With such waits, the optimal start may reach
 the target later.
 
 ## Optimal stop, step by step

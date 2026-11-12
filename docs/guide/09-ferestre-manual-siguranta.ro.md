@@ -258,6 +258,7 @@ pentru avertizări.
 | O fereastră e deschisă de peste … min | fereastra deschisă mai mult de pragul de alertă, cât e nevoie de căldură |
 | … e indisponibil de peste … min | un termostat sau senzor indisponibil mai mult de pragul de alertă (importantă) |
 | Sursa de căldură … e indisponibilă | atunci nu se încălzește deloc, nici pentru antiîngheț (importantă) |
+| Releul de circuit … e indisponibil | camerele circuitului lui nu primesc căldură; trebuie reparat releul sau schimbate circuitele (importantă) |
 | Nicio temperatură de afară de la … | nicio sursă configurată (senzor, meteo) nu dă temperatura mai mult de pragul de alertă |
 | Pornite, dar nu funcționează fără senzor de temperatură exterioară sau entitate meteo | funcții de vreme pornite fără sursa de care au nevoie |
 | Senzorii de temperatură sunt indisponibili | se folosește senzorul dispozitivului sau `eco` |

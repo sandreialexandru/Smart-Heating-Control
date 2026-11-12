@@ -118,7 +118,6 @@ from .const import (
     CONF_QUIET_END,
     CONF_QUIET_START,
     CONF_REEVAL_MINUTES,
-    CONF_REFERENCE_ROOM,
     CONF_ROOM_DIFF_ALERT,
     CONF_SCENARIO_ROOMS,
     CONF_SCHEDULE,
@@ -552,7 +551,7 @@ def _boiler_schema(v: dict[str, Any]) -> vol.Schema:
 def _boiler_details(
     v: dict[str, Any], rooms: list[selector.SelectOptionDict], trv_rooms: bool = True
 ) -> vol.Schema:
-    """Boiler timing and the rooms that decide it (reference room only with several rooms)."""
+    """Boiler timing and the rooms that decide it."""
     d = HOUSE_DEFAULTS
     fields: dict[Any, Any] = {}
     if v.get(CONF_BOILER_ENTITY):
@@ -577,12 +576,6 @@ def _boiler_details(
             fields[_req(CONF_BOILER_BOOST, v, d)] = selector.BooleanSelector()
             # Empty: the frost protection of the house (only with the boost).
             fields[_opt(CONF_BOILER_IDLE_TEMP, v)] = _number(3, 30, 0.5, "°C")
-        if len(rooms) > 1:
-            fields[_opt(CONF_REFERENCE_ROOM, v)] = selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=rooms, mode=selector.SelectSelectorMode.DROPDOWN
-                )
-            )
     return vol.Schema(fields)
 
 
@@ -1378,7 +1371,7 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
         return self._second("energy_details", _energy_details(self._pending_values), user_input)
 
     def _room_options(self) -> list[selector.SelectOptionDict]:
-        """Rooms of the house that heat from its heat source, for the reference room choice."""
+        """Rooms of the house that may start its heat source (for Rooms needed)."""
         return [
             selector.SelectOptionDict(value=sub.subentry_id, label=sub.title)
             for sub in self.config_entry.subentries.values()

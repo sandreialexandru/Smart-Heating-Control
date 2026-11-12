@@ -402,7 +402,7 @@ at once), and a *Lock* button for the child lock of the room.
 
 - **Not heating**: below its target, a room says why it does not heat (within
   the thermostat tolerance or the hysteresis, a minimum on / off time, waiting
-  for other rooms or the reference room, the heat source off or unknown, the
+  for other rooms, a secondary room, its circuit off, the heat source off or unknown, the
   thermostat off). The *Decision* sensor has it as `no_heat_reason`.
 - **Warm outside**: while the heating is off because it is warm the house
   shows why, e.g. *Warm outside: on • heating is off until the average falls to

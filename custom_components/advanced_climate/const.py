@@ -171,7 +171,6 @@ CONF_PV_OFFSET: Final = "pv_offset"
 
 CONF_BOILER_ENTITY: Final = "boiler_entity"
 CONF_BOILER_MIN_ROOMS: Final = "boiler_min_rooms"
-CONF_REFERENCE_ROOM: Final = "reference_room"
 CONF_BOILER_MIN_ON: Final = "boiler_min_on"
 CONF_BOILER_MIN_OFF: Final = "boiler_min_off"
 # When no room asks for heat any more, the TRVs of the last room that asked stay

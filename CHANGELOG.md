@@ -7,6 +7,18 @@ GitHub releases.
 
 ## Unreleased
 
+### ⚠️ Before you update: the *Reference room* is removed
+
+If you set a *Reference room* (*Heat source* options), it is no longer used
+after the update: **every room of the heat source can then start the boiler**.
+To keep only that room starting it, open every other room (⋮ → *Reconfigure*)
+and turn off *Can start the house heat source* on the page after its devices:
+those rooms become secondary rooms. They take heat while the boiler runs for
+the room that starts it, as with the reference room, and frost protection still
+starts the boiler for any room. Secondary rooms also allow more than one room
+to start the boiler (the living room and the bedroom, the rest secondary),
+which the reference room could not.
+
 ### New
 
 - 🏠 **Secondary rooms**: *Can start the house heat source* (per room, on by
@@ -15,8 +27,8 @@ GitHub releases.
   *Rooms needed*; its TRVs, valves or relays still open while it is below its
   target, so it takes heat only while the boiler runs for another room
   (enclosed balconies, a guest room, a hall). Frost protection still starts the
-  boiler for it. A secondary room cannot be the *Reference room* and is never
-  the cold room of the *Alert when a room stays colder than*. The card says *a
+  boiler for it. A secondary room is never the cold room of the *Alert when a
+  room stays colder than*. They replace the *Reference room* (see above). The card says *a
   secondary room: it takes heat when another room starts the heat source*.
 - 🔀 **Heating circuits** (#10): *Circuit relays* (house option, at the heat
   source; empty by default) and a *Circuit* per room on the boiler, for houses
@@ -27,8 +39,14 @@ GitHub releases.
   needed closes at once. The boiler is not started for a room whose circuit is
   off or unavailable (the card says *its circuit (…) is off*). A secondary room
   does not open its circuit; frost protection does. A room waiting for *Rooms
-  needed* or the *Reference room* does not open its circuit, and *Keep the last
-  TRV open* closes it once the boiler is off (no pump running all night).
+  needed* does not open its circuit, and *Keep the last TRV open* closes it
+  once the boiler is off (no pump running all night). In a pause the circuit
+  relays are not switched, except for frost protection.
+- 🚨 **Circuit relay unavailable** (important alert): a circuit relay
+  unavailable longer than *Alert when a device is unavailable longer than*.
+  The rooms of its circuit get no heat, and with *Rooms needed* above 1 the
+  boiler may not start for the other rooms either: repair the relay or change
+  the circuits of the house.
 
 - ♨️ **Top up while the boiler runs** (room option, off by default; TRVs or
   relays of the heat source): while the boiler runs for other rooms, a room
@@ -41,7 +59,9 @@ GitHub releases.
   TRVs not closed in between. Its band is the hysteresis of the room, now
   asked also for a TRV that reports whether it heats when the room is topped
   up; *Keep the last TRV open* is asked only when a room with TRVs heats from
-  the heat source.
+  the heat source. For a secondary room, which never starts the boiler, it
+  catches the heat while the boiler runs for other rooms, so the room does not
+  stay below its target until the next start.
 
 ### Fixed
 

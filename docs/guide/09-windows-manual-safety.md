@@ -257,6 +257,7 @@ as the recipient of the important alerts and of the warnings.
 | A window has been open for more than … min | the window open longer than the alert threshold, while heat is needed |
 | … has been unavailable for more than … min | a thermostat or sensor unavailable longer than the alert threshold (important) |
 | The heat source … has been unavailable | then nothing heats, not even frost protection (important) |
+| The circuit relay … has been unavailable | the rooms of its circuit get no heat; repair the relay or change the circuits (important) |
 | No outdoor temperature from … | no configured source (sensor, weather) gives a temperature for longer than the alert threshold |
 | On but not working without an outdoor temperature sensor or a weather entity | weather functions on without the source they need |
 | The temperature sensors are unavailable | the device sensor or `eco` is used |

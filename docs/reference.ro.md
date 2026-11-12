@@ -424,7 +424,7 @@ multe deodată) și un buton *Blocare* pentru blocarea modificărilor în camer�
 
 - **Nu încălzește**: sub țintă, camera spune de ce nu încălzește (în toleranța
   termostatului sau în histerezis, timp minim pornit / oprit, așteaptă alte
-  camere sau camera de referință, sursa de căldură oprită sau necunoscută,
+  camere, cameră secundară, circuitul oprit, sursa de căldură oprită sau necunoscută,
   termostatul oprit). Senzorul *Decizie* îl are ca `no_heat_reason`.
 - **Cald afară**: cât încălzirea e oprită pentru că e cald, casa arată de ce,
   de exemplu *Cald afară: pornit • încălzirea e oprită până media scade la

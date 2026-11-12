@@ -222,24 +222,3 @@ async def test_circuit_waits_for_the_rooms_needed(
     assert _on(hass, "input_boolean.radiators") and _on(hass, "input_boolean.floor")
     assert _on(hass, "input_boolean.boiler")
     await _unload(hass, entry)
-
-
-async def test_circuit_waits_for_the_reference_room(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Only while the reference room starts the heat source are the circuits opened."""
-    entry, _ = await _setup(hass, freezer)
-    entry.runtime_data.options["reference_room"] = _room(entry, "Living").id
-    _report(hass, "climate.bedroom", "heating")
-    _report(hass, "climate.living", "idle", 21.5)
-    await _tick(hass, freezer, 5)
-    await _tick(hass, freezer, 5)
-    assert not _on(hass, "input_boolean.radiators")
-    assert not _on(hass, "input_boolean.boiler")
-    _report(hass, "climate.living", "heating")
-    await _tick(hass, freezer, 5)
-    await _tick(hass, freezer, 5)
-    assert _on(hass, "input_boolean.floor") and _on(hass, "input_boolean.radiators")
-    assert _on(hass, "input_boolean.boiler")
-    assert _room(entry, "Bedroom").heating
-    await _unload(hass, entry)

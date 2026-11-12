@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.5rc9";
+const CARD_VERSION = "2.6.5rc10";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -31,6 +31,7 @@ const TEMP_COLOR = "var(--ac-fixed)";
 // Alerts that mean something does not work (red); the others are warnings (amber).
 const ALERT_ERRORS = [
   "source_unavailable",
+  "circuit_unavailable",
   "device_unavailable",
   "sensor_unavailable",
   "not_accepted",
@@ -294,7 +295,6 @@ const TEXT = {
     nh_source_min_off: "the heat source waits for its minimum off time",
     nh_rooms_needed: "waiting for other rooms: {count} of {needed} ask for heat",
     nh_secondary: "a secondary room: it takes heat when another room starts the heat source",
-    nh_reference_room: "waiting for the reference room {room}",
     nh_circuit_closed: "its circuit ({entity}) is off: the pump or valve does not run",
     nh_source_off: "the heat source is off",
     nh_source_unknown: "the state of the heat source is unknown",
@@ -339,6 +339,7 @@ const TEXT = {
     applied_after: "applies after: {rule}",
     alerts: "Alerts",
     al_source_unavailable: "The heat source {entity} has been unavailable for more than {minutes} min: no heating, not even frost protection.",
+    al_circuit_unavailable: "The circuit relay {entity} has been unavailable for more than {minutes} min: the rooms of its circuit get no heat. Repair the relay or change the circuits of the house.",
     al_room_difference: "Some rooms stay cold while others are warm: {rooms}.",
     al_preset_missing: "The level {level} is not available on {entity} and its temperature is unknown.",
     al_not_accepted: "{entities} did not accept {target}.",
@@ -417,6 +418,7 @@ const TEXT = {
     end_guests: "End",
     next_at: "{preset} at {time}",
     at_source_unavailable: "Heat source unavailable",
+    at_circuit_unavailable: "Circuit relay unavailable",
     at_room_difference: "Rooms heated unevenly",
     at_preset_missing: "Level missing",
     at_not_accepted: "Temperature not accepted",
@@ -613,7 +615,6 @@ const TEXT = {
     nh_source_min_off: "sursa de căldură așteaptă timpul minim oprit",
     nh_rooms_needed: "așteaptă alte camere: {count} din {needed} cer căldură",
     nh_secondary: "cameră secundară: primește căldură când altă cameră pornește sursa de căldură",
-    nh_reference_room: "așteaptă camera de referință {room}",
     nh_circuit_closed: "circuitul ei ({entity}) e oprit: pompa sau ventilul nu merge",
     nh_source_off: "sursa de căldură e oprită",
     nh_source_unknown: "starea sursei de căldură e necunoscută",
@@ -658,6 +659,7 @@ const TEXT = {
     applied_after: "se aplică după: {rule}",
     alerts: "Alerte",
     al_source_unavailable: "Sursa de căldură {entity} e indisponibilă de peste {minutes} min: nu se încălzește, nici pentru antiîngheț.",
+    al_circuit_unavailable: "Releul de circuit {entity} e indisponibil de peste {minutes} min: camerele circuitului lui nu primesc căldură. Trebuie reparat releul sau schimbate circuitele casei.",
     al_room_difference: "Unele camere rămân reci, altele sunt calde: {rooms}.",
     al_preset_missing: "Nivelul {level} nu există pe {entity} și temperatura lui e necunoscută.",
     al_not_accepted: "{entities} nu a acceptat {target}.",
@@ -736,6 +738,7 @@ const TEXT = {
     end_guests: "Oprește",
     next_at: "{preset} la {time}",
     at_source_unavailable: "Sursa de căldură indisponibilă",
+    at_circuit_unavailable: "Releu de circuit indisponibil",
     at_room_difference: "Camere încălzite inegal",
     at_preset_missing: "Nivel lipsă",
     at_not_accepted: "Temperatură neacceptată",

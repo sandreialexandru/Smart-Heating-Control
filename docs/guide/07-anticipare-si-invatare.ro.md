@@ -109,8 +109,8 @@ verificarea periodică.
 
 **Atenție la așteptări care nu se învață.** Minutele învățate încep când camera
 chiar încălzește. Timpul în care camera cere căldură dar sursa așteaptă (timpul
-minim oprit, *Camere necesare pentru pornirea sursei* mai mare de 1, camera de
-referință) nu intră în învățare. Cu astfel de așteptări, pornirea anticipată
+minim oprit, *Camere necesare pentru pornirea sursei* mai mare de 1, o cameră
+secundară care așteaptă altă cameră) nu intră în învățare. Cu astfel de așteptări, pornirea anticipată
 poate ajunge mai târziu la țintă.
 
 ## Oprirea anticipată, pas cu pas

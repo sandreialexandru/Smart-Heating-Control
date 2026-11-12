@@ -82,7 +82,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .why p { margin: 6px 0 0; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
 .prog .count-sm { display: none; }
-.seg:last-child { flex: 0 0 auto !important; min-width: 5.5em; }
+.seg:last-child, .seg.scen, .seg.done { flex: 0 0 auto !important; min-width: 5.5em; }
 .box li { overflow-wrap: anywhere; }
 
 .fld { border-top: 1px solid var(--line); padding-top: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
@@ -172,7 +172,7 @@ dd pre { margin: 0; white-space: pre-wrap; font-family: var(--font-mono); font-s
   .card { padding: 18px 16px; border-radius: 14px; }
   .prog { flex-wrap: wrap; row-gap: 6px; }
   .seg span { display: none; }
-  .seg:last-child { min-width: 1.5em; }
+  .seg:last-child, .seg.scen, .seg.done { min-width: 1.5em; }
   .prog .count-sm { display: block; flex-basis: 100%; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink); font-weight: 600; }
   .row { grid-template-columns: 1fr; }
   .btn { padding: 10px 16px; }
@@ -190,7 +190,7 @@ const T = {
   title: L('Smart Heating Configurator', 'Configurator Smart Heating'),
   back: L('Back', 'Înapoi'), next: L('Next', 'Mai departe'), finish: L('Show my configuration', 'Arată configurația'),
   step: L('Step', 'Pasul'), of: L('of', 'din'),
-  secHouse: L('House', 'Casa'), secOpts: L('House options', 'Opțiuni casă'), secRooms: L('Rooms', 'Camere'), secDone: L('Summary', 'Rezumat'),
+  secHouse: L('House', 'Casa'), secOpts: L('House options', 'Opțiuni casă'), secRooms: L('Rooms', 'Camere'), secScen: L('Scenarios', 'Scenarii'), secDone: L('Summary', 'Rezumat'),
   means: L('What it means', 'Ce înseamnă'), effect: L('How it changes the heating', 'Cum influențează'), example: L('Example', 'Exemplu'),
   required: L('required', 'obligatoriu'), optional: L('optional', 'opțional'), helperTag: L('question for you', 'doar întrebare de ghidare'),
   def: L('default', 'implicit'), emptyIs: L('empty', 'gol'),
@@ -220,6 +220,7 @@ const T = {
 };
 
 const P_ADD = L('Settings → Devices & services → Add integration → Smart Heating Control', 'Setări → Dispozitive și servicii → Adaugă integrare → Smart Heating Control');
+const P_SCEN = L('Integration page → Add scenario (or ⋮ → Reconfigure scenario)', 'Pagina integrării → Adaugă scenariu (sau ⋮ → Reconfigurează scenariul)');
 const P_OPT = (en, ro) => L('Integration page → Configure → ' + en, 'Pagina integrării → Configurează → ' + ro);
 const P_ROOM = L('Integration page → Add room (or ⋮ → Reconfigure room)', 'Pagina integrării → Adaugă cameră (sau ⋮ → Reconfigurează camera)');
 
@@ -847,11 +848,55 @@ const ROOM = [
 ];
 /* ===== engine ===== */
 const KEY = 'shc-configurator-v1';
+
+/* ----- scenarios: profiles turned on in several rooms at once ----- */
+const WEEKDAY_NAMES = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+// The profiles of a room's own schedule, as in its Schedule field (one profile per line).
+const roomProfiles = c => String(c.r('schedule') || '').split('\n').map(l => l.split(':')[0].trim().toLowerCase()).filter(Boolean);
+// The rooms that can be in a scenario: their own schedule, not a schedule helper.
+const scenRooms = () => S.rooms.slice(0, roomsAdded()).map((r, i) => ({ r, i, c: ctx(i, 'rooms') })).filter(x => x.c.r('schedule_source') !== 'helper');
+function roomsAdded() { let n = 0; for (let i = 0; i < S.rooms.length; i++) { n++; if (S.rooms[i].more !== 'yes') break; } return n; }
+// The days of a new profile, by its name (the card can change them): mon…sun, workday, weekend; else, when the room has none of these, its first profile is for all days.
+function profileDays(name, names) {
+  if (WEEKDAY_NAMES.includes(name)) return [name];
+  if (name === 'workday' || name === 'weekend') return names.includes('workday') && names.includes('weekend') ? name : 'all';
+  const known = names.some(n => WEEKDAY_NAMES.includes(n) || n === 'workday' || n === 'weekend');
+  return !known && names[0] === name ? 'all' : null;
+}
+function daysOverlap(a, b) {
+  if (Array.isArray(a) && Array.isArray(b)) return a.some(d => b.includes(d));
+  if (Array.isArray(a) || Array.isArray(b)) return false;
+  return a === 'all' || b === 'all' || a === b;
+}
+// "Name: Room = profile + profile; Room = profile", one scenario per line.
+function parseScenarios(txt) {
+  return String(txt || '').split('\n').map(l => l.trim()).filter(Boolean).map(line => {
+    const at = line.indexOf(':');
+    const name = (at < 0 ? '' : line.slice(0, at)).trim();
+    const rooms = (at < 0 ? line : line.slice(at + 1)).split(';').map(x => x.trim()).filter(Boolean).map(part => {
+      const eq = part.indexOf('=');
+      return { room: (eq < 0 ? part : part.slice(0, eq)).trim(), profiles: (eq < 0 ? '' : part.slice(eq + 1)).split('+').map(x => x.trim().toLowerCase()).filter(Boolean) };
+    });
+    return { line, name, rooms };
+  });
+}
+const SCEN = [
+  {
+    id: 's_scenarios', sec: 'scen', where: P_SCEN, title: L('Scenarios', 'Scenarii'), show: () => scenRooms().length > 0,
+    intro: L('Optional. A scenario turns on chosen profiles in several rooms at once, from the house’s Scenario select, the buttons of the card or an automation (e.g. Home office: the home_office profile in the living room and the office). It adds nothing of its own: choosing it does in every room what its profile select does. Rooms left out keep their profiles. Scenarios are added after the house has started and its rooms exist.', 'Opțional. Un scenariu pornește profiluri alese în mai multe camere odată, din selectul Scenariu al casei, din butoanele cardului sau dintr-o automatizare (de exemplu Lucru de acasă: profilul home_office în living și în birou). Nu adaugă nimic al lui: alegerea lui face în fiecare cameră ce face selectul ei de profil. Camerele lăsate afară își păstrează profilurile. Scenariile se adaugă după ce casa a pornit și camerele există.'),
+    why: L('The house shows the scenario whose profiles are all on; when two match (one part of the other), the one setting more profiles. A deleted room leaves the scenarios; a missing profile, overlapping days or a room switched to a schedule helper is skipped and told in Repairs.', 'Casa arată scenariul ale cărui profiluri sunt toate pornite; când se potrivesc două (unul parte din celălalt), pe cel care setează mai multe profiluri. O cameră ștearsă iese din scenarii; un profil lipsă, zile comune sau o cameră trecută pe un helper de program sunt sărite și spuse în Reparații.'),
+    fields: [{ k: 'scenarios', t: 'area', l: L('Scenarios', 'Scenarii'),
+      d: L('One scenario per line: its name, a colon, then the rooms separated by “;”, each with “=” and its profiles separated by “+”. Only rooms with their own schedule (not a schedule helper), and profiles of that room’s schedule. The profiles of a room must not share days (two for workdays and weekend days, or for different weekdays, are fine). The active profiles of the same days are turned off, as when one is turned on in the card.', 'Un scenariu pe linie: numele, două puncte, apoi camerele separate prin „;”, fiecare cu „=” și profilurile ei separate prin „+”. Doar camere cu programul lor (nu helper de program) și profiluri din programul acelei camere. Profilurile unei camere nu au voie să aibă zile comune (unul pentru zile lucrătoare și unul pentru weekend sau pentru zile diferite din săptămână merg). Profilurile active pe aceleași zile se opresc, ca atunci când se pornește unul din card.'),
+      def: '', ph: L('Home office: Living = home_office; Office = home_office', 'Lucru de acasă: Living = home_office; Birou = home_office'),
+      note: L('In the real form: Add scenario → its name and rooms, then the profiles of every room from lists. One scenario per Add scenario.', 'În formularul real: Adaugă scenariu → numele și camerele, apoi profilurile fiecărei camere din liste. Câte un scenariu la fiecare Adaugă scenariu.'),
+      ex: L('Office day: Living = workday; Office = workday. Home office: Living = home_office; Office = home_office + weekend.', 'Zi la birou: Living = workday; Birou = workday. Lucru de acasă: Living = home_office; Birou = home_office + weekend.') }]
+  }
+];
 const FIELDS = {};
-[['house', HOUSE], ['opts', OPTS], ['room', ROOM]].forEach(([sc, arr]) => arr.forEach(s => s.fields.forEach(f => { const k = sc + ':' + f.k; if (!FIELDS[k]) FIELDS[k] = f; })));
+[['house', HOUSE], ['opts', OPTS], ['room', ROOM], ['scen', SCEN]].forEach(([sc, arr]) => arr.forEach(s => s.fields.forEach(f => { const k = sc + ':' + f.k; if (!FIELDS[k]) FIELDS[k] = f; })));
 const INH = new Set(['source', 'command_mode', 'trv_boost', 'reports', 'trv_boost_temperature', 'temperature_sensors', 'hysteresis']);
 const SUMMARY = { id: 'summary', sec: 'done', summary: true, title: T.sumTitle, fields: [] };
-const SECS = ['house', 'opts', 'rooms', 'done'];
+const SECS = ['house', 'opts', 'rooms', 'scen', 'done'];
 
 let S;
 try { S = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { S = null; }
@@ -883,7 +928,7 @@ function ctx(ri, sec) {
   ri = ri || 0;
   const c = { ri };
   c.whole = !!(S.rooms[ri] && S.rooms[ri].whole);
-  c.curScope = sec === 'house' ? 'house' : (sec === 'opts' ? 'opts' : 'room');
+  c.curScope = sec === 'house' ? 'house' : (sec === 'opts' ? 'opts' : (sec === 'scen' ? 'scen' : 'room'));
   c.h = k => getv('house', k, c); c.o = k => getv('opts', k, c); c.r = k => getv('room', k, c);
   c.val = k => getv(c.curScope, k, c);
   c.src = () => (c.whole ? c.h('source') : c.r('source'));
@@ -904,6 +949,9 @@ function flow() {
     ROOM.forEach(s => { if (!s.show || s.show(c)) out.push({ s, ri, id: s.id + '#' + ri }); });
     if (S.rooms[ri].more !== 'yes') break;
   }
+  if (!S.a.scen) S.a.scen = {};
+  const cs = ctx(null, 'scen');
+  SCEN.forEach(s => { if (!s.show || s.show(cs)) out.push({ s, ri: null, id: s.id }); });
   out.push({ s: SUMMARY, ri: null, id: 'summary' });
   return out;
 }
@@ -943,10 +991,10 @@ function progressHTML(fl, i) {
   const segs = SECS.map((sc, si) => {
     const n = counts[si]; const first = start; start += n;
     let pct = 0; if (i >= first + n) pct = 100; else if (i >= first) pct = Math.round((i - first + 1) / n * 100);
-    const label = { house: T.secHouse, opts: T.secOpts, rooms: T.secRooms, done: T.secDone }[sc];
-    return `<div class="seg${sc === cur ? ' now' : ''}" style="flex:${Math.max(n, 1)}"><div class="bar"><i style="width:${pct}%"></i></div><span>${esc(t(label))}</span></div>`;
+    const label = { house: T.secHouse, opts: T.secOpts, rooms: T.secRooms, scen: T.secScen, done: T.secDone }[sc];
+    return `<div class="seg${sc === 'scen' || sc === 'done' ? ' ' + sc : ''}${sc === cur ? ' now' : ''}" style="flex:${Math.max(n, 1)}"><div class="bar"><i style="width:${pct}%"></i></div><span>${esc(t(label))}</span></div>`;
   }).join('');
-  const curLabel = { house: T.secHouse, opts: T.secOpts, rooms: T.secRooms, done: T.secDone }[cur];
+  const curLabel = { house: T.secHouse, opts: T.secOpts, rooms: T.secRooms, scen: T.secScen, done: T.secDone }[cur];
   return `<nav class="prog" aria-label="progress">${segs}<span class="count-sm">${esc(t(curLabel))} · ${i + 1} / ${fl.length}</span></nav>`;
 }
 
@@ -988,7 +1036,7 @@ function fieldHTML(f, c, it) {
     if (f.live && shown !== '') h += `<p class="live" id="live-${id}">${esc(t(f.live(Number(shown), c)))}</p>`;
     else h += `<p class="live" id="live-${id}" hidden></p>`;
   } else if (f.t === 'area') {
-    h += `<textarea class="txt mono" id="${id}" rows="4" spellcheck="false" data-k="${esc(f.k)}" data-ri="${ri}" data-sc="${sc}">${esc(v)}</textarea>`;
+    h += `<textarea class="txt mono" id="${id}" rows="4" spellcheck="false"${f.ph ? ` placeholder="${esc(t(f.ph))}"` : ''} data-k="${esc(f.k)}" data-ri="${ri}" data-sc="${sc}">${esc(v)}</textarea>`;
   } else {
     const type = f.t === 'time' ? 'time' : 'text';
     const ph = f.t === 'ents' ? f.ph : (f.ph ? t(f.ph) : '');
@@ -1125,6 +1173,34 @@ function issues(fl) {
     });
     if (circuits.length && onSource.some(x => !x.r.whole && !hasTxt(x.c.r('circuit')))) out.push(['info', L('The house has circuit relays, but some rooms of the heat source have no circuit: their relay is never turned on for them.', 'Casa are relee de circuit, dar unele camere ale sursei nu au circuit: niciun releu de circuit nu e pornit pentru ele.')]);
   }
+  // Scenarios: names, rooms with their own schedule, profiles of that schedule, no shared days.
+  const cs = ctx(null, 'scen'); const avail = scenRooms(); const seen = new Set();
+  if (!avail.length && hasTxt(cs.val('scenarios'))) out.push(['warn', L('Scenarios: no room has its own schedule (all use a schedule helper), so the form offers no scenario.', 'Scenarii: nicio cameră nu are programul ei (toate folosesc un helper de program), deci formularul nu oferă scenarii.')]);
+  if (avail.length) parseScenarios(cs.val('scenarios')).forEach(sc => {
+    const tag = sc.name || sc.line;
+    if (!sc.name) { out.push(['err', L(`Scenario “${sc.line}”: write its name, then a colon.`, `Scenariul „${sc.line}”: se scrie numele, apoi două puncte.`)]); return; }
+    if (seen.has(sc.name.toLowerCase())) out.push(['err', L(`Scenario ${tag}: another scenario has this name.`, `Scenariul ${tag}: alt scenariu are acest nume.`)]);
+    seen.add(sc.name.toLowerCase());
+    if (!sc.rooms.length) out.push(['err', L(`Scenario ${tag}: choose at least one room.`, `Scenariul ${tag}: trebuie aleasă cel puțin o cameră.`)]);
+    const used = new Set();
+    sc.rooms.forEach(x => {
+      const hit = rooms.find(y => roomName(y.r, y.i, y.c).trim().toLowerCase() === x.room.toLowerCase());
+      if (!hit) { out.push(['err', L(`Scenario ${tag}: no room is called “${x.room}”.`, `Scenariul ${tag}: nicio cameră nu se numește „${x.room}”.`)]); return; }
+      const nm = roomName(hit.r, hit.i, hit.c);
+      if (used.has(hit.i)) out.push(['err', L(`Scenario ${tag}: ${nm} appears twice; put all its profiles in one place, with “+”.`, `Scenariul ${tag}: ${nm} apare de două ori; toate profilurile ei se pun într-un loc, cu „+”.`)]);
+      used.add(hit.i);
+      if (hit.c.r('schedule_source') === 'helper') { out.push(['err', L(`Scenario ${tag}: ${nm} uses a schedule helper; only rooms with their own schedule can be in a scenario.`, `Scenariul ${tag}: ${nm} folosește un helper de program; doar camerele cu programul lor pot fi într-un scenariu.`)]); return; }
+      if (!x.profiles.length) { out.push(['err', L(`Scenario ${tag}: choose at least one profile for ${nm}.`, `Scenariul ${tag}: trebuie ales cel puțin un profil pentru ${nm}.`)]); return; }
+      const names = roomProfiles(hit.c);
+      const missing = x.profiles.filter(q => !names.includes(q));
+      if (missing.length) out.push(['err', L(`Scenario ${tag}: ${nm} has no profile ${missing.join(', ')} in its schedule (it has ${names.join(', ') || 'none'}).`, `Scenariul ${tag}: ${nm} nu are profilul ${missing.join(', ')} în program (are ${names.join(', ') || 'niciunul'}).`)]);
+      const known = x.profiles.filter(q => names.includes(q));
+      const shared = known.filter(q => known.some(o => o !== q && profileDays(q, names) && profileDays(o, names) && daysOverlap(profileDays(q, names), profileDays(o, names))));
+      if (shared.length) out.push(['err', L(`Scenario ${tag}: the profiles ${shared.join(', ')} of ${nm} share days. Choose profiles for different days.`, `Scenariul ${tag}: profilurile ${shared.join(', ')} din ${nm} au zile comune. Se aleg profiluri pentru zile diferite.`)]);
+      const unsure = known.filter(q => !profileDays(q, names));
+      if (known.length > 1 && unsure.length) out.push(['info', L(`Scenario ${tag}: the days of ${unsure.join(', ')} (${nm}) are set in the card; the form refuses profiles of one room that share days.`, `Scenariul ${tag}: zilele pentru ${unsure.join(', ')} (${nm}) se aleg din card; formularul refuză profilurile unei camere care au zile comune.`)]);
+    });
+  });
   if (c0.o('cutoff_enabled') && c0.o('season_mode') === 'always') out.push(['info', L('Cutoff on with season “Always”: the warm-outside cutoff stops the heating in warm weather, but in deep summer you may still prefer mode Summer or an automatic season.', 'Prag pornit cu sezon „Mereu”: pragul oprește încălzirea pe vreme caldă, dar vara poate fi preferat modul Vară sau un sezon automat.')]);
   return out;
 }

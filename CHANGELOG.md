@@ -29,6 +29,13 @@ GitHub releases.
   does not open its circuit; frost protection does, and *Keep the last TRV
   open* keeps it open.
 
+### Fixed
+
+- 🕒 The card shows times in the *Time format* of the user profile of Home
+  Assistant (24 h, 12 h, of the language or of the system); before, it always
+  used the clock of the language, so English showed 12 h even when 24 h was
+  set (#11).
+
 ## 2.6.4 – 2026-11-11
 
 ### New

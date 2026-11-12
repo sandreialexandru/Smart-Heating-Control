@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.5rc3";
+const CARD_VERSION = "2.6.5rc4";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -1106,7 +1106,20 @@ class SmartHeatingControlCard extends HTMLElement {
 
   /** A moment as text in the language and time zone of the card. */
   _fmt(t, opts) {
-    return new Date(t).toLocaleString(this._lang(), { ...opts, timeZone: this._tz() });
+    const o = { ...opts, timeZone: this._tz() };
+    if (o.hour) o.hour12 = this._hour12();
+    return new Date(t).toLocaleString(this._lang(), o);
+  }
+
+  /** 12 or 24 hour clock, as set in the profile of the user (Time format). */
+  _hour12() {
+    const format = this._hass?.locale?.time_format;
+    if (format === "12") return true;
+    if (format === "24") return false;
+    // "language": the clock of the language; "system": the one of the browser.
+    const locale = format === "system" ? undefined : this._lang();
+    const cycle = new Intl.DateTimeFormat(locale, { hour: "numeric" }).resolvedOptions().hourCycle;
+    return cycle === "h11" || cycle === "h12";
   }
 
   /** ISO datetime -> value for <input type="datetime-local"> (card time zone). */

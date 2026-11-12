@@ -272,3 +272,14 @@ test("a week of a sensor that reports every 30 s is drawn with far fewer points,
   ok(r.min < 19.0001, "the lowest is kept: " + r.min);
   ok(r.first && r.last && r.sorted, "first, last, in order");
 });
+
+test("time format of the user profile: 24 h, 12 h, and the one of the language", async (p) => {
+  const next = async (timeFormat, lang) => {
+    await mount(p, {}, { rooms: R1, timeFormat, lang });
+    return p.evaluate(() => card._fmt(Date.UTC(2026, 0, 5, 15, 30), { hour: "2-digit", minute: "2-digit" }));
+  };
+  eq(await next("24", "en"), "17:30", "24 h with English");
+  ok(/5:30\s?PM/i.test(await next("12", "en")), "12 h");
+  ok(/5:30\s?PM/i.test(await next("language", "en")), "English language: 12 h");
+  eq(await next("language", "ro"), "17:30", "Romanian language: 24 h");
+});

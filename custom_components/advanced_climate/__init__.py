@@ -19,9 +19,11 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_BOILER_ENTITY,
     CONF_PROFILE_DAYS,
     CONF_SCHEDULE,
     CONF_SCHEDULE_SOURCE,
+    CONF_SECONDARY_SOURCE,
     DEFAULT_SCHEDULE,
     DOMAIN,
     SCHEDULE_INTERNAL,
@@ -98,7 +100,8 @@ def _remove_old_entities(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     The profile select of the rooms (2.2), the two reset buttons of the
     learning (2.6: one *Reset learning* button now); and the schedule profile
-    select of a room that now follows a schedule helper (no profiles of its own).
+    select of a room that now follows a schedule helper (no profiles of its own);
+    the heat source select of a house without a secondary heat source.
     """
     registry = er.async_get(hass)
     rooms = {sid for sid, sub in entry.subentries.items() if sub.subentry_type == SUBENTRY_ROOM}
@@ -113,6 +116,9 @@ def _remove_old_entities(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if sub.subentry_type == SUBENTRY_ROOM
         and sub.data.get(CONF_SCHEDULE_SOURCE, SCHEDULE_INTERNAL) != SCHEDULE_INTERNAL
     }
+    opts = {**entry.data, **entry.options}
+    if not (opts.get(CONF_BOILER_ENTITY) and opts.get(CONF_SECONDARY_SOURCE)):
+        old.add(("select", f"{entry.entry_id}_heat_source"))
     for item in er.async_entries_for_config_entry(registry, entry.entry_id):
         if (item.domain, item.unique_id) in old:
             registry.async_remove(item.entity_id)

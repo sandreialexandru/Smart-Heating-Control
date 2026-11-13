@@ -206,10 +206,12 @@
       "boiler": {
         "title": "Wärmequelle und Wärmebedarf",
         "data": {
-          "boiler_entity": "Wärmequelle"
+          "boiler_entity": "Wärmequelle",
+          "secondary_source": "Zweite Wärmequelle"
         },
         "data_description": {
-          "boiler_entity": "Der Kessel (oder das Relais, das die Wärmequelle startet), wenn die Räume ihn nicht selbst starten können (Heizkörperthermostate, Zonenventile). Die Integration startet ihn, wenn Räume Wärme anfordern, und Lernen und Heizzeit zählen nur, solange er läuft. Nie das Relais, das ein Generic Thermostat schon nutzt. Mit Heizkörperthermostaten und einem Kessel, den ein Thermostat außerhalb von Home Assistant startet, ist das Lernen nicht zuverlässig: Optimaler Start und Stopp sind dann nicht zu empfehlen."
+          "boiler_entity": "Der Kessel (oder das Relais, das die Wärmequelle startet), wenn die Räume ihn nicht selbst starten können (Heizkörperthermostate, Zonenventile). Die Integration startet ihn, wenn Räume Wärme anfordern, und Lernen und Heizzeit zählen nur, solange er läuft. Nie das Relais, das ein Generic Thermostat schon nutzt. Mit Heizkörperthermostaten und einem Kessel, den ein Thermostat außerhalb von Home Assistant startet, ist das Lernen nicht zuverlässig: Optimaler Start und Stopp sind dann nicht zu empfehlen.",
+          "secondary_source": "Optional, nur mit einer Wärmequelle oben: eine zweite (z. B. eine Wärmepumpe neben dem Kessel), die dieselben Räume und Kreise heizt. Es läuft immer nur eine: Solange die zweite genutzt wird, bleibt die erste aus. Welche, wählst du in der Karte oder im Select Wärmequelle des Hauses (von Hand, per Automatisierung oder Automatisch nach einem Kriterium, im nächsten Schritt). Ist die gewählte nicht verfügbar, heizt die andere. Leer (Standard): eine Wärmequelle."
         },
         "description": "Nur für Häuser, in denen die Räume die Wärmequelle nicht selbst starten können (Heizkörperthermostate oder Zonenventile): Die Integration startet sie dann, wenn Räume Wärme anfordern, und ein Raum heizt (für das Lernen und die Heizzeit) nur, solange sie läuft.\n\n⚠️ Mit einem Thermostat an jedem Heizkörper muss die Anlage das Wasser durchlassen (ein automatischer Bypass, ein Kessel mit internem Bypass oder ein Heizkörper ohne Thermostat): Die Thermostate schließen bei ihrer Zieltemperatur, und die Wärmequelle läuft eventuell bis zum Ende ihrer Mindestlaufzeit."
       },
@@ -388,7 +390,8 @@
           "keep_last_open": "Letztes Heizkörperthermostat offen lassen",
           "circuits": "Kreisrelais",
           "boiler_boost": "Quelle über ihre Temperatur starten und stoppen",
-          "boiler_idle_temp": "Ruhetemperatur der Wärmequelle"
+          "boiler_idle_temp": "Ruhetemperatur der Wärmequelle",
+          "source_criterion": "Automatische Wahl der Quelle"
         },
         "data_description": {
           "boiler_min_rooms": "Wie viele Räume Wärme anfordern müssen, um sie zu starten. 1 = ein beliebiger Raum. Nebenräume („Kann die Wärmequelle des Hauses starten“ aus) zählen nicht.",
@@ -397,7 +400,8 @@
           "keep_last_open": "Wenn kein Raum mehr Wärme anfordert, bleiben die Heizkörperthermostate des letzten anfordernden Raums offen (sie bekommen die Höchsttemperatur des Raums oder bleiben an). So hat die Restwärme in Wärmequelle und Leitungen einen Weg, wie mit einem Bypass, und das Ventil bewegt sich in der Nacht nicht noch einmal. Das gilt, bis ein anderer Raum Wärme anfordert, eine stärkere Regel den Raum übernimmt (Fenster, manuelle Änderung, Pause, Modus, warm draußen) oder der Raum selbst Wärme braucht. Der Raum fordert währenddessen keine Wärme an, kann aber wärmer werden als seine Zieltemperatur, und sein Lernen überspringt diese Zeit. Standardmäßig aus.",
           "circuits": "Nur bei mehreren Heizkreisen am Kessel (z. B. Fußbodenheizung und Heizkörper), jeder mit eigenem Pumpen- oder Zonenventilrelais. Ein Raum an der Wärmequelle wählt dann seinen Kreis (in seinen Einstellungen): Fordert er Wärme an, wird zuerst sein Kreisrelais eingeschaltet, dann der Kessel; braucht ihn kein Raum mehr, stoppt zuerst der Kessel, dann das Kreisrelais. Für einen Raum, dessen Kreis aus ist, startet der Kessel nicht. Leer (Standard): keine Kreise, nichts ändert sich.",
           "boiler_boost": "Ein Thermostat als Wärmequelle (z. B. Hive, Nest, Tado, ein Generic Thermostat) startet den Kessel nur nach seiner eigenen Zieltemperatur und seinem eigenen Sensor. An (Standard): Es bleibt im Heizmodus; zum Starten bekommt es die Höchsttemperatur des Hauses, zum Stoppen die Ruhetemperatur (standardmäßig die Frostschutztemperatur des Hauses) – so schützt es weiter vor Frost, falls Home Assistant ausfällt. Eine von Hand gesetzte Zieltemperatur wird zurückgenommen. Aus: Nur sein Modus wird umgeschaltet (Heizen / Aus). Ein Thermostat ohne Zieltemperatur wird immer über den Modus geschaltet. Nicht dasselbe wie „Nach den Raumsensoren heizen“ der Zone für das ganze Haus: Das ist für ein Thermostat, das selbst die ganze Wohnung heizt.",
-          "boiler_idle_temp": "Nur mit „Quelle über ihre Temperatur starten und stoppen“: was das Thermostat bekommt, solange kein Raum Wärme anfordert. Leer (Standard): die Frostschutztemperatur des Hauses, damit der Kessel aus bleibt. Ein höherer Wert (z. B. 17,5 °C) lässt das Thermostat seinen eigenen Bereich nach seinem eigenen Sensor auf dieser Temperatur halten: nützlich, wenn es auch Heizkörper ohne Thermostat heizt. Muss unter der Höchsttemperatur des Hauses liegen."
+          "boiler_idle_temp": "Nur mit „Quelle über ihre Temperatur starten und stoppen“: was das Thermostat bekommt, solange kein Raum Wärme anfordert. Leer (Standard): die Frostschutztemperatur des Hauses, damit der Kessel aus bleibt. Ein höherer Wert (z. B. 17,5 °C) lässt das Thermostat seinen eigenen Bereich nach seinem eigenen Sensor auf dieser Temperatur halten: nützlich, wenn es auch Heizkörper ohne Thermostat heizt. Muss unter der Höchsttemperatur des Hauses liegen.",
+          "source_criterion": "Was im Modus Automatisch die zweite Quelle wählt: PV-Überschuss (der PV-Sensor liegt über seiner Schwelle, unter Energie), Kälte draußen (unter einer Temperatur, im nächsten Schritt), Günstiger Strom (der Preis liegt höchstens bei seiner unteren Grenze, unter Energie), Eigene Entität (eine Ein/Aus-Entität deiner Wahl: ein = die zweite Quelle). Es erscheint nur, was im Haus eingerichtet ist. Keins (Standard): kein Automatisch, die Quelle wird von Hand oder per Automatisierung gewählt. Nimm beim PV-Überschuss die Erzeugung der Module oder einen Überschuss, der die Wärmepumpe einschließt: Ein Einspeisesensor fällt, sobald die Wärmepumpe startet, und die Quellen würden hin und her wechseln."
         }
       },
       "behavior_details": {
@@ -424,6 +428,20 @@
           "hysteresis": "Das Haus fordert Wärme unter Zieltemperatur minus diesem Wert an und hört über Zieltemperatur plus diesem Wert auf, gemessen von seinen Sensoren.",
           "inertia_control": "Sobald das Haus gelernt hat, wie träge seine Heizung reagiert, endet die höhere Temperatur etwas früher, wenn die bereits abgegebene Wärme das Haus von selbst an die Obergrenze der Hysterese bringt, und beginnt etwas früher, wenn das Haus sonst unter die Untergrenze fiele, bevor die Wärme ankommt. Die Grenzen bleiben. Aus: Nur die Hysterese entscheidet."
         }
+      },
+      "boiler_source": {
+        "title": "Automatische Wahl der Quelle",
+        "description": "Die Quelle wechselt erst, wenn das Kriterium für die Umschaltzeit geändert bleibt.",
+        "data": {
+          "source_criterion_entity": "Entität des Kriteriums",
+          "source_cold_below": "Zweite Quelle unter",
+          "source_switch_minutes": "Umschaltzeit"
+        },
+        "data_description": {
+          "source_criterion_entity": "Ein: Die zweite Quelle heizt; aus: die erste. Zum Beispiel ein Template-Binärsensor oder ein Input Boolean.",
+          "source_cold_below": "Außentemperatur, unter der die zweite Quelle heizt (z. B. der Kessel, wenn die Wärmepumpe die erste Quelle ist und nicht mehr ausreicht).",
+          "source_switch_minutes": "Wie lange das Kriterium geändert bleiben muss, bevor die Quelle wechselt (Standard 15 min), damit eine Wolke oder eine kurze Preisänderung die Quellen nicht hin und her schaltet. 0 = sofort. Eine von Hand gewählte Quelle wechselt sofort."
+        }
       }
     },
     "error": {
@@ -443,7 +461,10 @@
       "invalid_recipient": "„{recipient}“ geht nicht: Schreibe einen Benachrichtigungsdienst (notify.name), optional gefolgt von E-Mail-Adressen, z. B. notify.me_gmail_com: ana@example.com, ion@example.com.",
       "idle_not_below_max": "Die Ruhetemperatur muss unter der Höchsttemperatur des Hauses liegen.",
       "entity_is_circuit": "{entity} ist ein Kreisrelais von {owner}. Es kann nicht zusätzlich Gerät eines Raums oder ein anderer Kreis sein.",
-      "circuit_is_source": "Die Wärmequelle kann nicht zugleich ein Kreisrelais sein."
+      "circuit_is_source": "Die Wärmequelle kann nicht zugleich ein Kreisrelais sein.",
+      "secondary_without_primary": "Die zweite Wärmequelle braucht eine Wärmequelle.",
+      "secondary_is_primary": "Die zweite Wärmequelle muss ein anderes Gerät als die Wärmequelle sein.",
+      "criterion_is_source": "Das Kriterium kann keine der Wärmequellen sein."
     }
   },
   "config_subentries": {
@@ -896,6 +917,23 @@
             "name": "Heute genutzt"
           }
         }
+      },
+      "heat_source": {
+        "name": "Wärmequelle",
+        "state": {
+          "auto": "Automatisch",
+          "primary": "Erste Quelle",
+          "secondary": "Zweite Quelle"
+        },
+        "state_attributes": {
+          "active": {
+            "name": "In Betrieb",
+            "state": {
+              "primary": "Erste Quelle",
+              "secondary": "Zweite Quelle"
+            }
+          }
+        }
       }
     },
     "switch": {
@@ -1066,6 +1104,15 @@
       "options": {
         "celsius": "Celsius (°C)",
         "fahrenheit": "Fahrenheit (°F)"
+      }
+    },
+    "source_criterion": {
+      "options": {
+        "none": "Keins (von Hand oder per Automatisierung)",
+        "pv_surplus": "PV-Überschuss",
+        "cold": "Kälte draußen",
+        "cheap_power": "Günstiger Strom",
+        "entity": "Eigene Entität"
       }
     }
   },

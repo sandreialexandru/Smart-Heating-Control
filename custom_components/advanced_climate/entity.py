@@ -88,6 +88,7 @@ class RoomEntity(Entity):
 HOUSE_ENTITY_KEYS: dict[str, str] = {
     "mode": "select",
     "scenario": "select",
+    "heat_source": "select",
     "presence": "sensor",
     "outdoor_average": "sensor",
     "heating_runtime": "sensor",

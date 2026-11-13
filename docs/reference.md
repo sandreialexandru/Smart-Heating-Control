@@ -193,7 +193,7 @@ the safety limits.
 
 ## Entities
 
-House: *Mode* (select), *Presence* (home / nearby / far), *Pause* and *Guest
+House: *Mode* (select), *Heat source* (select, only with a secondary heat source), *Presence* (home / nearby / far), *Pause* and *Guest
 mode* (switches), *Vacation start / end* (datetime), *Heating season*, *Outdoor
 cutoff* and *Heat demand* (binary sensors), *Outdoor average*, *Heating time*,
 buttons to clear manual changes, clear the vacation and reevaluate.

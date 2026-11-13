@@ -207,6 +207,64 @@ Ce face integrarea:
   ventilului. Un ventil de zonă cu contact de capăt care pornește singur
   centrala nu are nevoie de circuit aici.
 
+## Sursă secundară
+
+Unele case au două surse de căldură pentru aceleași camere: o pompă de căldură
+lângă centrală, o centrală pe gaz lângă una electrică. Merge doar una odată.
+
+1. În opțiunile casei, la sursa de căldură, alege **Sursa secundară** sub
+   *Sursa de căldură* (aceleași tipuri: `switch`, `input_boolean`, `climate`).
+2. Pe pagina următoare, **Alegerea automată a sursei** (opțional), apoi pe
+   ultima pagină ce îi trebuie și **Timpul de comutare**.
+
+Casa primește apoi selectul *Sursa de căldură*, iar cardul un rând de butoane
+cu numele celor două aparate: `Automat | Centrală | Pompă`.
+
+- **Principală** sau **Secundară**: încălzește doar acea sursă, orice ar zice
+  criteriul. O alegere de mână se aplică imediat.
+- **Automat** (doar cu un criteriu): decide criteriul, *on* = sursa secundară:
+
+| Criteriu | Sursa secundară încălzește cât… | Folosește |
+| --- | --- | --- |
+| Surplus PV | senzorul PV e peste prag | *Senzor surplus fotovoltaic* și *Surplus de la* (Energie) |
+| Frig afară | afară e sub *Sursa secundară sub* | senzorul exterior sau entitatea meteo |
+| Curent ieftin | prețul e cel mult *Preț mic până la* | senzorul de preț (Energie) |
+| Entitate proprie | entitatea aleasă e pornită | orice `binary_sensor`, `input_boolean` sau `switch` |
+
+Apar doar criteriile pe care casa le are setate. Sursa se schimbă doar după ce
+criteriul a rămas schimbat cât *Timpul de comutare* (implicit 15 min), ca un nor
+să nu comute sursele de colo-colo. Cardul arată sursa în uz și, cât Automat
+așteaptă, când se schimbă.
+
+Exemplu: centrala ca sursă de căldură, pompa ca sursă secundară, criteriul
+*Surplus PV*. Cât panourile dau peste prag încălzește pompa (iar cu *Ajustare cu
+surplus* camerele urcă puțin, ca pardoseala să strângă căldură); seara preia
+centrala.
+
+Sau invers: pompa ca sursă de căldură, centrala pe gaz ca sursă secundară,
+criteriul *Frig afară* sub −5 °C.
+
+Ce face integrarea:
+
+- Sursa care nu e în uz e ținută oprită (un termostat cu boost, la temperatura
+  de repaus). La o schimbare, întâi se oprește cea veche, apoi pornește cea
+  nouă, fără să aștepte timpul minim oprită al celei vechi.
+- Dacă sursa aleasă e indisponibilă și cealaltă merge, încălzește cealaltă.
+  Indisponibilă mai mult decât *Alertă când un dispozitiv e indisponibil mai
+  mult de*: un avertisment care spune care încălzește între timp; amândouă
+  indisponibile: alerta importantă, ca la o singură sursă.
+- Camerele, circuitele, *Camere necesare*, timpii minimi și pauza merg ca la o
+  singură sursă. În pauză sursele nu sunt comutate, în afară de antiîngheț.
+- Învățarea camerelor e una pentru ambele surse: o pompă pe pardoseală
+  încălzește mai încet decât centrala, așa că camerele învață o medie.
+- La *Surplus PV* folosește producția panourilor sau un surplus care include
+  pompa: un senzor de export scade imediat ce pornește pompa, iar sursele s-ar
+  schimba de colo-colo.
+- O pompă legată doar pe pardoseală (caloriferele rămân pe centrală) nu e
+  acoperită: ar trebui să meargă amândouă odată, pe circuite diferite. Acolo se
+  folosește o automatizare. Un aparat hibrid care alege singur (un termostat
+  pentru ambele) nu are nevoie de sursă secundară.
+
 ## Când „încălzește” o cameră
 
 Pentru învățare și pentru timpul de încălzire, o cameră **încălzește doar cât

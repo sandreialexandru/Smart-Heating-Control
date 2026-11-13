@@ -206,10 +206,12 @@
       "boiler": {
         "title": "Fonte di calore e richiesta di calore",
         "data": {
-          "boiler_entity": "Fonte di calore"
+          "boiler_entity": "Fonte di calore",
+          "secondary_source": "Fonte di calore secondaria"
         },
         "data_description": {
-          "boiler_entity": "La caldaia (o il relè che accende la fonte di calore) quando le stanze non possono accenderla da sole (valvole termostatiche, valvole di zona). L'integrazione la accende quando le stanze chiedono calore, e l'apprendimento e il tempo di riscaldamento contano solo mentre è accesa. Mai il relè che un Generic Thermostat usa già. Con valvole termostatiche e una caldaia accesa da un termostato che non è in Home Assistant, l'apprendimento non è affidabile: avvio e spegnimento ottimali sono sconsigliati."
+          "boiler_entity": "La caldaia (o il relè che accende la fonte di calore) quando le stanze non possono accenderla da sole (valvole termostatiche, valvole di zona). L'integrazione la accende quando le stanze chiedono calore, e l'apprendimento e il tempo di riscaldamento contano solo mentre è accesa. Mai il relè che un Generic Thermostat usa già. Con valvole termostatiche e una caldaia accesa da un termostato che non è in Home Assistant, l'apprendimento non è affidabile: avvio e spegnimento ottimali sono sconsigliati.",
+          "secondary_source": "Facoltativa, solo con una fonte di calore qui sopra: una seconda (per esempio una pompa di calore accanto alla caldaia) che scalda le stesse stanze e gli stessi circuiti. Ne funziona una sola: finché si usa la secondaria, la prima resta spenta. Scegli quale dalla scheda o con il select Fonte di calore della casa (a mano, con un'automazione o in Automatico secondo un criterio, al passo successivo). Se quella scelta non è disponibile, scalda l'altra. Vuoto (predefinito): una sola fonte."
         },
         "description": "Solo per case in cui le stanze non possono accendere da sole la fonte di calore (valvole termostatiche o valvole di zona): l'integrazione la accende quando le stanze chiedono calore, e una stanza si scalda (per l'apprendimento e il tempo di riscaldamento) solo mentre è accesa.\n\n⚠️ Con una valvola termostatica su ogni termosifone, l'impianto deve far passare l'acqua (un bypass automatico, una caldaia con bypass interno o un termosifone senza valvola): le valvole si chiudono alla loro temperatura obiettivo, e la fonte di calore può restare accesa fino alla fine del suo tempo minimo di accensione."
       },
@@ -388,7 +390,8 @@
           "keep_last_open": "Tieni aperta l'ultima valvola termostatica",
           "circuits": "Relè dei circuiti",
           "boiler_boost": "Accendere e spegnere la fonte tramite la sua temperatura",
-          "boiler_idle_temp": "Temperatura di riposo della fonte"
+          "boiler_idle_temp": "Temperatura di riposo della fonte",
+          "source_criterion": "Scelta automatica della fonte"
         },
         "data_description": {
           "boiler_min_rooms": "Quante stanze devono chiedere calore per accenderla. 1 = qualsiasi stanza. Le stanze secondarie (Può accendere la fonte di calore della casa spento) non contano.",
@@ -397,7 +400,8 @@
           "keep_last_open": "Quando nessuna stanza chiede più calore, le valvole termostatiche dell'ultima stanza che lo chiedeva restano aperte (ricevono la temperatura massima della stanza o restano accese). Così il calore rimasto nella fonte e nei tubi ha dove andare, come con un bypass, e la valvola non si muove di nuovo durante la notte. Finché un'altra stanza non chiede calore, una regola più forte non prende la stanza (finestra, modifica manuale, pausa, modalità, caldo fuori) o la stanza stessa non ha bisogno di calore. Nel frattempo la stanza non chiede calore, ma può diventare più calda del suo obiettivo, e il suo apprendimento salta quel periodo. Spento di default.",
           "circuits": "Solo con più circuiti di riscaldamento sulla caldaia (per esempio pavimento radiante e termosifoni), ognuno con il proprio relè della pompa o della valvola di zona. Una stanza sulla fonte di calore sceglie allora il suo circuito (nelle sue impostazioni): quando chiede calore si accende prima il relè del circuito, poi la caldaia; quando nessuna stanza ne ha più bisogno, si spegne prima la caldaia, poi il relè. La caldaia non parte per una stanza il cui circuito è spento. Vuoto (predefinito): nessun circuito, non cambia nulla.",
           "boiler_boost": "Un termostato usato come fonte di calore (per esempio Hive, Nest, Tado, un Generic Thermostat) accende la caldaia solo in base al proprio obiettivo e al proprio sensore. Acceso (predefinito): resta in modalità riscaldamento; per accendere riceve la temperatura massima della casa, per spegnere la temperatura di riposo (di default quella dell'antigelo della casa), così continua a proteggere dal gelo se Home Assistant si ferma. Un obiettivo impostato a mano viene annullato. Spento: si cambia solo la sua modalità (riscaldamento / spento). Un termostato senza temperatura obiettivo viene sempre comandato tramite la modalità. Non è la stessa cosa di 'Scaldare in base ai sensori della stanza' della zona di tutta la casa: quella è per un termostato che scalda da sé tutta la casa.",
-          "boiler_idle_temp": "Solo con 'Accendere e spegnere la fonte tramite la sua temperatura': cosa riceve il termostato finché nessuna stanza chiede calore. Vuoto (predefinito): la temperatura antigelo della casa, così la caldaia resta spenta. Un valore più alto (per esempio 17,5 °C) fa mantenere al termostato la sua zona a quella temperatura, con il proprio sensore: utile se scalda anche termosifoni senza valvola termostatica. Deve essere sotto la temperatura massima della casa."
+          "boiler_idle_temp": "Solo con 'Accendere e spegnere la fonte tramite la sua temperatura': cosa riceve il termostato finché nessuna stanza chiede calore. Vuoto (predefinito): la temperatura antigelo della casa, così la caldaia resta spenta. Un valore più alto (per esempio 17,5 °C) fa mantenere al termostato la sua zona a quella temperatura, con il proprio sensore: utile se scalda anche termosifoni senza valvola termostatica. Deve essere sotto la temperatura massima della casa.",
+          "source_criterion": "Cosa sceglie la fonte secondaria in Automatico: Surplus fotovoltaico (il sensore FV supera la sua soglia, in Energia), Freddo fuori (sotto una temperatura, al passo successivo), Corrente economica (il prezzo è al massimo il suo limite basso, in Energia), Entità propria (un'entità on / off a tua scelta: on = la fonte secondaria). Compare solo quello che la casa ha impostato. Nessuno (predefinito): niente Automatico, la fonte si sceglie a mano o con un'automazione. Con il surplus fotovoltaico usa la produzione dei pannelli o un surplus che comprende la pompa di calore: un sensore di immissione scende appena parte la pompa, e le fonti si alternerebbero di continuo."
         }
       },
       "behavior_details": {
@@ -424,6 +428,20 @@
           "hysteresis": "La casa chiede calore sotto l'obiettivo meno questo valore e smette sopra l'obiettivo più questo valore, misurato dai suoi sensori.",
           "inertia_control": "Quando la casa ha imparato quanto lentamente reagisce il suo riscaldamento, la temperatura più alta finisce un po' prima se il calore già dato porterebbe da solo la casa in cima alla fascia di isteresi, e comincia un po' prima se la casa scenderebbe sotto il fondo della fascia prima che arrivi il calore. La fascia resta il limite. Spento: decide solo l'isteresi."
         }
+      },
+      "boiler_source": {
+        "title": "Scelta automatica della fonte",
+        "description": "La fonte cambia solo dopo che il criterio è rimasto cambiato per il tempo di commutazione.",
+        "data": {
+          "source_criterion_entity": "Entità del criterio",
+          "source_cold_below": "Fonte secondaria sotto",
+          "source_switch_minutes": "Tempo di commutazione"
+        },
+        "data_description": {
+          "source_criterion_entity": "On: scalda la fonte secondaria; off: la principale. Per esempio un binary sensor template o un input boolean.",
+          "source_cold_below": "Temperatura esterna sotto la quale scalda la fonte secondaria (per esempio la caldaia, quando la pompa di calore è la fonte principale e non ce la fa più).",
+          "source_switch_minutes": "Quanto il criterio deve restare cambiato prima che la fonte cambi (predefinito 15 min), così una nuvola o una breve variazione di prezzo non fa alternare le fonti. 0 = subito. Una fonte scelta a mano cambia subito."
+        }
       }
     },
     "error": {
@@ -443,7 +461,10 @@
       "invalid_recipient": "\"{recipient}\" non si può usare: scrivi un servizio di notifica (notify.nome), eventualmente seguito da indirizzi email, per esempio notify.me_gmail_com: ana@example.com, ion@example.com.",
       "idle_not_below_max": "La temperatura di riposo deve essere sotto la temperatura massima della casa.",
       "entity_is_circuit": "{entity} è un relè di circuito di {owner}. Non può essere anche un dispositivo di una stanza o un altro circuito.",
-      "circuit_is_source": "La fonte di calore non può essere anche un relè di circuito."
+      "circuit_is_source": "La fonte di calore non può essere anche un relè di circuito.",
+      "secondary_without_primary": "La fonte secondaria ha bisogno di una fonte di calore.",
+      "secondary_is_primary": "La fonte secondaria deve essere un dispositivo diverso dalla fonte di calore.",
+      "criterion_is_source": "Il criterio non può essere una delle fonti di calore."
     }
   },
   "config_subentries": {
@@ -896,6 +917,23 @@
             "name": "Usato oggi"
           }
         }
+      },
+      "heat_source": {
+        "name": "Fonte di calore",
+        "state": {
+          "auto": "Automatico",
+          "primary": "Principale",
+          "secondary": "Secondaria"
+        },
+        "state_attributes": {
+          "active": {
+            "name": "In uso",
+            "state": {
+              "primary": "Principale",
+              "secondary": "Secondaria"
+            }
+          }
+        }
       }
     },
     "switch": {
@@ -1066,6 +1104,15 @@
       "options": {
         "celsius": "Celsius (°C)",
         "fahrenheit": "Fahrenheit (°F)"
+      }
+    },
+    "source_criterion": {
+      "options": {
+        "none": "Nessuno (a mano o con un'automazione)",
+        "pv_surplus": "Surplus fotovoltaico",
+        "cold": "Freddo fuori",
+        "cheap_power": "Corrente economica",
+        "entity": "Entità propria"
       }
     }
   },

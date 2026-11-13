@@ -715,7 +715,7 @@ async def test_heat_source_shown_for_trvs_on_the_whole_house(hass: HomeAssistant
     assert "boiler" in result["menu_options"]
     result = await options.async_configure(result["flow_id"], {"next_step_id": "boiler"})
     assert result["step_id"] == "boiler"
-    assert _keys(result) == {"boiler_entity"}
+    assert _keys(result) == {"boiler_entity", "secondary_source"}
 
 
 async def test_options_that_need_rooms_or_people(hass: HomeAssistant) -> None:

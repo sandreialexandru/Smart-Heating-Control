@@ -11,6 +11,7 @@ Numele entităților sunt date ca în interfața în română. ID-urile încep c
 | --- | --- |
 | *Mod* (select) | Modul: `auto`, `away`, `vacation`, `off`, `summer`. |
 | *Scenariu* (select) | Scenariile casei: arată pe cel ale cărui profiluri sunt toate pornite, alege unul (vezi [capitolul 4](04-program.ro.md#scenarii)). |
+| *Sursa de căldură* (select) | Doar cu o sursă secundară: `auto` (doar cu un criteriu), `primary`, `secondary`; atribute: `active` (sursa în uz), entitățile și numele ambelor, `criterion`, `switch_at` (când o schimbă Automat). Vezi [capitolul 8](08-sursa-si-energie.ro.md#sursă-secundară). |
 | *Prezență* (senzor) | `home`, `nearby`, `far`; atribute: persoanele, `arriving`, `guest_mode`, `vacation_active`, `vacation_suspended`, `vacation_preheating`, `pending`, `pending_since`. |
 | *Pauză* (comutator) | Pauza. |
 | *Mod oaspeți* (comutator) | Modul oaspeți (starea casei rămâne *acasă*). |

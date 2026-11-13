@@ -19,6 +19,7 @@
       vacation_end: `datetime.${hp}_vacation_end`, clear_overrides: `button.${hp}_clear_overrides`,
       reevaluate: `button.${hp}_reevaluate`, clear_vacation: `button.${hp}_clear_vacation`,
       ...(o.scenarios ? { scenario: `select.${hp}_scenario` } : {}),
+      ...(o.source ? { heat_source: `select.${hp}_heat_source` } : {}),
     };
     const states = {};
     const st = (id, state, attributes = {}) => {
@@ -28,6 +29,7 @@
       temperature_unit: unit, persons: { "person.andrei": "home" }, arriving: false, guest_mode: false, vacation_active: false });
     st(he.mode, o.mode || "auto", { options: ["auto", "away", "vacation", "off", "summer"] });
     if (o.scenarios) st(he.scenario, o.scenario || "unknown", { options: o.scenarios });
+    if (o.source) st(he.heat_source, o.source.state, { primary_name: "Boiler", secondary_name: "Heat pump", active: "primary", ...o.source });
     const fc = Array.from({ length: 12 }, (_, i) => [iso(Math.ceil(now / HOUR) * HOUR + i * HOUR), T(o.outdoor ?? 5) - i * 0.3]);
     st(he.outdoor_average, T(o.outdoor ?? 5), { latest: o.noOutdoor ? null : T(o.outdoor ?? 5), cutoff_enabled: true, cutoff_temperature: T(17),
       forecast: o.noOutdoor ? [] : fc, unit_of_measurement: unit, heating_season: true,

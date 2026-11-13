@@ -174,6 +174,26 @@ test("house scenarios: a button each, the active one marked, a click chooses it"
   ok(!(await p.evaluate(() => !!card.shadowRoot.querySelector(".scenarios"))), "no row without scenarios");
 });
 
+test("heat source: Automatic and both sources by their names, the one in use and the next switch", async (p) => {
+  const at = new Date(Date.now() + 10 * 60e3).toISOString();
+  await mount(p, {}, { rooms: R, source: { state: "auto", options: ["auto", "primary", "secondary"], active: "primary", switch_at: at } });
+  const info = await p.evaluate(() => {
+    const box = card.shadowRoot.querySelector(".sources");
+    return [box.querySelector(".sclabel").innerText, [...box.querySelectorAll(".seg")].map((b) => [b.innerText, b.classList.contains("active")])];
+  });
+  ok(info[0].startsWith("Heat source: Boiler · → Heat pump at "), `label ${info[0]}`);
+  eq(info[1], [["Automatic", true], ["Boiler", false], ["Heat pump", false]], "buttons");
+  await click(p, '.sources .seg[data-option="secondary"]'); await p.waitForTimeout(50);
+  eq(await last(p), { domain: "select", service: "select_option", data: { entity_id: "select.home_heat_source", option: "secondary" } }, "choose");
+  // Without a criterion: only the two sources; in Romanian.
+  await mount(p, {}, { rooms: R, lang: "ro", source: { state: "secondary", options: ["primary", "secondary"], active: "secondary" } });
+  const ro = await p.evaluate(() => [card.shadowRoot.querySelector(".sources .sclabel").innerText, card.shadowRoot.querySelectorAll(".sources .seg").length]);
+  eq(ro, ["Sursa de căldură: Heat pump", 2], "two buttons");
+  // No secondary source: no row.
+  await mount(p, {}, { rooms: R });
+  ok(!(await p.evaluate(() => !!card.shadowRoot.querySelector(".sources"))), "no row without a secondary source");
+});
+
 test("messages: Resume ends the pause, End ends the guest mode, Automatic the manual change", async (p) => {
   const until = new Date(Date.now() + 2 * H).toISOString();
   await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom", override: { temperature: 23, until, origin: "card", preset: null, applied: true } }], pause: true, guest: true });

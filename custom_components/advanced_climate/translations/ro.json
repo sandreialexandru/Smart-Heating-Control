@@ -206,10 +206,12 @@
       "boiler": {
         "title": "Sursa de căldură și cererea de căldură",
         "data": {
-          "boiler_entity": "Sursa de căldură"
+          "boiler_entity": "Sursa de căldură",
+          "secondary_source": "Sursă secundară"
         },
         "data_description": {
-          "boiler_entity": "Centrala (sau releul care pornește sursa de căldură) când camerele nu o pot porni singure (TRV-uri, robinete de zonă). Integrarea o pornește când camerele cer căldură, iar învățarea și timpul de încălzire se numără doar cât merge. Niciodată releul folosit deja de un Generic Thermostat. Cu TRV-uri și o centrală pornită de un termostat care nu e în Home Assistant, învățarea nu e sigură: pornirea și oprirea anticipată nu sunt recomandate."
+          "boiler_entity": "Centrala (sau releul care pornește sursa de căldură) când camerele nu o pot porni singure (TRV-uri, robinete de zonă). Integrarea o pornește când camerele cer căldură, iar învățarea și timpul de încălzire se numără doar cât merge. Niciodată releul folosit deja de un Generic Thermostat. Cu TRV-uri și o centrală pornită de un termostat care nu e în Home Assistant, învățarea nu e sigură: pornirea și oprirea anticipată nu sunt recomandate.",
+          "secondary_source": "Opțional, doar cu o sursă de căldură aleasă mai sus: a doua sursă (de exemplu o pompă de căldură lângă centrală), care încălzește aceleași camere și circuite. Merge doar una: cât e folosită cea secundară, prima stă oprită. Alegi care din card sau din selectul Sursa de căldură al casei (de mână, dintr-o automatizare sau Automat, după un criteriu ales la pasul următor). Dacă cea aleasă e indisponibilă, încălzește cealaltă. Gol (implicit): o singură sursă."
         },
         "description": "Doar pentru casele în care camerele nu pot porni singure sursa de căldură (TRV-uri sau robinete de zonă): integrarea o pornește atunci când camerele cer căldură, iar o cameră încălzește (pentru învățare și timpul de încălzire) doar cât merge sursa.\n\n⚠️ Cu TRV-uri pe toate caloriferele, instalația trebuie să lase apa să circule (bypass automat, centrală cu bypass intern sau un calorifer fără TRV): TRV-urile se închid la țintă, iar sursa poate merge până la capătul timpului minim pornită."
       },
@@ -388,7 +390,8 @@
           "keep_last_open": "Ține deschis ultimul TRV",
           "circuits": "Releele circuitelor",
           "boiler_boost": "Pornește și oprește sursa prin temperatura ei",
-          "boiler_idle_temp": "Temperatura sursei în repaus"
+          "boiler_idle_temp": "Temperatura sursei în repaus",
+          "source_criterion": "Alegerea automată a sursei"
         },
         "data_description": {
           "boiler_min_rooms": "Câte camere trebuie să ceară căldură ca să pornească. 1 = oricare cameră. Camerele secundare (Poate porni sursa de căldură a casei oprit) nu se numără.",
@@ -397,7 +400,8 @@
           "keep_last_open": "Când nu mai cere căldură nicio cameră, TRV-urile ultimei camere care a cerut rămân deschise (primesc temperatura maximă a camerei sau rămân pornite), ca restul de căldură din sursă și din țevi să aibă pe unde trece, ca printr-un bypass, iar robinetul să nu se mai miște noaptea. Până cere căldură altă cameră, camera e preluată de o regulă mai puternică (fereastră, modificare manuală, pauză, mod, cald afară) sau camera însăși are nevoie de căldură. Între timp camera nu cere căldură, dar se poate încălzi peste țintă, iar învățarea ei sare peste acel timp. Oprit implicit.",
           "circuits": "Doar cu mai multe circuite de încălzire pe centrală (de exemplu pardoseală și calorifere), fiecare cu releul pompei sau al ventilului de zonă. O cameră de pe sursa de căldură își alege apoi circuitul (în setările ei): când cere căldură, întâi se pornește releul circuitului, apoi centrala; când nicio cameră nu mai are nevoie, întâi se oprește centrala, apoi releul circuitului. Centrala nu pornește pentru o cameră al cărei circuit e oprit. Gol (implicit): fără circuite, nu se schimbă nimic.",
           "boiler_boost": "Un termostat folosit ca sursă de căldură (de exemplu Hive, Nest, Tado, un Generic Thermostat) pornește centrala doar după ținta și senzorul lui. Pornit (implicit): rămâne pe încălzire; ca să pornească primește temperatura maximă a casei, ca să se oprească temperatura de repaus (implicit antiînghețul casei) (așa protejează în continuare la îngheț dacă Home Assistant se oprește). Ținta schimbată manual pe el este readusă. Oprit: i se schimbă doar modul (încălzire / oprit). Un termostat fără temperatură țintă este comandat întotdeauna prin mod. Nu e același lucru cu „Încălzește după senzorii camerelor” de la zona casei: aceea e pentru un termostat care încălzește singur toată casa.",
-          "boiler_idle_temp": "Doar cu „Pornește și oprește sursa prin temperatura ei”: ce primește termostatul cât nicio cameră nu cere căldură. Gol (implicit): temperatura de antiîngheț a casei, deci centrala rămâne oprită. O valoare mai mare (de exemplu 17,5 °C) îl lasă să țină zona lui, după senzorul lui, la acea temperatură: util când încălzește și calorifere fără TRV. Trebuie să fie sub temperatura maximă a casei."
+          "boiler_idle_temp": "Doar cu „Pornește și oprește sursa prin temperatura ei”: ce primește termostatul cât nicio cameră nu cere căldură. Gol (implicit): temperatura de antiîngheț a casei, deci centrala rămâne oprită. O valoare mai mare (de exemplu 17,5 °C) îl lasă să țină zona lui, după senzorul lui, la acea temperatură: util când încălzește și calorifere fără TRV. Trebuie să fie sub temperatura maximă a casei.",
+          "source_criterion": "Ce alege sursa secundară pe Automat: Surplus PV (senzorul PV e peste prag, din Energie), Frig afară (sub o temperatură, la pasul următor), Curent ieftin (prețul e cel mult limita de jos, din Energie), Entitate proprie (o entitate on / off aleasă de tine: on = sursa secundară). Apar doar cele pe care casa le are setate. Niciunul (implicit): fără Automat, sursa se alege de mână sau dintr-o automatizare. La Surplus PV folosește producția panourilor sau un surplus care include pompa de căldură: un senzor de export scade imediat ce pornește pompa, iar sursele s-ar schimba de colo-colo."
         }
       },
       "behavior_details": {
@@ -424,6 +428,20 @@
           "hysteresis": "Casa cere căldură sub ținta minus această valoare și se oprește peste ținta plus această valoare, măsurat de senzorii ei.",
           "inertia_control": "După ce casa a învățat cât de încet reacționează încălzirea, temperatura mai mare se termină puțin mai devreme când căldura deja dată ar duce singură casa până la limita de sus a histerezisului și începe puțin mai devreme când casa ar coborî la limita de jos înainte să ajungă căldura. Banda rămâne limita. Oprit: decide doar histerezisul."
         }
+      },
+      "boiler_source": {
+        "title": "Alegerea automată a sursei",
+        "description": "Sursa se schimbă doar după ce criteriul a rămas schimbat cât timpul de comutare.",
+        "data": {
+          "source_criterion_entity": "Entitatea criteriului",
+          "source_cold_below": "Sursa secundară sub",
+          "source_switch_minutes": "Timp de comutare"
+        },
+        "data_description": {
+          "source_criterion_entity": "On: încălzește sursa secundară; off: cea principală. De exemplu un binary sensor template sau un input boolean.",
+          "source_cold_below": "Temperatura de afară sub care încălzește sursa secundară (de exemplu centrala, când pompa de căldură e sursa principală și nu mai face față).",
+          "source_switch_minutes": "Cât trebuie să rămână schimbat criteriul până se schimbă sursa (implicit 15 min), ca un nor sau o variație scurtă de preț să nu comute sursele de colo-colo. 0 = imediat. O sursă aleasă de mână se schimbă imediat."
+        }
       }
     },
     "error": {
@@ -443,7 +461,10 @@
       "invalid_recipient": "„{recipient}” nu poate fi folosit: scrie un serviciu de notificare (notify.nume), urmat opțional de adrese de email, de ex. notify.eu_gmail_com: ana@exemplu.ro, ion@exemplu.ro.",
       "idle_not_below_max": "Temperatura de repaus trebuie să fie sub temperatura maximă a casei.",
       "entity_is_circuit": "{entity} e releul unui circuit al casei {owner}. Nu poate fi și dispozitivul unei camere sau alt circuit.",
-      "circuit_is_source": "Sursa de căldură nu poate fi și releul unui circuit."
+      "circuit_is_source": "Sursa de căldură nu poate fi și releul unui circuit.",
+      "secondary_without_primary": "Sursa secundară are nevoie de o sursă de căldură.",
+      "secondary_is_primary": "Sursa secundară trebuie să fie alt aparat decât sursa de căldură.",
+      "criterion_is_source": "Criteriul nu poate fi una dintre sursele de căldură."
     }
   },
   "config_subentries": {
@@ -896,6 +917,23 @@
             "name": "Folosit azi"
           }
         }
+      },
+      "heat_source": {
+        "name": "Sursa de căldură",
+        "state": {
+          "auto": "Automat",
+          "primary": "Principală",
+          "secondary": "Secundară"
+        },
+        "state_attributes": {
+          "active": {
+            "name": "În uz",
+            "state": {
+              "primary": "Principală",
+              "secondary": "Secundară"
+            }
+          }
+        }
       }
     },
     "switch": {
@@ -1066,6 +1104,15 @@
       "options": {
         "celsius": "Celsius (°C)",
         "fahrenheit": "Fahrenheit (°F)"
+      }
+    },
+    "source_criterion": {
+      "options": {
+        "none": "Niciunul (de mână sau dintr-o automatizare)",
+        "pv_surplus": "Surplus PV",
+        "cold": "Frig afară",
+        "cheap_power": "Curent ieftin",
+        "entity": "Entitate proprie"
       }
     }
   },

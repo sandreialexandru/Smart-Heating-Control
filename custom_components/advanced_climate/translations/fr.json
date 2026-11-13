@@ -206,10 +206,12 @@
       "boiler": {
         "title": "Source de chaleur et demande de chaleur",
         "data": {
-          "boiler_entity": "Source de chaleur"
+          "boiler_entity": "Source de chaleur",
+          "secondary_source": "Source de chaleur secondaire"
         },
         "data_description": {
-          "boiler_entity": "La chaudière (ou le relais qui démarre la source de chaleur) quand les pièces ne peuvent pas la démarrer elles-mêmes (têtes thermostatiques, vannes de zone). L'intégration la démarre quand des pièces demandent de la chaleur, et l'apprentissage et le temps de chauffe ne comptent que pendant qu'elle fonctionne. Jamais le relais qu'utilise déjà un Generic Thermostat. Avec des têtes thermostatiques et une chaudière démarrée par un thermostat hors de Home Assistant, l'apprentissage n'est pas fiable : le démarrage et l'arrêt optimaux sont déconseillés."
+          "boiler_entity": "La chaudière (ou le relais qui démarre la source de chaleur) quand les pièces ne peuvent pas la démarrer elles-mêmes (têtes thermostatiques, vannes de zone). L'intégration la démarre quand des pièces demandent de la chaleur, et l'apprentissage et le temps de chauffe ne comptent que pendant qu'elle fonctionne. Jamais le relais qu'utilise déjà un Generic Thermostat. Avec des têtes thermostatiques et une chaudière démarrée par un thermostat hors de Home Assistant, l'apprentissage n'est pas fiable : le démarrage et l'arrêt optimaux sont déconseillés.",
+          "secondary_source": "Facultatif, seulement avec une source de chaleur ci-dessus : une deuxième (par ex. une pompe à chaleur à côté de la chaudière) qui chauffe les mêmes pièces et circuits. Une seule fonctionne : tant que la secondaire est utilisée, la première reste éteinte. Vous choisissez laquelle dans la carte ou avec le select Source de chaleur de la maison (à la main, par une automatisation ou en Automatique selon un critère, à l'étape suivante). Si celle choisie est indisponible, l'autre chauffe. Vide (par défaut) : une seule source."
         },
         "description": "Seulement pour les maisons où les pièces ne peuvent pas démarrer elles-mêmes la source de chaleur (têtes thermostatiques ou vannes de zone) : l'intégration la démarre alors quand des pièces demandent de la chaleur, et une pièce chauffe (pour l'apprentissage et le temps de chauffe) seulement pendant qu'elle fonctionne.\n\n⚠️ Avec une tête thermostatique sur chaque radiateur, l'installation doit laisser passer l'eau (un by-pass automatique, une chaudière avec by-pass interne ou un radiateur sans tête) : les têtes se ferment à leur consigne, et la source de chaleur peut tourner jusqu'à la fin de sa durée minimale de marche."
       },
@@ -388,7 +390,8 @@
           "keep_last_open": "Garder ouverte la dernière tête thermostatique",
           "circuits": "Relais de circuit",
           "boiler_boost": "Démarrer et arrêter la source par sa température",
-          "boiler_idle_temp": "Température de veille de la source"
+          "boiler_idle_temp": "Température de veille de la source",
+          "source_criterion": "Choix automatique de la source"
         },
         "data_description": {
           "boiler_min_rooms": "Combien de pièces doivent demander de la chaleur pour la démarrer. 1 = n'importe quelle pièce. Les pièces secondaires (Peut démarrer la source de chaleur de la maison désactivé) ne comptent pas.",
@@ -397,7 +400,8 @@
           "keep_last_open": "Quand plus aucune pièce ne demande de chaleur, les têtes thermostatiques de la dernière pièce qui en demandait restent ouvertes (elles reçoivent la température maximale de la pièce, ou restent allumées). La chaleur restant dans la source et les tuyaux a ainsi un passage, comme avec un by-pass, et la vanne ne bouge plus de la nuit. Jusqu'à ce qu'une autre pièce demande de la chaleur, qu'une règle plus forte prenne la main sur la pièce (fenêtre, modification manuelle, pause, mode, douceur extérieure) ou que la pièce ait elle-même besoin de chaleur. Pendant ce temps, la pièce ne demande pas de chaleur, mais elle peut dépasser sa consigne, et son apprentissage ignore cette période. Désactivé par défaut.",
           "circuits": "Seulement avec plusieurs circuits de chauffage sur la chaudière (par exemple plancher chauffant et radiateurs), chacun avec son propre relais de circulateur ou de vanne de zone. Une pièce sur la source de chaleur choisit alors son circuit (dans ses réglages) : quand elle demande de la chaleur, son relais de circuit s'allume d'abord, puis la chaudière ; quand plus aucune pièce n'en a besoin, la chaudière s'arrête d'abord, puis le relais. La chaudière ne démarre pas pour une pièce dont le circuit est éteint. Vide (par défaut) : pas de circuits, rien ne change.",
           "boiler_boost": "Un thermostat utilisé comme source de chaleur (par exemple Hive, Nest, Tado, un Generic Thermostat) ne démarre la chaudière que d'après sa propre consigne et son propre capteur. Activé (par défaut) : il reste en mode chauffage ; pour démarrer, il reçoit la température maximale de la maison, pour s'arrêter la température de veille (par défaut celle du hors-gel de la maison), ce qui le laisse protéger contre le gel si Home Assistant s'arrête. Une consigne qu'on lui donne à la main est annulée. Désactivé : seul son mode est basculé (chauffage / arrêt). Un thermostat sans consigne est toujours commandé par son mode. À ne pas confondre avec « Chauffer selon les capteurs de la pièce » de la zone de toute la maison : celle-ci concerne un thermostat qui chauffe lui-même tout le logement.",
-          "boiler_idle_temp": "Seulement avec « Démarrer et arrêter la source par sa température » : ce que reçoit le thermostat tant qu'aucune pièce ne demande de chaleur. Vide (par défaut) : la température hors-gel de la maison, pour que la chaudière reste éteinte. Une valeur plus haute (par exemple 17,5 °C) laisse le thermostat maintenir sa propre zone à cette température, d'après son propre capteur : utile s'il chauffe aussi des radiateurs sans tête thermostatique. Elle doit être inférieure à la température maximale de la maison."
+          "boiler_idle_temp": "Seulement avec « Démarrer et arrêter la source par sa température » : ce que reçoit le thermostat tant qu'aucune pièce ne demande de chaleur. Vide (par défaut) : la température hors-gel de la maison, pour que la chaudière reste éteinte. Une valeur plus haute (par exemple 17,5 °C) laisse le thermostat maintenir sa propre zone à cette température, d'après son propre capteur : utile s'il chauffe aussi des radiateurs sans tête thermostatique. Elle doit être inférieure à la température maximale de la maison.",
+          "source_criterion": "Ce qui choisit la source secondaire en Automatique : Surplus photovoltaïque (le capteur PV dépasse son seuil, dans Énergie), Froid dehors (sous une température, à l'étape suivante), Électricité bon marché (le prix est au plus à sa limite basse, dans Énergie), Votre entité (une entité marche / arrêt de votre choix : marche = la source secondaire). Seul ce qui est réglé dans la maison apparaît. Aucun (par défaut) : pas d'Automatique, la source se choisit à la main ou par une automatisation. Avec le surplus photovoltaïque, utilisez la production des panneaux ou un surplus qui inclut la pompe à chaleur : un capteur d'injection baisse dès que la pompe démarre, et les sources basculeraient sans cesse."
         }
       },
       "behavior_details": {
@@ -424,6 +428,20 @@
           "hysteresis": "La maison demande de la chaleur sous la consigne moins cette valeur et s'arrête au-dessus de la consigne plus cette valeur, mesurée par ses capteurs.",
           "inertia_control": "Une fois que la maison a appris la lenteur de son chauffage, la température plus élevée prend fin un peu plus tôt quand la chaleur déjà fournie amènera d'elle-même la maison en haut de la bande d'hystérésis, et commence un peu plus tôt quand la maison descendrait sinon sous le bas de la bande avant que la chaleur n'arrive. La bande reste la limite. Désactivé : seule l'hystérésis décide."
         }
+      },
+      "boiler_source": {
+        "title": "Choix automatique de la source",
+        "description": "La source ne change qu'une fois le critère resté changé pendant le temps de bascule.",
+        "data": {
+          "source_criterion_entity": "Entité du critère",
+          "source_cold_below": "Source secondaire en dessous de",
+          "source_switch_minutes": "Temps de bascule"
+        },
+        "data_description": {
+          "source_criterion_entity": "Marche : la source secondaire chauffe ; arrêt : la principale. Par exemple un binary sensor template ou un input boolean.",
+          "source_cold_below": "Température extérieure en dessous de laquelle la source secondaire chauffe (par ex. la chaudière, quand la pompe à chaleur est la source principale et ne suffit plus).",
+          "source_switch_minutes": "Combien de temps le critère doit rester changé avant que la source change (15 min par défaut), pour qu'un nuage ou une brève variation de prix ne fasse pas basculer les sources sans cesse. 0 = tout de suite. Une source choisie à la main change tout de suite."
+        }
       }
     },
     "error": {
@@ -443,7 +461,10 @@
       "invalid_recipient": "« {recipient} » n'est pas utilisable : écrivez un service de notification (notify.nom), éventuellement suivi d'adresses e-mail, par exemple notify.me_gmail_com: ana@example.com, ion@example.com.",
       "idle_not_below_max": "La température de veille doit être inférieure à la température maximale de la maison.",
       "entity_is_circuit": "{entity} est un relais de circuit de {owner}. Il ne peut pas aussi être un appareil d'une pièce ou un autre circuit.",
-      "circuit_is_source": "La source de chaleur ne peut pas aussi être un relais de circuit."
+      "circuit_is_source": "La source de chaleur ne peut pas aussi être un relais de circuit.",
+      "secondary_without_primary": "La source secondaire a besoin d'une source de chaleur.",
+      "secondary_is_primary": "La source secondaire doit être un autre appareil que la source de chaleur.",
+      "criterion_is_source": "Le critère ne peut pas être l'une des sources de chaleur."
     }
   },
   "config_subentries": {
@@ -896,6 +917,23 @@
             "name": "Utilisé aujourd'hui"
           }
         }
+      },
+      "heat_source": {
+        "name": "Source de chaleur",
+        "state": {
+          "auto": "Automatique",
+          "primary": "Principale",
+          "secondary": "Secondaire"
+        },
+        "state_attributes": {
+          "active": {
+            "name": "En service",
+            "state": {
+              "primary": "Principale",
+              "secondary": "Secondaire"
+            }
+          }
+        }
       }
     },
     "switch": {
@@ -1066,6 +1104,15 @@
       "options": {
         "celsius": "Celsius (°C)",
         "fahrenheit": "Fahrenheit (°F)"
+      }
+    },
+    "source_criterion": {
+      "options": {
+        "none": "Aucun (à la main ou par une automatisation)",
+        "pv_surplus": "Surplus photovoltaïque",
+        "cold": "Froid dehors",
+        "cheap_power": "Électricité bon marché",
+        "entity": "Votre entité"
       }
     }
   },

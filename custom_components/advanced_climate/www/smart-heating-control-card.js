@@ -164,6 +164,9 @@ const TEXT = {
     runtime: "Heating time",
     mode: "Mode",
     scenario: "Scenario",
+    heat_source: "Heat source",
+    source_auto: "Automatic",
+    source_switch: "→ {name} at {time}",
     pause: "Pause",
     guests: "Guests",
     vacation: "Vacation",
@@ -339,6 +342,7 @@ const TEXT = {
     applied_after: "applies after: {rule}",
     alerts: "Alerts",
     al_source_unavailable: "The heat source {entity} has been unavailable for more than {minutes} min: no heating, not even frost protection.",
+    al_source_unavailable_other: "The heat source {entity} has been unavailable for more than {minutes} min: {other} heats meanwhile.",
     al_circuit_unavailable: "The circuit relay {entity} has been unavailable for more than {minutes} min: the rooms of its circuit get no heat. Repair the relay or change the circuits of the house.",
     al_room_difference: "Some rooms stay cold while others are warm: {rooms}.",
     al_preset_missing: "The level {level} is not available on {entity} and its temperature is unknown.",
@@ -418,6 +422,7 @@ const TEXT = {
     end_guests: "End",
     next_at: "{preset} at {time}",
     at_source_unavailable: "Heat source unavailable",
+    at_source_unavailable_other: "Heat source unavailable, the other one heats",
     at_circuit_unavailable: "Circuit relay unavailable",
     at_room_difference: "Rooms heated unevenly",
     at_preset_missing: "Level missing",
@@ -484,6 +489,9 @@ const TEXT = {
     runtime: "Timp de încălzire",
     mode: "Mod",
     scenario: "Scenariu",
+    heat_source: "Sursa de căldură",
+    source_auto: "Automat",
+    source_switch: "→ {name} la {time}",
     pause: "Pauză",
     guests: "Oaspeți",
     vacation: "Vacanță",
@@ -659,6 +667,7 @@ const TEXT = {
     applied_after: "se aplică după: {rule}",
     alerts: "Alerte",
     al_source_unavailable: "Sursa de căldură {entity} e indisponibilă de peste {minutes} min: nu se încălzește, nici pentru antiîngheț.",
+    al_source_unavailable_other: "Sursa de căldură {entity} e indisponibilă de peste {minutes} min: între timp încălzește {other}.",
     al_circuit_unavailable: "Releul de circuit {entity} e indisponibil de peste {minutes} min: camerele circuitului lui nu primesc căldură. Trebuie reparat releul sau schimbate circuitele casei.",
     al_room_difference: "Unele camere rămân reci, altele sunt calde: {rooms}.",
     al_preset_missing: "Nivelul {level} nu există pe {entity} și temperatura lui e necunoscută.",
@@ -738,6 +747,7 @@ const TEXT = {
     end_guests: "Oprește",
     next_at: "{preset} la {time}",
     at_source_unavailable: "Sursa de căldură indisponibilă",
+    at_source_unavailable_other: "Sursă indisponibilă, încălzește cealaltă",
     at_circuit_unavailable: "Releu de circuit indisponibil",
     at_room_difference: "Camere încălzite inegal",
     at_preset_missing: "Nivel lipsă",
@@ -804,6 +814,9 @@ const TEXT = {
     runtime: "Heizzeit",
     mode: "Modus",
     scenario: "Szenario",
+    heat_source: "Wärmequelle",
+    source_auto: "Automatisch",
+    source_switch: "→ {name} um {time}",
     pause: "Pause",
     guests: "Gäste",
     vacation: "Urlaub",
@@ -979,6 +992,7 @@ const TEXT = {
     applied_after: "gilt nach: {rule}",
     alerts: "Warnungen",
     al_source_unavailable: "Die Wärmequelle {entity} ist seit mehr als {minutes} min nicht verfügbar: keine Heizung, nicht einmal Frostschutz.",
+    al_source_unavailable_other: "Die Wärmequelle {entity} ist seit mehr als {minutes} min nicht verfügbar: In der Zwischenzeit heizt {other}.",
     al_room_difference: "Einige Räume bleiben kalt, während andere warm sind: {rooms}.",
     al_preset_missing: "Die Stufe {level} gibt es auf {entity} nicht, und ihre Temperatur ist unbekannt.",
     al_not_accepted: "{entities} hat {target} nicht übernommen.",
@@ -1058,6 +1072,7 @@ const TEXT = {
     end_guests: "Beenden",
     next_at: "{preset} um {time}",
     at_source_unavailable: "Wärmequelle nicht verfügbar",
+    at_source_unavailable_other: "Wärmequelle nicht verfügbar, die andere heizt",
     at_room_difference: "Räume ungleich warm",
     at_preset_missing: "Stufe fehlt",
     at_not_accepted: "Temperatur nicht übernommen",
@@ -1124,6 +1139,9 @@ const TEXT = {
     runtime: "Verwarmingstijd",
     mode: "Modus",
     scenario: "Scenario",
+    heat_source: "Warmtebron",
+    source_auto: "Automatisch",
+    source_switch: "→ {name} om {time}",
     pause: "Pauze",
     guests: "Gasten",
     vacation: "Vakantie",
@@ -1299,6 +1317,7 @@ const TEXT = {
     applied_after: "geldt na: {rule}",
     alerts: "Meldingen",
     al_source_unavailable: "De warmtebron {entity} is al meer dan {minutes} min onbeschikbaar: geen verwarming, zelfs geen vorstbeveiliging.",
+    al_source_unavailable_other: "De warmtebron {entity} is al meer dan {minutes} min onbeschikbaar: intussen verwarmt {other}.",
     al_room_difference: "Sommige kamers blijven koud terwijl andere warm zijn: {rooms}.",
     al_preset_missing: "Het niveau {level} bestaat niet op {entity} en de temperatuur ervan is onbekend.",
     al_not_accepted: "{entities} heeft {target} niet overgenomen.",
@@ -1378,6 +1397,7 @@ const TEXT = {
     end_guests: "Stoppen",
     next_at: "{preset} om {time}",
     at_source_unavailable: "Warmtebron onbeschikbaar",
+    at_source_unavailable_other: "Warmtebron onbeschikbaar, de andere verwarmt",
     at_room_difference: "Kamers ongelijk verwarmd",
     at_preset_missing: "Niveau ontbreekt",
     at_not_accepted: "Temperatuur niet overgenomen",
@@ -1444,6 +1464,9 @@ const TEXT = {
     runtime: "Temps de chauffe",
     mode: "Mode",
     scenario: "Scénario",
+    heat_source: "Source de chaleur",
+    source_auto: "Automatique",
+    source_switch: "→ {name} à {time}",
     pause: "Pause",
     guests: "Invités",
     vacation: "Vacances",
@@ -1619,6 +1642,7 @@ const TEXT = {
     applied_after: "s'applique après : {rule}",
     alerts: "Alertes",
     al_source_unavailable: "La source de chaleur {entity} est indisponible depuis plus de {minutes} min : plus de chauffage, même pas le hors-gel.",
+    al_source_unavailable_other: "La source de chaleur {entity} est indisponible depuis plus de {minutes} min : {other} chauffe en attendant.",
     al_room_difference: "Certaines pièces restent froides alors que d'autres sont chaudes : {rooms}.",
     al_preset_missing: "Le niveau {level} n'existe pas sur {entity} et sa température est inconnue.",
     al_not_accepted: "{entities} n'a pas accepté {target}.",
@@ -1698,6 +1722,7 @@ const TEXT = {
     end_guests: "Terminer",
     next_at: "{preset} à {time}",
     at_source_unavailable: "Source de chaleur indisponible",
+    at_source_unavailable_other: "Source indisponible, l'autre chauffe",
     at_room_difference: "Pièces chauffées inégalement",
     at_preset_missing: "Niveau manquant",
     at_not_accepted: "Température refusée",
@@ -1764,6 +1789,9 @@ const TEXT = {
     runtime: "Tempo di riscaldamento",
     mode: "Modalità",
     scenario: "Scenario",
+    heat_source: "Fonte di calore",
+    source_auto: "Automatico",
+    source_switch: "→ {name} alle {time}",
     pause: "Pausa",
     guests: "Ospiti",
     vacation: "Vacanza",
@@ -1939,6 +1967,7 @@ const TEXT = {
     applied_after: "vale dopo: {rule}",
     alerts: "Avvisi",
     al_source_unavailable: "La fonte di calore {entity} non è disponibile da più di {minutes} min: niente riscaldamento, nemmeno l'antigelo.",
+    al_source_unavailable_other: "La fonte di calore {entity} non è disponibile da più di {minutes} min: nel frattempo scalda {other}.",
     al_room_difference: "Alcune stanze restano fredde mentre altre sono calde: {rooms}.",
     al_preset_missing: "Il livello {level} non esiste su {entity} e la sua temperatura è sconosciuta.",
     al_not_accepted: "{entities} non ha accettato {target}.",
@@ -2018,6 +2047,7 @@ const TEXT = {
     end_guests: "Termina",
     next_at: "{preset} alle {time}",
     at_source_unavailable: "Fonte di calore non disponibile",
+    at_source_unavailable_other: "Fonte non disponibile, scalda l'altra",
     at_room_difference: "Stanze scaldate in modo diseguale",
     at_preset_missing: "Livello mancante",
     at_not_accepted: "Temperatura non accettata",
@@ -3010,12 +3040,39 @@ class SmartHeatingControlCard extends HTMLElement {
     return `<div class="sbtns" style="--cols:${cols}">${buttons}</div>${bodies}`;
   }
 
+  /** The heat source of the house: Automatic (with a criterion), the primary and the secondary one, by their names. */
+  _sourceHtml(s, entityId) {
+    const at = s.attributes || {};
+    const name = (k) => at[`${k}_name`] || this._label(s, k);
+    const label = (opt) => (opt === "auto" ? this._t("source_auto") : name(opt));
+    const options = at.options || [];
+    const active = at.active === "secondary" ? "secondary" : "primary";
+    let info = `${this._t("heat_source")}: ${name(active)}`;
+    if (at.switch_at) {
+      // Automatic changes the source once the criterion has stayed changed long enough.
+      const next = active === "primary" ? "secondary" : "primary";
+      const time = this._fmt(at.switch_at, { hour: "2-digit", minute: "2-digit" });
+      info += ` · ${this._t("source_switch").replace("{name}", name(next)).replace("{time}", time)}`;
+    }
+    const buttons = options
+      .map(
+        (opt) => `<button class="seg ${s.state === opt ? "active" : ""}" data-action="mode" title="${esc(label(opt))}"
+          aria-pressed="${s.state === opt}" data-entity="${esc(entityId)}" data-option="${esc(opt)}">${esc(label(opt))}</button>`
+      )
+      .join("");
+    return `<div class="scenarios sources">
+        <span class="sclabel">${this._icon("fire-circle")}<span>${esc(info)}</span></span>
+        <div class="segmented" style="--n:${options.length}" role="group" aria-label="${esc(this._t("heat_source"))}">${buttons}</div>
+      </div>`;
+  }
+
   /** House block: presence, outdoor, mode, pause, guests, vacation and buttons. */
   _houseHtml(house) {
     const e = house.entities;
     const presence = this._state(e.presence);
     const mode = this._state(e.mode);
     const scenario = this._state(e.scenario);
+    const source = this._state(e.heat_source);
     const outdoor = this._state(e.outdoor_average);
     const season = this._state(e.heating_season);
     const cutoff = this._state(e.outdoor_cutoff);
@@ -3179,6 +3236,7 @@ class SmartHeatingControlCard extends HTMLElement {
           </div>
           <div class="segmented ${modeCount > 4 ? "many" : ""}" style="--n:${modeCount}" role="group" aria-label="${esc(this._t("mode"))}">${modes}</div>
           ${scenarios}
+          ${source ? this._sourceHtml(source, e.heat_source) : ""}
         </div>
         ${
           avatars

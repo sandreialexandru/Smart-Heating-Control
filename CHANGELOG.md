@@ -30,6 +30,15 @@ which the reference room could not.
   boiler for it. A secondary room is never the cold room of the *Alert when a
   room stays colder than*. They replace the *Reference room* (see above). The card says *a
   secondary room: it takes heat when another room starts the heat source*.
+- 🔁 **Secondary heat source**: a second heat source of the house for the
+  same rooms and circuits (a heat pump next to the boiler; house option, at the
+  heat source; empty by default). Only one runs, the other is kept off. The new
+  *Heat source* select (and a row of buttons in the card, with the names of
+  the devices) chooses *Primary*, *Secondary* or *Automatic*. Automatic follows
+  a criterion: *PV surplus*, *Cold outside*, *Cheap power* or an on / off
+  entity of your own, once it has stayed changed for the *Switching time* (15
+  min by default). An unavailable source is replaced by the other one, with a
+  warning. See the guide, chapter 8.
 - 🔀 **Heating circuits** (#10): *Circuit relays* (house option, at the heat
   source; empty by default) and a *Circuit* per room on the boiler, for houses
   with several circuits on one boiler, each with its own pump or zone valve

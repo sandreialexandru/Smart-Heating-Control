@@ -1,6 +1,8 @@
-"""Selects for Smart Heating Control: the mode and the scenario of the house, the profile of each room."""
+"""Selects for Smart Heating Control: the mode, the scenario and the heat source of the house, the profile of each room."""
 
 from __future__ import annotations
+
+from typing import Any
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
@@ -13,6 +15,7 @@ from .entity import HouseEntity, RoomEntity
 from .house import House
 from .room import Room
 from .scenarios import activate, active_scenario, scenario_subentries
+from .util import iso
 
 
 async def async_setup_entry(
@@ -23,6 +26,8 @@ async def async_setup_entry(
     """Set up selects."""
     house = entry.runtime_data
     async_add_entities([ModeSelect(house), ScenarioSelect(house)])
+    if house.secondary_source:
+        async_add_entities([HeatSourceSelect(house)])
     for room in house.rooms.values():
         if room.config.get(CONF_SCHEDULE_SOURCE, SCHEDULE_INTERNAL) == SCHEDULE_INTERNAL:
             async_add_entities([ProfileSelect(room)], config_subentry_id=room.id)
@@ -74,6 +79,56 @@ class ScenarioSelect(HouseEntity, SelectEntity):
             activate(self.house, option)
         except ValueError as err:
             raise HomeAssistantError(str(err)) from err
+
+
+class HeatSourceSelect(HouseEntity, SelectEntity):
+    """The heat source of the house: Automatic (by the criterion), primary or secondary.
+
+    Only with a secondary heat source; Automatic only with a criterion. The
+    attributes tell the source in use and the names of both, for the card.
+    """
+
+    def __init__(self, house: House) -> None:
+        """Initialize."""
+        super().__init__(house, "heat_source")
+
+    @property
+    def options(self) -> list[str]:
+        """Automatic (with a criterion), primary and secondary."""
+        return self.house.source_options
+
+    @property
+    def current_option(self) -> str:
+        """The choice that applies."""
+        return self.house.source_choice
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """The source in use, both sources and the criterion."""
+        house = self.house
+        primary, secondary = (house.source_entities + [None, None])[:2]
+        return {
+            "active": house.active_source,
+            "primary_entity": primary,
+            "secondary_entity": secondary,
+            "primary_name": self._name(primary),
+            "secondary_name": self._name(secondary),
+            "criterion": house.source_criterion,
+            "switch_at": iso(house.source_switch_at),
+        }
+
+    def _name(self, entity_id: str | None) -> str | None:
+        """The name of a heat source in Home Assistant."""
+        if not entity_id:
+            return None
+        state = self.hass.states.get(entity_id)
+        if state is not None and state.name:
+            return str(state.name)
+        return entity_id.split(".", 1)[-1]
+
+    async def async_select_option(self, option: str) -> None:
+        """Choose the heat source."""
+        await self.house.async_set_source(option)
 
 
 class ProfileSelect(RoomEntity, SelectEntity):

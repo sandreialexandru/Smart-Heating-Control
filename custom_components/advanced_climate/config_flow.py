@@ -128,8 +128,13 @@ from .const import (
     CONF_SEASON_MODE,
     CONF_SEASON_START,
     CONF_SEASON_TEMP,
+    CONF_SECONDARY_SOURCE,
     CONF_SOLAR_OFFSET,
     CONF_SOURCE,
+    CONF_SOURCE_COLD_BELOW,
+    CONF_SOURCE_CRITERION,
+    CONF_SOURCE_CRITERION_ENTITY,
+    CONF_SOURCE_SWITCH_MINUTES,
     CONF_STARTS_HOUSE_SOURCE,
     CONF_STOP_TOLERANCE,
     CONF_SWITCHES,
@@ -156,6 +161,11 @@ from .const import (
     CONF_WINDOW_OPEN_DELAY,
     CONF_WINDOW_SENSORS,
     CONF_WORKDAY_SENSOR,
+    CRITERION_CHEAP,
+    CRITERION_COLD,
+    CRITERION_ENTITY,
+    CRITERION_NONE,
+    CRITERION_PV,
     DEFAULT_LEVEL_TEMPS,
     DOMAIN,
     GT_DOMAIN,
@@ -289,6 +299,7 @@ TEMP_ABSOLUTE_KEYS = {
     CONF_NEARBY_TEMP,
     CONF_TRV_BOOST_TEMP,
     CONF_BOILER_IDLE_TEMP,
+    CONF_SOURCE_COLD_BELOW,
     *(f"temp_{p}" for p in PRESETS),
 }
 TEMP_DELTA_KEYS = {
@@ -541,11 +552,50 @@ def _energy_details(v: dict[str, Any]) -> vol.Schema:
     return vol.Schema(fields)
 
 
+SOURCE_DOMAINS = ["switch", "climate", "input_boolean"]
+
+
 def _boiler_schema(v: dict[str, Any]) -> vol.Schema:
-    """The heat source of the house."""
+    """The heat source of the house, and an optional secondary one."""
     return vol.Schema(
-        {_opt(CONF_BOILER_ENTITY, v): _entity(["switch", "climate", "input_boolean"])}
+        {
+            _opt(CONF_BOILER_ENTITY, v): _entity(SOURCE_DOMAINS),
+            _opt(CONF_SECONDARY_SOURCE, v): _entity(SOURCE_DOMAINS),
+        }
     )
+
+
+def source_criteria(v: dict[str, Any]) -> list[str]:
+    """The criteria of the secondary source that can work with these options."""
+    criteria = [CRITERION_NONE]
+    if v.get(CONF_PV_SENSOR):
+        criteria.append(CRITERION_PV)
+    if v.get(CONF_OUTDOOR_SENSOR) or v.get(CONF_WEATHER):
+        criteria.append(CRITERION_COLD)
+    if v.get(CONF_PRICE_SENSOR) and v.get(CONF_PRICE_LOW) not in (None, ""):
+        criteria.append(CRITERION_CHEAP)
+    criteria.append(CRITERION_ENTITY)
+    return criteria
+
+
+def _source_details(v: dict[str, Any]) -> vol.Schema:
+    """What the criterion of the secondary source needs, and the switching time."""
+    d = HOUSE_DEFAULTS
+    criterion = v.get(CONF_SOURCE_CRITERION, CRITERION_NONE)
+    fields: dict[Any, Any] = {}
+    if not v.get(CONF_SECONDARY_SOURCE) or criterion not in source_criteria(v)[1:]:
+        return vol.Schema(fields)
+    if criterion == CRITERION_ENTITY:
+        fields[
+            vol.Required(
+                CONF_SOURCE_CRITERION_ENTITY,
+                description={"suggested_value": v.get(CONF_SOURCE_CRITERION_ENTITY)},
+            )
+        ] = _entity(["binary_sensor", "input_boolean", "switch"])
+    if criterion == CRITERION_COLD:
+        fields[_req(CONF_SOURCE_COLD_BELOW, v, d)] = _number(-30, 20, 0.5, "°C")
+    fields[_req(CONF_SOURCE_SWITCH_MINUTES, v, d)] = _number(0, 240, 1, "min")
+    return vol.Schema(fields)
 
 
 def _boiler_details(
@@ -571,6 +621,12 @@ def _boiler_details(
             fields[_req(CONF_KEEP_LAST_OPEN, v, d)] = _bool()
         # The relays of the heating circuits (pumps or zone valves), if any.
         fields[_opt(CONF_CIRCUITS, v)] = _entity(["switch", "input_boolean"], multiple=True)
+        if v.get(CONF_SECONDARY_SOURCE):
+            # What chooses the secondary source in Automatic (only what can work).
+            criteria = source_criteria(v)
+            chosen = v.get(CONF_SOURCE_CRITERION)
+            shown = {CONF_SOURCE_CRITERION: chosen if chosen in criteria else CRITERION_NONE}
+            fields[_req(CONF_SOURCE_CRITERION, shown, d)] = _select(criteria, "source_criterion")
         if str(v[CONF_BOILER_ENTITY]).startswith("climate."):
             # A thermostat as the heat source: boosted like the TRVs.
             fields[_req(CONF_BOILER_BOOST, v, d)] = selector.BooleanSelector()
@@ -734,6 +790,8 @@ def _entity_owners(hass: Any, skip: Skip = (None, None)) -> dict[str, tuple[str,
         boiler = opts.get(CONF_BOILER_ENTITY)
         if boiler and skip != (entry.entry_id, "boiler"):
             owners[boiler] = ("source", entry.title)
+            if secondary := opts.get(CONF_SECONDARY_SOURCE):
+                owners[secondary] = ("source", entry.title)
             for circuit in as_list(opts.get(CONF_CIRCUITS)):
                 owners[circuit] = ("circuit", entry.title)
         for sub in entry.subentries.values():
@@ -1409,11 +1467,27 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
         placeholders: dict[str, str] = {"entity": "", "owner": ""}
         if user_input is not None:
             boiler = user_input.get(CONF_BOILER_ENTITY)
+            secondary = user_input.get(CONF_SECONDARY_SOURCE)
             skip = (self.config_entry.entry_id, "boiler")
             if boiler and (error := _in_use_error(self.hass, [boiler], skip, placeholders)):
                 errors[CONF_BOILER_ENTITY] = error
+            elif secondary and not boiler:
+                errors[CONF_SECONDARY_SOURCE] = "secondary_without_primary"
+            elif secondary and secondary == boiler:
+                errors[CONF_SECONDARY_SOURCE] = "secondary_is_primary"
+            elif secondary and (error := _in_use_error(self.hass, [secondary], skip, placeholders)):
+                errors[CONF_SECONDARY_SOURCE] = error
             else:
                 self._first(schema, user_input)
+                if not secondary:
+                    # Nothing of a secondary source is kept without it.
+                    for key in (
+                        CONF_SOURCE_CRITERION,
+                        CONF_SOURCE_CRITERION_ENTITY,
+                        CONF_SOURCE_COLD_BELOW,
+                        CONF_SOURCE_SWITCH_MINUTES,
+                    ):
+                        self._pending.pop(key, None)
                 return await self.async_step_boiler_details()
             schema = _boiler_schema({**self._values, **user_input})
         return self.async_show_form(
@@ -1431,9 +1505,12 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {"entity": "", "owner": ""}
         if user_input is not None and (circuits := as_list(user_input.get(CONF_CIRCUITS))):
-            boiler = self._pending_values.get(CONF_BOILER_ENTITY)
+            sources = {
+                self._pending_values.get(CONF_BOILER_ENTITY),
+                self._pending_values.get(CONF_SECONDARY_SOURCE),
+            }
             skip = (self.config_entry.entry_id, "boiler")
-            if boiler in circuits:
+            if sources & set(circuits):
                 errors[CONF_CIRCUITS] = "circuit_is_source"
             elif error := _in_use_error(self.hass, circuits, skip, placeholders):
                 errors[CONF_CIRCUITS] = error
@@ -1443,7 +1520,36 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
             if float(idle) >= maximum:
                 # It would never stop: idle at or above what starts it.
                 errors[CONF_BOILER_IDLE_TEMP] = "idle_not_below_max"
+        if user_input is not None and not errors and schema.schema:
+            self._pending = _merge(self._pending, schema, _kept(user_input, self._unit()))
+            if _source_details(self._pending_values).schema:
+                return await self.async_step_boiler_source()
+            # Nothing of a criterion that does not apply is kept.
+            for key in (CONF_SOURCE_CRITERION_ENTITY, CONF_SOURCE_COLD_BELOW):
+                self._pending.pop(key, None)
+            return self.async_create_entry(data=self._pending)
         return self._second("boiler_details", schema, user_input, errors, placeholders)
+
+    async def async_step_boiler_source(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """What the criterion of the secondary source needs, and the switching time."""
+        schema = _source_details(self._pending_values)
+        errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {"entity": "", "owner": ""}
+        if user_input is not None:
+            entity = user_input.get(CONF_SOURCE_CRITERION_ENTITY)
+            sources = {
+                self._pending_values.get(CONF_BOILER_ENTITY),
+                self._pending_values.get(CONF_SECONDARY_SOURCE),
+            }
+            if entity and entity in sources:
+                errors[CONF_SOURCE_CRITERION_ENTITY] = "criterion_is_source"
+            # Nothing of another criterion is kept.
+            for key in (CONF_SOURCE_CRITERION_ENTITY, CONF_SOURCE_COLD_BELOW):
+                if not any(str(getattr(m, "schema", m)) == key for m in schema.schema):
+                    self._pending.pop(key, None)
+        return self._second("boiler_source", schema, user_input, errors, placeholders)
 
     async def async_step_behavior(
         self, user_input: dict[str, Any] | None = None

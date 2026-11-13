@@ -93,13 +93,26 @@ from .const import (
     CONF_SEASON_MODE,
     CONF_SEASON_START,
     CONF_SEASON_TEMP,
+    CONF_SECONDARY_SOURCE,
+    CONF_SOURCE_COLD_BELOW,
+    CONF_SOURCE_CRITERION,
+    CONF_SOURCE_CRITERION_ENTITY,
+    CONF_SOURCE_SWITCH_MINUTES,
     CONF_TEMP_UNIT,
     CONF_TRAVEL_TIME,
     CONF_VACATION_PREHEAT,
     CONF_WEATHER,
     CONF_WINDOW_IGNORE_ABOVE,
     CONF_WORKDAY_SENSOR,
+    CRITERION_CHEAP,
+    CRITERION_COLD,
+    CRITERION_ENTITY,
+    CRITERION_NONE,
+    CRITERION_PV,
     DOMAIN,
+    HEAT_SOURCE_AUTO,
+    HEAT_SOURCE_PRIMARY,
+    HEAT_SOURCE_SECONDARY,
     HOUSE_DEFAULTS,
     MODE_AUTO,
     MODE_VACATION,
@@ -124,6 +137,7 @@ from .presence import (
     raw_house_presence,
 )
 from .room import Room
+from .source_choice import SourceChooser
 from .util import (
     CELSIUS,
     FAHRENHEIT,
@@ -217,7 +231,10 @@ class House:
         # Since when each circuit relay has been unavailable.
         self._circuit_unavailable_since: dict[str, datetime] = {}
         self._source_wait_until: datetime | None = None
-        self._source_unavailable_since: datetime | None = None
+        # Since when each heat source has been unavailable.
+        self._source_unavailable_since: dict[str, datetime] = {}
+        # Primary or secondary heat source: the choice of the user and the one in use.
+        self.source_chooser = SourceChooser()
         self._outdoor_unavailable_since: datetime | None = None
         # Alerts and messages: for the card and the notify services.
         self.notifier = Notifier(self)
@@ -268,6 +285,7 @@ class House:
         self.boiler_runtime_s = float(house.get("boiler_runtime_s", 0.0))
         self._frost_started = bool(house.get("frost_started", False))
         self.boiler_changed = from_iso(house.get("boiler_changed"))
+        self.source_chooser = SourceChooser(house.get("source_choice"), house.get("source_active"))
         self.workday_cache = dict(house.get("workday_cache", {}))
 
         room_data = data.get("rooms", {})
@@ -350,6 +368,7 @@ class House:
             CONF_WEATHER,
             CONF_PRICE_SENSOR,
             CONF_PV_SENSOR,
+            CONF_SOURCE_CRITERION_ENTITY,
         ):
             if opts.get(key):
                 entities.append(opts[key])
@@ -363,7 +382,7 @@ class House:
             self._unsubs.append(
                 async_track_state_change_event(
                     self.hass,
-                    [opts[CONF_BOILER_ENTITY], *self.circuits],
+                    [*self.source_entities, *self.circuits],
                     self._async_boiler_changed,
                 )
             )
@@ -413,6 +432,8 @@ class House:
                 # in a pause is stopped again, and the minimum on / off time holds.
                 "frost_started": self._frost_started,
                 "boiler_changed": iso(self.boiler_changed),
+                "source_choice": self.source_chooser.choice,
+                "source_active": self.source_chooser.active,
                 "workday_cache": dict(list(self.workday_cache.items())[-20:]),
             },
             "rooms": {room_id: room.as_dict() for room_id, room in self.rooms.items()},
@@ -513,6 +534,9 @@ class House:
         # The end of the minimum on / off time the heat source waits for.
         if self.source_waiting and self._source_wait_until is not None:
             candidates.append(self._source_wait_until)
+        # Automatic changes the heat source once the criterion stayed changed long enough.
+        if (switch_at := self.source_switch_at) is not None:
+            candidates.append(switch_at)
         for moment in (self.vacation_start, self._vacation_resume(), self.vacation_end):
             if moment and moment > now:
                 candidates.append(moment)
@@ -1265,6 +1289,8 @@ class House:
     async def _async_control_boiler(self, now: datetime) -> None:
         """Switch the boiler from the heat demand of the rooms, with minimum on / off times."""
         opts = self.options
+        # The heat source in use (primary or secondary) is decided first.
+        self._choose_source(now)
         # Only the rooms that heat from the heat source of the house start it,
         # and of them only those that may (not the secondary rooms).
         sourced = {rid: room for rid, room in self.rooms.items() if room.uses_house_source}
@@ -1330,7 +1356,7 @@ class House:
         # without one while at least one room heats.
         configured, source_on = self.heat_source_state()
         running = bool(source_on) if configured else any(r.heating for r in self.rooms.values())
-        self._check_source_available(now, configured, source_on)
+        self._check_source_available(now)
         self._check_circuits_available(now)
         if self._source_running_since is not None:
             self.boiler_runtime_s += (now - self._source_running_since).total_seconds()
@@ -1340,6 +1366,12 @@ class House:
 
         self.source_waiting = None
         self._source_wait_until = None
+        if self.secondary_source and not self.paused:
+            # The source not in use stays stopped, before the other one starts.
+            # In a pause something else controls the heating: left alone.
+            for entity_id in self.source_entities:
+                if entity_id != self.source_entity:
+                    await self._async_stop_source(entity_id)
         await self._async_switch_source(now, demand, frost)
         if circuits:
             # Closed only once the heat source is off, or while another one stays open.
@@ -1393,10 +1425,149 @@ class House:
                 switched.append(entity_id)
         return switched
 
-    async def _async_switch_source(self, now: datetime, demand: bool, frost: bool) -> None:
-        """Start or stop the heat source, with its minimum on / off times."""
+    # ------------------------------------------------------------------
+    # Primary and secondary heat source
+    # ------------------------------------------------------------------
+    @property
+    def secondary_source(self) -> str | None:
+        """The secondary heat source (only with a primary one)."""
+        if not self.options.get(CONF_BOILER_ENTITY):
+            return None
+        return self.options.get(CONF_SECONDARY_SOURCE) or None
+
+    @property
+    def source_entities(self) -> list[str]:
+        """The heat sources of the house: the primary one, then the secondary one."""
+        primary = self.options.get(CONF_BOILER_ENTITY)
+        if not primary:
+            return []
+        return [primary, *([self.secondary_source] if self.secondary_source else [])]
+
+    @property
+    def source_criterion(self) -> str:
+        """The criterion of the Automatic choice; none when it cannot work.
+
+        Each one needs what it reads: the PV sensor (and its threshold), an
+        outdoor temperature, the price sensor with its low limit, the entity.
+        """
+        if not self.secondary_source:
+            return CRITERION_NONE
         opts = self.options
-        boiler = opts.get(CONF_BOILER_ENTITY)
+        criterion = opts.get(CONF_SOURCE_CRITERION, CRITERION_NONE)
+        works = {
+            CRITERION_PV: bool(opts.get(CONF_PV_SENSOR)),
+            CRITERION_COLD: self.outdoor_configured,
+            CRITERION_CHEAP: bool(opts.get(CONF_PRICE_SENSOR))
+            and opts.get(CONF_PRICE_LOW) not in (None, ""),
+            CRITERION_ENTITY: bool(opts.get(CONF_SOURCE_CRITERION_ENTITY)),
+        }
+        return criterion if works.get(criterion) else CRITERION_NONE
+
+    def criterion_on(self) -> bool | None:
+        """The criterion asks for the secondary source (None: unknown now)."""
+        opts = self.options
+        criterion = self.source_criterion
+        if criterion == CRITERION_PV:
+            surplus = float_state(self.hass, opts.get(CONF_PV_SENSOR))
+            return None if surplus is None else surplus >= float(opts[CONF_PV_THRESHOLD])
+        if criterion == CRITERION_COLD:
+            outdoor = self.outdoor_now
+            return None if outdoor is None else outdoor < float(opts[CONF_SOURCE_COLD_BELOW])
+        if criterion == CRITERION_CHEAP:
+            price = float_state(self.hass, opts.get(CONF_PRICE_SENSOR))
+            return None if price is None else price <= float(opts[CONF_PRICE_LOW])
+        if criterion == CRITERION_ENTITY:
+            state = self.hass.states.get(opts[CONF_SOURCE_CRITERION_ENTITY])
+            return state.state == STATE_ON if valid(state) else None  # type: ignore[union-attr]
+        return None
+
+    @property
+    def source_options(self) -> list[str]:
+        """The choices of the select: Automatic only with a criterion."""
+        manual = [HEAT_SOURCE_PRIMARY, HEAT_SOURCE_SECONDARY]
+        return [HEAT_SOURCE_AUTO, *manual] if self.source_criterion != CRITERION_NONE else manual
+
+    @property
+    def source_choice(self) -> str:
+        """The choice of the user, as it applies."""
+        return self.source_chooser.effective_choice(self.source_criterion != CRITERION_NONE)
+
+    @property
+    def active_source(self) -> str:
+        """The heat source in use: primary or secondary."""
+        if not self.secondary_source:
+            return HEAT_SOURCE_PRIMARY
+        return self.source_chooser.active or HEAT_SOURCE_PRIMARY
+
+    @property
+    def source_entity(self) -> str | None:
+        """The entity of the heat source in use (None without a heat source)."""
+        entities = self.source_entities
+        if not entities:
+            return None
+        return entities[1] if self.active_source == HEAT_SOURCE_SECONDARY else entities[0]
+
+    @property
+    def source_switch_at(self) -> datetime | None:
+        """When Automatic will change the source (the criterion changed, not for long yet)."""
+        if self.source_choice != HEAT_SOURCE_AUTO:
+            return None
+        return self.source_chooser.switch_at(self.criterion_on(), self._source_switch_delay)
+
+    @property
+    def _source_switch_delay(self) -> timedelta:
+        return timedelta(minutes=float(self.options[CONF_SOURCE_SWITCH_MINUTES]))
+
+    async def async_set_source(self, option: str) -> None:
+        """Choose the heat source: automatic, primary or secondary."""
+        if option not in self.source_options:
+            raise HomeAssistantError(f"Unknown heat source choice {option}")
+        self.source_chooser.choice = option
+        await self.async_evaluate_or_notify()
+
+    def _choose_source(self, now: datetime) -> str | None:
+        """Decide the heat source in use; the entity of the one left, if it changed.
+
+        The one wanted (by hand, or by the criterion in Automatic) is used, unless
+        it is unavailable while the other one works: then the other one heats.
+        """
+        if not self.secondary_source:
+            return None
+        chooser = self.source_chooser
+        auto = self.source_criterion != CRITERION_NONE
+        want = chooser.wanted(now, self.criterion_on(), auto, self._source_switch_delay)
+        primary, secondary = self.source_entities
+        entity = {HEAT_SOURCE_PRIMARY: primary, HEAT_SOURCE_SECONDARY: secondary}
+        other = HEAT_SOURCE_SECONDARY if want == HEAT_SOURCE_PRIMARY else HEAT_SOURCE_PRIMARY
+        if not valid(self.hass.states.get(entity[want])) and valid(
+            self.hass.states.get(entity[other])
+        ):
+            want = other
+        previous = chooser.active
+        chooser.active = want
+        if previous is None or previous == want:
+            return None
+        # The new source starts without the minimum off time of the old one.
+        self.boiler_changed = None
+        self.async_save()
+        return entity[previous]
+
+    async def _async_stop_source(self, entity_id: str) -> None:
+        """Keep a heat source not in use stopped (off, or at its idle temperature if boosted)."""
+        state = self.hass.states.get(entity_id)
+        if not valid(state):
+            return
+        boost = self._source_boost(state)  # type: ignore[arg-type]
+        if not self._source_is_on(state, boost) and (  # type: ignore[arg-type]
+            boost is None or self._source_settled(state, boost, False)  # type: ignore[arg-type]
+        ):
+            return
+        await self._async_command_source(entity_id, state, boost, False)  # type: ignore[arg-type]
+
+    async def _async_switch_source(self, now: datetime, demand: bool, frost: bool) -> None:
+        """Start or stop the heat source in use, with its minimum on / off times."""
+        opts = self.options
+        boiler = self.source_entity
         if not boiler:
             return
         want = demand
@@ -1430,13 +1601,24 @@ class House:
                 self.source_waiting = "min_on" if is_on else "min_off"
                 self._source_wait_until = self.boiler_changed + minimum
                 return
+        if not await self._async_command_source(boiler, state, boost, want):  # type: ignore[arg-type]
+            return
+        self.boiler_on = want
+        if not correction:
+            self.boiler_changed = now
+            self._frost_started = bool(want and self.paused)
+
+    async def _async_command_source(
+        self, boiler: str, state: State, boost: tuple[float, float] | None, want: bool
+    ) -> bool:
+        """Start or stop one heat source; False when the command failed."""
         context = self.new_context()
         domain = boiler.split(".", 1)[0]
         try:
             if domain == "climate" and boost is not None:
                 # Boosted: always in its heat mode, at the maximum of the house
                 # to start, at the frost protection of the house to stop.
-                on_mode = heat_mode(state.attributes.get("hvac_modes"))  # type: ignore[union-attr]
+                on_mode = heat_mode(state.attributes.get("hvac_modes"))
                 await self.hass.services.async_call(
                     "climate",
                     "set_temperature",
@@ -1449,7 +1631,7 @@ class House:
                     context=context,
                 )
             elif domain == "climate":
-                on_mode = heat_mode(state.attributes.get("hvac_modes"))  # type: ignore[union-attr]
+                on_mode = heat_mode(state.attributes.get("hvac_modes"))
                 await self.hass.services.async_call(
                     "climate",
                     "set_hvac_mode",
@@ -1466,12 +1648,9 @@ class House:
                     context=context,
                 )
         except (HomeAssistantError, ValueError) as err:
-            _LOGGER.warning("Could not switch the boiler %s: %s", boiler, err)
-            return
-        self.boiler_on = want
-        if not correction:
-            self.boiler_changed = now
-            self._frost_started = bool(want and self.paused)
+            _LOGGER.warning("Could not switch the heat source %s: %s", boiler, err)
+            return False
+        return True
 
     def _update_keep_open(self) -> bool:
         """Choose, keep or end the room whose TRVs stay open for the heat source.
@@ -1537,29 +1716,43 @@ class House:
             }
         return self.top_up_rooms != previous
 
-    def _check_source_available(
-        self, now: datetime, configured: bool, source_on: bool | None
-    ) -> None:
-        """Alert when the heat source has been unavailable for the configured time."""
-        entity_id = self.options.get(CONF_BOILER_ENTITY)
-        key = f"unavailable_{entity_id}"
-        if not configured or source_on is not None:
-            if self._source_unavailable_since is not None:
-                self._source_unavailable_since = None
-                self.clear_alert(key)
-            return
-        if self._source_unavailable_since is None:
-            self._source_unavailable_since = now
+    def _check_source_available(self, now: datetime) -> None:
+        """Alert when a heat source has been unavailable for the configured time.
+
+        With two heat sources the other one heats meanwhile (a warning); with
+        one, or both unavailable, no heating at all (important).
+        """
+        entities = self.source_entities
+        for entity_id in list(self._source_unavailable_since):
+            if entity_id not in entities or valid(self.hass.states.get(entity_id)):
+                del self._source_unavailable_since[entity_id]
+                self.clear_alert(f"unavailable_{entity_id}")
         limit = timedelta(minutes=self.alert_unavailable_minutes)
-        if now - self._source_unavailable_since >= limit:
-            self.notify(
-                key,
-                f"The heat source {entity_id} has been unavailable for more than "
-                f"{limit.total_seconds() / 60:.0f} minutes: the rooms cannot be heated, "
-                "not even for frost protection.",
-                code="source_unavailable",
-                params={"entity": entity_id, "minutes": round(limit.total_seconds() / 60)},
-            )
+        minutes = round(limit.total_seconds() / 60)
+        for entity_id in entities:
+            if valid(self.hass.states.get(entity_id)):
+                continue
+            since = self._source_unavailable_since.setdefault(entity_id, now)
+            if now - since < limit:
+                continue
+            others = [e for e in entities if e != entity_id and valid(self.hass.states.get(e))]
+            if others:
+                self.notify(
+                    f"unavailable_{entity_id}",
+                    f"The heat source {entity_id} has been unavailable for more than "
+                    f"{minutes} minutes: {others[0]} heats meanwhile.",
+                    code="source_unavailable_other",
+                    params={"entity": entity_id, "other": others[0], "minutes": minutes},
+                )
+            else:
+                self.notify(
+                    f"unavailable_{entity_id}",
+                    f"The heat source {entity_id} has been unavailable for more than "
+                    f"{minutes} minutes: the rooms cannot be heated, "
+                    "not even for frost protection.",
+                    code="source_unavailable",
+                    params={"entity": entity_id, "minutes": minutes},
+                )
 
     def _check_circuits_available(self, now: datetime) -> None:
         """Alert when a circuit relay has been unavailable for the configured time.
@@ -1694,11 +1887,11 @@ class House:
         return state.state != "off" and target is not None and abs(target - boost[1]) < 0.05
 
     def heat_source_state(self) -> tuple[bool, bool | None]:
-        """(configured, running) of the heat source of the house (the boiler entity).
+        """(configured, running) of the heat source of the house in use.
 
         ``running`` is None while the entity is unavailable or unknown.
         """
-        entity_id = self.options.get(CONF_BOILER_ENTITY)
+        entity_id = self.source_entity
         if not entity_id:
             return False, None
         state = self.hass.states.get(entity_id)
@@ -1863,6 +2056,14 @@ class House:
             "heat_demand": self.heat_demand,
             "keep_open_room": self.keep_open_room,
             "top_up_rooms": sorted(self.top_up_rooms),
+            "heat_source": {
+                "choice": self.source_choice,
+                "active": self.active_source,
+                "entity": self.source_entity,
+                "criterion": self.source_criterion,
+                "criterion_on": self.criterion_on(),
+                "switch_at": iso(self.source_switch_at),
+            },
             "house_offsets": self.house_offsets(),
             "calendar_message": self.calendar_message,
             "last_evaluation": iso(self._last_eval),

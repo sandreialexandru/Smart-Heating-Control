@@ -182,6 +182,26 @@ CONF_BOILER_BOOST: Final = "boiler_boost"
 # °C the boosted heat source idles at (empty: the frost protection of the house).
 CONF_BOILER_IDLE_TEMP: Final = "boiler_idle_temp"
 CONF_ROOM_DIFF_ALERT: Final = "room_diff_alert"
+# A second heat source of the house (a heat pump, a boiler...): while it is
+# chosen it gets the heat demand and the first one stays off.
+CONF_SECONDARY_SOURCE: Final = "secondary_source"
+# What chooses it in the Automatic choice: the PV surplus, the cold outside, the
+# cheap price or an on / off entity of the user. None: chosen by hand only.
+CONF_SOURCE_CRITERION: Final = "source_criterion"
+CONF_SOURCE_CRITERION_ENTITY: Final = "source_criterion_entity"
+CONF_SOURCE_COLD_BELOW: Final = "source_cold_below"  # °C, the "cold" criterion
+# Minutes the criterion must stay changed before the source is switched.
+CONF_SOURCE_SWITCH_MINUTES: Final = "source_switch_minutes"
+CRITERION_NONE: Final = "none"
+CRITERION_PV: Final = "pv_surplus"
+CRITERION_COLD: Final = "cold"
+CRITERION_CHEAP: Final = "cheap_power"
+CRITERION_ENTITY: Final = "entity"
+CRITERIA: Final = (CRITERION_NONE, CRITERION_PV, CRITERION_COLD, CRITERION_CHEAP, CRITERION_ENTITY)
+# The choice of the heat source (the select of the house).
+HEAT_SOURCE_AUTO: Final = "auto"
+HEAT_SOURCE_PRIMARY: Final = "primary"
+HEAT_SOURCE_SECONDARY: Final = "secondary"
 
 CONF_OVERRIDE_MODE: Final = "override_mode"
 CONF_OVERRIDE_HOURS: Final = "override_hours"
@@ -260,6 +280,9 @@ HOUSE_DEFAULTS: Final = {
     CONF_BOILER_MIN_OFF: 0,
     CONF_KEEP_LAST_OPEN: False,
     CONF_BOILER_BOOST: True,
+    CONF_SOURCE_CRITERION: CRITERION_NONE,
+    CONF_SOURCE_COLD_BELOW: -5.0,
+    CONF_SOURCE_SWITCH_MINUTES: 15,
     CONF_ROOM_DIFF_ALERT: 0.0,
     CONF_OVERRIDE_MODE: OVERRIDE_FIXED,
     CONF_OVERRIDE_HOURS: 2.0,

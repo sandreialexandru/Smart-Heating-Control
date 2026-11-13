@@ -206,10 +206,12 @@
       "boiler": {
         "title": "Warmtebron en warmtevraag",
         "data": {
-          "boiler_entity": "Warmtebron"
+          "boiler_entity": "Warmtebron",
+          "secondary_source": "Tweede warmtebron"
         },
         "data_description": {
-          "boiler_entity": "De ketel (of het relais dat de warmtebron start) als de kamers hem niet zelf kunnen starten (radiatorkranen, zonekleppen). De integratie start hem als kamers om warmte vragen, en het leren en de verwarmingstijd tellen alleen zolang hij draait. Nooit het relais dat een Generic Thermostat al gebruikt. Met radiatorkranen en een ketel die gestart wordt door een thermostaat buiten Home Assistant is het leren niet betrouwbaar: optimale start en stop worden dan afgeraden."
+          "boiler_entity": "De ketel (of het relais dat de warmtebron start) als de kamers hem niet zelf kunnen starten (radiatorkranen, zonekleppen). De integratie start hem als kamers om warmte vragen, en het leren en de verwarmingstijd tellen alleen zolang hij draait. Nooit het relais dat een Generic Thermostat al gebruikt. Met radiatorkranen en een ketel die gestart wordt door een thermostaat buiten Home Assistant is het leren niet betrouwbaar: optimale start en stop worden dan afgeraden.",
+          "secondary_source": "Optioneel, alleen met een warmtebron hierboven: een tweede (bijv. een warmtepomp naast de ketel) die dezelfde kamers en circuits verwarmt. Er draait er maar één: zolang de tweede gebruikt wordt, blijft de eerste uit. Welke kies je in de kaart of met de select Warmtebron van het huis (met de hand, met een automatisering of Automatisch volgens een criterium, in de volgende stap). Is de gekozen bron onbeschikbaar, dan verwarmt de andere. Leeg (standaard): één warmtebron."
         },
         "description": "Alleen voor huizen waar de kamers de warmtebron niet zelf kunnen starten (radiatorkranen of zonekleppen): de integratie start hem dan als kamers om warmte vragen, en een kamer verwarmt (voor het leren en de verwarmingstijd) alleen zolang hij draait.\n\n⚠️ Met een radiatorkraan op elke radiator moet de installatie het water kunnen doorlaten (een automatische bypass, een ketel met interne bypass of één radiator zonder radiatorkraan): de kranen sluiten bij hun doeltemperatuur, en de warmtebron kan blijven draaien tot zijn minimale aan-tijd voorbij is."
       },
@@ -388,7 +390,8 @@
           "keep_last_open": "De laatste radiatorkraan open houden",
           "circuits": "Circuitrelais",
           "boiler_boost": "De bron starten en stoppen via de temperatuur",
-          "boiler_idle_temp": "Ruststand-temperatuur van de warmtebron"
+          "boiler_idle_temp": "Ruststand-temperatuur van de warmtebron",
+          "source_criterion": "Automatische keuze van de bron"
         },
         "data_description": {
           "boiler_min_rooms": "Hoeveel kamers om warmte moeten vragen om hem te starten. 1 = elke kamer. Bijkamers (Kan de warmtebron van het huis starten uit) tellen niet mee.",
@@ -397,7 +400,8 @@
           "keep_last_open": "Als geen kamer meer om warmte vraagt, blijven de radiatorkranen van de laatste kamer die vroeg open (ze krijgen de maximumtemperatuur van de kamer, of blijven aan). Zo kan de restwarmte in de warmtebron en de leidingen ergens heen, zoals met een bypass, en beweegt de kraan 's nachts niet nog eens. Totdat een andere kamer om warmte vraagt, een sterkere regel de kamer overneemt (raam, handmatige wijziging, pauze, modus, warm buiten) of de kamer zelf warmte nodig heeft. De kamer vraagt intussen niet om warmte, maar kan warmer worden dan zijn doeltemperatuur, en het leren slaat die tijd over. Standaard uit.",
           "circuits": "Alleen met meerdere verwarmingscircuits op de ketel (bijv. vloerverwarming en radiatoren), elk met een eigen pomp- of zoneklep-relais. Een kamer op de warmtebron kiest dan zijn circuit (in zijn instellingen): vraagt hij om warmte, dan gaat eerst het circuitrelais aan en dan de ketel; heeft geen kamer het nog nodig, dan stopt eerst de ketel en dan het circuitrelais. Voor een kamer waarvan het circuit uit staat, start de ketel niet. Leeg (standaard): geen circuits, er verandert niets.",
           "boiler_boost": "Een thermostaat als warmtebron (bijv. Hive, Nest, Tado, een Generic Thermostat) start de ketel alleen op zijn eigen doeltemperatuur en sensor. Aan (standaard): hij blijft in zijn verwarmingsmodus; om te starten krijgt hij de maximumtemperatuur van het huis, om te stoppen de ruststand-temperatuur (standaard de vorstbeveiliging van het huis) – zo blijft hij tegen vorst beschermen als Home Assistant stopt. Een met de hand ingestelde doeltemperatuur wordt teruggezet. Uit: alleen zijn modus wordt omgezet (verwarmen / uit). Een thermostaat zonder doeltemperatuur wordt altijd via zijn modus geschakeld. Niet hetzelfde als 'Verwarmen op de kamersensoren' van de zone voor het hele huis: dat is voor een thermostaat die zelf het hele huis verwarmt.",
-          "boiler_idle_temp": "Alleen met 'De bron starten en stoppen via de temperatuur': wat de thermostaat krijgt zolang geen kamer om warmte vraagt. Leeg (standaard): de vorstbeveiliging van het huis, zodat de ketel uit blijft. Een hogere waarde (bijv. 17,5 °C) laat de thermostaat zijn eigen ruimte, op zijn eigen sensor, op die temperatuur houden: handig als hij ook radiatoren zonder radiatorkraan verwarmt. Moet onder de maximumtemperatuur van het huis liggen."
+          "boiler_idle_temp": "Alleen met 'De bron starten en stoppen via de temperatuur': wat de thermostaat krijgt zolang geen kamer om warmte vraagt. Leeg (standaard): de vorstbeveiliging van het huis, zodat de ketel uit blijft. Een hogere waarde (bijv. 17,5 °C) laat de thermostaat zijn eigen ruimte, op zijn eigen sensor, op die temperatuur houden: handig als hij ook radiatoren zonder radiatorkraan verwarmt. Moet onder de maximumtemperatuur van het huis liggen.",
+          "source_criterion": "Wat in Automatisch de tweede bron kiest: Zonnestroomoverschot (de PV-sensor ligt boven zijn drempel, bij Energie), Koud buiten (onder een temperatuur, in de volgende stap), Goedkope stroom (de prijs is hooguit zijn ondergrens, bij Energie), Eigen entiteit (een aan/uit-entiteit naar keuze: aan = de tweede bron). Alleen wat in het huis is ingesteld staat erbij. Geen (standaard): geen Automatisch, de bron wordt met de hand of met een automatisering gekozen. Gebruik bij zonnestroomoverschot de opbrengst van de panelen of een overschot inclusief de warmtepomp: een terugleversensor daalt zodra de warmtepomp start, en de bronnen zouden heen en weer wisselen."
         }
       },
       "behavior_details": {
@@ -424,6 +428,20 @@
           "hysteresis": "Het huis vraagt om warmte onder de doeltemperatuur min deze waarde en stopt boven de doeltemperatuur plus deze waarde, gemeten door zijn sensoren.",
           "inertia_control": "Zodra het huis heeft geleerd hoe traag de verwarming reageert, eindigt de hogere temperatuur iets eerder als de al geleverde warmte het huis vanzelf naar de bovengrens van de hysterese brengt, en begint iets eerder als het huis anders onder de ondergrens zakt voordat de warmte aankomt. De grenzen blijven. Uit: alleen de hysterese beslist."
         }
+      },
+      "boiler_source": {
+        "title": "Automatische keuze van de bron",
+        "description": "De bron wisselt pas als het criterium de omschakeltijd lang veranderd blijft.",
+        "data": {
+          "source_criterion_entity": "Entiteit van het criterium",
+          "source_cold_below": "Tweede bron onder",
+          "source_switch_minutes": "Omschakeltijd"
+        },
+        "data_description": {
+          "source_criterion_entity": "Aan: de tweede bron verwarmt; uit: de eerste. Bijvoorbeeld een template binary sensor of een input boolean.",
+          "source_cold_below": "Buitentemperatuur waaronder de tweede bron verwarmt (bijv. de ketel als de warmtepomp de eerste bron is en het niet meer aankan).",
+          "source_switch_minutes": "Hoe lang het criterium veranderd moet blijven voordat de bron wisselt (standaard 15 min), zodat een wolk of een korte prijswijziging de bronnen niet heen en weer schakelt. 0 = meteen. Een met de hand gekozen bron wisselt meteen."
+        }
       }
     },
     "error": {
@@ -443,7 +461,10 @@
       "invalid_recipient": "'{recipient}' kan niet worden gebruikt: schrijf een notify-dienst (notify.naam), eventueel gevolgd door e-mailadressen, bijv. notify.me_gmail_com: ana@example.com, ion@example.com.",
       "idle_not_below_max": "De ruststand-temperatuur moet onder de maximumtemperatuur van het huis liggen.",
       "entity_is_circuit": "{entity} is een circuitrelais van {owner}. Het kan niet ook een apparaat van een kamer of een ander circuit zijn.",
-      "circuit_is_source": "De warmtebron kan niet ook een circuitrelais zijn."
+      "circuit_is_source": "De warmtebron kan niet ook een circuitrelais zijn.",
+      "secondary_without_primary": "De tweede warmtebron heeft een warmtebron nodig.",
+      "secondary_is_primary": "De tweede warmtebron moet een ander apparaat zijn dan de warmtebron.",
+      "criterion_is_source": "Het criterium kan geen van de warmtebronnen zijn."
     }
   },
   "config_subentries": {
@@ -896,6 +917,23 @@
             "name": "Vandaag gebruikt"
           }
         }
+      },
+      "heat_source": {
+        "name": "Warmtebron",
+        "state": {
+          "auto": "Automatisch",
+          "primary": "Eerste bron",
+          "secondary": "Tweede bron"
+        },
+        "state_attributes": {
+          "active": {
+            "name": "In gebruik",
+            "state": {
+              "primary": "Eerste bron",
+              "secondary": "Tweede bron"
+            }
+          }
+        }
       }
     },
     "switch": {
@@ -1066,6 +1104,15 @@
       "options": {
         "celsius": "Celsius (°C)",
         "fahrenheit": "Fahrenheit (°F)"
+      }
+    },
+    "source_criterion": {
+      "options": {
+        "none": "Geen (met de hand of met een automatisering)",
+        "pv_surplus": "Zonnestroomoverschot",
+        "cold": "Koud buiten",
+        "cheap_power": "Goedkope stroom",
+        "entity": "Eigen entiteit"
       }
     }
   },

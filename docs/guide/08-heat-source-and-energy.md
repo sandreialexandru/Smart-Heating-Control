@@ -203,6 +203,67 @@ What the integration does:
   open. A zone valve with an end switch that starts the boiler by itself
   needs no circuit here.
 
+## Secondary heat source
+
+Some houses have two heat sources for the same rooms: a heat pump next to the
+boiler, a gas boiler next to an electric one. Only one of them runs at a time.
+
+1. In the options of the house, at the heat source, pick the **Secondary heat
+   source** under the *Heat source* (the same kinds: `switch`,
+   `input_boolean`, `climate`).
+2. On the next page, the **Automatic choice of the source** (optional), then
+   on the last page what it needs and the **Switching time**.
+
+The house then gets a *Heat source* select, and the card a row of buttons with
+the names of the two devices: `Automatic | Boiler | Heat pump`.
+
+- **Primary** or **Secondary**: only that source heats, whatever the criterion
+  says. A choice made by hand applies at once.
+- **Automatic** (only with a criterion): the criterion decides, *on* = the
+  secondary source:
+
+| Criterion | The secondary source heats while… | Uses |
+| --- | --- | --- |
+| PV surplus | the PV sensor is above its threshold | *PV surplus sensor* and *Surplus from* (Energy) |
+| Cold outside | the outdoor temperature is below *Secondary source below* | the outdoor sensor or the weather entity |
+| Cheap power | the price is at or below *Low price up to* | the price sensor (Energy) |
+| Your own entity | the entity you choose is on | any `binary_sensor`, `input_boolean` or `switch` |
+
+Only the criteria the house has set up are offered. The source changes only
+once the criterion has stayed changed for the *Switching time* (15 min by
+default), so a cloud does not switch the sources back and forth. The card shows
+the source in use and, while Automatic waits, when it will change.
+
+Example: the boiler as the heat source, the heat pump as the secondary one,
+the criterion *PV surplus*. While the panels give more than the threshold the
+heat pump heats (and with *Adjustment with surplus* the rooms go a little
+higher, so the floor stores heat); in the evening the boiler takes over.
+
+Or the other way round: the heat pump as the heat source, the gas boiler as the
+secondary one, the criterion *Cold outside* below −5 °C.
+
+What the integration does:
+
+- The source not in use is kept off (a boosted thermostat at its idle
+  temperature). At a change, the old one stops first, then the new one starts,
+  without waiting for the minimum off time of the old one.
+- If the chosen source is unavailable and the other one works, the other one
+  heats. Unavailable longer than *Alert when a device is unavailable longer
+  than*: a warning that says which one heats meanwhile; both unavailable: the
+  important alert, as with one source.
+- Rooms, circuits, *Rooms needed*, the minimum times and the pause work as with
+  one source. In a pause the sources are not switched, except for frost
+  protection.
+- The learning of the rooms is one for both sources: a heat pump on floor
+  heating heats more slowly than the boiler, so the rooms learn an average.
+- With *PV surplus*, use the production of the panels or a surplus that
+  includes the heat pump: an export sensor drops as soon as the heat pump
+  starts, and the sources would switch back and forth.
+- A heat pump connected only to the floor heating (the radiators stay on the
+  boiler) is not covered: both would have to run at once, on different
+  circuits. Use an automation there. A hybrid unit that chooses by itself
+  (one thermostat for both) needs no secondary source.
+
 ## When a room "heats"
 
 For the learning and the heating time, a room **heats only while its source

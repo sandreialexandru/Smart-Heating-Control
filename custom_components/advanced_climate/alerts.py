@@ -20,6 +20,8 @@ CATEGORIES: dict[str, str] = {
     "source_unavailable": CATEGORY_CRITICAL,
     "circuit_unavailable": CATEGORY_CRITICAL,
     "device_unavailable": CATEGORY_CRITICAL,
+    # The other heat source heats meanwhile.
+    "source_unavailable_other": CATEGORY_WARNING,
     # Something to look at.
     "sensor_unavailable": CATEGORY_WARNING,
     "sensor_silent": CATEGORY_WARNING,
@@ -53,6 +55,7 @@ CATEGORIES: dict[str, str] = {
 # end because a setting changed, and no one waits for that.
 RESOLVABLE = {
     "source_unavailable",
+    "source_unavailable_other",
     "circuit_unavailable",
     "device_unavailable",
     "sensor_unavailable",
@@ -69,6 +72,7 @@ RESOLVABLE = {
 TEXTS: dict[str, dict[str, str]] = {
     "en": {
         "source_unavailable": "The heat source {entity} has been unavailable for more than {minutes} min: no heating, not even frost protection.",
+        "source_unavailable_other": "The heat source {entity} has been unavailable for more than {minutes} min: {other} heats meanwhile.",
         "circuit_unavailable": "The circuit relay {entity} has been unavailable for more than {minutes} min: the rooms of its circuit get no heat. Repair the relay or change the circuits of the house.",
         "room_difference": "Some rooms stay cold while others are warm: {rooms}.",
         "preset_missing": "The level {level} is not available on {entity} and its temperature is unknown.",
@@ -100,6 +104,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "vacation_preheat": "The vacation ends soon: the house is warmed up for your return.",
         # Resolved.
         "resolved_source_unavailable": "The heat source {entity} works again.",
+        "resolved_source_unavailable_other": "The heat source {entity} works again.",
         "resolved_circuit_unavailable": "The circuit relay {entity} works again.",
         "resolved_device_unavailable": "{entity} is available again.",
         "resolved_sensor_unavailable": "The temperature sensors work again.",
@@ -122,6 +127,7 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "ro": {
         "source_unavailable": "Sursa de căldură {entity} e indisponibilă de peste {minutes} min: nu se încălzește, nici pentru antiîngheț.",
+        "source_unavailable_other": "Sursa de căldură {entity} e indisponibilă de peste {minutes} min: între timp încălzește {other}.",
         "circuit_unavailable": "Releul de circuit {entity} e indisponibil de peste {minutes} min: camerele circuitului lui nu primesc căldură. Trebuie reparat releul sau schimbate circuitele casei.",
         "room_difference": "Unele camere rămân reci, altele sunt calde: {rooms}.",
         "preset_missing": "Nivelul {level} nu există pe {entity} și temperatura lui e necunoscută.",
@@ -152,6 +158,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "vacation_started": "A început vacanța: toate camerele sunt pe away.",
         "vacation_preheat": "Vacanța se termină curând: casa se încălzește pentru întoarcerea voastră.",
         "resolved_source_unavailable": "Sursa de căldură {entity} funcționează din nou.",
+        "resolved_source_unavailable_other": "Sursa de căldură {entity} funcționează din nou.",
         "resolved_circuit_unavailable": "Releul de circuit {entity} funcționează din nou.",
         "resolved_device_unavailable": "{entity} e din nou disponibil.",
         "resolved_sensor_unavailable": "Senzorii de temperatură funcționează din nou.",
@@ -173,6 +180,7 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "de": {
         "source_unavailable": "Die Wärmequelle {entity} ist seit mehr als {minutes} min nicht verfügbar: keine Heizung, nicht einmal Frostschutz.",
+        "source_unavailable_other": "Die Wärmequelle {entity} ist seit mehr als {minutes} min nicht verfügbar: In der Zwischenzeit heizt {other}.",
         "circuit_unavailable": "Das Kreisrelais {entity} ist seit mehr als {minutes} min nicht verfügbar: Die Räume seines Kreises bekommen keine Wärme. Repariere das Relais oder ändere die Kreise des Hauses.",
         "room_difference": "Einige Räume bleiben kalt, während andere warm sind: {rooms}.",
         "preset_missing": "Die Stufe {level} gibt es auf {entity} nicht, und ihre Temperatur ist unbekannt.",
@@ -203,6 +211,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "vacation_started": "Der Urlaub hat begonnen: Alle Räume sind auf away.",
         "vacation_preheat": "Der Urlaub endet bald: Das Haus wird für eure Rückkehr vorgeheizt.",
         "resolved_source_unavailable": "Die Wärmequelle {entity} funktioniert wieder.",
+        "resolved_source_unavailable_other": "Die Wärmequelle {entity} funktioniert wieder.",
         "resolved_circuit_unavailable": "Das Kreisrelais {entity} funktioniert wieder.",
         "resolved_device_unavailable": "{entity} ist wieder verfügbar.",
         "resolved_sensor_unavailable": "Die Temperatursensoren funktionieren wieder.",
@@ -224,6 +233,7 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "nl": {
         "source_unavailable": "De warmtebron {entity} is al meer dan {minutes} min onbeschikbaar: geen verwarming, zelfs geen vorstbeveiliging.",
+        "source_unavailable_other": "De warmtebron {entity} is al meer dan {minutes} min onbeschikbaar: intussen verwarmt {other}.",
         "circuit_unavailable": "Het circuitrelais {entity} is al meer dan {minutes} min onbeschikbaar: de kamers van zijn circuit krijgen geen warmte. Repareer het relais of pas de circuits van het huis aan.",
         "room_difference": "Sommige kamers blijven koud terwijl andere warm zijn: {rooms}.",
         "preset_missing": "Het niveau {level} bestaat niet op {entity} en de temperatuur ervan is onbekend.",
@@ -254,6 +264,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "vacation_started": "De vakantie is begonnen: alle kamers staan op away.",
         "vacation_preheat": "De vakantie is bijna voorbij: het huis warmt op voor jullie terugkomst.",
         "resolved_source_unavailable": "De warmtebron {entity} werkt weer.",
+        "resolved_source_unavailable_other": "De warmtebron {entity} werkt weer.",
         "resolved_circuit_unavailable": "Het circuitrelais {entity} werkt weer.",
         "resolved_device_unavailable": "{entity} is weer beschikbaar.",
         "resolved_sensor_unavailable": "De temperatuursensoren werken weer.",
@@ -275,6 +286,7 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "fr": {
         "source_unavailable": "La source de chaleur {entity} est indisponible depuis plus de {minutes} min : plus de chauffage, même pas le hors-gel.",
+        "source_unavailable_other": "La source de chaleur {entity} est indisponible depuis plus de {minutes} min : {other} chauffe en attendant.",
         "circuit_unavailable": "Le relais de circuit {entity} est indisponible depuis plus de {minutes} min : les pièces de son circuit ne reçoivent pas de chaleur. Réparez le relais ou modifiez les circuits de la maison.",
         "room_difference": "Certaines pièces restent froides alors que d'autres sont chaudes : {rooms}.",
         "preset_missing": "Le niveau {level} n'existe pas sur {entity} et sa température est inconnue.",
@@ -305,6 +317,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "vacation_started": "Les vacances ont commencé : toutes les pièces sont en away.",
         "vacation_preheat": "Les vacances se terminent bientôt : la maison se réchauffe pour votre retour.",
         "resolved_source_unavailable": "La source de chaleur {entity} fonctionne de nouveau.",
+        "resolved_source_unavailable_other": "La source de chaleur {entity} fonctionne de nouveau.",
         "resolved_circuit_unavailable": "Le relais de circuit {entity} fonctionne de nouveau.",
         "resolved_device_unavailable": "{entity} est de nouveau disponible.",
         "resolved_sensor_unavailable": "Les capteurs de température fonctionnent de nouveau.",
@@ -326,6 +339,7 @@ TEXTS: dict[str, dict[str, str]] = {
     },
     "it": {
         "source_unavailable": "La fonte di calore {entity} non è disponibile da più di {minutes} min: niente riscaldamento, nemmeno l'antigelo.",
+        "source_unavailable_other": "La fonte di calore {entity} non è disponibile da più di {minutes} min: nel frattempo scalda {other}.",
         "circuit_unavailable": "Il relè di circuito {entity} non è disponibile da più di {minutes} min: le stanze del suo circuito non ricevono calore. Ripara il relè o cambia i circuiti della casa.",
         "room_difference": "Alcune stanze restano fredde mentre altre sono calde: {rooms}.",
         "preset_missing": "Il livello {level} non esiste su {entity} e la sua temperatura è sconosciuta.",
@@ -356,6 +370,7 @@ TEXTS: dict[str, dict[str, str]] = {
         "vacation_started": "La vacanza è iniziata: tutte le stanze sono su away.",
         "vacation_preheat": "La vacanza finisce presto: la casa si scalda per il vostro rientro.",
         "resolved_source_unavailable": "La fonte di calore {entity} funziona di nuovo.",
+        "resolved_source_unavailable_other": "La fonte di calore {entity} funziona di nuovo.",
         "resolved_circuit_unavailable": "Il relè di circuito {entity} funziona di nuovo.",
         "resolved_device_unavailable": "{entity} è di nuovo disponibile.",
         "resolved_sensor_unavailable": "I sensori di temperatura funzionano di nuovo.",

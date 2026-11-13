@@ -206,10 +206,12 @@
       "boiler": {
         "title": "Heat source and heat demand",
         "data": {
-          "boiler_entity": "Heat source"
+          "boiler_entity": "Heat source",
+          "secondary_source": "Secondary heat source"
         },
         "data_description": {
-          "boiler_entity": "The boiler (or the relay that starts the heat source) when the rooms cannot start it themselves (TRVs, zone valves). The integration starts it when rooms ask for heat, and the learning and the heating time count only while it runs. Never the relay a Generic Thermostat already uses. With TRVs and a boiler started by a thermostat that is not in Home Assistant, the learning is not reliable: optimal start and stop are not recommended."
+          "boiler_entity": "The boiler (or the relay that starts the heat source) when the rooms cannot start it themselves (TRVs, zone valves). The integration starts it when rooms ask for heat, and the learning and the heating time count only while it runs. Never the relay a Generic Thermostat already uses. With TRVs and a boiler started by a thermostat that is not in Home Assistant, the learning is not reliable: optimal start and stop are not recommended.",
+          "secondary_source": "Optional, only with a heat source above: a second one (e.g. a heat pump next to the boiler) that heats the same rooms and circuits. Only one of them runs: while the secondary one is in use, the first one stays off. You choose which one in the card or with the Heat source select of the house (by hand, by an automation, or Automatic by a criterion, in the next step). If the chosen one is unavailable, the other one heats. Empty (default): one heat source."
         },
         "description": "Only for houses where the rooms cannot start the heat source themselves (TRVs or zone valves): the integration then starts it when rooms ask for heat, and a room heats (for the learning and the heating time) only while it runs.\n\n⚠️ With TRVs on every radiator, the installation must let the water through (an automatic bypass, a boiler with an internal bypass or one radiator without a TRV): the TRVs close at their target, and the heat source may run until its minimum on time ends."
       },
@@ -388,7 +390,8 @@
           "keep_last_open": "Keep the last TRV open",
           "circuits": "Circuit relays",
           "boiler_boost": "Start and stop the source by its temperature",
-          "boiler_idle_temp": "Heat source idle temperature"
+          "boiler_idle_temp": "Heat source idle temperature",
+          "source_criterion": "Automatic choice of the source"
         },
         "data_description": {
           "boiler_min_rooms": "How many rooms must ask for heat to start it. 1 = any room. Secondary rooms (Can start the house heat source off) do not count.",
@@ -397,7 +400,8 @@
           "keep_last_open": "When no room asks for heat any more, the TRVs of the last room that asked stay open (they get the maximum temperature of the room, or are left on), so the heat left in the heat source and the pipes has a way through, as with a bypass, and the valve does not move again during the night. Until another room asks for heat, a stronger rule takes the room (window, manual change, pause, mode, warm outside) or the room itself needs heat. The room asks for no heat meanwhile, but it may get warmer than its target, and its learning skips that time. Off by default.",
           "circuits": "Only with several heating circuits on the boiler (e.g. floor heating and radiators), each with its own pump or zone valve relay. A room on the heat source then picks its circuit (in its settings): when it asks for heat its circuit relay is turned on first, then the boiler; when no room needs it, the boiler stops first, then the circuit relay. The boiler is not started for a room whose circuit is off. Empty (default): no circuits, nothing changes.",
           "boiler_boost": "A thermostat as the heat source (e.g. Hive, Nest, Tado, a Generic Thermostat) starts the boiler only by its own target and sensor. On (default): it stays in its heat mode; to start it gets the maximum temperature of the house, to stop it the idle temperature (by default the frost protection temperature of the house) (it then still protects against frost if Home Assistant stops). Its own target set by hand is taken back. Off: only its mode is switched (heat / off). A thermostat without a target temperature is always switched by its mode. Not the same as 'Heat by the room sensors' of the whole-house zone: that one is for a thermostat that heats the whole home itself.",
-          "boiler_idle_temp": "Only with 'Start and stop the source by its temperature': what the thermostat gets while no room asks for heat. Empty (default): the frost protection temperature of the house, so the boiler stays off. A higher value (e.g. 17.5 °C) lets the thermostat keep its own area, by its own sensor, at that temperature: useful when it also heats radiators without TRVs. It must be below the maximum temperature of the house."
+          "boiler_idle_temp": "Only with 'Start and stop the source by its temperature': what the thermostat gets while no room asks for heat. Empty (default): the frost protection temperature of the house, so the boiler stays off. A higher value (e.g. 17.5 °C) lets the thermostat keep its own area, by its own sensor, at that temperature: useful when it also heats radiators without TRVs. It must be below the maximum temperature of the house.",
+          "source_criterion": "What chooses the secondary source in Automatic: PV surplus (the PV sensor is above its threshold, in Energy), Cold outside (below a temperature, in the next step), Cheap power (the price is at or below its low limit, in Energy), Your own entity (an on / off entity you choose: on = the secondary source). Only what the house has set up is listed. None (default): no Automatic, the source is chosen by hand or by an automation. With PV surplus, use the production of the panels or a surplus that includes the heat pump: an export sensor drops as soon as the heat pump starts, and the sources would switch back and forth."
         }
       },
       "behavior_details": {
@@ -424,6 +428,20 @@
           "hysteresis": "The house asks for heat below target minus this value and stops above target plus this value, measured by its sensors.",
           "inertia_control": "Once the house learned how slowly its heating reacts, the higher temperature ends a little early when the heat already given would take the house to the top of the hysteresis band by itself, and starts a little early when the house would fall to its bottom before the heat arrives. The band stays the limit. Off: only the hysteresis decides."
         }
+      },
+      "boiler_source": {
+        "title": "Automatic choice of the source",
+        "description": "The source changes only once the criterion has stayed changed for the switching time.",
+        "data": {
+          "source_criterion_entity": "Criterion entity",
+          "source_cold_below": "Secondary source below",
+          "source_switch_minutes": "Switching time"
+        },
+        "data_description": {
+          "source_criterion_entity": "On: the secondary source heats; off: the primary one. For example a template binary sensor or an input boolean.",
+          "source_cold_below": "Outdoor temperature below which the secondary source heats (e.g. the boiler, when the heat pump is the primary source and no longer copes).",
+          "source_switch_minutes": "How long the criterion must stay changed before the source changes (default 15 min), so a cloud or a short price change does not switch the sources back and forth. 0 = at once. A source chosen by hand changes at once."
+        }
       }
     },
     "error": {
@@ -443,7 +461,10 @@
       "invalid_recipient": "“{recipient}” cannot be used: write a notify service (notify.name), optionally followed by email addresses, e.g. notify.me_gmail_com: ana@example.com, ion@example.com.",
       "idle_not_below_max": "The idle temperature must be below the maximum temperature of the house.",
       "entity_is_circuit": "{entity} is a circuit relay of {owner}. It cannot also be a device of a room or another circuit.",
-      "circuit_is_source": "The heat source cannot also be a circuit relay."
+      "circuit_is_source": "The heat source cannot also be a circuit relay.",
+      "secondary_without_primary": "The secondary source needs a heat source.",
+      "secondary_is_primary": "The secondary source must be another device than the heat source.",
+      "criterion_is_source": "The criterion cannot be one of the heat sources."
     }
   },
   "config_subentries": {
@@ -896,6 +917,23 @@
             "name": "Used today"
           }
         }
+      },
+      "heat_source": {
+        "name": "Heat source",
+        "state": {
+          "auto": "Automatic",
+          "primary": "Primary",
+          "secondary": "Secondary"
+        },
+        "state_attributes": {
+          "active": {
+            "name": "In use",
+            "state": {
+              "primary": "Primary",
+              "secondary": "Secondary"
+            }
+          }
+        }
       }
     },
     "switch": {
@@ -1066,6 +1104,15 @@
       "options": {
         "celsius": "Celsius (°C)",
         "fahrenheit": "Fahrenheit (°F)"
+      }
+    },
+    "source_criterion": {
+      "options": {
+        "none": "None (by hand or by an automation)",
+        "pv_surplus": "PV surplus",
+        "cold": "Cold outside",
+        "cheap_power": "Cheap power",
+        "entity": "Your own entity"
       }
     }
   },

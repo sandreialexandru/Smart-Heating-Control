@@ -45,7 +45,7 @@
           "climates": "Termostati",
           "switches": "Interruttori (relè)",
           "command_mode": "Comando",
-          "trv_boost": "Scaldare in base ai sensori della stanza"
+          "trv_boost": "Riscaldamento in base ai sensori della stanza"
         },
         "data_description": {
           "climates": "Il termostato che comanda la caldaia, per esempio l'entità del Generic Thermostat (climate.climate).",

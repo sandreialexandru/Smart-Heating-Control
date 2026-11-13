@@ -542,3 +542,39 @@ async def test_cold_below_in_fahrenheit(hass: HomeAssistant) -> None:
         result["flow_id"], {"source_cold_below": 14, "source_switch_minutes": 15}
     )
     assert entry.options["source_cold_below"] == -10.0
+
+
+async def test_the_limits_of_the_criteria(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Exactly at the PV threshold: on; exactly at the cold limit: off; at the low price: on."""
+    hass.states.async_set("sensor.pv", "1500")
+    hass.states.async_set("sensor.outdoor", "-5", {"unit_of_measurement": "°C"})
+    hass.states.async_set("sensor.price", "0.12")
+    entry = await _setup(
+        hass,
+        freezer,
+        pv_sensor="sensor.pv",
+        pv_threshold=1500,
+        outdoor_sensor="sensor.outdoor",
+        price_sensor="sensor.price",
+        price_low=0.12,
+        source_criterion="pv_surplus",
+        source_cold_below=-5.0,
+    )
+    house = entry.runtime_data
+    assert house.criterion_on() is True
+    house.options["source_criterion"] = "cold"
+    assert house.criterion_on() is False
+    house.options["source_criterion"] = "cheap_power"
+    assert house.criterion_on() is True
+    await _unload(hass, entry)
+
+
+async def test_cheap_power_needs_the_low_price_in_the_options(hass: HomeAssistant) -> None:
+    entry = _house_with_rooms(hass, options={"price_sensor": "sensor.price"})
+    _, result = await _boiler_flow(
+        hass, entry, {"boiler_entity": "switch.boiler", "secondary_source": "switch.pump"}
+    )
+    field = next(k for k in result["data_schema"].schema if str(k) == "source_criterion")
+    assert result["data_schema"].schema[field].config["options"] == ["none", "entity"]

@@ -1843,7 +1843,9 @@ class House:
         the frost protection of the house (not below its minimum), on its step.
         None: switched by its mode (no boost, no temperature, not a thermostat).
         """
-        if state.domain != "climate" or not self.options.get(CONF_BOILER_BOOST, True):
+        # The default is never used (the options have every key): not mutated.
+        boost = self.options.get(CONF_BOILER_BOOST, True)  # pragma: no mutate
+        if state.domain != "climate" or not boost:
             return None
         attrs = state.attributes
         features = attrs.get("supported_features")

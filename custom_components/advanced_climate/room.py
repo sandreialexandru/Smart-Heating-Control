@@ -1264,7 +1264,8 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
     @property
     def uses_house_source(self) -> bool:
         """True when the room heats from the heat source of the house (the default)."""
-        return bool(self.config.get(CONF_USE_HOUSE_SOURCE, True))
+        # The default is never used (the config has every key): not mutated.
+        return bool(self.config.get(CONF_USE_HOUSE_SOURCE, True))  # pragma: no mutate
 
     @property
     def circuit(self) -> str | None:
@@ -1284,7 +1285,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         if not self.uses_house_source:
             return False
         secondary = (
-            not self.config.get(CONF_STARTS_HOUSE_SOURCE, True)
+            not self.config.get(CONF_STARTS_HOUSE_SOURCE, True)  # pragma: no mutate
             and bool(self.house.options.get(CONF_BOILER_ENTITY))
             and not self.is_whole_house
         )
@@ -1410,9 +1411,11 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         if heating and self.circuit is not None:
             heating = self.house.circuit_on(self.circuit) is True
         now = dt_util.utcnow()
-        if heating and self._heating_since is None:
+        # The two checks below overlap with _account_runtime (each evaluation): their
+        # mutants change nothing visible.
+        if heating and self._heating_since is None:  # pragma: no mutate
             self._heating_since = now
-        if not heating and self._heating_since is not None:
+        if not heating and self._heating_since is not None:  # pragma: no mutate
             self._account_runtime(now)
             self._heating_since = None
         self.heating = heating

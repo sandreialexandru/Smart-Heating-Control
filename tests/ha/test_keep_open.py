@@ -303,3 +303,22 @@ async def test_a_secondary_room_neither_starts_the_boiler_nor_ends_the_room_kept
     await house._async_control_boiler(dt_util.utcnow())
     assert house.heat_demand
     await _unload(hass, entry)
+
+
+async def test_the_changes_of_the_room_kept_open_are_reported(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """True only when the room kept open changes (it makes the TRVs be set again)."""
+    entry, trvs = await _setup(hass, freezer)
+    house = entry.runtime_data
+    await _bedroom_heats_then_stops(hass, freezer, trvs)
+    assert house.keep_open_room is not None
+    # Kept open, nobody asks: nothing changes.
+    assert house._update_keep_open() is False
+    assert house._update_keep_open() is False
+    # The option off: the room is no longer kept open (a change), then nothing.
+    house.options["keep_last_open"] = False
+    assert house._update_keep_open() is True
+    assert house.keep_open_room is None
+    assert house._update_keep_open() is False
+    await _unload(hass, entry)

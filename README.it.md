@@ -86,7 +86,7 @@ risorse della dashboard.
     <td colspan="2" align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-chart.png" alt="Il grafico: temperatura, obiettivo, riscaldamento, temperatura esterna e temperatura prevista" width="720"><br><sub>7 giorni di cronologia e le prossime 12 ore, con la temperatura che la stanza si aspetta</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-light.png" alt="Una modifica manuale con la sezione Imposta per un po' aperta, tema chiaro" width="360"><br><sub>Impostare un livello o una temperatura per un po'</sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-light.png" alt="Una modifica manuale con la sezione Imposta temporaneamente aperta, tema chiaro" width="360"><br><sub>Impostare un livello o una temperatura temporaneamente</sub></td>
     <td align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/card-compact.png" alt="Scheda compatta: un riquadro per stanza" width="360"><br><sub>Compatta: un riquadro per stanza</sub></td>
   </tr>
 </table>

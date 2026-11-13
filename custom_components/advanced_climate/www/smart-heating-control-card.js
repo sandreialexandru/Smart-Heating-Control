@@ -6538,7 +6538,7 @@ const EDITOR_LABELS = {
     show_house: "Casa: presenza, modalità, pausa, ospiti, vacanza",
     show_rooms: "Stanze",
     show_timeline: "Grafico: ultime 24 ore e le prossime 12",
-    show_quick_override: "Imposta per un po'",
+    show_quick_override: "Imposta temporaneamente",
     show_levels: "Temperature dei livelli",
     show_details: "Dettagli",
     show_schedule_editor: "Editor del programma",

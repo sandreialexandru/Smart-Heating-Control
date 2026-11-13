@@ -71,6 +71,10 @@ collapsed: true
 - The **scenarios**, three per row in the same buttons as the modes (two per
   row when there are two or four), the active one tinted the same way (when
   the house has any, see [chapter 4](04-schedule.md#scenarios)).
+- The **heat source**, only with a secondary one: *Automatic* (with a
+  criterion) and the two sources by their names, with the one in use above
+  them and, while Automatic waits, when it will change (see
+  [chapter 8](08-heat-source-and-energy.md#secondary-heat-source)).
 - The buttons, 3 + 2: **Pause** and **Guests** (on / off), **Vacation** (opens
   the vacation dates), then **Reevaluate** and **Automatic** (clears all manual
   changes); the icon is next to the name, above it on a narrow card. A button

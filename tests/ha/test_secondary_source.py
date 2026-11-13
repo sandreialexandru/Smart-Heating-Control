@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -382,3 +382,163 @@ async def test_the_select_goes_with_the_secondary_source(
     await _tick(hass, freezer, 15)
     assert hass.states.get(_select(hass)) is None
     await _unload(hass, entry)
+
+
+# ---------------------------------------------------------------------------
+# Real houses
+# ---------------------------------------------------------------------------
+HEAT_PUMP = {
+    "hvac_modes": ["heat", "off"],
+    "min_temp": 5.0,
+    "max_temp": 30.0,
+    "target_temp_step": 0.5,
+    "supported_features": 1,
+}
+
+
+async def test_boiler_relay_and_a_boosted_heat_pump_thermostat(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A heat pump as a thermostat (boosted): the maximum to start, idle to stop, never off."""
+    temps = async_mock_service(hass, "climate", "set_temperature")
+    async_mock_service(hass, "climate", "set_hvac_mode")
+    assert await async_setup_component(hass, "input_boolean", {"input_boolean": {"boiler": {}}})
+    hass.states.async_set("climate.bedroom", "heat", {**TRV, "temperature": 21.0})
+    hass.states.async_set(
+        "climate.heat_pump", "heat", {**HEAT_PUMP, "temperature": 7.0, "hvac_action": "idle"}
+    )
+    entry = await _house(
+        hass,
+        freezer,
+        [("Bedroom", ROOM)],
+        boiler_entity=BOILER,
+        secondary_source="climate.heat_pump",
+        max_temp=25.0,
+        frost_temp=7.0,
+    )
+    _report(hass, "heating")
+    await _tick(hass, freezer, 5)
+    assert _on(hass, BOILER)
+    pump = [c.data for c in temps if c.data["entity_id"] == "climate.heat_pump"]
+    assert pump == []  # at its idle temperature: already stopped
+
+    await _choose(hass, freezer, "secondary")
+    assert not _on(hass, BOILER)
+    # (The mocked service does not change the state: it may be sent again.)
+    pump = [c.data["temperature"] for c in temps if c.data["entity_id"] == "climate.heat_pump"]
+    assert pump and set(pump) == {25.0}
+    hass.states.async_set(
+        "climate.heat_pump", "heat", {**HEAT_PUMP, "temperature": 25.0, "hvac_action": "heating"}
+    )
+    await _tick(hass, freezer, 5)
+    assert entry.runtime_data.heat_source_state() == (True, True)
+    assert _room(entry, "Bedroom").heating
+
+    # Back to the boiler: the heat pump idles (heat mode, frost protection), the boiler starts.
+    await _choose(hass, freezer, "primary")
+    pump = [c.data for c in temps if c.data["entity_id"] == "climate.heat_pump"]
+    assert pump[-1]["temperature"] == 7.0 and pump[-1]["hvac_mode"] == "heat"
+    assert _on(hass, BOILER)
+    await _unload(hass, entry)
+
+
+async def test_with_circuits_the_relays_stay_open_while_the_source_changes(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    async_mock_service(hass, "climate", "set_temperature")
+    async_mock_service(hass, "climate", "set_hvac_mode")
+    assert await async_setup_component(
+        hass, "input_boolean", {"input_boolean": {"boiler": {}, "pump": {}, "floor": {}}}
+    )
+    hass.states.async_set("climate.bedroom", "heat", {**TRV, "temperature": 21.0})
+    entry = await _house(
+        hass,
+        freezer,
+        [("Bedroom", {**ROOM, "circuit": "input_boolean.floor"})],
+        boiler_entity=BOILER,
+        secondary_source=PUMP,
+        circuits=["input_boolean.floor"],
+    )
+    _report(hass, "heating")
+    await _tick(hass, freezer, 5)
+    assert _on(hass, "input_boolean.floor") and _on(hass, BOILER)
+    changes: list[tuple[str, str]] = []
+
+    @callback
+    def _changed(event) -> None:
+        if event.data["entity_id"] in (BOILER, PUMP, "input_boolean.floor"):
+            changes.append((event.data["entity_id"], event.data["new_state"].state))
+
+    hass.bus.async_listen("state_changed", _changed)
+    await _choose(hass, freezer, "secondary")
+    assert changes == [(BOILER, "off"), (PUMP, "on")]
+    assert _on(hass, "input_boolean.floor")
+    # Warm: the pump stops first, then the circuit.
+    changes.clear()
+    _report(hass, "idle")
+    await _tick(hass, freezer, 5)
+    await _tick(hass, freezer, 5)
+    assert changes == [(PUMP, "off"), ("input_boolean.floor", "off")]
+    await _unload(hass, entry)
+
+
+async def test_minimum_times_and_the_pause(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A change of source does not wait for the minimum off time; a pause leaves both alone."""
+    entry = await _setup(hass, freezer, boiler_min_on=10, boiler_min_off=10)
+    _report(hass, "heating")
+    await _tick(hass, freezer, 5)
+    assert _on(hass, BOILER)
+    await _choose(hass, freezer, "secondary")
+    assert _on(hass, PUMP) and not _on(hass, BOILER)
+
+    # Paused: something else controls the heating; a boiler turned on by hand stays on.
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.home_pause"}, blocking=True
+    )
+    await _tick(hass, freezer, 5)
+    await hass.services.async_call("input_boolean", "turn_on", {"entity_id": BOILER}, blocking=True)
+    await _tick(hass, freezer, 65)
+    assert _on(hass, BOILER)
+    await _choose(hass, freezer, "primary")
+    assert _on(hass, PUMP)  # not switched in a pause either
+    await _unload(hass, entry)
+
+
+async def test_both_sources_unavailable_is_the_important_alert(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    entry = await _setup(hass, freezer, alert_unavailable_minutes=15)
+    hass.states.async_set(BOILER, "unavailable")
+    hass.states.async_set(PUMP, "unavailable")
+    await _tick(hass, freezer, 65)
+    await _tick(hass, freezer, 16 * 60)
+    active = entry.runtime_data.notifier.active
+    assert active[f"unavailable_{BOILER}"]["code"] == "source_unavailable"
+    assert active[f"unavailable_{PUMP}"]["code"] == "source_unavailable"
+    assert entry.runtime_data.heat_source_state() == (True, None)
+    await _unload(hass, entry)
+
+
+async def test_cold_below_in_fahrenheit(hass: HomeAssistant) -> None:
+    """The temperature of the cold criterion is shown and kept in the unit of the house."""
+    entry = _house_with_rooms(
+        hass,
+        options={
+            "temperature_unit": "fahrenheit",
+            "boiler_entity": "switch.boiler",
+            "secondary_source": "switch.pump",
+            "outdoor_sensor": "sensor.outdoor",
+        },
+    )
+    options, result = await _boiler_flow(
+        hass, entry, {"boiler_entity": "switch.boiler", "secondary_source": "switch.pump"}
+    )
+    result = await options.async_configure(result["flow_id"], {"source_criterion": "cold"})
+    field = next(k for k in result["data_schema"].schema if str(k) == "source_cold_below")
+    assert field.default() == 23.0  # −5 °C
+    result = await options.async_configure(
+        result["flow_id"], {"source_cold_below": 14, "source_switch_minutes": 15}
+    )
+    assert entry.options["source_cold_below"] == -10.0

@@ -55,8 +55,9 @@ base alle previsioni), gestisce una stagione di riscaldamento, aggiunge calore
 col gelo intenso e abbassa una stanza al sole.
 
 **Energia.** Accende la caldaia solo quando una stanza ne ha bisogno, segue
-una tariffa dinamica o il surplus fotovoltaico e conta il tempo di
-riscaldamento per giorno, settimana o mese.
+una tariffa dinamica o il surplus fotovoltaico, passa a una seconda fonte di
+calore (la pompa di calore finché c'è sole, la caldaia col gelo intenso) e
+conta il tempo di riscaldamento per giorno, settimana o mese.
 
 **Sicura.** Sempre l'antigelo, una temperatura massima, ogni comando
 controllato e rinviato se non è arrivato, avvisi per finestre aperte,

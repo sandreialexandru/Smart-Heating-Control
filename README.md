@@ -53,7 +53,9 @@ the forecast), keeps a heating season, adds heat in hard frost, and lowers a
 sunny room.
 
 **Energy.** Starts the boiler only when a room needs it, follows a dynamic
-tariff or solar surplus, and counts the heating time per day, week or month.
+tariff or solar surplus, switches to a second heat source (a heat pump while
+the sun shines, the boiler when it is very cold) and counts the heating time
+per day, week or month.
 
 **Safe.** Frost protection always, a maximum temperature, every command
 checked and sent again if it did not arrive, alerts for open windows,

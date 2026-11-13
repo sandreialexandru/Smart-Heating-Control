@@ -56,8 +56,9 @@ nach der Vorhersage), kennt eine Heizperiode, legt bei starkem Frost etwas
 drauf und senkt einen sonnigen Raum ab.
 
 **Energie.** Startet den Kessel nur, wenn ein Raum ihn braucht, folgt einem
-dynamischen Tarif oder PV-Überschuss und zählt die Heizzeit pro Tag, Woche
-oder Monat.
+dynamischen Tarif oder PV-Überschuss, wechselt zu einer zweiten Wärmequelle
+(die Wärmepumpe, solange die Sonne scheint, der Kessel bei starker Kälte) und
+zählt die Heizzeit pro Tag, Woche oder Monat.
 
 **Sicher.** Immer Frostschutz, eine Höchsttemperatur, jeder Befehl wird
 geprüft und erneut gesendet, wenn er nicht ankam, Warnungen bei offenen

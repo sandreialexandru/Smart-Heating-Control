@@ -58,8 +58,9 @@ d'après les prévisions), gère une saison de chauffe, ajoute un peu de chaleur
 par grand froid et baisse une pièce ensoleillée.
 
 **Énergie.** Ne démarre la chaudière que lorsqu'une pièce en a besoin, suit
-un tarif dynamique ou un surplus solaire, et compte le temps de chauffe par
-jour, semaine ou mois.
+un tarif dynamique ou un surplus solaire, passe sur une deuxième source de
+chaleur (la pompe à chaleur tant qu'il y a du soleil, la chaudière par grand
+froid) et compte le temps de chauffe par jour, semaine ou mois.
 
 **Sûr.** Toujours le hors-gel, une température maximale, chaque commande
 vérifiée et renvoyée si elle n'est pas arrivée, des alertes pour les fenêtres

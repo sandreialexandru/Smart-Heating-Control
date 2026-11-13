@@ -54,8 +54,9 @@ wijziging zo lang als je hebt gekozen en komt daarna het schema terug.
 bij strenge vorst en verlaagt een zonnige kamer.
 
 **Energie.** Start de ketel alleen als een kamer hem nodig heeft, volgt een
-dynamisch tarief of zonnestroomoverschot en telt de verwarmingstijd per dag,
-week of maand.
+dynamisch tarief of zonnestroomoverschot, schakelt over op een tweede
+warmtebron (de warmtepomp zolang de zon schijnt, de ketel bij strenge kou) en
+telt de verwarmingstijd per dag, week of maand.
 
 **Veilig.** Altijd vorstbeveiliging, een maximumtemperatuur, elke opdracht
 gecontroleerd en opnieuw verstuurd als die niet aankwam, meldingen bij open

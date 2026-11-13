@@ -54,8 +54,9 @@ prognoză), păstrează un sezon de încălzire, adaugă căldură la ger și co
 ținta unei camere însorite.
 
 **Energie.** Pornește centrala doar când o cameră are nevoie, urmează un
-tarif dinamic sau surplusul fotovoltaic și numără timpul de încălzire pe zi,
-săptămână sau lună.
+tarif dinamic sau surplusul fotovoltaic, trece pe o a doua sursă de căldură
+(pompa cât e soare, centrala când e foarte frig) și numără timpul de
+încălzire pe zi, săptămână sau lună.
 
 **Sigură.** Antiîngheț mereu, o temperatură maximă, fiecare comandă
 verificată și trimisă din nou dacă n-a ajuns, alerte pentru ferestre deschise,

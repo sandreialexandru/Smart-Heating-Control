@@ -321,7 +321,8 @@ Cardul spune de ce, iar senzorul *Decizie* are atributul `no_heat_reason`:
 
 - **Sursa de căldură indisponibilă** mai mult de *Alertă când un dispozitiv e
   indisponibil mai mult de* (implicit 15 minute): atunci nu se încălzește
-  deloc, nici pentru antiîngheț.
+  deloc, nici pentru antiîngheț. Cu o [sursă secundară](#sursă-secundară) care
+  merge, încălzește ea între timp, iar alerta e doar un avertisment.
 - **Releu de circuit indisponibil** mai mult de același timp: camerele
   circuitului lui nu primesc căldură (vezi [Circuite de
   încălzire](#circuite-de-încălzire)).
@@ -349,7 +350,9 @@ gol, ajustarea lui nu se folosește.
 Cu un *Senzor surplus fotovoltaic* (puterea trimisă în rețea, în W): cât
 surplusul e cel puțin *Surplus de la* (implicit 1000 W), se adaugă *Ajustare cu
 surplus* (implicit +0,5 °C). Util doar cu încălzire electrică sau pompă de
-căldură: energia proprie e folosită în loc să fie vândută ieftin.
+căldură: energia proprie e folosită în loc să fie vândută ieftin. Cu centrală
+și pompă de căldură, [sursa secundară](#sursă-secundară) poate și să treacă pe
+pompă cât e surplus.
 
 Ajustările de energie se adună cu celelalte (compensare, câștig solar), suma e
 limitată la ±3 °C și nu se aplică niciodată unui antiîngheț

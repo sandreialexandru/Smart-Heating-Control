@@ -320,7 +320,8 @@ attribute:
 
 - **The heat source is unavailable** longer than *Alert when a device is
   unavailable longer than* (15 minutes by default): then nothing heats, not even
-  frost protection.
+  frost protection. With a [secondary heat source](#secondary-heat-source) that
+  works, it heats meanwhile and the alert is only a warning.
 - **A circuit relay is unavailable** longer than the same time: the rooms of its
   circuit get no heat (see [Heating circuits](#heating-circuits)).
 - **Alert when a room stays colder than** (in the *Alerts* options, 0 = off by
@@ -348,7 +349,9 @@ its adjustment off.
 With a *PV surplus sensor* (the power exported to the grid, in W): while the
 surplus is at least *Surplus from* (1000 W by default), *Adjustment with
 surplus* (+0.5 °C by default) is added. Useful only with electric heating or a
-heat pump: you use your own energy instead of selling it cheaply.
+heat pump: you use your own energy instead of selling it cheaply. With a
+boiler and a heat pump, the [secondary heat source](#secondary-heat-source) can
+also switch to the heat pump while there is surplus.
 
 The energy adjustments add up with the others (compensation, solar gain), the
 sum is limited to ±3 °C and never applies to a frost protection (see

@@ -71,6 +71,10 @@ collapsed: true
 - **Scenariile**, câte trei pe rând în aceleași butoane ca modurile (câte două
   când sunt două sau patru), cel activ colorat la fel (când casa are, vezi
   [capitolul 4](04-program.ro.md#scenarii)).
+- **Sursa de căldură**, doar cu o sursă secundară: *Automat* (cu un criteriu)
+  și cele două surse cu numele lor, cu sursa în uz deasupra și, cât Automat
+  așteaptă, când se schimbă (vezi
+  [capitolul 8](08-sursa-si-energie.ro.md#sursă-secundară)).
 - Butoanele, 3 + 2: **Pauză** și **Oaspeți** (pornit / oprit), **Vacanță**
   (deschide datele vacanței), apoi **Reevaluează** și **Automat** (anulează
   toate modificările manuale); iconița e lângă nume, deasupra lui pe un card

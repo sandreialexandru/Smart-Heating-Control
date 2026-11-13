@@ -75,6 +75,25 @@ class NotificationTextsTest(unittest.TestCase):
 
 class ScenarioTextsTest(unittest.TestCase):
     def test_every_language(self) -> None:
-        source = (ROOT / "scenarios.py").read_text()
-        for lang in ("en", "ro", "de", "nl", "fr", "it"):
-            self.assertIn(f'    "{lang}": {{\n        "empty"', source)
+        """Read from the code, not its layout (the mutation tests rewrite it)."""
+        import ast
+
+        tree = ast.parse((ROOT / "scenarios.py").read_text())
+        texts = next(
+            node.value
+            for node in ast.walk(tree)
+            if isinstance(node, (ast.Assign, ast.AnnAssign))
+            and any(
+                isinstance(t, ast.Name) and t.id == "_TEXTS"
+                for t in (node.targets if isinstance(node, ast.Assign) else [node.target])
+            )
+        )
+        found = ast.literal_eval(texts)
+        self.assertEqual(set(found), {"en", "ro", "de", "nl", "fr", "it"})
+        for lang, keys in found.items():
+            with self.subTest(language=lang):
+                self.assertEqual(set(keys), set(found["en"]))
+                for key, text in found["en"].items():
+                    self.assertEqual(
+                        sorted(PLACEHOLDER.findall(keys[key])), sorted(PLACEHOLDER.findall(text))
+                    )

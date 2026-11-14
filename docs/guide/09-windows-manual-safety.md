@@ -58,6 +58,14 @@ until the device has shown the last value for 1 minute (some TRVs show the new
 value at once and then report the old one once more); after that any other value
 is a manual change.
 
+**The range of the entity.** Every thermostat gets temperatures within the
+*min_temp* / *max_temp* of its entity (Home Assistant refuses any other). A
+level below its minimum is sent as that minimum: e.g. a heat pump whose entity
+goes no lower than 16 °C is held at 16 °C during a vacation at 12 °C, and an
+alert tells it once (*… accepts at least 16 °C, so the room is held at 16 °C
+instead of 12 °C …*). Lower the minimum on the device, or in its app, for less;
+the alert ends when the entity shows the lower minimum.
+
 **Limits of the device.** Some TRVs have their own *Max temperature* /
 *Min temperature* on the device, narrower than the range of their entity (e.g.
 25 °C on a Tuya TRV whose entity goes to 35 °C). When a TRV reports less than the
@@ -265,6 +273,7 @@ as the recipient of the important alerts and of the warnings.
 | Heating for … h, but the temperature rose by only …° | see *Heating without effect* below |
 | Low battery on … | below *Low battery below* (20 % by default) |
 | … did not accept … | the command check failed twice |
+| … accepts at least …, so the room is held at … | the entity of the thermostat goes no lower than that minimum (above, *The range of the entity*) |
 | … accepts at most / at least … | the TRV keeps its own *Max / Min temperature* set on the device (above, *Limits of the device*) |
 | Some rooms stay cold while others are warm | with *Alert when a room stays colder than* |
 | The level … is not available on … | a preset chosen for a level is missing on the thermostat and its temperature is unknown |

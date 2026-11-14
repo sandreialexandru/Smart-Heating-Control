@@ -80,6 +80,11 @@ which the reference room could not.
 
 ### Fixed
 
+- 🌡️ **A thermostat that goes no lower than a minimum** (#14): the temperatures
+  sent stay within the *min_temp* of its entity, as they already did within its
+  *max_temp*. A heat pump whose entity stops at 16 °C was sent 12 °C in a
+  vacation, Home Assistant refused it and it was sent again and again; now it
+  is held at 16 °C and an alert tells it once.
 - ⏸️ A change made on the devices in a pause (a heat pump making hot water,
   an automation) is no longer a manual change: in a pause something else
   controls the heating, so when the pause ends the decision is sent again. A

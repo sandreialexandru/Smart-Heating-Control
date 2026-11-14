@@ -17,7 +17,7 @@
  *   runtime_period: day          # heating time shown for: day | week | month (tap to change)
  */
 
-const CARD_VERSION = "2.6.5rc12";
+const CARD_VERSION = "2.6.5rc13";
 
 // Decisions that last only a while: the planned part of the chart shows the schedule.
 const TEMPORARY_RULES = ["window_open", "frost_protection", "valve_exercise"];
@@ -359,6 +359,7 @@ const TEXT = {
     al_battery_low: "Low battery on {device} ({level}%).",
     al_device_limit_max: "{entity} accepts at most {value}: raise its Max temperature on the device if the room needs more.",
     al_device_limit_min: "{entity} accepts at least {value}: lower its Min temperature on the device for a lower frost protection.",
+    al_device_range_min: "{entity} accepts at least {value}, so the room is held at {value} instead of {target}: lower the minimum on the device (or in its app) if you want it lower.",
     al_weather_without_source: "On but not working without an outdoor temperature sensor or a weather entity: {features}.",
     al_boiler_min_rooms: "Rooms needed to start the heat source is {needed}, but the house has {rooms} rooms that can start it: the heat source starts only for frost protection.",
     al_outdoor_unavailable: "No outdoor temperature from {entities} for more than {minutes} min: the cutoff, the automatic season, the compensation and the optimal stop cannot use it.",
@@ -437,6 +438,7 @@ const TEXT = {
     at_battery_low: "Low battery",
     at_device_limit_max: "Device limit",
     at_device_limit_min: "Device limit",
+    at_device_range_min: "Device minimum",
     at_weather_without_source: "No outdoor temperature",
     at_boiler_min_rooms: "Heat source cannot start",
     at_outdoor_unavailable: "Outdoor temperature unavailable",
@@ -684,6 +686,7 @@ const TEXT = {
     al_battery_low: "Baterie descărcată la {device} ({level}%).",
     al_device_limit_max: "{entity} acceptă cel mult {value}: ridică Max temperature pe dispozitiv dacă e nevoie de mai mult.",
     al_device_limit_min: "{entity} acceptă cel puțin {value}: coboară Min temperature pe dispozitiv pentru un antiîngheț mai jos.",
+    al_device_range_min: "{entity} acceptă cel puțin {value}, așa că camera e ținută la {value} în loc de {target}: coboară minimul pe aparat (sau în aplicația lui) dacă o vrei mai jos.",
     al_weather_without_source: "Pornite, dar nu funcționează fără senzor de temperatură exterioară sau entitate meteo: {features}.",
     al_boiler_min_rooms: "Camere necesare pentru pornirea sursei de căldură: {needed}, dar casa are {rooms} camere care o pot porni: sursa de căldură pornește doar pentru antiîngheț.",
     al_outdoor_unavailable: "Nicio temperatură de afară de la {entities} de peste {minutes} min: oprirea când e cald, sezonul automat, compensarea și oprirea anticipată nu o pot folosi.",
@@ -762,6 +765,7 @@ const TEXT = {
     at_battery_low: "Baterie descărcată",
     at_device_limit_max: "Limita dispozitivului",
     at_device_limit_min: "Limita dispozitivului",
+    at_device_range_min: "Minimul dispozitivului",
     at_weather_without_source: "Fără temperatură exterioară",
     at_boiler_min_rooms: "Sursa de căldură nu poate porni",
     at_outdoor_unavailable: "Temperatura exterioară indisponibilă",
@@ -1008,6 +1012,7 @@ const TEXT = {
     al_battery_low: "Batterie schwach bei {device} ({level} %).",
     al_device_limit_max: "{entity} nimmt höchstens {value} an: Erhöhe am Gerät seine Max-Temperatur, wenn der Raum mehr braucht.",
     al_device_limit_min: "{entity} nimmt mindestens {value} an: Senke am Gerät seine Min-Temperatur für einen niedrigeren Frostschutz.",
+    al_device_range_min: "{entity} nimmt mindestens {value} an, daher wird der Raum auf {value} statt {target} gehalten: Senke das Minimum am Gerät (oder in seiner App), wenn du es niedriger willst.",
     al_weather_without_source: "Eingeschaltet, aber ohne Außentemperatursensor oder Wetter-Entität wirkungslos: {features}.",
     al_boiler_min_rooms: "Zum Starten der Wärmequelle sind {needed} Räume nötig, aber das Haus hat nur {rooms} Räume, die sie starten können: Die Wärmequelle startet nur für den Frostschutz.",
     al_outdoor_unavailable: "Seit mehr als {minutes} min keine Außentemperatur von {entities}: Abschaltung, automatische Heizperiode, Kompensation und optimaler Stopp können sie nicht nutzen.",
@@ -1086,6 +1091,7 @@ const TEXT = {
     at_battery_low: "Batterie schwach",
     at_device_limit_max: "Gerätegrenze",
     at_device_limit_min: "Gerätegrenze",
+    at_device_range_min: "Geräteminimum",
     at_weather_without_source: "Keine Außentemperatur",
     at_boiler_min_rooms: "Wärmequelle kann nicht starten",
     at_outdoor_unavailable: "Außentemperatur nicht verfügbar",
@@ -1333,6 +1339,7 @@ const TEXT = {
     al_battery_low: "Batterij bijna leeg bij {device} ({level}%).",
     al_device_limit_max: "{entity} accepteert hoogstens {value}: verhoog de maximumtemperatuur op het apparaat als de kamer meer nodig heeft.",
     al_device_limit_min: "{entity} accepteert minstens {value}: verlaag de minimumtemperatuur op het apparaat voor een lagere vorstbeveiliging.",
+    al_device_range_min: "{entity} accepteert minstens {value}, dus de kamer wordt op {value} gehouden in plaats van {target}: verlaag het minimum op het apparaat (of in de app) als je het lager wilt.",
     al_weather_without_source: "Aan, maar werkt niet zonder buitentemperatuursensor of weerentiteit: {features}.",
     al_boiler_min_rooms: "Er zijn {needed} kamers nodig om de warmtebron te starten, maar het huis heeft {rooms} kamers die hem kunnen starten: de warmtebron start alleen voor vorstbeveiliging.",
     al_outdoor_unavailable: "Al meer dan {minutes} min geen buitentemperatuur van {entities}: de afschakeling, het automatische seizoen, de compensatie en de optimale stop kunnen hem niet gebruiken.",
@@ -1411,6 +1418,7 @@ const TEXT = {
     at_battery_low: "Batterij bijna leeg",
     at_device_limit_max: "Grens van het apparaat",
     at_device_limit_min: "Grens van het apparaat",
+    at_device_range_min: "Minimum van het apparaat",
     at_weather_without_source: "Geen buitentemperatuur",
     at_boiler_min_rooms: "Warmtebron kan niet starten",
     at_outdoor_unavailable: "Buitentemperatuur onbeschikbaar",
@@ -1658,6 +1666,7 @@ const TEXT = {
     al_battery_low: "Batterie faible sur {device} ({level} %).",
     al_device_limit_max: "{entity} accepte au maximum {value} : augmentez sa température max sur l'appareil si la pièce a besoin de plus.",
     al_device_limit_min: "{entity} accepte au minimum {value} : baissez sa température min sur l'appareil pour un hors-gel plus bas.",
+    al_device_range_min: "{entity} accepte au minimum {value} : la pièce est donc maintenue à {value} au lieu de {target}. Baissez le minimum sur l'appareil (ou dans son application) si vous la voulez plus basse.",
     al_weather_without_source: "Activé mais sans effet sans capteur de température extérieure ni entité météo : {features}.",
     al_boiler_min_rooms: "Il faut {needed} pièces pour démarrer la source de chaleur, mais la maison n'a que {rooms} pièces capables de la démarrer : la source ne démarre que pour le hors-gel.",
     al_outdoor_unavailable: "Aucune température extérieure de {entities} depuis plus de {minutes} min : la coupure, la saison automatique, la compensation et l'arrêt optimal ne peuvent pas l'utiliser.",
@@ -1736,6 +1745,7 @@ const TEXT = {
     at_battery_low: "Batterie faible",
     at_device_limit_max: "Limite de l'appareil",
     at_device_limit_min: "Limite de l'appareil",
+    at_device_range_min: "Minimum de l'appareil",
     at_weather_without_source: "Pas de température extérieure",
     at_boiler_min_rooms: "La source ne peut pas démarrer",
     at_outdoor_unavailable: "Température extérieure indisponible",
@@ -1983,6 +1993,7 @@ const TEXT = {
     al_battery_low: "Batteria scarica su {device} ({level}%).",
     al_device_limit_max: "{entity} accetta al massimo {value}: alza la sua temperatura massima sul dispositivo se la stanza ha bisogno di più.",
     al_device_limit_min: "{entity} accetta almeno {value}: abbassa la sua temperatura minima sul dispositivo per un antigelo più basso.",
+    al_device_range_min: "{entity} accetta almeno {value}, quindi la stanza resta a {value} invece di {target}: abbassa il minimo sul dispositivo (o nella sua app) se la vuoi più bassa.",
     al_weather_without_source: "Attivo ma senza effetto senza un sensore di temperatura esterna o un'entità meteo: {features}.",
     al_boiler_min_rooms: "Servono {needed} stanze per accendere la fonte di calore, ma la casa ha solo {rooms} stanze che possono accenderla: la fonte si accende solo per l'antigelo.",
     al_outdoor_unavailable: "Nessuna temperatura esterna da {entities} da più di {minutes} min: lo spegnimento, la stagione automatica, la compensazione e lo spegnimento ottimale non possono usarla.",
@@ -2061,6 +2072,7 @@ const TEXT = {
     at_battery_low: "Batteria scarica",
     at_device_limit_max: "Limite del dispositivo",
     at_device_limit_min: "Limite del dispositivo",
+    at_device_range_min: "Minimo del dispositivo",
     at_weather_without_source: "Nessuna temperatura esterna",
     at_boiler_min_rooms: "La fonte di calore non può partire",
     at_outdoor_unavailable: "Temperatura esterna non disponibile",

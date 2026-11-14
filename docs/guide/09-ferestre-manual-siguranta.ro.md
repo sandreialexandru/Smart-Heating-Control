@@ -58,6 +58,14 @@ dispozitivul înainte de fiecare comandă, până când dispozitivul arată ulti
 TRV-uri arată imediat valoarea nouă, apoi mai raportează o dată pe cea veche);
 după aceea orice altă valoare e o modificare manuală.
 
+**Intervalul entității.** Fiecare termostat primește temperaturi în
+*min_temp* / *max_temp* ale entității lui (Home Assistant refuză orice altceva).
+Un nivel sub minimul lui e trimis ca acel minim: de exemplu o pompă de căldură a
+cărei entitate nu coboară sub 16 °C e ținută la 16 °C într-o vacanță la 12 °C, iar
+o alertă spune asta o dată (*… acceptă cel puțin 16 °C, așa că camera e ținută la
+16 °C în loc de 12 °C …*). Pentru mai puțin, coboară minimul pe aparat sau în
+aplicația lui; alerta se încheie când entitatea arată minimul mai mic.
+
 **Limitele dispozitivului.** Unele TRV-uri au pe dispozitiv propriile *Max
 temperature* / *Min temperature*, mai înguste decât intervalul entității (de
 exemplu 25 °C pe un TRV Tuya a cărui entitate merge până la 35 °C). Când un TRV
@@ -266,6 +274,7 @@ pentru avertizări.
 | Încălzește de … h, dar temperatura a crescut doar cu …° | vezi *Încălzire fără efect* mai jos |
 | Baterie descărcată la … | sub *Baterie descărcată sub* (implicit 20 %) |
 | … nu a acceptat … | verificarea comenzilor a eșuat de două ori |
+| … acceptă cel puțin …, așa că camera e ținută la … | entitatea termostatului nu coboară sub acel minim (mai sus, *Intervalul entității*) |
 | … acceptă cel mult / cel puțin … | TRV-ul ține propria limită *Max / Min temperature* de pe dispozitiv (mai sus, *Limitele dispozitivului*) |
 | Unele camere rămân reci, altele sunt calde | cu *Alertă când o cameră rămâne mai rece cu* |
 | Nivelul … nu există pe … | un preset ales pentru un nivel lipsește de pe termostat și temperatura lui e necunoscută |

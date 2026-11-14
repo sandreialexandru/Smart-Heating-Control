@@ -329,6 +329,8 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         # Limits a thermostat applies on the device itself, below its entity range
         # (e.g. "Max temperature" 25 on a Tuya TRV whose entity goes to 35).
         self.limits = DeviceLimits(DEVICE_LIMIT_KEEP)
+        # The minimum of a thermostat entity told to the user: {entity: its min_temp}.
+        self.range_min_told: dict[str, float] = {}
 
     # ------------------------------------------------------------------
     # Setup

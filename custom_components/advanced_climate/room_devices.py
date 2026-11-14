@@ -487,6 +487,42 @@ class RoomDevices:
             value = min(value, high)
         if low is not None:
             value = max(value, low)
+        return self._within_entity_range(state, value)
+
+    def _within_entity_range(self, state: State, value: float) -> float:
+        """The value within the range of the entity (Home Assistant refuses any other).
+
+        Below its minimum (e.g. a heat pump that goes no lower than 16 for a
+        vacation at 12) the room is held at that minimum, and told so once.
+        """
+        entity_id = state.entity_id
+        high = float_attr(state, "max_temp")
+        low = float_attr(state, "min_temp")
+        told = self.range_min_told.get(entity_id)
+        if told is not None and (low is None or low < told - 1e-9):
+            # The minimum was lowered on the device: the alert no longer applies.
+            del self.range_min_told[entity_id]
+            self.house.clear_alert(f"range_{entity_id}_min")
+        if high is not None and value > high:
+            value = high
+        if low is not None and value < low - 1e-9:
+            if told is None or told != low:
+                self.range_min_told[entity_id] = low
+                unit = system_unit(self.hass)
+                self.house.notify(
+                    f"range_{entity_id}_min",
+                    f"{self.name}: {entity_id} accepts at least {low:g} {unit}, so the room "
+                    f"is held at {low:g} {unit} instead of {value:g} {unit}: lower the "
+                    "minimum on the device (or in its app) if you want it lower.",
+                    code="device_range_min",
+                    params={
+                        "entity": entity_id,
+                        "value": f"{low:g} {unit}",
+                        "target": f"{value:g} {unit}",
+                    },
+                    room=self.id,
+                )
+            value = low
         return value
 
     def _device_limit(self, entity_id: str, kind: str) -> float | None:

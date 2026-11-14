@@ -414,3 +414,49 @@ async def test_two_profiles_chosen_one_after_the_other_both_stay(
         "guests": True,
     }
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_trv_that_goes_back_to_auto_by_itself_is_left_in_auto(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Tuya TRV602Z (#15): put in heat it reports auto again a moment later. Before,
+    it was put in heat again and again (every second); now it is left in auto."""
+    from homeassistant.core import ServiceCall, callback
+
+    temps = async_mock_service(hass, "climate", "set_temperature")
+    modes: list[ServiceCall] = []
+
+    @callback
+    def _set_mode(call: ServiceCall) -> None:
+        modes.append(call)
+        # Heat for a moment (as Home Assistant shows it), then the TRV reports auto
+        # again: within seconds of the call, so with its context (as an entity does).
+        attrs = {**TRV_AUTO, "temperature": 21.0}
+        hass.states.async_set("climate.trv", "heat", attrs, context=call.context)
+        hass.loop.call_soon(
+            lambda: hass.states.async_set("climate.trv", "auto", attrs, context=call.context)
+        )
+
+    hass.services.async_register("climate", "set_hvac_mode", _set_mode)
+    hass.states.async_set("climate.trv", "auto", {**TRV_AUTO, "temperature": 21.0})
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"},
+            )
+        ],
+    )
+    for _ in range(10):
+        await _tick(hass, freezer, 2)
+    await _tick(hass, freezer, 310)
+    await _tick(hass, freezer, 310)
+    assert len(modes) == 1  # tried once
+    assert hass.states.get("climate.trv").state == "auto"
+    room = _room(entry, "Office")
+    assert "climate.trv" in room.keeps_auto
+    assert room.decision.rule != "manual_override"
+    assert len(temps) <= 2
+    await _unload(hass, entry)

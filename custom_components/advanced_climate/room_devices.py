@@ -85,6 +85,8 @@ if TYPE_CHECKING:
 
 # The same logger as the rest of the room, so the log lines keep their name.
 _LOGGER = logging.getLogger(__name__.rsplit(".", 1)[0] + ".room")
+# Back in auto within this time after being put in heat: the thermostat keeps auto.
+AUTO_RETURN_WINDOW = timedelta(minutes=10)
 
 
 class RoomDevices:
@@ -380,11 +382,26 @@ class RoomDevices:
         mode), and the Preset command leaves the mode alone (presets may need
         auto).
         """
-        return (
+        if not (
             self.command_mode == COMMAND_TEMPERATURE
             and state.state == "auto"
             and "heat" in (state.attributes.get("hvac_modes") or [])
-        )
+        ):
+            return False
+        entity_id = state.entity_id
+        if entity_id in self.keeps_auto:
+            return False
+        left = self.auto_left_at.get(entity_id)
+        if left is not None and dt_util.utcnow() - left < AUTO_RETURN_WINDOW:
+            # Put in heat a moment ago and back in auto by itself (some Tuya TRVs
+            # cannot be put in heat from Home Assistant): left in auto from now
+            # on, as before 2.6.4, instead of being put in heat again and again.
+            self.keeps_auto.add(entity_id)
+            _LOGGER.info(
+                "Room %s: %s goes back to auto by itself, it is left in auto", self.name, entity_id
+            )
+            return False
+        return True
 
     def _holds(self, state: State, target: Target) -> bool:
         """The thermostat holds the temperature of the target (in its own unit)."""
@@ -439,6 +456,8 @@ class RoomDevices:
         if (state.state == STATE_OFF and on_mode) or (
             self._own_schedule_mode(state) and self._holds(state, target)
         ):
+            if state.state != STATE_OFF:
+                self.auto_left_at[entity_id] = dt_util.utcnow()
             await self._send(entity_id, "set_hvac_mode", "hvac_mode", on_mode or "heat", "state")
 
         if target.kind == KIND_PRESET and self.command_mode == COMMAND_PRESET:

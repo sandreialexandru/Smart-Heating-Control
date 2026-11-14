@@ -80,6 +80,11 @@ which the reference room could not.
 
 ### Fixed
 
+- 🔁 **A TRV switching between auto and heat again and again** (#15, Tuya
+  TRV602Z, since 2.6.4): put in *heat* from *auto*, some TRVs report *auto*
+  again a second later, and they were put in *heat* again, every second. A TRV
+  that goes back to *auto* by itself within 10 minutes is now left in *auto*,
+  as before 2.6.4.
 - 🌡️ **A thermostat that goes no lower than a minimum** (#14): the temperatures
   sent stay within the *min_temp* of its entity, as they already did within its
   *max_temp*. A heat pump whose entity stops at 16 °C was sent 12 °C in a

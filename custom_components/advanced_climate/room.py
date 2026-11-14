@@ -331,6 +331,10 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self.limits = DeviceLimits(DEVICE_LIMIT_KEEP)
         # The minimum of a thermostat entity told to the user: {entity: its min_temp}.
         self.range_min_told: dict[str, float] = {}
+        # Thermostats put from auto in heat, and when (to see if they go back by themselves).
+        self.auto_left_at: dict[str, datetime] = {}
+        # Thermostats that go back to auto by themselves: left in auto.
+        self.keeps_auto: set[str] = set()
 
     # ------------------------------------------------------------------
     # Setup

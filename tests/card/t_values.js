@@ -174,6 +174,17 @@ test("house scenarios: a button each, the active one marked, a click chooses it"
   ok(!(await p.evaluate(() => !!card.shadowRoot.querySelector(".scenarios"))), "no row without scenarios");
 });
 
+test("a target below the minimum of the device: held at it, in the reason and the details", async (p) => {
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Living", preset: "away", target: 12, heldAt: 16 }] });
+  const text = await p.evaluate(() => card.shadowRoot.innerHTML);
+  ok(text.includes("held at 16"), "reason says held at 16");
+  ok(text.includes("the minimum of the device"), "why");
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Living", preset: "away", target: 12, heldAt: 16 }], lang: "ro" });
+  ok((await p.evaluate(() => card.shadowRoot.innerHTML)).includes("ținut la 16"), "Romanian");
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Living", preset: "away", target: 12 }] });
+  ok(!(await p.evaluate(() => card.shadowRoot.innerHTML)).includes("held at"), "not without a minimum");
+});
+
 test("heat source: Automatic and both sources by their names, the one in use and the next switch", async (p) => {
   const at = new Date(Date.now() + 10 * 60e3).toISOString();
   await mount(p, {}, { rooms: R, source: { state: "auto", options: ["auto", "primary", "secondary"], active: "primary", switch_at: at } });

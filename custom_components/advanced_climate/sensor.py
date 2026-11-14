@@ -277,6 +277,8 @@ class DecisionSensor(RoomEntity, SensorEntity):
             "preset": decision.target.preset if decision else None,
             "temperature_unit": unit,
             "target_temperature": _t(room.target_temperature, unit),
+            # Held higher by the minimum of the thermostat entity (None: as targeted).
+            "held_at": _t(room.held_at(), unit, 1),
             "current_temperature": _t(room.current_temp, unit),
             "offsets": [[label, _d(delta, unit)] for label, delta in decision.offsets]
             if decision

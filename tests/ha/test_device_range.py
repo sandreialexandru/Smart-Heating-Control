@@ -73,3 +73,20 @@ async def test_within_the_range_nothing_changes(
     assert _sent(temps)[-1] == 12.0
     assert not [k for k in entry.runtime_data.notifier.active if k.startswith("range_")]
     await _unload(hass, entry)
+
+
+async def test_the_decision_tells_the_temperature_held(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    async_mock_service(hass, "climate", "set_temperature")
+    async_mock_service(hass, "climate", "set_hvac_mode")
+    hass.states.async_set("climate.daikin", "heat", {**HP, "temperature": 21.0})
+    entry = await _house(hass, freezer, [("Living", ROOM)])
+    await _tick(hass, freezer, 5)
+    assert hass.states.get("sensor.living_decision").attributes["held_at"] is None
+    await entry.runtime_data.async_set_mode("vacation")
+    await _tick(hass, freezer, 5)
+    attrs = hass.states.get("sensor.living_decision").attributes
+    assert attrs["target_temperature"] == 12.0
+    assert attrs["held_at"] == 16.0
+    await _unload(hass, entry)

@@ -63,7 +63,8 @@ is a manual change.
 level below its minimum is sent as that minimum: e.g. a heat pump whose entity
 goes no lower than 16 °C is held at 16 °C during a vacation at 12 °C, and an
 alert tells it once (*… accepts at least 16 °C, so the room is held at 16 °C
-instead of 12 °C …*). Lower the minimum on the device, or in its app, for less;
+instead of 12 °C …*); the card adds *held at 16°, the minimum of the device* to
+the reason. Lower the minimum on the device, or in its app, for less;
 the alert ends when the entity shows the lower minimum.
 
 **Limits of the device.** Some TRVs have their own *Max temperature* /

@@ -1429,6 +1429,32 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             return False
         return self.target_temperature <= self.frost_temp()
 
+    def held_at(self) -> float | None:
+        """The minimum of its thermostats (°C) when the target is below it, else None.
+
+        Home Assistant accepts no temperature below the min_temp of an entity: a
+        target below it is held at that minimum (shown in the card).
+        """
+        target = self.target_temperature
+        if (
+            target is None
+            or self.decision is None
+            or self.decision.target.kind == KIND_OFF
+            or self.source not in (SOURCE_CLIMATE, SOURCE_GT)
+            or self.command_mode == COMMAND_HVAC
+            or (self.decision.target.preset and self.sends_preset(self.decision.target.preset))
+        ):
+            return None
+        minimums = [
+            value
+            for entity_id in self.climates
+            if (value := climate_temp(self.hass, self.hass.states.get(entity_id), "min_temp"))
+            is not None
+        ]
+        if not minimums or max(minimums) <= target + 0.05:
+            return None
+        return max(minimums)
+
     def temperature_gap(self) -> float | None:
         """Degrees below the target (negative when above)."""
         if self.current_temp is None or self.target_temperature is None:

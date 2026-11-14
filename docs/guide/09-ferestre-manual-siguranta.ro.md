@@ -63,7 +63,8 @@ după aceea orice altă valoare e o modificare manuală.
 Un nivel sub minimul lui e trimis ca acel minim: de exemplu o pompă de căldură a
 cărei entitate nu coboară sub 16 °C e ținută la 16 °C într-o vacanță la 12 °C, iar
 o alertă spune asta o dată (*… acceptă cel puțin 16 °C, așa că camera e ținută la
-16 °C în loc de 12 °C …*). Pentru mai puțin, coboară minimul pe aparat sau în
+16 °C în loc de 12 °C …*); cardul adaugă la motiv *ținut la 16°, minimul
+aparatului*. Pentru mai puțin, coboară minimul pe aparat sau în
 aplicația lui; alerta se încheie când entitatea arată minimul mai mic.
 
 **Limitele dispozitivului.** Unele TRV-uri au pe dispozitiv propriile *Max

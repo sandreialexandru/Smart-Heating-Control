@@ -404,6 +404,7 @@ const TEXT = {
     rs_arriving: "someone is on the way home",
     rs_vacation_preheat: "vacation ends soon: preheating",
     rs_limited: "limited to {limited}",
+    rs_held_at: "held at {temp}, the minimum of the device",
     rs_stop_cancelled: "optimal stop cancelled: the room got colder than expected",
     off_compensation: "outdoor compensation",
     off_tariff_high: "high tariff",
@@ -731,6 +732,7 @@ const TEXT = {
     rs_arriving: "cineva e pe drum spre casă",
     rs_vacation_preheat: "vacanța se termină curând: preîncălzire",
     rs_limited: "limitat la {limited}",
+    rs_held_at: "ținut la {temp}, minimul aparatului",
     rs_stop_cancelled: "oprire anticipată anulată: camera s-a răcit mai repede decât se aștepta",
     off_compensation: "compensare exterioară",
     off_tariff_high: "tarif ridicat",
@@ -1058,6 +1060,7 @@ const TEXT = {
     rs_arriving: "jemand ist auf dem Heimweg",
     rs_vacation_preheat: "der Urlaub endet bald: Vorheizen",
     rs_limited: "begrenzt auf {limited}",
+    rs_held_at: "auf {temp} gehalten, das Minimum des Geräts",
     rs_stop_cancelled: "optimaler Stopp abgebrochen: Der Raum wurde kälter als erwartet",
     off_compensation: "Außenkompensation",
     off_tariff_high: "hoher Tarif",
@@ -1385,6 +1388,7 @@ const TEXT = {
     rs_arriving: "iemand is onderweg naar huis",
     rs_vacation_preheat: "de vakantie is bijna voorbij: voorverwarmen",
     rs_limited: "beperkt tot {limited}",
+    rs_held_at: "op {temp} gehouden, het minimum van het apparaat",
     rs_stop_cancelled: "optimale stop afgebroken: de kamer werd kouder dan verwacht",
     off_compensation: "buitencompensatie",
     off_tariff_high: "hoog tarief",
@@ -1712,6 +1716,7 @@ const TEXT = {
     rs_arriving: "quelqu'un rentre à la maison",
     rs_vacation_preheat: "les vacances se terminent bientôt : préchauffage",
     rs_limited: "limité à {limited}",
+    rs_held_at: "maintenu à {temp}, le minimum de l'appareil",
     rs_stop_cancelled: "arrêt optimal annulé : la pièce s'est refroidie plus que prévu",
     off_compensation: "compensation extérieure",
     off_tariff_high: "tarif élevé",
@@ -2039,6 +2044,7 @@ const TEXT = {
     rs_arriving: "qualcuno sta tornando a casa",
     rs_vacation_preheat: "la vacanza finisce presto: preriscaldamento",
     rs_limited: "limitato a {limited}",
+    rs_held_at: "tenuto a {temp}, il minimo del dispositivo",
     rs_stop_cancelled: "spegnimento ottimale annullato: la stanza si è raffreddata più del previsto",
     off_compensation: "compensazione esterna",
     off_tariff_high: "tariffa alta",
@@ -3625,7 +3631,13 @@ class SmartHeatingControlCard extends HTMLElement {
     if (offsets) text += ` (${offsets})`;
     if (p.limited !== undefined) text += ` (${fill(this._t("rs_limited"))})`;
     if (p.stop_cancelled) text += ` (${this._t("rs_stop_cancelled")})`;
+    if (num(a.held_at) !== null) text += ` (${this._heldAt(a)})`;
     return text;
+  }
+
+  /** The thermostat holds more than the target: its entity goes no lower. */
+  _heldAt(a) {
+    return this._t("rs_held_at").replace("{temp}", this._temp(a.held_at));
   }
 
   /** Name of an adjustment of the target. */
@@ -4694,7 +4706,10 @@ class SmartHeatingControlCard extends HTMLElement {
     const runtimeHtml = runtime ? `<div>${this._runtimeButton(e.heating_runtime, "dt")}</div>` : "";
     const temps = `<dl class="details">
         ${dl(this._t("room_temp"), esc(this._temp(a.current_temperature)))}
-        ${dl(this._t("target"), esc(this._temp(a.target_temperature)))}
+        ${dl(
+          this._t("target"),
+          `${esc(this._temp(a.target_temperature))}${num(a.held_at) !== null ? `<small class="sub">${esc(this._heldAt(a))}</small>` : ""}`
+        )}
         ${devicePreset !== null ? dl(this._t("device_preset"), esc(devicePreset)) : ""}
         ${
           a.trv_boost

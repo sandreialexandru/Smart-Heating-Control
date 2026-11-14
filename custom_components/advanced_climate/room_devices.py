@@ -86,7 +86,7 @@ if TYPE_CHECKING:
 # The same logger as the rest of the room, so the log lines keep their name.
 _LOGGER = logging.getLogger(__name__.rsplit(".", 1)[0] + ".room")
 # Back in auto within this time after being put in heat: the thermostat keeps auto.
-AUTO_RETURN_WINDOW = timedelta(minutes=10)
+AUTO_RETURN_WINDOW = timedelta(minutes=5)
 
 
 class RoomDevices:

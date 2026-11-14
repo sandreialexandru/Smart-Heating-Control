@@ -460,3 +460,70 @@ async def test_trv_that_goes_back_to_auto_by_itself_is_left_in_auto(
     assert room.decision.rule != "manual_override"
     assert len(temps) <= 2
     await _unload(hass, entry)
+
+
+async def _trv_obeying_heat(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
+    """A TRV in auto that takes heat when told (the state follows the command)."""
+    from homeassistant.core import ServiceCall, callback
+
+    modes: list[ServiceCall] = []
+
+    @callback
+    def _set_mode(call: ServiceCall) -> None:
+        modes.append(call)
+        state = hass.states.get("climate.trv")
+        hass.states.async_set(
+            "climate.trv", call.data["hvac_mode"], state.attributes, context=call.context
+        )
+
+    hass.services.async_register("climate", "set_hvac_mode", _set_mode)
+    async_mock_service(hass, "climate", "set_temperature")
+    hass.states.async_set("climate.trv", "auto", {**TRV_AUTO, "temperature": 21.0})
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {"source": "climate", "climates": ["climate.trv"], "command_mode": "temperature"},
+            )
+        ],
+    )
+    await _tick(hass, freezer, 5)
+    assert modes and modes[-1].data["hvac_mode"] == "heat"
+    assert hass.states.get("climate.trv").state == "heat"
+    return entry, modes
+
+
+async def test_a_late_return_to_auto_is_not_a_manual_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A TRV that reports auto again only a minute after heat: the device, not a person."""
+    entry, modes = await _trv_obeying_heat(hass, freezer)
+    room = _room(entry, "Office")
+    assert "climate.trv" not in room.keeps_auto
+    # A minute later, outside the context of the command: back in auto.
+    await _tick(hass, freezer, 60)
+    hass.states.async_set("climate.trv", "auto", {**TRV_AUTO, "temperature": 21.0}, Context())
+    await _tick(hass, freezer, 5)
+    assert room.decision.rule != "manual_override"
+    assert "climate.trv" in room.keeps_auto
+    sent = len(modes)
+    await _tick(hass, freezer, 310)
+    await _tick(hass, freezer, 310)
+    assert len(modes) == sent
+    await _unload(hass, entry)
+
+
+async def test_auto_by_hand_after_the_window_is_a_manual_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Auto chosen by a person later than 5 minutes after heat: a manual change."""
+    entry, _modes = await _trv_obeying_heat(hass, freezer)
+    room = _room(entry, "Office")
+    await _tick(hass, freezer, 6 * 60)
+    hass.states.async_set("climate.trv", "auto", {**TRV_AUTO, "temperature": 21.0}, Context())
+    await _tick(hass, freezer, 5)
+    assert room.decision.rule == "manual_override"
+    assert "climate.trv" not in room.keeps_auto
+    await _unload(hass, entry)

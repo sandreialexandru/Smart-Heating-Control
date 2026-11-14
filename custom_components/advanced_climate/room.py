@@ -659,6 +659,8 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             self._remember_preset_temp(new)
             if self._check_device_limit(entity_id, old, new):
                 pass  # its own limit, not a person
+            elif self._check_auto_return(entity_id, old, new):
+                pass  # back in auto by itself after heat, not a person
             elif self._is_manual_change(event, old, new):
                 self._device_changed(entity_id, new)
             else:

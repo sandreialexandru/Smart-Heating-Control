@@ -84,7 +84,8 @@ which the reference room could not.
   TRV602Z, since 2.6.4): put in *heat* from *auto*, some TRVs report *auto*
   again a second later, and they were put in *heat* again, every second. A TRV
   that goes back to *auto* by itself within 5 minutes is now left in *auto*,
-  as before 2.6.4.
+  as before 2.6.4. That return is the device, not a manual change, also when
+  it is reported late (with the same temperature).
 - 🌡️ **A thermostat that goes no lower than a minimum** (#14): the temperatures
   sent stay within the *min_temp* of its entity, as they already did within its
   *max_temp*. A heat pump whose entity stops at 16 °C was sent 12 °C in a

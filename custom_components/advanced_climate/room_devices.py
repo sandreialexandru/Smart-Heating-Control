@@ -403,6 +403,30 @@ class RoomDevices:
             return False
         return True
 
+    def _check_auto_return(self, entity_id: str, old: State | None, new: State | None) -> bool:
+        """True when a thermostat put in heat goes back to auto by itself (not a person).
+
+        Within ``AUTO_RETURN_WINDOW`` of being put in heat, with the same
+        temperature: the device does it (some Tuya TRVs cannot stay in heat),
+        also when it reports late, after the context of the command. It is left
+        in auto from then on.
+        """
+        if old is None or new is None or not valid(old) or not valid(new):
+            return False
+        if new.state != "auto" or old.state == "auto":
+            return False
+        left = self.auto_left_at.get(entity_id)
+        if left is None or dt_util.utcnow() - left >= AUTO_RETURN_WINDOW:
+            return False
+        if float_attr(old, ATTR_TEMPERATURE) != float_attr(new, ATTR_TEMPERATURE):
+            return False
+        if entity_id not in self.keeps_auto:
+            self.keeps_auto.add(entity_id)
+            _LOGGER.info(
+                "Room %s: %s goes back to auto by itself, it is left in auto", self.name, entity_id
+            )
+        return True
+
     def _holds(self, state: State, target: Target) -> bool:
         """The thermostat holds the temperature of the target (in its own unit)."""
         temperature = self._climate_temperature(target)

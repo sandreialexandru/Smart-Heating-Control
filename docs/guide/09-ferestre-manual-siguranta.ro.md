@@ -11,7 +11,9 @@ reacționează pe cameră.
 
 1. Fereastra se deschide. Dacă rămâne deschisă *Întârziere la deschidere*
    (implicit 60 de secunde), camera trece pe *Când o fereastră e deschisă*:
-   - **Antiîngheț** (implicit): camera păstrează temperatura minimă;
+   - **Antiîngheț** (implicit): camera păstrează temperatura minimă; un
+     termostat care nu acceptă atât de puțin (un AC cu minimul 16 °C) e oprit
+     în schimb, dacă se poate, ca să nu încălzească fereastra deschisă;
    - **Oprire**: încălzirea se oprește (la dispozitivele care nu se pot opri, se
      trimite antiînghețul).
 2. Fereastra se închide. După *Întârziere la închidere* (implicit 30 de

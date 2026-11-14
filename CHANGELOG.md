@@ -86,7 +86,9 @@ which the reference room could not.
   vacation, Home Assistant refused it and it was sent again and again; now it
   is held at 16 °C and an alert tells it once. The card says it next to the
   reason (*held at 16°, the minimum of the device*); the *Decision* sensor has
-  it as `held_at`.
+  it as `held_at`. With a window open (*Frost protection*), such a thermostat
+  is turned off instead, if it can be, rather than heating the open window at
+  its minimum; *Mode off* keeps it at its minimum (frost protection).
 - ⏸️ A change made on the devices in a pause (a heat pump making hot water,
   an automation) is no longer a manual change: in a pause something else
   controls the heating, so when the pause ends the decision is sent again. A

@@ -11,7 +11,9 @@ reacts per room.
 
 1. The window opens. If it stays open for the *Open delay* (60 seconds by
    default), the room uses *When a window is open*:
-   - **Frost protection** (default): the room keeps the minimum temperature;
+   - **Frost protection** (default): the room keeps the minimum temperature; a
+     thermostat that accepts nothing that low (an AC whose minimum is 16 °C) is
+     turned off instead, if it can be, so it does not heat the open window;
    - **Turn off**: the heating stops (devices that cannot be turned off get the
      frost protection temperature).
 2. The window closes. After the *Close delay* (30 seconds by default), the room

@@ -269,7 +269,7 @@ aplică stabilește nivelul.
 2. **Pauză**
 3. **Mișcarea robinetelor** – în orice mod, nu cu o fereastră deschisă
 4. **Mod Oprit / Vară / în afara sezonului**
-5. **Fereastră deschisă**
+5. **Fereastră deschisă** (antiîngheț sub minimul entității termostatului: oprit, dacă se poate opri)
 6. **Modificare manuală**
 7. **Vacanță** (o zi fără profil activ: antiîngheț, peste `away`)
 8. **Modul Plecat** – `away` (o zi fără profil activ: antiîngheț)

@@ -103,6 +103,36 @@ class RuleOrderTest(unittest.TestCase):
             window_action=const.WINDOW_ACTION_OFF,
         )
 
+    def test_window_below_the_minimum_of_the_device(self) -> None:
+        """Frost protection below what the thermostat accepts (an AC at 16): off instead."""
+        d = self.check(const.RULE_WINDOW, "off", window_open=True, device_min=16.0)
+        self.assertEqual(d.key, "window_off")
+        # Exactly at it, or above: frost protection as usual.
+        self.check(
+            const.RULE_WINDOW, "temperature", temperature=7.0, window_open=True, device_min=7.0
+        )
+        self.check(
+            const.RULE_WINDOW, "temperature", temperature=7.0, window_open=True, device_min=7.04
+        )
+        self.check(const.RULE_WINDOW, "off", window_open=True, device_min=7.06)
+        # A device without off: held at its minimum (frost protection is sent).
+        self.check(
+            const.RULE_WINDOW,
+            "temperature",
+            temperature=7.0,
+            window_open=True,
+            device_min=16.0,
+            supports_off=False,
+        )
+        # Mode off stays frost protection, even below the minimum.
+        self.check(
+            const.RULE_MODE_OFF,
+            "temperature",
+            temperature=7.0,
+            mode=const.MODE_OFF,
+            device_min=16.0,
+        )
+
     def test_modes(self) -> None:
         self.check(const.RULE_MODE_OFF, "temperature", temperature=7.0, mode=const.MODE_OFF)
         self.check(const.RULE_SUMMER, "off", mode=const.MODE_SUMMER)

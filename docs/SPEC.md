@@ -267,7 +267,7 @@ applies sets the level.
 2. **Pause**
 3. **Valve exercise** – in every mode, not with a window open
 4. **Mode Off / Summer / out of season**
-5. **Window open**
+5. **Window open** (frost protection below the minimum of the thermostat entity: off, if it can be turned off)
 6. **Manual change**
 7. **Vacation** (a day without an active profile: frost protection, above `away`)
 8. **Mode Away** – `away` (a day without an active profile: frost protection)

@@ -133,6 +133,8 @@ class RoomInputs:
     level_temp: Callable[[str], float | None]
     offsets: list[tuple[str, float]] = field(default_factory=list)
     supports_off: bool = True
+    # The highest minimum of the thermostat entities (°C): below it nothing is accepted.
+    device_min: float | None = None
     exercise_temp: float | None = None
     # Highest temperature set on the thermostats now (a manual change keeps it).
     device_setpoint: float | None = None
@@ -228,7 +230,14 @@ def base_decision(inputs: RoomInputs) -> Decision:
             key="out_of_season",
         )
     if inputs.window_open:
-        if inputs.window_action == WINDOW_ACTION_OFF:
+        # Frost protection below what the thermostat accepts would heat the open
+        # window at its minimum (an AC at 16): turned off instead, when it can be.
+        below_device = (
+            inputs.supports_off
+            and inputs.device_min is not None
+            and inputs.frost_temp < inputs.device_min - 0.05
+        )
+        if inputs.window_action == WINDOW_ACTION_OFF or below_device:
             return Decision(RULE_WINDOW, _off(inputs), "Window open: heating off", key="window_off")
         return Decision(
             RULE_WINDOW,

@@ -187,3 +187,28 @@ async def test_minimum_in_fahrenheit(hass: HomeAssistant, freezer: FrozenDateTim
     held = hass.states.get("sensor.living_decision").attributes["held_at"]
     assert held is not None
     await _unload(hass, entry)
+
+
+async def test_an_open_window_turns_off_a_device_that_cannot_go_to_frost(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """An AC at 16 minimum: with the window open it is turned off, not heating at 16."""
+    temps = _mock(hass)
+    modes = async_mock_service(hass, "climate", "set_hvac_mode")
+    hass.states.async_set("climate.daikin", "heat", {**HP, "temperature": 21.0})
+    hass.states.async_set("binary_sensor.window", "off", {"device_class": "window"})
+    entry = await _house(
+        hass, freezer, [("Living", {**ROOM, "window_sensors": ["binary_sensor.window"]})]
+    )
+    await _tick(hass, freezer, 5)
+    hass.states.async_set("binary_sensor.window", "on", {"device_class": "window"})
+    await _tick(hass, freezer, 5)
+    await _tick(hass, freezer, 300)
+    await _tick(hass, freezer, 5)
+    room = _room(entry, "Living")
+    assert room.decision.key == "window_off"
+    assert [c.data["hvac_mode"] for c in modes if c.data["entity_id"] == "climate.daikin"][
+        -1
+    ] == "off"
+    assert 16.0 not in _sent(temps)
+    await _unload(hass, entry)

@@ -593,6 +593,111 @@ class SunTest(unittest.TestCase):
         self.assertFalse(learning.ThermalLearner.from_dict(bad).model.learned)
 
 
+class LearningSumsTest(unittest.TestCase):
+    """The sums behind the model, checked number by number."""
+
+    T0 = datetime(2026, 11, 1, tzinfo=TZ)
+
+    def test_old_stretches_weigh_half_after_seven_days(self) -> None:
+        # 7 days of stretches of 30 minutes: 336 of them.
+        self.assertAlmostEqual(learning.FORGET ** (7 * 24 * 2), 0.5, places=12)
+
+    def test_the_mean_outdoor_temperature_is_weighted_by_time(self) -> None:
+        learner = learning.ThermalLearner()
+        # 0 °C, then 10 °C after 10 minutes (mean 5 for 10 minutes), then still
+        # 10 °C 20 minutes later (10 for 20 minutes).
+        for minute, out in ((0, 0.0), (10, 10.0), (30, 10.0)):
+            learner.observe(self.T0 + timedelta(minutes=minute), False, 20.0, out)
+        f = learning.FORGET
+        total = f * (5.0 * 10 / 60) + 10.0 * 20 / 60
+        weight = f * (10 / 60) + 20 / 60
+        self.assertAlmostEqual(learner.outdoor_sum, total, places=12)
+        self.assertAlmostEqual(learner.outdoor_weight, weight, places=12)
+        self.assertAlmostEqual(learner.model.outdoor_mean, total / weight, places=12)
+        # Kept and read back.
+        again = learning.ThermalLearner.from_dict(learner.as_dict())
+        self.assertAlmostEqual(again.model.outdoor_mean, total / weight, places=12)
+
+    def test_no_mean_without_the_outdoor_temperature(self) -> None:
+        learner = learning.ThermalLearner()
+        for minute, out in ((0, 4.0), (10, None), (20, 6.0)):
+            learner.observe(self.T0 + timedelta(minutes=minute), False, 20.0, out)
+        self.assertEqual(learner.outdoor_weight, 0.0)
+        self.assertIsNone(learner.model.outdoor_mean)
+
+    def _stretch(self, learner, start: int, heated_minutes: int) -> bool:
+        """A stretch of 30 minutes, one observation a minute, heating for the
+        first ``heated_minutes``; True when it was learned."""
+        learned = False
+        for minute in range(31):
+            now = self.T0 + timedelta(minutes=start + minute)
+            learned = (
+                learner.observe(now, minute < heated_minutes, 20.0 + minute / 100, 5.0) or learned
+            )
+        return learned
+
+    def test_heated_and_idle_stretches_at_their_limits(self) -> None:
+        learner = learning.ThermalLearner()
+        # Heating half of the time: a heated stretch (q ≥ 0.5).
+        self.assertTrue(self._stretch(learner, 0, 15))
+        self.assertEqual((learner.heat_windows, learner.idle_windows), (1.0, 0.0))
+        # A fifth of the time: an idle one (q ≤ 0.2); the first one is forgotten a little.
+        self.assertTrue(self._stretch(learner, 30, 6))
+        f = learning.FORGET
+        self.assertEqual((learner.heat_windows, learner.idle_windows), (f, 1.0))
+        # In between: neither.
+        self.assertTrue(self._stretch(learner, 60, 9))
+        self.assertEqual((learner.heat_windows, learner.idle_windows), (f * f, f))
+
+    def test_a_new_fit_starts_from_nothing(self) -> None:
+        fit = learning._Fit(tau=30.0)
+        self.assertEqual(fit.as_list(), [30.0] + [0.0] * (len(fit.as_list()) - 1))
+        self.assertEqual((fit.q_area, fit.q_out_area), (0.0, 0.0))
+        # With nothing learned, the small pull gives the default: 1 °C per hour, no loss.
+        self.assertEqual(fit.solve(), (learning.DEFAULT_RATE, 0.0, 0.0, 0.0))
+        self.assertEqual(learning.ThermalModel().minutes_per_degree(20.0, 5.0), 60.0)
+
+    def test_the_sun_must_be_clear_of_the_noise(self) -> None:
+        fit = learning._Fit(tau=0.0)
+        fit.error, fit.weight = 4.0, 1.0
+        matrix = [[1.0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 1.0]]
+        use = [0, 3]
+        # Variance of the gain: the usual squared error (4) times its element of
+        # the inverse (1 / (1 + ridge)); it must be 5 standard errors from 0.
+        limit = learning.SUN_T_MIN * math.sqrt(4.0 / 1.0 * (1.0 / (1.0 + learning.RIDGE)))
+        self.assertTrue(fit._sun_seen(matrix, use, limit))
+        self.assertFalse(fit._sun_seen(matrix, use, limit * 0.999))
+        self.assertFalse(fit._sun_seen(matrix, use, -limit * 2))
+        # A tiny error: a small gain is clear; none is not.
+        fit.error = 1e-6
+        self.assertTrue(fit._sun_seen(matrix, use, 0.5))
+        self.assertFalse(fit._sun_seen(matrix, use, 0.0))
+        # Without any error the gain cannot be judged.
+        fit.error = 0.0
+        self.assertFalse(fit._sun_seen(matrix, use, 1.0))
+        # Nothing learned yet, or a weight below one stretch.
+        fit.error, fit.weight = 1e-6, 0.0
+        self.assertFalse(fit._sun_seen(matrix, use, 1.0))
+        fit.weight = 0.5
+        self.assertTrue(fit._sun_seen(matrix, use, 1.0))
+        # The sums cannot be solved: not seen.
+        singular = [[1.0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, -learning.RIDGE]]
+        self.assertFalse(fit._sun_seen(singular, use, 1.0))
+        # The other unknowns count: with the loss as well, the variance is the same
+        # here (no link between them), so the same limit.
+        fit.error, fit.weight = 4.0, 1.0
+        both = [[1.0, 0, 0, 0], [0, 1.0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 1.0]]
+        self.assertTrue(fit._sun_seen(both, [0, 1, 3], limit))
+        self.assertFalse(fit._sun_seen(both, [0, 1, 3], limit * 0.999))
+        # Heating and sun seen together: the sun is less certain. The element of
+        # the inverse of [[2 + r, 1], [1, 2 + r]] for the sun is (2 + r) / ((2 + r)² − 1).
+        linked = [[2.0, 0, 0, 1.0], [0, 0, 0, 0], [0, 0, 0, 0], [1.0, 0, 0, 2.0]]
+        d = 2.0 + learning.RIDGE
+        wider = learning.SUN_T_MIN * math.sqrt(4.0 * d / (d * d - 1.0))
+        self.assertTrue(fit._sun_seen(linked, use, wider * 1.0001))
+        self.assertFalse(fit._sun_seen(linked, use, wider * 0.999))
+
+
 class ExpectedOutdoorTest(unittest.TestCase):
     """The outdoor temperature expected during an optimal start / stop."""
 

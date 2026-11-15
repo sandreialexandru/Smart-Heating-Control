@@ -403,6 +403,65 @@ async def test_fahrenheit_forms(hass: HomeAssistant) -> None:
     assert round(entry.options["frost_temp"], 2) == 8.0
 
 
+async def test_fahrenheit_limits_and_differences(hass: HomeAssistant) -> None:
+    """In °F, temperatures move by 32 °F and 1.8 per degree; differences only by
+    1.8; other numbers and the switches stay as they are."""
+    hass.states.async_set(
+        "sensor.outdoor", "5", {"device_class": "temperature", "unit_of_measurement": "°C"}
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        options={
+            "temperature_unit": "fahrenheit",
+            "outdoor_sensor": "sensor.outdoor",
+            "cutoff_enabled": True,
+            "compensation_enabled": True,
+            "cutoff_temp": 15.0,
+            "cutoff_hysteresis": 1.0,
+            "cutoff_avg_hours": 6,
+        },
+    )
+    entry.add_to_hass(hass)
+    flow = hass.config_entries.options
+    result = await flow.async_init(entry.entry_id)
+    result = await flow.async_configure(result["flow_id"], {"next_step_id": "weather"})
+    result = await flow.async_configure(
+        result["flow_id"],
+        {"outdoor_sensor": "sensor.outdoor", "cutoff_enabled": True, "compensation_enabled": True},
+    )
+    assert result["step_id"] == "weather_details"
+    fields = {str(k): (k, v) for k, v in result["data_schema"].schema.items()}
+
+    def limits(key: str) -> tuple:
+        config = fields[key][1].config
+        return config["min"], config["max"], config["step"], config.get("unit_of_measurement")
+
+    # 5 … 30 °C, absolute.
+    assert limits("cutoff_temp") == (41.0, 86.0, 0.5, "°F")
+    # 0 … 5 °C, a difference.
+    assert limits("cutoff_hysteresis") == (0.0, 9.0, 0.1, "°F")
+    # −30 … 15 °C, absolute; −3 … 3 °C, a difference.
+    assert limits("compensation_below") == (-22.0, 59.0, 0.5, "°F")
+    assert limits("compensation_offset") == (-5.4, 5.4, 0.1, "°F")
+    # Hours stay hours.
+    assert limits("cutoff_avg_hours") == (1, 48, 1, "h")
+    # The stored values, shown in °F: 15 °C → 59 °F, a difference of 1 °C → 1.8 °F.
+    assert fields["cutoff_temp"][0].default() == 59.0
+    assert fields["cutoff_hysteresis"][0].default() == 1.8
+    assert fields["cutoff_avg_hours"][0].default() == 6
+    data = {str(k): k.default() for k in result["data_schema"].schema if callable(k.default)}
+    result = await flow.async_configure(
+        result["flow_id"],
+        {**data, "cutoff_temp": 64.4, "cutoff_hysteresis": 0.9, "cutoff_avg_hours": 12},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options["cutoff_temp"] == 18.0
+    assert entry.options["cutoff_hysteresis"] == 0.5
+    assert entry.options["cutoff_avg_hours"] == 12
+    assert entry.options["cutoff_enabled"] is True
+
+
 async def test_reconfigure_unit(hass: HomeAssistant) -> None:
     """The unit of the house is changed with Reconfigure."""
     entry = MockConfigEntry(domain=DOMAIN, title="Home", options={"persons": []})
@@ -1414,3 +1473,26 @@ async def test_hysteresis_asked_for_a_trv_topped_up(hass: HomeAssistant) -> None
             "heat",
             {"hvac_action": "idle", "temperature": 21, "current_temperature": 20},
         )
+
+
+async def test_the_heat_source_answers_left_empty(hass: HomeAssistant) -> None:
+    """A room of a house with a heat source: on it, starting it and not topped up
+    unless chosen."""
+    hass.states.async_set("switch.boiler", "off")
+    hass.states.async_set("climate.trv", "heat", {"hvac_modes": ["heat", "off"]})
+    entry = MockConfigEntry(domain=DOMAIN, title="Home", options={"boiler_entity": "switch.boiler"})
+    entry.add_to_hass(hass)
+    flow = hass.config_entries.subentries
+    result = await flow.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
+    result = await flow.async_configure(result["flow_id"], {"name": "Office", "source": "climate"})
+    result = await flow.async_configure(
+        result["flow_id"], {"climates": ["climate.trv"], "command_mode": "temperature"}
+    )
+    assert result["step_id"] == "house_source"
+    result = await flow.async_configure(result["flow_id"], {})
+    result = await _until(hass, result, flow, stop={FlowResultType.CREATE_ENTRY})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    room = next(iter(entry.subentries.values())).data
+    assert room["use_house_source"] is True
+    assert room["starts_house_source"] is True
+    assert room["top_up"] is False

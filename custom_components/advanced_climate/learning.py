@@ -89,7 +89,6 @@ HEAT_WINDOW_Q = 0.5
 IDLE_WINDOW_Q = 0.2
 # Before the model is learned: 1 °C per hour (60 minutes per degree), no loss.
 DEFAULT_RATE = 1.0
-DEFAULT_MINUTES_PER_DEGREE = 60.0
 # Stretches with an error beyond this many times the usual one weigh less.
 ROBUST_LIMIT = 2.5
 ROBUST_MIN_WINDOWS = 10

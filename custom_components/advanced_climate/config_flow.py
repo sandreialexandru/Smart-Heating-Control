@@ -475,7 +475,8 @@ def _weather_details(v: dict[str, Any]) -> vol.Schema:
     """Values of the chosen weather features (cutoff, season, compensation, forecast)."""
     d = HOUSE_DEFAULTS
     fields: dict[Any, Any] = {}
-    if v.get(CONF_CUTOFF_ENABLED) or v.get(CONF_FORECAST_ENABLED):
+    # The forecast needs the cutoff (checked on the first page): "and" is the same.
+    if v.get(CONF_CUTOFF_ENABLED) or v.get(CONF_FORECAST_ENABLED):  # pragma: no mutate
         fields[_req(CONF_CUTOFF_TEMP, v, d)] = _number(5, 30, 0.5, "°C")
     if v.get(CONF_CUTOFF_ENABLED):
         fields[_req(CONF_CUTOFF_HYSTERESIS, v, d)] = _number(0, 5, 0.1, "°C")

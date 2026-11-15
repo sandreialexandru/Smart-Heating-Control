@@ -335,6 +335,10 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self.auto_left_at: dict[str, datetime] = {}
         # Thermostats that go back to auto by themselves: left in auto.
         self.keeps_auto: set[str] = set()
+        # Commands to each device (a loop guard), and the pauses after too many.
+        self.command_times: dict[str, list[datetime]] = {}
+        self.commands_paused_until: dict[str, datetime] = {}
+        self.commands_paused_at: dict[str, datetime] = {}
 
     # ------------------------------------------------------------------
     # Setup

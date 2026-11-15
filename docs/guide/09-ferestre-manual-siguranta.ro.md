@@ -243,7 +243,9 @@ opțiuni (*Alerte*), după cât de importante sunt:
 - **avertizări**: toate celelalte alerte din lista de mai jos. În orele de
   liniște așteaptă sfârșitul lor și se trimit doar dacă mai sunt valabile;
 - **informații**: ce a făcut casa singură: a început sau s-a încheiat sezonul
-  de încălzire, a început o vacanță planificată, casa se încălzește înainte de
+  de încălzire, încălzirea s-a oprit pentru că e cald afară sau pornește din
+  nou pentru că se face frig (după media măsurată sau după prognoză, cu media
+  ei), a început o vacanță planificată, casa se încălzește înainte de
   întoarcere, a pornit sau s-a încheiat vacanța automată, modul oaspeți s-a
   oprit singur. Nu apar în card.
 
@@ -277,6 +279,7 @@ pentru avertizări.
 | Încălzește de … h, dar temperatura a crescut doar cu …° | vezi *Încălzire fără efect* mai jos |
 | Baterie descărcată la … | sub *Baterie descărcată sub* (implicit 20 %) |
 | … nu a acceptat … | verificarea comenzilor a eșuat de două ori |
+| … a primit … comenzi în … min, ceva îl tot schimbă înapoi … | un aparat e schimbat înapoi iar și iar (programul lui, o automatizare, un TRV care nu păstrează valoarea): fără comenzi către el 15 min, ca să-i cruțe bateria; alerta se încheie după o oră liniștită |
 | … acceptă cel puțin …, așa că camera e ținută la … | entitatea termostatului nu coboară sub acel minim (mai sus, *Intervalul entității*) |
 | … acceptă cel mult / cel puțin … | TRV-ul ține propria limită *Max / Min temperature* de pe dispozitiv (mai sus, *Limitele dispozitivului*) |
 | Unele camere rămân reci, altele sunt calde | cu *Alertă când o cameră rămâne mai rece cu* |

@@ -87,6 +87,13 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__.rsplit(".", 1)[0] + ".room")
 # Back in auto within this time after being put in heat: the thermostat keeps auto.
 AUTO_RETURN_WINDOW = timedelta(minutes=5)
+# More commands than this to one device in COMMAND_WINDOW: something keeps
+# changing it back (a loop). Commands to it pause for COMMAND_PAUSE (battery, radio).
+COMMAND_LIMIT = 40
+COMMAND_WINDOW = timedelta(minutes=10)
+COMMAND_PAUSE = timedelta(minutes=15)
+# The alert ends this long after the last pause.
+COMMAND_CALM = timedelta(hours=1)
 
 
 class RoomDevices:
@@ -98,7 +105,13 @@ class RoomDevices:
     # Commands
     # ------------------------------------------------------------------
     async def _call(self, domain: str, service: str, data: dict[str, Any]) -> bool:
-        """Call a service with the context of the integration; False when it fails."""
+        """Call a service with the context of the integration; False when it fails.
+
+        A device getting too many commands (a loop) gets none for a while.
+        """
+        entity_id = data.get(ATTR_ENTITY_ID)
+        if isinstance(entity_id, str) and not self._command_allowed(entity_id):
+            return False
         try:
             await self.hass.services.async_call(
                 domain, service, data, blocking=True, context=self.house.new_context()
@@ -107,6 +120,48 @@ class RoomDevices:
             _LOGGER.warning("Room %s: %s.%s failed: %s", self.name, domain, service, err)
             return False
         return True
+
+    def _command_allowed(self, entity_id: str) -> bool:
+        """Count a command to a device; False while it is paused for too many commands."""
+        now = dt_util.utcnow()
+        until = self.commands_paused_until.get(entity_id)
+        if until is not None and now < until:
+            return False
+        last = self.commands_paused_at.get(entity_id)
+        if last is not None and now - last >= COMMAND_PAUSE + COMMAND_CALM:
+            # Calm again for long enough: the alert ends.
+            del self.commands_paused_at[entity_id]
+            self.house.clear_alert(f"commands_{entity_id}")
+        times = [t for t in self.command_times.get(entity_id, []) if now - t < COMMAND_WINDOW]
+        times.append(now)
+        self.command_times[entity_id] = times
+        if len(times) <= COMMAND_LIMIT:
+            return True
+        self.command_times[entity_id] = []
+        self.commands_paused_until[entity_id] = now + COMMAND_PAUSE
+        self.commands_paused_at[entity_id] = now
+        count = len(times) - 1
+        window = round(COMMAND_WINDOW.total_seconds() / 60)
+        pause = round(COMMAND_PAUSE.total_seconds() / 60)
+        _LOGGER.warning(
+            "Room %s: %s got %d commands in %d min, something keeps changing it back: "
+            "no commands to it for %d min (battery, radio)",
+            self.name,
+            entity_id,
+            count,
+            window,
+            pause,
+        )
+        self.house.notify(
+            f"commands_{entity_id}",
+            f"{self.name}: {entity_id} got {count} commands in {window} min, something keeps "
+            f"changing it back: commands paused for {pause} min to save its battery. Check "
+            "its own schedule or automations.",
+            code="commands_paused",
+            params={"device": entity_id, "count": count, "window": window, "pause": pause},
+            room=self.id,
+        )
+        return False
 
     async def _async_apply(self, target: Target, *, force: bool = False) -> None:
         """Send the commands needed to reach ``target``."""

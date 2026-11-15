@@ -243,7 +243,9 @@ matter:
 - **warnings**: every other alert of the list below. In the quiet hours they
   wait until the quiet hours end and are sent only if they still apply;
 - **information**: what the house did by itself: the heating season started or
-  ended, a planned vacation started, the house warms up before your return, the
+  ended, the heating stopped because it is warm outside or starts again because
+  it gets cold (by the measured average or by the forecast, with its mean), a
+  planned vacation started, the house warms up before your return, the
   automatic vacation started or ended, guest mode ended by itself. Not shown in
   the card.
 
@@ -276,6 +278,7 @@ as the recipient of the important alerts and of the warnings.
 | Heating for … h, but the temperature rose by only …° | see *Heating without effect* below |
 | Low battery on … | below *Low battery below* (20 % by default) |
 | … did not accept … | the command check failed twice |
+| … got … commands in … min, something keeps changing it back … | a device is changed back again and again (its own schedule, an automation, a TRV that does not keep the value): no commands to it for 15 min, to save its battery; the alert ends after a calm hour |
 | … accepts at least …, so the room is held at … | the entity of the thermostat goes no lower than that minimum (above, *The range of the entity*) |
 | … accepts at most / at least … | the TRV keeps its own *Max / Min temperature* set on the device (above, *Limits of the device*) |
 | Some rooms stay cold while others are warm | with *Alert when a room stays colder than* |

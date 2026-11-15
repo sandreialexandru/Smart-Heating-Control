@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import Context, HomeAssistant
 from pytest_homeassistant_custom_component.common import async_mock_service
@@ -211,4 +213,63 @@ async def test_an_open_window_turns_off_a_device_that_cannot_go_to_frost(
         -1
     ] == "off"
     assert 16.0 not in _sent(temps)
+    await _unload(hass, entry)
+
+
+async def test_too_many_commands_to_a_device_pause_it(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A device that keeps changing back (a loop): after 40 commands in 10 min, a pause."""
+    from homeassistant.core import ServiceCall, callback
+
+    sent: list[ServiceCall] = []
+
+    @callback
+    def _set_temperature(call: ServiceCall) -> None:
+        sent.append(call)
+        # It takes the value, then puts its own back at once (within the context).
+        attrs = {**HP, "min_temp": 5.0, "temperature": call.data["temperature"]}
+        hass.states.async_set("climate.daikin", "heat", attrs, context=call.context)
+        back = {**attrs, "temperature": 23.0}
+        hass.loop.call_soon(
+            lambda: hass.states.async_set("climate.daikin", "heat", back, context=call.context)
+        )
+
+    hass.services.async_register("climate", "set_temperature", _set_temperature)
+    async_mock_service(hass, "climate", "set_hvac_mode")
+    hass.states.async_set("climate.daikin", "heat", {**HP, "min_temp": 5.0, "temperature": 23.0})
+    entry = await _house(hass, freezer, [("Living", ROOM)])
+    for _ in range(120):
+        await _tick(hass, freezer, 2)
+    house = entry.runtime_data
+    assert 40 <= len(sent) <= 41  # stopped at the limit, not hundreds
+    alert = house.notifier.active["commands_climate.daikin"]
+    assert alert["code"] == "commands_paused"
+    assert alert["params"]["window"] == 10 and alert["params"]["pause"] == 15
+    count = len(sent)
+    await _tick(hass, freezer, 10 * 60)
+    assert len(sent) == count  # paused
+    await _tick(hass, freezer, 6 * 60)
+    assert len(sent) > count  # the pause is over: tried again
+    await _unload(hass, entry)
+
+
+async def test_the_command_alert_ends_after_a_calm_hour(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    _mock(hass)
+    hass.states.async_set("climate.daikin", "heat", {**HP, "temperature": 21.0})
+    entry = await _house(hass, freezer, [("Living", ROOM)])
+    room = _room(entry, "Living")
+    room.command_times.clear()  # the commands of the start
+    for _ in range(40):
+        assert room._command_allowed("climate.daikin")
+    assert not room._command_allowed("climate.daikin")
+    assert "commands_climate.daikin" in entry.runtime_data.notifier.active
+    freezer.tick(timedelta(minutes=16))
+    assert room._command_allowed("climate.daikin")
+    assert "commands_climate.daikin" in entry.runtime_data.notifier.active
+    freezer.tick(timedelta(minutes=60))
+    assert room._command_allowed("climate.daikin")
+    assert "commands_climate.daikin" not in entry.runtime_data.notifier.active
     await _unload(hass, entry)

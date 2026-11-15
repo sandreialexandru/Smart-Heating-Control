@@ -21,6 +21,9 @@ which the reference room could not.
 
 ### New
 
+- 🌦️ **The weather tells what it does**: when the heating stops because it is
+  warm outside, or starts again because it gets cold, the house says so
+  (information), by the measured average or by the forecast, with its mean.
 - 🏠 **Secondary rooms**: *Can start the house heat source* (per room, on by
   default, asked only for a room that heats from the heat source of the house).
   Off: the room never starts the boiler for itself and does not count for
@@ -80,6 +83,11 @@ which the reference room could not.
 
 ### Fixed
 
+- 🛑 **A brake on command loops**: a device that gets more than 40 commands in
+  10 minutes (something keeps changing it back: its own schedule, an
+  automation, a TRV that does not keep the value) gets none for 15 minutes,
+  with a warning, to save its battery and the radio. The alert ends after a
+  calm hour.
 - 🔁 **A TRV switching between auto and heat again and again** (#15, Tuya
   TRV602Z, since 2.6.4): put in *heat* from *auto*, some TRVs report *auto*
   again a second later, and they were put in *heat* again, every second. A TRV

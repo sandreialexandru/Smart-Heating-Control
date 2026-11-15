@@ -126,6 +126,7 @@ from .const import (
     STORAGE_VERSION,
     SUBENTRY_ROOM,
 )
+from .engine import fmt_temp
 from .notifier import Notifier
 from .outdoor import OutdoorTracker, expected_outdoor
 from .presence import (
@@ -1921,12 +1922,15 @@ class House:
         # The planned vacation (its dates), guests aside: they only suspend it.
         planned = self.mode != MODE_VACATION and not self.auto_vacation and self._vacation_set(now)
         states = {
+            "cutoff": self.cutoff_active,
             "season": self.season_active,
             "vacation": planned,
             "preheat": self.vacation_preheating(now),
         }
         told = self._told
         # Only changes are told, never the state found at the start.
+        if told.get("cutoff") is not None and states["cutoff"] != told["cutoff"]:
+            self._inform_cutoff(bool(states["cutoff"]))
         if told.get("season") is not None and states["season"] != told["season"]:
             self.inform("season_on" if states["season"] else "season_off")
         if told.get("vacation") is False and states["vacation"]:
@@ -1934,6 +1938,24 @@ class House:
         if told.get("preheat") is False and states["preheat"]:
             self.inform("vacation_preheat")
         self._told = states
+
+    def _inform_cutoff(self, off: bool) -> None:
+        """Tell why the heating stopped (warm outside) or may run again (cold coming).
+
+        By the measured average or by the forecast, with its mean and hours.
+        """
+        reason = self.cutoff_reason
+        forecast = reason in ("forecast_warm", "forecast_cold")
+        if forecast:
+            value = self.forecast_mean
+            hours = float(self.options[CONF_FORECAST_HOURS])
+        else:
+            value = self.outdoor_average
+            hours = self.average_hours
+        code = ("weather_off" if off else "weather_on") + ("_forecast" if forecast else "")
+        params: dict[str, Any] = {"hours": f"{hours:g}"}
+        params["temp"] = fmt_temp(value, self.unit) if value is not None else "?"
+        self.inform(code, params)
 
     def _check_room_difference(self) -> None:
         """Alert when some rooms stay cold while others reached their target."""

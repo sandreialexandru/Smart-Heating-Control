@@ -148,6 +148,8 @@ stay below its target until another room starts the boiler again.
   by the whole hysteresis and asked by itself (a sensor of a tenth of a degree would
   otherwise start and stop it again and again). When its target changes (e.g.
   from 18 to 21 °C at 06:00), it is looked at again against the new target.
+  This holds only for a top up: a room that reached its target by its own
+  heating (it asked for heat) can still be topped up later.
 - With a circuit, only while that circuit is already open (no pump is started
   for a few tenths of a degree). Its learning skips that time, as when kept
   open.

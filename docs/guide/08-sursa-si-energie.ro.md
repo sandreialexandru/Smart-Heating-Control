@@ -152,6 +152,9 @@ rămână sub țintă până când altă cameră pornește din nou centrala.
   până nu coboară cu tot histerezisul și cere singură (altfel un senzor cu o zecime de grad ar
   porni-o și opri-o din nou și din nou). Când i se schimbă ținta (de exemplu
   de la 18 la 21 °C la 06:00), se verifică din nou față de ținta nouă.
+  Asta e valabil doar pentru încălzirea la ocazie: o cameră care a ajuns la
+  țintă prin încălzirea ei obișnuită (a cerut căldură) poate fi încălzită la
+  ocazie mai târziu.
 - Cu un circuit, doar cât acel circuit e deja deschis (nu se pornește o pompă
   pentru câteva zecimi de grad). Învățarea ei sare peste acest timp, ca la
   ținerea deschisă.

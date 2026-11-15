@@ -514,6 +514,8 @@ class RoomDevices:
     def forget_auto_returns(self) -> None:
         """The room is reconfigured: its thermostats are tried in heat again."""
         self.keeps_auto.clear()
+        self.reports_heating.clear()
+        self.max_sent.clear()
         self.auto_returns.clear()
         self.auto_left_at.clear()
         self.house.async_save()
@@ -949,7 +951,9 @@ class RoomDevices:
                     entity_id, "set_hvac_mode", "hvac_mode", on_mode if want else STATE_OFF, "state"
                 )
                 if want:
-                    await self._async_heat_to_max(entity_id)
+                    await self._async_heat_to_max(entity_id, turned_on=True)
+                else:
+                    self.max_sent.discard(entity_id)
         if ok:
             self._relay_on = want
             self._relay_held = held and want
@@ -958,14 +962,26 @@ class RoomDevices:
                 self._relay_changed = now
         return ok
 
-    async def _async_heat_to_max(self, entity_id: str) -> None:
+    async def _async_heat_to_max(self, entity_id: str, *, turned_on: bool = False) -> None:
         """An on / off thermostat that is on heats as far as it can: its own
         target (at 20 with the room at 21) would close it before the room is
-        warm. The room sensor turns it off."""
+        warm. The room sensor turns it off.
+
+        Sent once per time it is on (turned on, or found on): one that keeps
+        its own limit, or a schedule preset that ignores the temperature, is
+        not sent it again and again. A change made on it sends it again.
+        """
         state = self.hass.states.get(entity_id)
         if not valid(state):
             return
         assert state is not None
+        if not turned_on and entity_id in self.max_sent:
+            return
+        self.max_sent.add(entity_id)
+        if entity_id not in self.keeps_auto and (manual := _manual_preset(state)) is not None:
+            # On its schedule preset: put on manual, so it takes the temperature.
+            self.auto_left_at[entity_id] = dt_util.utcnow()
+            await self._send(entity_id, "set_preset_mode", "preset_mode", manual)
         current = float_attr(state, ATTR_TEMPERATURE)
         value = self._device_value(state, self.max_temp())
         if current is not None and current != value:

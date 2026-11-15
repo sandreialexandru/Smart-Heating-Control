@@ -62,6 +62,7 @@ class Trv:
     refuses_on: tuple[str, ...] = ()  # presets on which it keeps its temperature
     preset_temps: dict[str, float] = field(default_factory=dict)
     report_delay: float = 0.0  # a cloud device reports late
+    own_limit: float | None = None  # keeps at most this, whatever its max_temp says
     # Its own regulation: opens below target - band, closes above target + band.
     band: float = 0.2
     valve_open: bool = False
@@ -182,6 +183,8 @@ class House:
                 trv.target = float(call.data["temperature"])
                 if trv.step:
                     trv.target = round(trv.target / trv.step) * trv.step
+                if trv.own_limit is not None:
+                    trv.target = min(trv.target, trv.own_limit)
             if trv.heat_on_temperature_for is not None and trv.state == "auto":
                 trv.state = "heat"
 
@@ -483,6 +486,48 @@ async def test_two_days_of_an_on_off_thermostat(
     entry = await _house(hass, freezer, rooms)
     await house.run(48)
     house.check(2)
+    await _unload(hass, entry)
+
+
+@pytest.mark.parametrize(
+    "trv",
+    [
+        # Its own limit at 22 though it reports a maximum of 30.
+        Trv("climate.office", "office", target=18.0, own_limit=22.0),
+        # On its schedule preset it keeps its own target; it has a manual one.
+        Trv(
+            "climate.office",
+            "office",
+            target=18.0,
+            presets=["schedule", "manual"],
+            preset="schedule",
+            refuses_on=("schedule",),
+        ),
+        # The same without a manual preset: it never takes the temperature.
+        Trv(
+            "climate.office",
+            "office",
+            target=18.0,
+            presets=["schedule", "eco"],
+            preset="schedule",
+            refuses_on=("schedule",),
+        ),
+    ],
+    ids=["own_limit", "schedule_manual", "schedule_only"],
+)
+async def test_two_days_of_an_on_off_thermostat_found_on(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, trv: Trv
+) -> None:
+    """Found on (heat), commanded on / off: the maximum is not sent again and again
+    to one that does not keep it."""
+    house = await _sim(hass, freezer)
+    rooms = [_trv_room(house, "office", trv, command_mode="hvac_mode")]
+    entry = await _house(hass, freezer, rooms)
+    await house.run(48)
+    house.check(2)
+    temps = [c for c in house.commands if c[2] == "set_temperature"]
+    starts = sum(1 for c in house.commands if c[2] == "set_hvac_mode")
+    assert len(temps) <= starts + 1, (len(temps), starts)
     await _unload(hass, entry)
 
 

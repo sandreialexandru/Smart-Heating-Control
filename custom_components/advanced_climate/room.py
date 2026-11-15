@@ -337,6 +337,11 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self.auto_returns: dict[str, int] = {}
         # Kept over a restart: it is not tried in heat again (a moment of "on").
         self.keeps_auto: set[str] = set(stored.get("keeps_auto") or [])
+        # Thermostats seen reporting heating: their hvac_action is trusted for the
+        # heating time (one stuck on idle is not).
+        self.reports_heating: set[str] = set(stored.get("reports_heating") or [])
+        # On / off thermostats that got the maximum while on (sent once per on).
+        self.max_sent: set[str] = set()
         # Commanded by preset and sent a temperature since: the preset shown no
         # longer says what the device holds (some keep the preset with it).
         self.preset_stale: dict[str, float] = {
@@ -472,6 +477,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             "observed_temps": self.observed_temps,
             "preset_stale": self.preset_stale,
             "keeps_auto": sorted(self.keeps_auto),
+            "reports_heating": sorted(self.reports_heating),
             "decisions": list(self.decisions),
             "last_exercise": self.last_exercise,
             "chosen_profile": self.chosen_profile,
@@ -683,6 +689,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
                 pass  # back in auto by itself after heat, not a person
             elif self._is_manual_change(event, old, new):
                 self._device_changed(entity_id, new)
+                self.max_sent.discard(entity_id)
             else:
                 self.sent.confirm(entity_id, new, now)
             if self.command_mode == COMMAND_HVAC:
@@ -699,6 +706,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
                 and not self.sent.is_echo(entity_id, old, new, now)
             ):
                 self._device_changed(entity_id, new)
+                self.max_sent.discard(entity_id)
         if entity_id in as_list(self.config.get(CONF_TEMP_SENSORS)) or entity_id in self.climates:
             self._update_temperature(now)
         self._update_window(now)
@@ -1492,13 +1500,22 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self.heating = heating
 
     def _device_heating(self) -> bool | None:
-        """Whether a thermostat of the room says it heats (None: none says)."""
-        actions = [
-            state.attributes.get("hvac_action")  # type: ignore[union-attr]
-            for entity_id in self.climates
-            if valid(state := self.hass.states.get(entity_id))
-        ]
-        known = [a for a in actions if a is not None]
+        """Whether a thermostat of the room says it heats (None: none says).
+
+        Only thermostats seen reporting heating once: one whose hvac_action
+        stays on idle would count no heating at all.
+        """
+        known = []
+        for entity_id in self.climates:
+            state = self.hass.states.get(entity_id)
+            if not valid(state):
+                continue
+            action = state.attributes.get("hvac_action")  # type: ignore[union-attr]
+            if action == "heating" and entity_id not in self.reports_heating:
+                self.reports_heating.add(entity_id)
+                self.house.async_save()
+            if action is not None and entity_id in self.reports_heating:
+                known.append(action)
         return any(a == "heating" for a in known) if known else None
 
     @property

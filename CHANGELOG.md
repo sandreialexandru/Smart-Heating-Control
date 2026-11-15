@@ -102,9 +102,15 @@ which the reference room could not.
   follows the thermostat (`hvac_action`), not the on / off decision. A
   thermostat left on keeps heating only in short bursts at its own target, and
   one told off can still heat: the time was counted too long or not at all.
+  Only once the thermostat reported heating at least once: one whose
+  `hvac_action` stays on idle keeps the on / off decision, as before.
 - 🔥 **An on / off thermostat already on gets the maximum too**: found on at
   its own lower target (e.g. 17 with the room at 21), it now heats as far as
-  it can, as when it is turned on, so the room reaches its target.
+  it can, as when it is turned on, so the room reaches its target. Sent once
+  each time it is on: one that keeps its own limit (22 with a maximum of 30)
+  or ignores the temperature is not sent it again and again. One on its
+  schedule preset (`schedule`, `auto`, `program`) with a `manual` preset is
+  put on manual first, so it takes the temperature.
 - 🛑 **A brake on command loops**: a device that gets more than 40 commands in
   10 minutes (something keeps changing it back: its own schedule, an
   automation, a TRV that does not keep the value) gets none for 15 minutes,

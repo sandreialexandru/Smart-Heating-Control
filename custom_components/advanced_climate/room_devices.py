@@ -432,6 +432,21 @@ class RoomDevices:
                 return candidate
         return None
 
+    def _on_other_level_preset(self, state: State, target: Target) -> bool:
+        """Commanded by preset, a level without a preset of its own, while the
+        device is still on the preset of another level (e.g. away after a
+        vacation) and can leave it (``none``): it is taken off it first."""
+        if self.command_mode != COMMAND_PRESET or target.kind == KIND_OFF:
+            return False
+        available = list(state.attributes.get("preset_modes") or [])
+        current = state.attributes.get("preset_mode")
+        if PRESET_NONE not in available or current in (None, PRESET_NONE):
+            return False
+        if target.kind == KIND_PRESET and self._device_preset(target.preset or "", available):
+            return False  # the level has its preset: that one is sent
+        used = {self._device_preset(level, available) for level in PRESETS}
+        return current in used
+
     def _own_schedule_mode(self, state: State) -> bool:
         """A thermostat driven by temperature, left in auto (its own schedule) while it has heat.
 
@@ -515,6 +530,8 @@ class RoomDevices:
                     state.attributes.get("preset_mode") == name
                     and state.entity_id not in self.preset_stale
                 )
+        if self._on_other_level_preset(state, target):
+            return False
         # A level the thermostat has no preset for, and whose temperature is
         # unknown, is not reached, so the room says so (``preset_missing``).
         # Compared in the unit of the thermostat, as sent; taken in auto (its own
@@ -581,6 +598,10 @@ class RoomDevices:
                     if kept:
                         await self._async_preset_temperature(entity_id, target.preset or "", stale)
                 return sent
+        if self._on_other_level_preset(state, target):
+            # Off the preset of the level before (e.g. away), then the temperature:
+            # some refuse a temperature on it, or keep its mode (a holiday mode).
+            await self._send(entity_id, "set_preset_mode", "preset_mode", PRESET_NONE, force=force)
         temperature = self._climate_temperature(target)
         if temperature is None:
             self.house.notify(

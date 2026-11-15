@@ -746,3 +746,135 @@ async def test_a_trv_left_in_auto_stays_so_after_a_restart(
     assert room.as_dict()["keeps_auto"] == [E]
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def _daikin(hass: HomeAssistant, freezer: FrozenDateTimeFactory, refuses_on_away: bool):
+    """A heat pump through its cloud: away (its holiday mode) for the vacation,
+    temperatures for the other levels; it reports a second late."""
+    calls: list[tuple[str, object]] = []
+
+    def _later(changes: dict) -> None:
+        # Reported a second later, on top of what it shows then.
+        def _report() -> None:
+            st = hass.states.get(E)
+            hass.states.async_set(E, st.state, {**st.attributes, **changes})
+
+        hass.loop.call_later(1, _report)
+
+    @callback
+    def _temp(call: ServiceCall) -> None:
+        calls.append(("temperature", call.data["temperature"]))
+        # What it holds when the command arrives (the cloud applies it in order).
+        if not (refuses_on_away and hass.data.setdefault("daikin_preset", "none") == "away"):
+            _later({"temperature": call.data["temperature"]})
+
+    @callback
+    def _preset(call: ServiceCall) -> None:
+        calls.append(("preset", call.data["preset_mode"]))
+        hass.data["daikin_preset"] = call.data["preset_mode"]
+        changes = {"preset_mode": call.data["preset_mode"]}
+        if call.data["preset_mode"] == "away":
+            changes["temperature"] = 16.0
+        _later(changes)
+
+    hass.services.async_register("climate", "set_temperature", _temp)
+    hass.services.async_register("climate", "set_preset_mode", _preset)
+    hass.states.async_set(
+        E,
+        "heat",
+        {
+            "hvac_modes": ["heat", "off"],
+            "preset_modes": ["none", "away"],
+            "preset_mode": "none",
+            "temperature": 20.0,
+            "current_temperature": 20.0,
+            "min_temp": 16,
+            "max_temp": 30,
+        },
+    )
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {
+                    "source": "climate",
+                    "climates": [E],
+                    "command_mode": "preset",
+                    "preset_map": {"away": "away"},
+                },
+            )
+        ],
+    )
+    for _ in range(5):
+        await _tick(hass, freezer, 60)
+    house = entry.runtime_data
+    await house.async_set_mode("vacation")
+    for _ in range(10):
+        await _tick(hass, freezer, 60)
+    assert ("preset", "away") in calls
+    assert hass.states.get(E).attributes["preset_mode"] == "away"
+    sent = len(calls)
+    await house.async_set_mode("auto")
+    for _ in range(30):
+        await _tick(hass, freezer, 60)
+    return entry, calls[sent:]
+
+
+async def test_after_the_vacation_the_away_preset_is_left(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """It kept away (its holiday mode) with 21 °C, or refused 21 °C on away and
+    was sent it again and again; now it is taken off away first."""
+    for refuses in (True, False):
+        entry, after = await _daikin(hass, freezer, refuses)
+        state = hass.states.get(E)
+        assert after[0] == ("preset", "none"), after
+        assert state.attributes["preset_mode"] == "none"
+        assert state.attributes["temperature"] == 21.0
+        assert len(after) <= 3, after
+        assert _room(entry, "Office").decision.rule != "manual_override"
+        await _unload(hass, entry)
+        await _tick(hass, freezer, 5)
+
+
+async def test_a_preset_of_no_level_is_not_left(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Only the presets the room uses for its levels are taken back: another one
+    (e.g. its own eco, not mapped) is not touched by the temperature."""
+    presets = async_mock_service(hass, "climate", "set_preset_mode")
+    async_mock_service(hass, "climate", "set_temperature")
+    hass.states.async_set(
+        E,
+        "heat",
+        {
+            "hvac_modes": ["heat", "off"],
+            "preset_modes": ["none", "away", "eco"],
+            "preset_mode": "eco",
+            "temperature": 20.0,
+            "current_temperature": 20.0,
+            "min_temp": 16,
+            "max_temp": 30,
+        },
+    )
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {
+                    "source": "climate",
+                    "climates": [E],
+                    "command_mode": "preset",
+                    "preset_map": {"away": "away"},
+                },
+            )
+        ],
+    )
+    for _ in range(3):
+        await _tick(hass, freezer, 60)
+    assert not any(c.data["preset_mode"] == "none" for c in presets)
+    await _unload(hass, entry)

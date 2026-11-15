@@ -122,6 +122,11 @@ which the reference room could not.
   with the temperature known for it (only to a device that kept that preset;
   one put on another preset, e.g. *away*, is left to it), and nothing is
   learned meanwhile.
+- 🏖️ **After a vacation on the *away* preset** (#14, e.g. a heat pump with a
+  holiday mode): commanded by *Preset*, with temperatures for the other
+  levels, the thermostat stayed on *away*: it kept its holiday mode, or refused
+  the temperature and was sent it again and again. It is now put on *none*
+  first, then gets the temperature.
 - 🔥 **A heat source with the range of the water** (e.g. 30–80 °C) with
   *Start and stop the source by its temperature*: it was sent 25 °C again and
   again (refused), or never heated (25–60 °C). It is now switched by its mode,

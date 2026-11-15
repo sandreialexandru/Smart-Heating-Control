@@ -146,7 +146,8 @@ stay below its target until another room starts the boiler again.
   start the boiler again; below it, the room asks for heat as usual.
 - Once at its target, the room is not topped up again until it fell by the
   whole hysteresis and asked by itself (a sensor of a tenth of a degree would
-  otherwise start and stop it again and again).
+  otherwise start and stop it again and again). When its target changes (e.g.
+  from 18 to 21 °C at 06:00), it is looked at again against the new target.
 - With a circuit, only while that circuit is already open (no pump is started
   for a few tenths of a degree). Its learning skips that time, as when kept
   open.

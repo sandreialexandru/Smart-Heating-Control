@@ -106,8 +106,9 @@ which the reference room could not.
 - 🔁 **A TRV switching between auto and heat again and again** (#15, Tuya
   TRV602Z, since 2.6.4): put in *heat* from *auto*, some TRVs report *auto*
   again a second later, and they were put in *heat* again, every second. A TRV
-  that goes back to *auto* by itself twice is now left in *auto*, as before
-  2.6.4, also after a restart.
+  that goes back to *auto* by itself twice, each time within the hour after
+  it was put in *heat*, is now left in *auto*, as before 2.6.4, also after a
+  restart; reconfiguring the room tries it in *heat* again.
 - 🔄 **Back to its schedule is not a manual change**: a thermostat that goes
   back to *auto* (or its schedule preset) by itself, whenever (a TRV minutes
   later, Netatmo or Tado when their manual time ends), was taken as a manual
@@ -136,7 +137,8 @@ which the reference room could not.
   does not close it before the room is warm.
 - ♨️ **Top up while the boiler runs started and stopped in a loop** with a
   sensor of a tenth of a degree: once at its target, a room is topped up again
-  only after it fell by the whole hysteresis (it asks itself then).
+  only after it fell by the whole hysteresis (it asks itself then), or when its
+  target changes (e.g. 18 to 21 at 06:00).
 - 🔂 **The same command is not sent again** to a TRV that confirms late, while
   it has not reported a change (up to the verification after 2 minutes).
 - ⏱️ **Secondary heat source: each source keeps its minimum on / off times**

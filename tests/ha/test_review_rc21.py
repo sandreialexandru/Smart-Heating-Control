@@ -878,3 +878,137 @@ async def test_a_preset_of_no_level_is_not_left(
         await _tick(hass, freezer, 60)
     assert not any(c.data["preset_mode"] == "none" for c in presets)
     await _unload(hass, entry)
+
+
+# ---------------------------------------------------------------- left in auto: not for good
+async def _trv_in_heat(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
+    """A TRV in auto that takes heat when told (the state follows the command)."""
+    modes: list[str] = []
+
+    @callback
+    def _mode(call: ServiceCall) -> None:
+        modes.append(call.data["hvac_mode"])
+        st = hass.states.get(E)
+        hass.states.async_set(E, call.data["hvac_mode"], st.attributes, context=call.context)
+
+    @callback
+    def _temp(call: ServiceCall) -> None:
+        st = hass.states.get(E)
+        attrs = {**st.attributes, "temperature": call.data["temperature"]}
+        hass.states.async_set(E, st.state, attrs, context=call.context)
+
+    hass.services.async_register("climate", "set_hvac_mode", _mode)
+    hass.services.async_register("climate", "set_temperature", _temp)
+    hass.states.async_set(
+        E,
+        "auto",
+        {
+            "hvac_modes": ["auto", "heat", "off"],
+            "temperature": 21.0,
+            "hvac_action": "idle",
+            "current_temperature": 20.0,
+            "min_temp": 5,
+            "max_temp": 30,
+        },
+    )
+    entry = await _house(
+        hass,
+        freezer,
+        [("Office", {"source": "climate", "climates": [E], "command_mode": "temperature"})],
+    )
+    await _tick(hass, freezer, 5)
+    assert modes == ["heat"]
+    return entry, modes
+
+
+async def _auto_on_the_device(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    hass.states.async_set(E, "auto", hass.states.get(E).attributes, Context())
+    await _tick(hass, freezer, 5)
+    await _tick(hass, freezer, 5)
+
+
+async def test_auto_pressed_on_the_trv_a_day_apart_does_not_leave_it_in_auto(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Auto pressed on the TRV, then again 20 hours later: each time it is put in
+    heat again (it can stay in heat), never left in auto for good."""
+    entry, modes = await _trv_in_heat(hass, freezer)
+    room = _room(entry, "Office")
+    for _ in range(3):
+        await _tick(hass, freezer, 20 * 3600)
+        await _auto_on_the_device(hass, freezer)
+        assert room.decision.rule != "manual_override"
+        assert E not in room.keeps_auto
+        assert hass.states.get(E).state == "heat"
+    assert modes == ["heat"] * 4
+    await _unload(hass, entry)
+
+
+async def test_a_late_return_starts_the_count_again(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Back within the hour (1), then after two hours (counted again from 0), then
+    within the hour (1): not left in auto; one more within the hour: left."""
+    entry, _modes = await _trv_in_heat(hass, freezer)
+    room = _room(entry, "Office")
+    for wait, kept in ((10 * 60, False), (2 * 3600, False), (10 * 60, False), (10 * 60, True)):
+        await _tick(hass, freezer, wait)
+        await _auto_on_the_device(hass, freezer)
+        assert (E in room.keeps_auto) is kept, (wait, room.auto_returns)
+    assert hass.states.get(E).state == "auto"
+    await _unload(hass, entry)
+
+
+async def test_reconfiguring_the_room_tries_its_trvs_in_heat_again(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    from homeassistant.data_entry_flow import FlowResultType
+
+    entry, _modes = await _trv_in_heat(hass, freezer)
+    room = _room(entry, "Office")
+    for _ in range(2):
+        await _tick(hass, freezer, 60)
+        await _auto_on_the_device(hass, freezer)
+    assert E in room.keeps_auto
+    assert hass.states.get(E).state == "auto"
+    subentry = next(iter(entry.subentries.values()))
+    flow = hass.config_entries.subentries
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+    for _ in range(20):
+        if result["type"] is not FlowResultType.FORM:
+            break
+        result = await flow.async_configure(result["flow_id"], {})
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    for _ in range(3):
+        await _tick(hass, freezer, 30)
+    room = _room(entry, "Office")
+    assert E not in room.keeps_auto
+    assert hass.states.get(E).state == "heat"
+    await _unload(hass, entry)
+
+
+# ---------------------------------------------------------------- top up, a new target
+async def test_topped_up_after_its_target_went_up(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """At 20.8 °C on a target of 18 it had reached it; at 06:00 the target is 21:
+    in the band 20.7-21 it is topped up while the boiler runs for another room."""
+    from tests.ha.test_top_up import _setup as _top_up_setup
+    from tests.ha.test_top_up import _steps
+
+    entry, trvs = await _top_up_setup(hass, freezer)
+    office = _room(entry, "Office")
+    await office.async_set_level("home", 18.0)
+    trvs.report("climate.office", "idle", 20.8)
+    await _steps(hass, freezer)
+    assert office.target_temperature == 18.0
+    assert office._top_up_reached
+    trvs.report("climate.bedroom", "heating", 20.0)
+    await _steps(hass, freezer)
+    assert not office.topped_up
+    await office.async_set_level("home", 21.0)
+    await _steps(hass, freezer)
+    assert office.target_temperature == 21.0
+    assert office.topped_up
+    await _unload(hass, entry)

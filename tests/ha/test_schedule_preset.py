@@ -92,20 +92,29 @@ async def test_one_that_goes_back_to_its_schedule_is_left_there(
 async def test_a_late_return_to_the_schedule_is_not_a_manual_change(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Back on its schedule by itself, whenever (e.g. after its manual time): put
-    on manual again; the second time it is left there."""
+    """Back on its schedule by itself hours later (e.g. after its manual time):
+    put on manual again each time, never left there for good; back twice within
+    the hour after it was put on manual: left on its schedule."""
     entry, presets, _temps, _modes = await _bosch(hass, freezer)
     await _tick(hass, freezer, 5)
     room = _room(entry, "Office")
-    for back in (1, 2):
-        await _tick(hass, freezer, 3 * 3600)
+
+    async def back(after: int) -> None:
+        await _tick(hass, freezer, after)
         state = hass.states.get("climate.bosch")
         hass.states.async_set(
             "climate.bosch", "heat", {**state.attributes, "preset_mode": "schedule"}, Context()
         )
         await _tick(hass, freezer, 5)
         assert room.decision.rule != "manual_override"
-        assert len(presets) == 2  # put on manual again once, then left on its schedule
+
+    for count in (2, 3):
+        await back(3 * 3600)
+        assert len(presets) == count  # put on manual again
+        assert "climate.bosch" not in room.keeps_auto
+    await back(10 * 60)
+    assert len(presets) == 4
+    await back(10 * 60)
     assert "climate.bosch" in room.keeps_auto
     sent = len(presets)
     await _tick(hass, freezer, 310)

@@ -2373,9 +2373,14 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
         data = dict(self._data)
         title = str(data.pop(CONF_NAME, "Room")).strip() or "Room"
         if self._reconfigure:
-            return self.async_update_and_abort(
-                self._get_entry(), self._get_reconfigure_subentry(), title=title, data=data
-            )
+            subentry = self._get_reconfigure_subentry()
+            # Reconfigured (a TRV changed or set up again): the thermostats left
+            # in auto are tried in heat again.
+            house = getattr(self._get_entry(), "runtime_data", None)
+            room = house.rooms.get(subentry.subentry_id) if house is not None else None
+            if room is not None:
+                room.forget_auto_returns()
+            return self.async_update_and_abort(self._get_entry(), subentry, title=title, data=data)
         return self.async_create_entry(title=title, data=data)
 
 

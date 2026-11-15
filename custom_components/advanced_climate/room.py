@@ -342,8 +342,10 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self.preset_stale: dict[str, float] = {
             str(k): float(v) for k, v in (stored.get("preset_stale") or {}).items()
         }
-        # Topped up to its target: not again until the room asks by itself.
+        # Topped up to its target: not again until the room asks by itself
+        # (and the target it was reached for: a new target is looked at again).
         self._top_up_reached = False
+        self._top_up_target: float | None = None
         # The last command to each device, until it reports a change: not sent twice.
         self.pending_command: dict[str, dict[str, tuple[str, Any, datetime]]] = {}
         # Commands to each device (a loop guard), and the pauses after too many.
@@ -1199,6 +1201,11 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         current, target = self.current_temp, self.target_temperature
         if current is None or target is None:
             return
+        if self._top_up_target is not None and abs(target - self._top_up_target) > 1e-9:
+            # Another target (e.g. sleep 18 -> home 21 at 06:00): reached or not
+            # is decided again against it.
+            self._top_up_reached = current >= target
+        self._top_up_target = target
         if current >= target:
             self._top_up_reached = True
         elif current <= target - float(self.config[CONF_HYSTERESIS]):

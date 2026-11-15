@@ -85,8 +85,11 @@ if TYPE_CHECKING:
 
 # The same logger as the rest of the room, so the log lines keep their name.
 _LOGGER = logging.getLogger(__name__.rsplit(".", 1)[0] + ".room")
-# Put in heat (or on manual) and back in auto by itself this many times: left in auto.
+# Put in heat (or on manual) and back in auto by itself this many times, each time
+# within the hour after it was put in heat: left in auto. A return later than that
+# (e.g. auto pressed on the device a day later) starts the count again.
 AUTO_RETURNS_KEPT = 2
+AUTO_RETURN_COUNTED = timedelta(hours=1)
 # Presets of a thermostat that follows its own schedule (e.g. Aqara, Tuya, Moes), and the one
 # that keeps the temperature sent.
 SCHEDULE_PRESETS = frozenset({"schedule", "auto", "program", "programme", "timer"})
@@ -490,7 +493,12 @@ class RoomDevices:
         back_schedule = _on_schedule_preset(new) and not _on_schedule_preset(old)
         if not (back_auto or back_schedule):
             return False
-        if self.auto_left_at.pop(entity_id, None) is not None:
+        left = self.auto_left_at.pop(entity_id, None)
+        if left is not None and dt_util.utcnow() - left > AUTO_RETURN_COUNTED:
+            # Long after it was put in heat: it can stay in heat, so this is no
+            # device that cannot (e.g. auto pressed on it): counted again from 0.
+            self.auto_returns.pop(entity_id, None)
+        elif left is not None:
             returns = self.auto_returns.get(entity_id, 0) + 1
             self.auto_returns[entity_id] = returns
             if returns >= AUTO_RETURNS_KEPT and entity_id not in self.keeps_auto:
@@ -502,6 +510,13 @@ class RoomDevices:
                     entity_id,
                 )
         return True
+
+    def forget_auto_returns(self) -> None:
+        """The room is reconfigured: its thermostats are tried in heat again."""
+        self.keeps_auto.clear()
+        self.auto_returns.clear()
+        self.auto_left_at.clear()
+        self.house.async_save()
 
     def _holds(self, state: State, target: Target) -> bool:
         """The thermostat holds the temperature of the target (in its own unit)."""

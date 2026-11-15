@@ -295,7 +295,9 @@ For the learning and the heating time, a room **heats only while its source
 runs**:
 
 - Generic Thermostat: when it reports heating (`hvac_action`);
-- relay or on / off thermostat: when it is on;
+- relay: when it is on;
+- on / off thermostat: when it reports heating (`hvac_action`), else when it
+  is on;
 - with a *Heat source* set: in addition, only while the source runs (not for a
   room with *Heats from the heat source of the house* off).
 

@@ -685,6 +685,9 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
                 self._device_changed(entity_id, new)
             else:
                 self.sent.confirm(entity_id, new, now)
+            if self.command_mode == COMMAND_HVAC:
+                # On / off: the heating time follows the thermostat at once.
+                self._update_heating()
         elif entity_id in self.switches:
             if (
                 old is not None
@@ -1452,6 +1455,22 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             # Frost protection from the room sensor (the TRVs are boosted for it).
             demand = demand or self._boost_demand
         self.heat_demand = demand
+        self._update_heating()
+
+    def _update_heating(self) -> None:
+        """Whether the room heats now (its heating time)."""
+        demand = self.heat_demand
+        # Heating time: by the device when it says it heats (an on / off
+        # thermostat keeps its own band while on, and can heat when told off).
+        if (
+            self.command_mode == COMMAND_HVAC
+            and self.source != SOURCE_SWITCH
+            and self._exercise_until is None
+            and not self.opened_for_source
+        ):
+            device = self._device_heating()
+            if device is not None:
+                demand = device
         # The room heats only while its heat source runs: its own device (GT,
         # relay, on / off thermostat) and, when one is set, the heat source of
         # the house (the boiler that TRVs and zone valves wait for).
@@ -1471,6 +1490,16 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             self._account_runtime(now)
             self._heating_since = None
         self.heating = heating
+
+    def _device_heating(self) -> bool | None:
+        """Whether a thermostat of the room says it heats (None: none says)."""
+        actions = [
+            state.attributes.get("hvac_action")  # type: ignore[union-attr]
+            for entity_id in self.climates
+            if valid(state := self.hass.states.get(entity_id))
+        ]
+        known = [a for a in actions if a is not None]
+        return any(a == "heating" for a in known) if known else None
 
     @property
     def frost_demand(self) -> bool:

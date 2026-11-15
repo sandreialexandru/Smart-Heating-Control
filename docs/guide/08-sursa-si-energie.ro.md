@@ -296,7 +296,9 @@ Pentru învățare și pentru timpul de încălzire, o cameră **încălzește d
 merge sursa ei**:
 
 - Generic Thermostat: când spune că încălzește (`hvac_action`);
-- releu sau termostat pornit / oprit: când e pornit;
+- releu: când e pornit;
+- termostat pornit / oprit: când raportează că încălzește (`hvac_action`),
+  altfel când e pornit;
 - cu *Sursa de căldură* setată: în plus, doar cât merge și sursa (nu și pentru o
   cameră cu *Se încălzește de la sursa de căldură a casei* oprit).
 

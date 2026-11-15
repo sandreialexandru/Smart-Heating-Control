@@ -98,6 +98,13 @@ which the reference room could not.
 
 ### Fixed
 
+- ⏱️ **Heating time of a thermostat commanded on / off** (#16): it now
+  follows the thermostat (`hvac_action`), not the on / off decision. A
+  thermostat left on keeps heating only in short bursts at its own target, and
+  one told off can still heat: the time was counted too long or not at all.
+- 🔥 **An on / off thermostat already on gets the maximum too**: found on at
+  its own lower target (e.g. 17 with the room at 21), it now heats as far as
+  it can, as when it is turned on, so the room reaches its target.
 - 🛑 **A brake on command loops**: a device that gets more than 40 commands in
   10 minutes (something keeps changing it back: its own schedule, an
   automation, a TRV that does not keep the value) gets none for 15 minutes,

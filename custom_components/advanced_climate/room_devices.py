@@ -920,6 +920,11 @@ class RoomDevices:
         if want or target.kind == KIND_OFF:
             self.inertia_stop = None
         if want == actual:
+            if want and self.source != SOURCE_SWITCH:
+                # Already on (turned on by hand, or on at the start): it heats as
+                # far as it can too, else it keeps its own lower target.
+                for entity_id in self.climates:
+                    await self._async_heat_to_max(entity_id)
             self._relay_held = held and want
             return False
         if not released and self._relay_must_wait(actual, now):
@@ -943,15 +948,8 @@ class RoomDevices:
                 ok &= await self._send(
                     entity_id, "set_hvac_mode", "hvac_mode", on_mode if want else STATE_OFF, "state"
                 )
-                if want and valid(state):
-                    # Turned on, it heats as far as it can: its own target (at
-                    # 20 with the room at 21) would close it before the room is
-                    # warm. The room sensor turns it off.
-                    assert state is not None
-                    current = float_attr(state, ATTR_TEMPERATURE)
-                    value = self._device_value(state, self.max_temp())
-                    if current is not None and current != value:
-                        await self._send(entity_id, "set_temperature", ATTR_TEMPERATURE, value)
+                if want:
+                    await self._async_heat_to_max(entity_id)
         if ok:
             self._relay_on = want
             self._relay_held = held and want
@@ -959,6 +957,19 @@ class RoomDevices:
                 # Kept open is no start of the room: no minimum on time after it.
                 self._relay_changed = now
         return ok
+
+    async def _async_heat_to_max(self, entity_id: str) -> None:
+        """An on / off thermostat that is on heats as far as it can: its own
+        target (at 20 with the room at 21) would close it before the room is
+        warm. The room sensor turns it off."""
+        state = self.hass.states.get(entity_id)
+        if not valid(state):
+            return
+        assert state is not None
+        current = float_attr(state, ATTR_TEMPERATURE)
+        value = self._device_value(state, self.max_temp())
+        if current is not None and current != value:
+            await self._send(entity_id, "set_temperature", ATTR_TEMPERATURE, value)
 
     def _inertia_extreme(self, now: datetime) -> Callable[[bool], float] | None:
         """The learned model for starting and stopping by the inertia (None: the band only).

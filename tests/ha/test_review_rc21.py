@@ -635,3 +635,114 @@ async def test_a_trv_turned_on_by_hand_in_auto_is_a_manual_change(
     assert room.decision.rule == "manual_override"
     assert not temps or temps[-1].data["temperature"] == 21.0
     await _unload(hass, entry)
+
+
+async def test_a_cloud_thermostat_put_on_away_gets_no_temperature_after_it(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Commanded by preset (away for the vacation), temperatures for the other
+    levels, reporting late (a heat pump through its cloud): the away preset is
+    not followed by a temperature, which could take it out of its holiday mode."""
+    temps = async_mock_service(hass, "climate", "set_temperature")
+    presets = async_mock_service(hass, "climate", "set_preset_mode")
+    hass.states.async_set(
+        E,
+        "heat",
+        {
+            "hvac_modes": ["heat", "off"],
+            "preset_modes": ["none", "away"],
+            "preset_mode": "away",
+            "temperature": 16.0,
+            "current_temperature": 20.0,
+            "min_temp": 16,
+            "max_temp": 30,
+        },
+    )
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {
+                    "source": "climate",
+                    "climates": [E],
+                    "command_mode": "preset",
+                    "preset_map": {"away": "away"},
+                },
+            )
+        ],
+    )
+    await _tick(hass, freezer, 5)
+    room = _room(entry, "Office")
+    # It learned away = 16 (the state at start); now on a temperature (21).
+    room.observed_temps["away"] = 16.0
+    assert temps and temps[-1].data["temperature"] == 21.0
+    hass.states.async_set(
+        E, "heat", {**hass.states.get(E).attributes, "preset_mode": "none", "temperature": 21.0}
+    )
+    await _tick(hass, freezer, 5)
+    sent = len(temps)
+    # Vacation: away is sent; the state does not change yet (it reports late).
+    await entry.runtime_data.async_set_mode("vacation")
+    await _tick(hass, freezer, 5)
+    assert presets and presets[-1].data["preset_mode"] == "away"
+    assert len(temps) == sent
+    await _unload(hass, entry)
+
+
+async def test_a_trv_left_in_auto_stays_so_after_a_restart(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_storage: dict
+) -> None:
+    """Left in auto is saved: after a restart it is not tried in heat again (for
+    a TRV602Z, a moment of its valve fully open)."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    from custom_components.advanced_climate.const import DOMAIN, SUBENTRY_ROOM
+
+    async_mock_service(hass, "climate", "set_temperature")
+    modes = async_mock_service(hass, "climate", "set_hvac_mode")
+    hass.states.async_set(
+        E,
+        "auto",
+        {
+            "hvac_modes": ["auto", "heat", "off"],
+            "temperature": 21.0,
+            "hvac_action": "idle",
+            "current_temperature": 20.0,
+            "min_temp": 5,
+            "max_temp": 30,
+        },
+    )
+    entry_id = "house_keeps_auto"
+    hass_storage[f"{DOMAIN}.{entry_id}"] = {
+        "version": 1,
+        "key": f"{DOMAIN}.{entry_id}",
+        "data": {"house": {}, "rooms": {"office": {"keeps_auto": [E]}}},
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        minor_version=2,
+        options={"persons": [], "nearby_zones": []},
+        entry_id=entry_id,
+        subentries_data=[
+            {
+                "data": {"source": "climate", "climates": [E], "command_mode": "temperature"},
+                "subentry_type": SUBENTRY_ROOM,
+                "subentry_id": "office",
+                "title": "Office",
+                "unique_id": None,
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await _tick(hass, freezer, 5)
+    room = _room(entry, "Office")
+    assert E in room.keeps_auto
+    assert not modes
+    assert room.as_dict()["keeps_auto"] == [E]
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

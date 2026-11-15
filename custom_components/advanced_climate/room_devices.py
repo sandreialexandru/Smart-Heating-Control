@@ -480,6 +480,7 @@ class RoomDevices:
             self.auto_returns[entity_id] = returns
             if returns >= AUTO_RETURNS_KEPT and entity_id not in self.keeps_auto:
                 self.keeps_auto.add(entity_id)
+                self.house.async_save()
                 _LOGGER.info(
                     "Room %s: %s goes back to auto by itself, it is left in auto",
                     self.name,
@@ -568,12 +569,17 @@ class RoomDevices:
             if name is not None:
                 self.house.clear_alert(f"preset_{self.id}_{target.preset}")
                 stale = self.preset_stale.get(entity_id)
+                # Only a device that kept this preset with the temperature gets the
+                # one known for it: one coming from another preset (e.g. away on a
+                # cloud heat pump that reports late) is left to its preset.
+                kept = state.attributes.get("preset_mode") == name
                 sent = await self._send(
                     entity_id, "set_preset_mode", "preset_mode", name, force=force
                 )
                 if sent and stale is not None:
                     del self.preset_stale[entity_id]
-                    await self._async_preset_temperature(entity_id, target.preset or "", stale)
+                    if kept:
+                        await self._async_preset_temperature(entity_id, target.preset or "", stale)
                 return sent
         temperature = self._climate_temperature(target)
         if temperature is None:

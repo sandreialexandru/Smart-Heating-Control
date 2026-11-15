@@ -107,7 +107,7 @@ which the reference room could not.
   TRV602Z, since 2.6.4): put in *heat* from *auto*, some TRVs report *auto*
   again a second later, and they were put in *heat* again, every second. A TRV
   that goes back to *auto* by itself twice is now left in *auto*, as before
-  2.6.4.
+  2.6.4, also after a restart.
 - 🔄 **Back to its schedule is not a manual change**: a thermostat that goes
   back to *auto* (or its schedule preset) by itself, whenever (a TRV minutes
   later, Netatmo or Tado when their manual time ends), was taken as a manual
@@ -119,7 +119,9 @@ which the reference room could not.
   that keeps its preset when it gets a temperature (window open, no *off*
   mode) stayed at that temperature after the window closed, and that value
   was learned as the temperature of the level. The preset is now sent again,
-  with the temperature known for it, and nothing is learned meanwhile.
+  with the temperature known for it (only to a device that kept that preset;
+  one put on another preset, e.g. *away*, is left to it), and nothing is
+  learned meanwhile.
 - 🔥 **A heat source with the range of the water** (e.g. 30–80 °C) with
   *Start and stop the source by its temperature*: it was sent 25 °C again and
   again (refused), or never heated (25–60 °C). It is now switched by its mode,

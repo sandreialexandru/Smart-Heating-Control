@@ -335,7 +335,8 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self.auto_left_at: dict[str, datetime] = {}
         # Thermostats that go back to auto by themselves: how often, and those left in auto.
         self.auto_returns: dict[str, int] = {}
-        self.keeps_auto: set[str] = set()
+        # Kept over a restart: it is not tried in heat again (a moment of "on").
+        self.keeps_auto: set[str] = set(stored.get("keeps_auto") or [])
         # Commanded by preset and sent a temperature since: the preset shown no
         # longer says what the device holds (some keep the preset with it).
         self.preset_stale: dict[str, float] = {
@@ -468,6 +469,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             "runtime_s": round(self.runtime_s, 1),
             "observed_temps": self.observed_temps,
             "preset_stale": self.preset_stale,
+            "keeps_auto": sorted(self.keeps_auto),
             "decisions": list(self.decisions),
             "last_exercise": self.last_exercise,
             "chosen_profile": self.chosen_profile,

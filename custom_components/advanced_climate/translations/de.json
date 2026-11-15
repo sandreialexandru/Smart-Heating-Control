@@ -210,7 +210,7 @@
           "secondary_source": "Zweite Wärmequelle"
         },
         "data_description": {
-          "boiler_entity": "Der Kessel (oder das Relais, das die Wärmequelle startet), wenn die Räume ihn nicht selbst starten können (Heizkörperthermostate, Zonenventile). Die Integration startet ihn, wenn Räume Wärme anfordern, und Lernen und Heizzeit zählen nur, solange er läuft. Nie das Relais, das ein Generic Thermostat schon nutzt. Mit Heizkörperthermostaten und einem Kessel, den ein Thermostat außerhalb von Home Assistant startet, ist das Lernen nicht zuverlässig: Optimaler Start und Stopp sind dann nicht zu empfehlen.",
+          "boiler_entity": "Der Kessel (oder das Relais, das die Wärmequelle startet), wenn die Räume ihn nicht selbst starten können (Heizkörperthermostate, Zonenventile). Die Integration startet ihn, wenn Räume Wärme anfordern, und Lernen und Heizzeit zählen nur, solange er läuft. Nie das Relais, das ein Generic Thermostat schon nutzt. Mit Heizkörperthermostaten und einem Kessel, den ein Thermostat außerhalb von Home Assistant startet, ist das Lernen nicht zuverlässig: Optimaler Start und Stopp sind dann nicht zu empfehlen. Leer: keine Wärmequelle; im nächsten Schritt können trotzdem Heizkreis-Relais gewählt werden (Zonenventile, die mit dem Kessel verdrahtet sind).",
           "secondary_source": "Optional, nur mit einer Wärmequelle oben: eine zweite (z. B. eine Wärmepumpe neben dem Kessel), die dieselben Räume und Kreise heizt. Es läuft immer nur eine: Solange die zweite genutzt wird, bleibt die erste aus. Welche, wählst du in der Karte oder im Select Wärmequelle des Hauses (von Hand, per Automatisierung oder Automatisch nach einem Kriterium, im nächsten Schritt). Ist die gewählte nicht verfügbar, heizt die andere. Leer (Standard): eine Wärmequelle."
         },
         "description": "Nur für Häuser, in denen die Räume die Wärmequelle nicht selbst starten können (Heizkörperthermostate oder Zonenventile): Die Integration startet sie dann, wenn Räume Wärme anfordern, und ein Raum heizt (für das Lernen und die Heizzeit) nur, solange sie läuft.\n\n⚠️ Mit einem Thermostat an jedem Heizkörper muss die Anlage das Wasser durchlassen (ein automatischer Bypass, ein Kessel mit internem Bypass oder ein Heizkörper ohne Thermostat): Die Thermostate schließen bei ihrer Zieltemperatur, und die Wärmequelle läuft eventuell bis zum Ende ihrer Mindestlaufzeit."
@@ -404,6 +404,16 @@
           "source_criterion": "Was im Modus Automatisch die zweite Quelle wählt: PV-Überschuss (der PV-Sensor liegt über seiner Schwelle, unter Energie), Kälte draußen (unter einer Temperatur, im nächsten Schritt), Günstiger Strom (der Preis liegt höchstens bei seiner unteren Grenze, unter Energie), Eigene Entität (eine Ein/Aus-Entität deiner Wahl: ein = die zweite Quelle). Es erscheint nur, was im Haus eingerichtet ist. Keins (Standard): kein Automatisch, die Quelle wird von Hand oder per Automatisierung gewählt. Nimm beim PV-Überschuss die Erzeugung der Module oder einen Überschuss, der die Wärmepumpe einschließt: Ein Einspeisesensor fällt, sobald die Wärmepumpe startet, und die Quellen würden hin und her wechseln."
         }
       },
+      "boiler_circuits": {
+        "title": "Heizkreise",
+        "data": {
+          "circuits": "Heizkreis-Relais"
+        },
+        "data_description": {
+          "circuits": "Die Relais der Zonenventile (oder Pumpen) der Heizkreise, z. B. eines pro Etage. Ein Raum wählt dann seinen Heizkreis (in seinen Einstellungen): dessen Relais wird eingeschaltet, solange ein Raum davon Wärme anfordert, und ausgeschaltet, sobald keiner mehr anfordert. Leer (Standard): keine Heizkreise."
+        },
+        "description": "Ohne Wärmequelle: für Zonenventile, die fest mit dem Kessel verdrahtet sind und ihn beim Öffnen selbst starten (z. B. ein Ventil pro Etage). Die Integration öffnet das Ventil eines Heizkreises, solange einer seiner Räume Wärme anfordert, und schließt es, wenn keiner mehr anfordert; der Kessel folgt den Ventilen."
+      },
       "behavior_details": {
         "title": "Manuelle Änderungen",
         "data": {
@@ -516,6 +526,15 @@
             "starts_house_source": "An (Standard): Fordert dieser Raum Wärme an, startet er die Wärmequelle des Hauses (den Kessel), wie jeder Raum. Aus: ein Nebenraum. Er startet den Kessel nie für sich selbst; seine Heizkörperthermostate, Ventile oder Relais öffnen trotzdem, wenn er unter seiner Zieltemperatur ist, also bekommt er nur Wärme, solange der Kessel für einen anderen Raum läuft. Gut für Räume, die nicht kalt sein sollen, aber nicht zu einer bestimmten Zeit warm sein müssen: Wintergarten, Gästezimmer, Flur, Abstellraum. An milden Tagen läuft der Kessel vielleicht wenig, dann bleibt der Raum eventuell stundenlang unter seiner Zieltemperatur. Der Frostschutz startet den Kessel zur Sicherheit trotzdem für ihn. Er zählt nicht zu den Räumen, die zum Starten der Wärmequelle nötig sind.",
             "circuit": "Der Heizkreis dieses Raums (sein Pumpen- oder Zonenventilrelais), einer der Kreise des Hauses. Sein Relais wird vor dem Kessel eingeschaltet, wenn der Raum Wärme anfordert, und nach dem Stopp des Kessels ausgeschaltet, wenn kein Raum des Kreises ihn braucht. Leer: Der Raum hat keinen Kreis.",
             "top_up": "Aus (Standard). An: Solange der Kessel für andere Räume läuft und dieser Raum knapp unter seiner Zieltemperatur liegt (innerhalb seiner Hysterese, standardmäßig 0,3 °C, er fordert also noch keine Wärme an), öffnen seine Heizkörperthermostate oder sein Relais und er heizt bis zur Zieltemperatur. Er würde sonst bald selbst anfordern und den Kessel wieder starten: So startet der Kessel seltener. Er startet den Kessel nie und hält ihn nicht am Laufen, zählt nicht zu den nötigen Räumen und heizt mit einem Kreis nur, solange dieser Kreis schon offen ist. Nicht während einer manuellen Änderung, bei offenem Fenster, in der Pause oder beim optimalen Stopp. Für einen Nebenraum, der den Kessel nicht startet, nimmt er die Wärme mit, solange der Kessel für andere Räume läuft, und bleibt so nicht bis zum nächsten Start unter seiner Zieltemperatur."
+          }
+        },
+        "room_circuit": {
+          "title": "Heizkreis",
+          "data": {
+            "circuit": "Heizkreis"
+          },
+          "data_description": {
+            "circuit": "Der Heizkreis dieses Raums (sein Zonenventil- oder Pumpenrelais), unter denen des Hauses. Sein Relais wird eingeschaltet, solange der Raum Wärme anfordert, und ausgeschaltet, wenn kein Raum davon mehr anfordert. Leer: der Raum hat keinen Heizkreis."
           }
         },
         "control_on_off": {

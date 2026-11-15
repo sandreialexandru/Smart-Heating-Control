@@ -87,6 +87,10 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__.rsplit(".", 1)[0] + ".room")
 # Back in auto within this time after being put in heat: the thermostat keeps auto.
 AUTO_RETURN_WINDOW = timedelta(minutes=5)
+# Presets of a thermostat that follows its own schedule (e.g. Bosch), and the one
+# that keeps the temperature sent.
+SCHEDULE_PRESETS = frozenset({"schedule", "auto", "program", "programme", "timer"})
+MANUAL_PRESET = "manual"
 # More commands than this to one device in COMMAND_WINDOW: something keeps
 # changing it back (a loop). Commands to it pause for COMMAND_PAUSE (battery, radio).
 COMMAND_LIMIT = 40
@@ -435,12 +439,11 @@ class RoomDevices:
         temperature is set (Netatmo, Tado), and for some heat means a boost to
         the maximum. A device with only auto keeps it (that is its heating
         mode), and the Preset command leaves the mode alone (presets may need
-        auto).
+        auto). The same for a thermostat on its schedule preset (e.g. Bosch:
+        ``schedule``) that has a ``manual`` one: it is put on manual.
         """
-        if not (
-            self.command_mode == COMMAND_TEMPERATURE
-            and state.state == "auto"
-            and "heat" in (state.attributes.get("hvac_modes") or [])
+        if self.command_mode != COMMAND_TEMPERATURE or not (
+            _auto_with_heat(state) or _manual_preset(state) is not None
         ):
             return False
         entity_id = state.entity_id
@@ -468,7 +471,9 @@ class RoomDevices:
         """
         if old is None or new is None or not valid(old) or not valid(new):
             return False
-        if new.state != "auto" or old.state == "auto":
+        back_auto = new.state == "auto" and old.state != "auto"
+        back_schedule = _on_schedule_preset(new) and not _on_schedule_preset(old)
+        if not (back_auto or back_schedule):
             return False
         left = self.auto_left_at.get(entity_id)
         if left is None or dt_util.utcnow() - left >= AUTO_RETURN_WINDOW:
@@ -532,12 +537,15 @@ class RoomDevices:
                 return False
             return await self._send(entity_id, "set_temperature", ATTR_TEMPERATURE, minimum)
 
-        if (state.state == STATE_OFF and on_mode) or (
-            self._own_schedule_mode(state) and self._holds(state, target)
-        ):
+        own_schedule = self._own_schedule_mode(state) and self._holds(state, target)
+        if (state.state == STATE_OFF and on_mode) or (own_schedule and _auto_with_heat(state)):
             if state.state != STATE_OFF:
                 self.auto_left_at[entity_id] = dt_util.utcnow()
             await self._send(entity_id, "set_hvac_mode", "hvac_mode", on_mode or "heat", "state")
+        elif own_schedule and (manual := _manual_preset(state)) is not None:
+            # On its schedule preset: put on manual, so it keeps the temperature.
+            self.auto_left_at[entity_id] = dt_util.utcnow()
+            return await self._send(entity_id, "set_preset_mode", "preset_mode", manual)
 
         if target.kind == KIND_PRESET and self.command_mode == COMMAND_PRESET:
             available = list(state.attributes.get("preset_modes") or [])
@@ -1016,3 +1024,24 @@ class RoomDevices:
         """Enable or disable the child lock."""
         self.child_lock = on
         await self.house.async_evaluate_or_notify()
+
+
+def _auto_with_heat(state: State) -> bool:
+    """In auto (its own schedule) while it also has heat."""
+    return state.state == "auto" and "heat" in (state.attributes.get("hvac_modes") or [])
+
+
+def _on_schedule_preset(state: State) -> bool:
+    """On the preset of its own schedule (e.g. Bosch: ``schedule``)."""
+    preset = state.attributes.get("preset_mode")
+    return isinstance(preset, str) and preset.lower() in SCHEDULE_PRESETS
+
+
+def _manual_preset(state: State) -> str | None:
+    """The manual preset to leave its schedule preset for, when it has one."""
+    if not _on_schedule_preset(state):
+        return None
+    for preset in state.attributes.get("preset_modes") or []:
+        if isinstance(preset, str) and preset.lower() == MANUAL_PRESET:
+            return preset
+    return None

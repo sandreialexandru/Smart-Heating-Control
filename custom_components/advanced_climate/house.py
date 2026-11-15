@@ -379,7 +379,7 @@ class House:
                     self.hass, sorted(set(entities)), self._async_house_entity_changed
                 )
             )
-        if opts.get(CONF_BOILER_ENTITY):
+        if opts.get(CONF_BOILER_ENTITY) or self.circuits:
             self._unsubs.append(
                 async_track_state_change_event(
                     self.hass,
@@ -1329,16 +1329,21 @@ class House:
         circuits = self.circuits
         if circuits:
             # Only when the heat source is to start: a room waiting for other
-            # rooms does not run its pump for nothing. In a pause something else
-            # controls the heating: only for frost protection.
+            # rooms does not run its pump for nothing. Without a heat source the
+            # zone valves start the boiler themselves (wired): a room asking for
+            # heat opens its own. In a pause something else controls the
+            # heating: only for frost protection.
+            source = bool(self.source_entity)
             wanted = {
                 room.circuit
-                for room in sourced.values()
+                for room in (sourced if source else self.rooms).values()
                 if room.circuit
                 and (
                     room.frost_demand
                     or (
-                        not self.paused and demand and room.heat_demand and room.starts_house_source
+                        not self.paused
+                        and room.heat_demand
+                        and (not source or (demand and room.starts_house_source))
                     )
                 )
             }
@@ -1375,27 +1380,28 @@ class House:
                     await self._async_stop_source(entity_id)
         await self._async_switch_source(now, demand, frost)
         if circuits:
-            # Closed only once the heat source is off, or while another one stays open.
-            _, running = self.heat_source_state()
+            # Closed only once the heat source is off, or while another one stays
+            # open; without a heat source at once (the boiler stops with its valves).
+            configured, running = self.heat_source_state()
+            free = not configured or running is False
             still = [c for c in circuits if c in wanted and self.circuit_on(c)]
             if self.paused:
                 # Only those turned on in the pause for frost protection.
                 done = sorted(c for c in self._pause_circuits if c not in wanted)
-                if done and (running is False or still):
+                if done and (free or still):
                     await self._async_switch_circuits(done, False)
                     self._pause_circuits -= set(done)
             else:
                 self._pause_circuits = set()
-                if running is False or still:
+                if free or still:
                     await self._async_switch_circuits(
                         [c for c in circuits if c not in wanted], False
                     )
 
     @property
     def circuits(self) -> list[str]:
-        """The relays of the heating circuits (only with a heat source)."""
-        if not self.options.get(CONF_BOILER_ENTITY):
-            return []
+        """The relays of the heating circuits (also without a heat source: zone
+        valves that start the boiler themselves)."""
         return as_list(self.options.get(CONF_CIRCUITS))
 
     def circuit_on(self, entity_id: str) -> bool | None:

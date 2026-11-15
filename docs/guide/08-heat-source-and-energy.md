@@ -170,8 +170,8 @@ pump or zone valve: floor heating and radiators, the ground floor and the
 upper floor. The boiler must not run while every circuit is closed.
 
 1. In the options of the house, at the heat source, pick the **Circuit
-   relays** (`switch` or `input_boolean`), one per circuit. The field is shown
-   only with a *Heat source*.
+   relays** (`switch` or `input_boolean`), one per circuit. Without a *Heat
+   source* see [Zone valves without a heat source](#zone-valves-without-a-heat-source).
 2. In each room on the boiler, pick its **Circuit** (the step after its
    devices; shown only when the house has circuit relays). A room without one
    works as before.
@@ -200,8 +200,28 @@ What the integration does:
   either (their pumps may then run without it). Repair the relay, or change the
   circuits of the house.
 - No delays: the relay does not wait for a pump to run up or a valve to
-  open. A zone valve with an end switch that starts the boiler by itself
-  needs no circuit here.
+  open.
+
+### Zone valves without a heat source
+
+Zone valves wired to the boiler (one per floor, say) start it themselves
+when they open, through their end switch: the boiler is not in Home Assistant,
+only the valve relays are. Then leave the *Heat source* empty: the next page
+asks only for the **Circuit relays**, and each room gets its **Circuit** on the
+step after its devices.
+
+- The valve of a circuit opens while a room of it asks for heat, and closes
+  as soon as none does (there is no boiler to wait for). The boiler follows the
+  valves.
+- *Rooms needed*, secondary rooms and the minimum times belong to a heat
+  source: they do not apply here; every room with a circuit opens it.
+- Frost protection opens the valve; in a pause the valves are not switched,
+  except for frost protection.
+- The card says *its circuit (…) is off* while a room asks for heat and its
+  valve is closed or unavailable, and the unavailable valve alert works as
+  above.
+- The heating time and the learning follow the rooms (no heat source to
+  watch), as in a house without one.
 
 ## Secondary heat source
 

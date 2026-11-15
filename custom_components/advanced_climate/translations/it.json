@@ -210,7 +210,7 @@
           "secondary_source": "Fonte di calore secondaria"
         },
         "data_description": {
-          "boiler_entity": "La caldaia (o il relè che accende la fonte di calore) quando le stanze non possono accenderla da sole (valvole termostatiche, valvole di zona). L'integrazione la accende quando le stanze chiedono calore, e l'apprendimento e il tempo di riscaldamento contano solo mentre è accesa. Mai il relè che un Generic Thermostat usa già. Con valvole termostatiche e una caldaia accesa da un termostato che non è in Home Assistant, l'apprendimento non è affidabile: avvio e spegnimento ottimali sono sconsigliati.",
+          "boiler_entity": "La caldaia (o il relè che accende la fonte di calore) quando le stanze non possono accenderla da sole (valvole termostatiche, valvole di zona). L'integrazione la accende quando le stanze chiedono calore, e l'apprendimento e il tempo di riscaldamento contano solo mentre è accesa. Mai il relè che un Generic Thermostat usa già. Con valvole termostatiche e una caldaia accesa da un termostato che non è in Home Assistant, l'apprendimento non è affidabile: avvio e spegnimento ottimali sono sconsigliati. Vuoto: nessuna fonte di calore; nel passo successivo si possono comunque scegliere i relè dei circuiti (valvole di zona cablate alla caldaia).",
           "secondary_source": "Facoltativa, solo con una fonte di calore qui sopra: una seconda (per esempio una pompa di calore accanto alla caldaia) che scalda le stesse stanze e gli stessi circuiti. Ne funziona una sola: finché si usa la secondaria, la prima resta spenta. Scegli quale dalla scheda o con il select Fonte di calore della casa (a mano, con un'automazione o in Automatico secondo un criterio, al passo successivo). Se quella scelta non è disponibile, scalda l'altra. Vuoto (predefinito): una sola fonte."
         },
         "description": "Solo per case in cui le stanze non possono accendere da sole la fonte di calore (valvole termostatiche o valvole di zona): l'integrazione la accende quando le stanze chiedono calore, e una stanza si scalda (per l'apprendimento e il tempo di riscaldamento) solo mentre è accesa.\n\n⚠️ Con una valvola termostatica su ogni termosifone, l'impianto deve far passare l'acqua (un bypass automatico, una caldaia con bypass interno o un termosifone senza valvola): le valvole si chiudono alla loro temperatura obiettivo, e la fonte di calore può restare accesa fino alla fine del suo tempo minimo di accensione."
@@ -404,6 +404,16 @@
           "source_criterion": "Cosa sceglie la fonte secondaria in Automatico: Surplus fotovoltaico (il sensore FV supera la sua soglia, in Energia), Freddo fuori (sotto una temperatura, al passo successivo), Corrente economica (il prezzo è al massimo il suo limite basso, in Energia), Entità propria (un'entità on / off a tua scelta: on = la fonte secondaria). Compare solo quello che la casa ha impostato. Nessuno (predefinito): niente Automatico, la fonte si sceglie a mano o con un'automazione. Con il surplus fotovoltaico usa la produzione dei pannelli o un surplus che comprende la pompa di calore: un sensore di immissione scende appena parte la pompa, e le fonti si alternerebbero di continuo."
         }
       },
+      "boiler_circuits": {
+        "title": "Circuiti di riscaldamento",
+        "data": {
+          "circuits": "Relè dei circuiti"
+        },
+        "data_description": {
+          "circuits": "I relè delle valvole di zona (o delle pompe) dei circuiti di riscaldamento, ad es. uno per piano. Ogni stanza sceglie poi il suo circuito (nelle sue impostazioni): il relè si accende finché una sua stanza chiede calore e si spegne appena nessuna lo fa. Vuoto (predefinito): nessun circuito."
+        },
+        "description": "Senza fonte di calore: per valvole di zona cablate alla caldaia, che la avviano da sole quando si aprono (ad es. una valvola per piano). L'integrazione apre la valvola di un circuito finché una delle sue stanze chiede calore e la chiude quando nessuna lo fa; la caldaia segue le valvole."
+      },
       "behavior_details": {
         "title": "Modifiche manuali",
         "data": {
@@ -516,6 +526,15 @@
             "starts_house_source": "Acceso (predefinito): quando questa stanza chiede calore accende la fonte di calore della casa (la caldaia), come ogni stanza. Spento: una stanza secondaria. Non accende mai la caldaia per sé; le sue valvole termostatiche, valvole o relè si aprono comunque quando è sotto l'obiettivo, quindi prende calore solo mentre la caldaia è accesa per un'altra stanza. Adatta a stanze che non devono essere fredde ma non devono essere calde a un'ora precisa: verande, camera degli ospiti, corridoio, ripostiglio. In una giornata mite la caldaia può accendersi poco, quindi la stanza può restare sotto l'obiettivo per ore. Per sicurezza l'antigelo accende comunque la caldaia per lei. Non conta tra le stanze necessarie per accendere la fonte di calore.",
             "circuit": "Il circuito di riscaldamento di questa stanza (il relè della sua pompa o valvola di zona), tra quelli della casa. Il relè si accende prima della caldaia quando la stanza chiede calore, e si spegne dopo che la caldaia si è fermata quando nessuna stanza del circuito ne ha bisogno. Vuoto: la stanza non ha un circuito.",
             "top_up": "Spento (predefinito). Acceso: mentre la caldaia è accesa per altre stanze e questa stanza è appena sotto l'obiettivo (dentro la sua isteresi, 0,3 °C di default, quindi non chiede ancora calore), le sue valvole termostatiche o il relè si aprono e si scalda fino all'obiettivo. Avrebbe chiesto calore a breve e riacceso la caldaia: così la caldaia si accende meno spesso. Non accende mai la caldaia e non la tiene accesa, non conta tra le stanze necessarie e, con un circuito, si scalda solo se quel circuito è già aperto. Non durante una modifica manuale, con una finestra aperta, in pausa o durante lo spegnimento ottimale. Per una stanza secondaria, che non accende la caldaia, prende il calore mentre la caldaia è accesa per altre stanze, così non resta sotto l'obiettivo fino alla prossima accensione."
+          }
+        },
+        "room_circuit": {
+          "title": "Circuito di riscaldamento",
+          "data": {
+            "circuit": "Circuito"
+          },
+          "data_description": {
+            "circuit": "Il circuito di riscaldamento di questa stanza (il relè della sua valvola di zona o pompa), tra quelli della casa. Il relè si accende finché la stanza chiede calore e si spegne quando nessuna sua stanza lo fa. Vuoto: la stanza non ha circuito."
           }
         },
         "control_on_off": {

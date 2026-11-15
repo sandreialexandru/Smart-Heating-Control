@@ -1284,7 +1284,8 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
     def circuit(self) -> str | None:
         """The relay of the heating circuit of the room (a circuit of the house), if any."""
         circuit = self.config.get(CONF_CIRCUIT)
-        if not circuit or not self.uses_house_source:
+        # Without a heat source every room may be on a zone valve.
+        if not circuit or (self.house.source_entity and not self.uses_house_source):
             return None
         return circuit if circuit in self.house.circuits else None
 

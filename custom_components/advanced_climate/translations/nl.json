@@ -210,7 +210,7 @@
           "secondary_source": "Tweede warmtebron"
         },
         "data_description": {
-          "boiler_entity": "De ketel (of het relais dat de warmtebron start) als de kamers hem niet zelf kunnen starten (radiatorkranen, zonekleppen). De integratie start hem als kamers om warmte vragen, en het leren en de verwarmingstijd tellen alleen zolang hij draait. Nooit het relais dat een Generic Thermostat al gebruikt. Met radiatorkranen en een ketel die gestart wordt door een thermostaat buiten Home Assistant is het leren niet betrouwbaar: optimale start en stop worden dan afgeraden.",
+          "boiler_entity": "De ketel (of het relais dat de warmtebron start) als de kamers hem niet zelf kunnen starten (radiatorkranen, zonekleppen). De integratie start hem als kamers om warmte vragen, en het leren en de verwarmingstijd tellen alleen zolang hij draait. Nooit het relais dat een Generic Thermostat al gebruikt. Met radiatorkranen en een ketel die gestart wordt door een thermostaat buiten Home Assistant is het leren niet betrouwbaar: optimale start en stop worden dan afgeraden. Leeg: geen warmtebron; in de volgende stap kunnen toch circuitrelais worden gekozen (zoneventielen die bedraad zijn met de ketel).",
           "secondary_source": "Optioneel, alleen met een warmtebron hierboven: een tweede (bijv. een warmtepomp naast de ketel) die dezelfde kamers en circuits verwarmt. Er draait er maar één: zolang de tweede gebruikt wordt, blijft de eerste uit. Welke kies je in de kaart of met de select Warmtebron van het huis (met de hand, met een automatisering of Automatisch volgens een criterium, in de volgende stap). Is de gekozen bron onbeschikbaar, dan verwarmt de andere. Leeg (standaard): één warmtebron."
         },
         "description": "Alleen voor huizen waar de kamers de warmtebron niet zelf kunnen starten (radiatorkranen of zonekleppen): de integratie start hem dan als kamers om warmte vragen, en een kamer verwarmt (voor het leren en de verwarmingstijd) alleen zolang hij draait.\n\n⚠️ Met een radiatorkraan op elke radiator moet de installatie het water kunnen doorlaten (een automatische bypass, een ketel met interne bypass of één radiator zonder radiatorkraan): de kranen sluiten bij hun doeltemperatuur, en de warmtebron kan blijven draaien tot zijn minimale aan-tijd voorbij is."
@@ -404,6 +404,16 @@
           "source_criterion": "Wat in Automatisch de tweede bron kiest: Zonnestroomoverschot (de PV-sensor ligt boven zijn drempel, bij Energie), Koud buiten (onder een temperatuur, in de volgende stap), Goedkope stroom (de prijs is hooguit zijn ondergrens, bij Energie), Eigen entiteit (een aan/uit-entiteit naar keuze: aan = de tweede bron). Alleen wat in het huis is ingesteld staat erbij. Geen (standaard): geen Automatisch, de bron wordt met de hand of met een automatisering gekozen. Gebruik bij zonnestroomoverschot de opbrengst van de panelen of een overschot inclusief de warmtepomp: een terugleversensor daalt zodra de warmtepomp start, en de bronnen zouden heen en weer wisselen."
         }
       },
+      "boiler_circuits": {
+        "title": "Verwarmingscircuits",
+        "data": {
+          "circuits": "Circuitrelais"
+        },
+        "data_description": {
+          "circuits": "De relais van de zoneventielen (of pompen) van de verwarmingscircuits, bijv. één per verdieping. Een ruimte kiest dan haar circuit (in haar instellingen): het relais gaat aan zolang een ruimte ervan om warmte vraagt, en uit zodra geen enkele dat nog doet. Leeg (standaard): geen circuits."
+        },
+        "description": "Zonder warmtebron: voor zoneventielen die bedraad zijn met de ketel en die hem zelf starten als ze openen (bijv. één ventiel per verdieping). De integratie opent het ventiel van een circuit zolang een van zijn ruimtes om warmte vraagt en sluit het als geen enkele dat nog doet; de ketel volgt de ventielen."
+      },
       "behavior_details": {
         "title": "Handmatige wijzigingen",
         "data": {
@@ -516,6 +526,15 @@
             "starts_house_source": "Aan (standaard): vraagt deze kamer om warmte, dan start hij de warmtebron van het huis (de ketel), zoals elke kamer. Uit: een bijkamer. Hij start de ketel nooit voor zichzelf; zijn radiatorkranen, kleppen of relais gaan wel open als hij onder zijn doeltemperatuur is, dus hij krijgt alleen warmte zolang de ketel voor een andere kamer draait. Goed voor ruimtes die niet koud mogen zijn maar niet op een vast tijdstip warm hoeven te zijn: een serre, een logeerkamer, een gang, een berging. Op een zachte dag draait de ketel misschien weinig, dus de kamer kan urenlang onder zijn doeltemperatuur blijven. De vorstbeveiliging start de ketel voor de zekerheid wel. Hij telt niet mee voor de kamers die nodig zijn om de warmtebron te starten.",
             "circuit": "Het verwarmingscircuit van deze kamer (zijn pomp- of zoneklep-relais), een van de circuits van het huis. Het relais gaat aan vóór de ketel als de kamer om warmte vraagt, en uit nadat de ketel stopt als geen kamer van het circuit het nodig heeft. Leeg: de kamer heeft geen circuit.",
             "top_up": "Uit (standaard). Aan: zolang de ketel voor andere kamers draait en deze kamer net onder zijn doeltemperatuur zit (binnen zijn hysterese, standaard 0,3 °C, dus hij vraagt nog niet om warmte), gaan zijn radiatorkranen of relais open en verwarmt hij tot zijn doeltemperatuur. Hij zou anders binnenkort zelf vragen en de ketel opnieuw starten: zo start de ketel minder vaak. Hij start de ketel nooit en houdt hem niet aan, telt niet mee voor de nodige kamers en verwarmt met een circuit alleen zolang dat circuit al open is. Niet tijdens een handmatige wijziging, met een open raam, in pauze of tijdens de optimale stop. Voor een bijkamer, die de ketel niet start, pakt hij de warmte mee zolang de ketel voor andere kamers draait, zodat hij niet tot de volgende start onder zijn doeltemperatuur blijft."
+          }
+        },
+        "room_circuit": {
+          "title": "Verwarmingscircuit",
+          "data": {
+            "circuit": "Circuit"
+          },
+          "data_description": {
+            "circuit": "Het verwarmingscircuit van deze ruimte (het relais van het zoneventiel of de pomp), uit die van het huis. Het relais gaat aan zolang de ruimte om warmte vraagt en uit als geen ruimte ervan dat nog doet. Leeg: de ruimte heeft geen circuit."
           }
         },
         "control_on_off": {

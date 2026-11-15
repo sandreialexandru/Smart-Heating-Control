@@ -582,6 +582,14 @@ const OPTS = [
     ]
   },
   {
+    id: 'o_boiler_circuits', sec: 'opts', where: P_OPT('Heat source and heat demand → Heating circuits', 'Sursa de căldură și cererea de căldură → Circuite de încălzire'), title: L('Heating circuits', 'Circuite de încălzire'),
+    show: c => !hasTxt(c.o('boiler_entity')) && c.h('source') !== 'generic_thermostat' && c.h('source') !== 'switch',
+    intro: L('Without a heat source: for zone valves wired to the boiler, which start it themselves when they open (e.g. one valve per floor). The integration opens the valve of a circuit while one of its rooms asks for heat and closes it when none does; the boiler follows the valves.', 'Fără sursă de căldură: pentru ventile de zonă legate prin fir la centrală, care o pornesc singure când se deschid (de exemplu un ventil pe etaj). Integrarea deschide ventilul unui circuit cât una dintre camerele lui cere căldură și îl închide când nu mai cere niciuna; centrala urmează ventilele.'),
+    fields: [
+      ents('circuits', L('Circuit relays', 'Releele circuitelor'), L('The relays of the zone valves (or pumps) of the heating circuits, e.g. one per floor. A room then picks its circuit (in its settings): its relay is turned on while a room of it asks for heat, and off as soon as none does. Empty (default): no circuits.', 'Releele ventilelor de zonă (sau ale pompelor) circuitelor de încălzire, de exemplu unul pe etaj. Fiecare cameră își alege apoi circuitul (în setările ei): releul pornește cât o cameră a lui cere căldură și se oprește imediat ce nu mai cere niciuna. Gol (implicit): fără circuite.'), 'switch.upstairs_valve, switch.downstairs_valve')
+    ]
+  },
+  {
     id: 'o_behavior', sec: 'opts', where: P_OPT('Manual changes, vacation and limits', 'Modificări manuale, vacanță și limite'), title: L('Manual changes, vacation and limits', 'Modificări manuale, vacanță și limite'),
     intro: L('What happens when someone changes a thermostat by hand, how vacations behave, and the hard temperature limits.', 'Ce se întâmplă când cineva schimbă un termostat manual, cum se comportă vacanța și limitele ferme de temperatură.'),
     fields: [
@@ -696,6 +704,13 @@ const ROOM = [
         { m: L('Not topped up (default).', 'Nu se încălzește la ocazie (implicit).'), e: L('The room asks for heat when it is below its target by the hysteresis.', 'Camera cere căldură când e sub țintă cu histerezisul.') },
         { show: c => c.src() === 'climate' || c.src() === 'switch', note: L('Only for TRVs or relays (not a Generic Thermostat, which switches its relay by itself).', 'Doar pentru TRV-uri sau relee (nu Generic Thermostat, care își comută singur releul).'), ex: L('The living room asks for heat; the bedroom is at 20.8 °C for a target of 21 °C (hysteresis 0.3 °C, so it does not ask yet): it opens too and reaches 21 °C, instead of starting the boiler again later.', 'Living-ul cere căldură; dormitorul are 20,8 °C la o țintă de 21 °C (histerezis 0,3 °C, deci încă nu cere): se deschide și el și ajunge la 21 °C, în loc să pornească din nou centrala mai târziu.') }),
       ents('circuit', L('Circuit', 'Circuit'), L('The heating circuit of this room (its pump or zone valve relay), among those of the house. Its relay is turned on before the boiler when the room asks for heat, and off after the boiler stops when no room of it needs it. The boiler is not started for the room while its circuit is off or unavailable. Empty: the room has no circuit.', 'Circuitul de încălzire al acestei camere (releul pompei sau al ventilului de zonă), dintre cele ale casei. Releul lui pornește înaintea centralei când camera cere căldură și se oprește după ce centrala se oprește, când nicio cameră a lui nu mai are nevoie. Centrala nu pornește pentru cameră cât circuitul ei e oprit sau indisponibil. Gol: camera nu are circuit.'), 'switch.radiator_pump', { show: c => hasTxt(c.o('circuits')), note: L('Only when the house has circuit relays. In the real form this is a drop-down of the circuit relays of the house.', 'Doar când casa are relee de circuit. În formularul real este o listă cu releele circuitelor casei.') })
+    ]
+  },
+  {
+    id: 'r_circuit', sec: 'rooms', where: P_ROOM, title: L('Heating circuit', 'Circuit de încălzire'), show: c => !c.whole && !hasTxt(c.o('boiler_entity')) && hasTxt(c.o('circuits')),
+    intro: L('Only in a house without a heat source that has circuit relays (zone valves wired to the boiler).', 'Doar într-o casă fără sursă de căldură care are relee de circuit (ventile de zonă legate prin fir la centrală).'),
+    fields: [
+      ents('circuit', L('Circuit', 'Circuit'), L('The heating circuit of this room (its zone valve or pump relay), among those of the house. Its relay is turned on while the room asks for heat and off when no room of it does. Empty: the room has no circuit.', 'Circuitul de încălzire al acestei camere (releul ventilului de zonă sau al pompei), dintre cele ale casei. Releul lui pornește cât camera cere căldură și se oprește când nicio cameră a lui nu mai cere. Gol: camera nu are circuit.'), 'switch.upstairs_valve', { note: L('In the real form this is a drop-down of the circuit relays of the house.', 'În formularul real este o listă cu releele circuitelor casei.') })
     ]
   },
   {
@@ -1146,7 +1161,7 @@ function issues(fl) {
   });
   const wholeBoilerPair = boiler && c0.h('source') === 'climate' && wholeDevices.includes(String(c0.o('boiler_entity')).trim());
   if (boiler && !wholeStarts) own(c0.o('boiler_entity'), t(L('Heat source', 'Sursa de căldură')));
-  if (boiler && !wholeStarts) own(c0.o('circuits'), t(L('Circuit relays', 'Releele circuitelor')));
+  if (!wholeStarts) own(c0.o('circuits'), t(L('Circuit relays', 'Releele circuitelor')));
   if (boiler && !wholeStarts) own(c0.o('secondary_source'), t(L('Secondary heat source', 'Sursă secundară')));
   Object.entries(owners).forEach(([e, who]) => {
     if (who.length < 2 || (wholeBoilerPair && who.length === 2 && e === String(c0.o('boiler_entity')).trim())) return;
@@ -1191,6 +1206,15 @@ function issues(fl) {
       if (missing) out.push(['warn', L('The automatic choice of the source needs what its criterion reads (the PV sensor, an outdoor temperature, the price sensor with its low limit, or the entity): without it there is no Automatic, the source is chosen by hand.', 'Alegerea automată a sursei are nevoie de ce citește criteriul ei (senzorul PV, temperatura de afară, senzorul de preț cu limita de jos sau entitatea): fără el nu există Automat, sursa se alege de mână.')]);
     }
     if (circuits.length && onSource.some(x => !x.r.whole && !hasTxt(x.c.r('circuit')))) out.push(['info', L('The house has circuit relays, but some rooms of the heat source have no circuit: their relay is never turned on for them.', 'Casa are relee de circuit, dar unele camere ale sursei nu au circuit: niciun releu de circuit nu e pornit pentru ele.')]);
+  }
+  if (!boiler && !wholeStarts) {
+    // Zone valves wired to the boiler: every room may have a circuit of the house.
+    const circuits = String(c0.o('circuits') || '').split(/[\s,;]+/).filter(Boolean);
+    rooms.forEach(x => {
+      if (x.r.whole || !circuits.length) return;
+      const mine = String(x.c.r('circuit') || '').trim();
+      if (mine && !circuits.includes(mine)) out.push(['err', L(`${roomName(x.r, x.i, x.c)}: its circuit ${mine} is not one of the Circuit relays of the house.`, `${roomName(x.r, x.i, x.c)}: circuitul ${mine} nu e unul dintre Releele circuitelor casei.`)]);
+    });
   }
   // Scenarios: names, rooms with their own schedule, profiles of that schedule, no shared days.
   const cs = ctx(null, 'scen'); const avail = scenRooms(); const seen = new Set();

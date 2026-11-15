@@ -210,7 +210,7 @@
           "secondary_source": "Sursă secundară"
         },
         "data_description": {
-          "boiler_entity": "Centrala (sau releul care pornește sursa de căldură) când camerele nu o pot porni singure (TRV-uri, robinete de zonă). Integrarea o pornește când camerele cer căldură, iar învățarea și timpul de încălzire se numără doar cât merge. Niciodată releul folosit deja de un Generic Thermostat. Cu TRV-uri și o centrală pornită de un termostat care nu e în Home Assistant, învățarea nu e sigură: pornirea și oprirea anticipată nu sunt recomandate.",
+          "boiler_entity": "Centrala (sau releul care pornește sursa de căldură) când camerele nu o pot porni singure (TRV-uri, robinete de zonă). Integrarea o pornește când camerele cer căldură, iar învățarea și timpul de încălzire se numără doar cât merge. Niciodată releul folosit deja de un Generic Thermostat. Cu TRV-uri și o centrală pornită de un termostat care nu e în Home Assistant, învățarea nu e sigură: pornirea și oprirea anticipată nu sunt recomandate. Gol: fără sursă de căldură; la pasul următor poți alege totuși releele circuitelor (ventile de zonă legate prin fir la centrală).",
           "secondary_source": "Opțional, doar cu o sursă de căldură aleasă mai sus: a doua sursă (de exemplu o pompă de căldură lângă centrală), care încălzește aceleași camere și circuite. Merge doar una: cât e folosită cea secundară, prima stă oprită. Alegi care din card sau din selectul Sursa de căldură al casei (de mână, dintr-o automatizare sau Automat, după un criteriu ales la pasul următor). Dacă cea aleasă e indisponibilă, încălzește cealaltă. Gol (implicit): o singură sursă."
         },
         "description": "Doar pentru casele în care camerele nu pot porni singure sursa de căldură (TRV-uri sau robinete de zonă): integrarea o pornește atunci când camerele cer căldură, iar o cameră încălzește (pentru învățare și timpul de încălzire) doar cât merge sursa.\n\n⚠️ Cu TRV-uri pe toate caloriferele, instalația trebuie să lase apa să circule (bypass automat, centrală cu bypass intern sau un calorifer fără TRV): TRV-urile se închid la țintă, iar sursa poate merge până la capătul timpului minim pornită."
@@ -404,6 +404,16 @@
           "source_criterion": "Ce alege sursa secundară pe Automat: Surplus PV (senzorul PV e peste prag, din Energie), Frig afară (sub o temperatură, la pasul următor), Curent ieftin (prețul e cel mult limita de jos, din Energie), Entitate proprie (o entitate on / off aleasă de tine: on = sursa secundară). Apar doar cele pe care casa le are setate. Niciunul (implicit): fără Automat, sursa se alege de mână sau dintr-o automatizare. La Surplus PV folosește producția panourilor sau un surplus care include pompa de căldură: un senzor de export scade imediat ce pornește pompa, iar sursele s-ar schimba de colo-colo."
         }
       },
+      "boiler_circuits": {
+        "title": "Circuite de încălzire",
+        "data": {
+          "circuits": "Releele circuitelor"
+        },
+        "data_description": {
+          "circuits": "Releele ventilelor de zonă (sau ale pompelor) circuitelor de încălzire, de exemplu unul pe etaj. Fiecare cameră își alege apoi circuitul (în setările ei): releul pornește cât o cameră a lui cere căldură și se oprește imediat ce nu mai cere niciuna. Gol (implicit): fără circuite."
+        },
+        "description": "Fără sursă de căldură: pentru ventile de zonă legate prin fir la centrală, care o pornesc singure când se deschid (de exemplu un ventil pe etaj). Integrarea deschide ventilul unui circuit cât una dintre camerele lui cere căldură și îl închide când nu mai cere niciuna; centrala urmează ventilele."
+      },
       "behavior_details": {
         "title": "Modificări manuale",
         "data": {
@@ -516,6 +526,15 @@
             "starts_house_source": "Pornit (implicit): când camera cere căldură, pornește sursa de căldură a casei (centrala), ca orice cameră. Oprit: o cameră secundară. Nu pornește niciodată centrala pentru ea; TRV-urile, vanele sau releele ei se deschid totuși cât e sub țintă, deci primește căldură doar cât centrala merge pentru altă cameră. Potrivit pentru camere care nu trebuie să fie reci, dar nici calde la o oră anume: balcoane închise, camera de oaspeți, hol, debara. Într-o zi blândă centrala poate merge puțin, așa că acea cameră poate rămâne ore întregi sub țintă. Antiînghețul pornește totuși centrala pentru ea, din motive de siguranță. Nu se numără la Camere necesare pentru pornirea sursei.",
             "circuit": "Circuitul de încălzire al acestei camere (releul pompei sau al ventilului de zonă), dintre cele ale casei. Releul lui pornește înaintea centralei când camera cere căldură și se oprește după ce centrala se oprește, când nicio cameră a lui nu mai are nevoie. Gol: camera nu are circuit.",
             "top_up": "Oprit (implicit). Pornit: cât centrala merge pentru alte camere și camera e puțin sub țintă (în histerezisul ei, implicit 0,3 °C, deci încă nu cere căldură), TRV-urile sau releul ei se deschid și se încălzește până la țintă. Ar cere curând și ar porni din nou centrala: așa centrala pornește mai rar. Nu pornește niciodată centrala și nici nu o ține pornită, nu se numără la Camere necesare și, cu un circuit, se încălzește doar cât acel circuit e deja deschis. Nu în timpul unei modificări manuale, cu fereastra deschisă, în pauză sau la oprirea optimă. La o cameră secundară, care nu pornește centrala, prinde căldura cât centrala merge pentru alte camere, ca să nu rămână sub țintă până la următoarea pornire."
+          }
+        },
+        "room_circuit": {
+          "title": "Circuit de încălzire",
+          "data": {
+            "circuit": "Circuit"
+          },
+          "data_description": {
+            "circuit": "Circuitul de încălzire al acestei camere (releul ventilului de zonă sau al pompei), dintre cele ale casei. Releul lui pornește cât camera cere căldură și se oprește când nicio cameră a lui nu mai cere. Gol: camera nu are circuit."
           }
         },
         "control_on_off": {

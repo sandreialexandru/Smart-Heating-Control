@@ -21,6 +21,17 @@ which the reference room could not.
 
 ### New
 
+- 🚰 **Zone valves without a heat source** (#10): circuit relays now work also
+  without a *Heat source*, for zone valves wired to the boiler that start it
+  themselves (one per floor, say). Leave the *Heat source* empty: the next page
+  asks for the *Circuit relays*, and each room picks its *Circuit*. A valve opens
+  while a room of it asks for heat and closes as soon as none does.
+- 🌡️ **A thermostat on its schedule preset is put on manual** (e.g. Bosch):
+  with the *Temperature* command, a thermostat on `schedule` (or `auto`,
+  `program`) that has a `manual` preset is put on `manual` once it took the
+  temperature, so its own schedule no longer changes it, as the TRVs in *auto*
+  are put in *heat*. One that goes back to its schedule by itself within 5
+  minutes is left there, and that is not a manual change.
 - 🌦️ **The weather tells what it does**: when the heating stops because it is
   warm outside, or starts again because it gets cold, the house says so
   (information), by the measured average or by the forecast, with its mean.

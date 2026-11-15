@@ -313,3 +313,45 @@ async def test_every_room_form(hass: HomeAssistant) -> None:
         "schedule_internal",
         "extras",
     } <= seen, seen
+
+
+async def test_the_circuit_forms_without_a_heat_source(hass: HomeAssistant) -> None:
+    """Zone valves wired to the boiler: the circuits page and the room's circuit."""
+    entry = _house(hass, {"persons": ["person.andrei"], "nearby_zones": []})
+    seen: set[str] = set()
+    options = hass.config_entries.options
+    result = await options.async_init(entry.entry_id)
+    result = await options.async_configure(result["flow_id"], {"next_step_id": "boiler"})
+    await _walk(
+        hass,
+        options,
+        result,
+        ("options",),
+        {
+            "boiler": {},
+            "boiler_circuits": {"circuits": ["switch.upstairs", "switch.downstairs"]},
+        },
+        seen,
+    )
+    assert {"boiler", "boiler_circuits"} <= seen, seen
+    assert entry.options["circuits"] == ["switch.upstairs", "switch.downstairs"]
+    flow = hass.config_entries.subentries
+    result = await flow.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
+    await _walk(
+        hass,
+        flow,
+        result,
+        ("config_subentries", "room"),
+        {
+            "basics": {"name": "Bedroom", "source": "climate"},
+            "devices": {"climates": ["climate.bedroom"], "command_mode": "temperature"},
+            "room_circuit": {"circuit": "switch.upstairs"},
+            "sensors": {"temperature_sensors": ["sensor.a"]},
+        },
+        seen,
+        limit=40,
+    )
+    assert {"devices", "room_circuit"} <= seen, seen
+    assert "house_source" not in seen
+    room = next(iter(entry.subentries.values()))
+    assert room.data["circuit"] == "switch.upstairs"

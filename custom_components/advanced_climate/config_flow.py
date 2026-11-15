@@ -792,6 +792,7 @@ def _entity_owners(hass: Any, skip: Skip = (None, None)) -> dict[str, tuple[str,
             owners[boiler] = ("source", entry.title)
             if secondary := opts.get(CONF_SECONDARY_SOURCE):
                 owners[secondary] = ("source", entry.title)
+        if skip != (entry.entry_id, "boiler"):
             for circuit in as_list(opts.get(CONF_CIRCUITS)):
                 owners[circuit] = ("circuit", entry.title)
         for sub in entry.subentries.values():
@@ -1488,6 +1489,8 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
                         CONF_SOURCE_SWITCH_MINUTES,
                     ):
                         self._pending.pop(key, None)
+                if not boiler:
+                    return await self.async_step_boiler_circuits()
                 return await self.async_step_boiler_details()
             schema = _boiler_schema({**self._values, **user_input})
         return self.async_show_form(
@@ -1529,6 +1532,25 @@ class AdvancedClimateOptionsFlow(_UnitForms, _HouseHeatingSteps, OptionsFlow):
                 self._pending.pop(key, None)
             return self.async_create_entry(data=self._pending)
         return self._second("boiler_details", schema, user_input, errors, placeholders)
+
+    async def async_step_boiler_circuits(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Without a heat source: the relays of zone valves that start the boiler themselves."""
+        schema = vol.Schema(
+            {
+                _opt(CONF_CIRCUITS, self._pending_values): _entity(
+                    ["switch", "input_boolean"], multiple=True
+                )
+            }
+        )
+        errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {"entity": "", "owner": ""}
+        if user_input is not None and (circuits := as_list(user_input.get(CONF_CIRCUITS))):
+            skip = (self.config_entry.entry_id, "boiler")
+            if error := _in_use_error(self.hass, circuits, skip, placeholders):
+                errors[CONF_CIRCUITS] = error
+        return self._second("boiler_circuits", schema, user_input, errors, placeholders)
 
     async def async_step_boiler_source(
         self, user_input: dict[str, Any] | None = None
@@ -1688,6 +1710,8 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
             if not errors:
                 if with_source and d.get(CONF_USE_HOUSE_SOURCE, True) and not self._is_house_zone():
                     return await self.async_step_house_source()
+                if not with_source and self._house_circuits():
+                    return await self.async_step_room_circuit()
                 return await self._after_devices()
         return self.async_show_form(
             step_id="devices",
@@ -1732,29 +1756,7 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                 _bool()
             )
         # The circuit of the room, among those of the house (only when it has some).
-        opts = self._get_entry().options
-        circuits = as_list(opts.get(CONF_CIRCUITS)) if opts.get(CONF_BOILER_ENTITY) else []
-        if circuits:
-            options = [
-                selector.SelectOptionDict(
-                    value=c,
-                    label=str(
-                        (st := self.hass.states.get(c)) and st.attributes.get("friendly_name") or c
-                    ),
-                )
-                for c in circuits
-            ]
-            current = self._data.get(CONF_CIRCUIT)
-            fields[
-                vol.Optional(
-                    CONF_CIRCUIT,
-                    description={"suggested_value": current if current in circuits else None},
-                )
-            ] = selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=options, mode=selector.SelectSelectorMode.DROPDOWN
-                )
-            )
+        self._circuit_field(fields)
         schema = vol.Schema(fields)
         if user_input is not None:
             self._data[CONF_STARTS_HOUSE_SOURCE] = bool(
@@ -1764,12 +1766,57 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                 self._data[CONF_TOP_UP] = bool(user_input.get(CONF_TOP_UP, False))
             else:
                 self._data.pop(CONF_TOP_UP, None)
-            if user_input.get(CONF_CIRCUIT):
-                self._data[CONF_CIRCUIT] = user_input[CONF_CIRCUIT]
-            else:
-                self._data.pop(CONF_CIRCUIT, None)
+            self._keep_circuit(user_input)
             return await self._after_devices()
         return self.async_show_form(step_id="house_source", data_schema=schema)
+
+    def _house_circuits(self) -> list[str]:
+        """The circuit relays of the house (also without a heat source)."""
+        return as_list(self._get_entry().options.get(CONF_CIRCUITS))
+
+    def _circuit_field(self, fields: dict[Any, Any]) -> None:
+        """The Circuit field of the room, when the house has circuits."""
+        circuits = self._house_circuits()
+        if not circuits:
+            return
+        options = [
+            selector.SelectOptionDict(
+                value=c,
+                label=str(
+                    (st := self.hass.states.get(c)) and st.attributes.get("friendly_name") or c
+                ),
+            )
+            for c in circuits
+        ]
+        current = self._data.get(CONF_CIRCUIT)
+        fields[
+            vol.Optional(
+                CONF_CIRCUIT,
+                description={"suggested_value": current if current in circuits else None},
+            )
+        ] = selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=options, mode=selector.SelectSelectorMode.DROPDOWN
+            )
+        )
+
+    def _keep_circuit(self, user_input: dict[str, Any]) -> None:
+        """Keep the chosen circuit of the room (none: no circuit)."""
+        if user_input.get(CONF_CIRCUIT):
+            self._data[CONF_CIRCUIT] = user_input[CONF_CIRCUIT]
+        else:
+            self._data.pop(CONF_CIRCUIT, None)
+
+    async def async_step_room_circuit(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Without a heat source: the circuit (zone valve) of the room, if any."""
+        fields: dict[Any, Any] = {}
+        self._circuit_field(fields)
+        if user_input is not None:
+            self._keep_circuit(user_input)
+            return await self._after_devices()
+        return self.async_show_form(step_id="room_circuit", data_schema=vol.Schema(fields))
 
     def _on_off(self) -> bool:
         """True when the room is controlled on / off (relays or hvac_mode)."""

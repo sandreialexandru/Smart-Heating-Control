@@ -210,7 +210,7 @@
           "secondary_source": "Secondary heat source"
         },
         "data_description": {
-          "boiler_entity": "The boiler (or the relay that starts the heat source) when the rooms cannot start it themselves (TRVs, zone valves). The integration starts it when rooms ask for heat, and the learning and the heating time count only while it runs. Never the relay a Generic Thermostat already uses. With TRVs and a boiler started by a thermostat that is not in Home Assistant, the learning is not reliable: optimal start and stop are not recommended.",
+          "boiler_entity": "The boiler (or the relay that starts the heat source) when the rooms cannot start it themselves (TRVs, zone valves). The integration starts it when rooms ask for heat, and the learning and the heating time count only while it runs. Never the relay a Generic Thermostat already uses. With TRVs and a boiler started by a thermostat that is not in Home Assistant, the learning is not reliable: optimal start and stop are not recommended. Empty: no heat source; the next step can still take circuit relays (zone valves wired to the boiler).",
           "secondary_source": "Optional, only with a heat source above: a second one (e.g. a heat pump next to the boiler) that heats the same rooms and circuits. Only one of them runs: while the secondary one is in use, the first one stays off. You choose which one in the card or with the Heat source select of the house (by hand, by an automation, or Automatic by a criterion, in the next step). If the chosen one is unavailable, the other one heats. Empty (default): one heat source."
         },
         "description": "Only for houses where the rooms cannot start the heat source themselves (TRVs or zone valves): the integration then starts it when rooms ask for heat, and a room heats (for the learning and the heating time) only while it runs.\n\n⚠️ With TRVs on every radiator, the installation must let the water through (an automatic bypass, a boiler with an internal bypass or one radiator without a TRV): the TRVs close at their target, and the heat source may run until its minimum on time ends."
@@ -404,6 +404,16 @@
           "source_criterion": "What chooses the secondary source in Automatic: PV surplus (the PV sensor is above its threshold, in Energy), Cold outside (below a temperature, in the next step), Cheap power (the price is at or below its low limit, in Energy), Your own entity (an on / off entity you choose: on = the secondary source). Only what the house has set up is listed. None (default): no Automatic, the source is chosen by hand or by an automation. With PV surplus, use the production of the panels or a surplus that includes the heat pump: an export sensor drops as soon as the heat pump starts, and the sources would switch back and forth."
         }
       },
+      "boiler_circuits": {
+        "title": "Heating circuits",
+        "data": {
+          "circuits": "Circuit relays"
+        },
+        "data_description": {
+          "circuits": "The relays of the zone valves (or pumps) of the heating circuits, e.g. one per floor. A room then picks its circuit (in its settings): its relay is turned on while a room of it asks for heat, and off as soon as none does. Empty (default): no circuits."
+        },
+        "description": "Without a heat source: for zone valves wired to the boiler, which start it themselves when they open (e.g. one valve per floor). The integration opens the valve of a circuit while one of its rooms asks for heat and closes it when none does; the boiler follows the valves."
+      },
       "behavior_details": {
         "title": "Manual changes",
         "data": {
@@ -516,6 +526,15 @@
             "starts_house_source": "On (default): when this room asks for heat it starts the heat source of the house (the boiler), like every room. Off: a secondary room. It never starts the boiler for itself; its TRVs, valves or relays still open when it is below its target, so it takes heat only while the boiler runs for another room. Good for rooms that should not be cold but do not need to be warm at a set time: enclosed balconies, a guest room, a hall, a storage room. On a mild day the boiler may run little, so the room may stay below its target for hours. Frost protection still starts the boiler for it, for safety. It does not count for Rooms needed to start the heat source.",
             "circuit": "The heating circuit of this room (its pump or zone valve relay), among those of the house. Its relay is turned on before the boiler when the room asks for heat, and off after the boiler stops when no room of it needs it. Empty: the room has no circuit.",
             "top_up": "Off (default). On: while the boiler runs for other rooms and this room is a little below its target (within its hysteresis, 0.3 °C by default, so it does not ask for heat yet), its TRVs or relay open and it heats up to its target. It would ask soon and start the boiler again: this way the boiler starts less often. It never starts the boiler nor keeps it running, does not count for Rooms needed and, with a circuit, heats only while that circuit is already open. Not during a manual change, with a window open, in pause or during the optimal stop. For a secondary room, which does not start the boiler, it catches the heat while the boiler runs for other rooms, so it does not stay below its target until the next start."
+          }
+        },
+        "room_circuit": {
+          "title": "Heating circuit",
+          "data": {
+            "circuit": "Circuit"
+          },
+          "data_description": {
+            "circuit": "The heating circuit of this room (its zone valve or pump relay), among those of the house. Its relay is turned on while the room asks for heat and off when no room of it does. Empty: the room has no circuit."
           }
         },
         "control_on_off": {

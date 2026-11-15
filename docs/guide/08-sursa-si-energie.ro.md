@@ -173,8 +173,8 @@ pompa sau ventilul lui de zonă: încălzire în pardoseală și calorifere, par
 și etajul. Centrala nu trebuie să meargă cât toate circuitele sunt închise.
 
 1. În opțiunile casei, la sursa de căldură, alege **Releele circuitelor**
-   (`switch` sau `input_boolean`), câte unul pe circuit. Câmpul apare doar cu o
-   *Sursă de căldură*.
+   (`switch` sau `input_boolean`), câte unul pe circuit. Fără *Sursă de
+   căldură* vezi [Ventile de zonă fără sursă de căldură](#ventile-de-zonă-fără-sursă-de-căldură).
 2. La fiecare cameră pe centrală, alege-i **Circuitul** (pasul de după
    dispozitive; apare doar când casa are relee de circuit). O cameră fără
    circuit merge ca înainte.
@@ -204,8 +204,28 @@ Ce face integrarea:
   pornească nici pentru celelalte camere (pompele lor pot merge atunci fără
   ea). Releul trebuie reparat sau circuitele casei schimbate.
 - Fără întârzieri: releul nu așteaptă pornirea pompei sau deschiderea
-  ventilului. Un ventil de zonă cu contact de capăt care pornește singur
-  centrala nu are nevoie de circuit aici.
+  ventilului.
+
+### Ventile de zonă fără sursă de căldură
+
+Ventilele de zonă legate prin fir la centrală (câte unul pe etaj, de exemplu)
+o pornesc singure când se deschid, prin contactul lor de capăt: centrala nu e
+în Home Assistant, doar releele ventilelor. Atunci lasă *Sursa de căldură*
+goală: pagina următoare cere doar **Releele circuitelor**, iar fiecare cameră
+primește **Circuitul** la pasul de după dispozitive.
+
+- Ventilul unui circuit se deschide cât o cameră a lui cere căldură și se
+  închide imediat ce nu mai cere niciuna (nu e nicio centrală de așteptat).
+  Centrala urmează ventilele.
+- *Camere necesare*, camerele secundare și timpii minimi țin de o sursă de
+  căldură: aici nu se aplică; orice cameră cu circuit și-l deschide.
+- Antiînghețul deschide ventilul; în pauză ventilele nu sunt comutate, cu
+  excepția antiînghețului.
+- Cardul spune *circuitul ei (…) e oprit* cât o cameră cere căldură și
+  ventilul ei e închis sau indisponibil, iar alerta pentru ventil indisponibil
+  merge ca mai sus.
+- Timpul de încălzire și învățarea urmează camerele (nu e nicio sursă de
+  urmărit), ca într-o casă fără sursă.
 
 ## Sursă secundară
 

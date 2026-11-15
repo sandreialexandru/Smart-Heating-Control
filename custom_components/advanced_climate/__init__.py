@@ -20,6 +20,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_BOILER_ENTITY,
+    CONF_CIRCUIT,
+    CONF_CIRCUITS,
     CONF_PROFILE_DAYS,
     CONF_SCHEDULE,
     CONF_SCHEDULE_SOURCE,
@@ -56,6 +58,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the integration (services and the Lovelace card)."""
     async_setup_services(hass)
     await async_register_card(hass)
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Bring a house of an older version up to date."""
+    if entry.version > 1:
+        return False  # saved by a newer version
+    if entry.minor_version < 2:
+        # Before 2.6.5 the circuit relays worked only with a heat source: those
+        # kept after the heat source was removed did nothing. Now they would be
+        # switched (zone valves without a heat source), so they are cleared.
+        options = dict(entry.options)
+        if not options.get(CONF_BOILER_ENTITY) and options.get(CONF_CIRCUITS):
+            options.pop(CONF_CIRCUITS)
+            for subentry in list(entry.subentries.values()):
+                if subentry.subentry_type == SUBENTRY_ROOM and CONF_CIRCUIT in subentry.data:
+                    data = {k: v for k, v in subentry.data.items() if k != CONF_CIRCUIT}
+                    hass.config_entries.async_update_subentry(entry, subentry, data=data)
+            _LOGGER.info(
+                "%s: circuit relays left from a removed heat source were cleared", entry.title
+            )
+        hass.config_entries.async_update_entry(entry, options=options, minor_version=2)
     return True
 
 

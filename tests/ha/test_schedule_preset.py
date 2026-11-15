@@ -1,4 +1,4 @@
-"""A thermostat on its schedule preset (e.g. Bosch: ``schedule``) with a ``manual``
+"""A thermostat on its schedule preset (e.g. Aqara, Tuya: ``schedule``) with a ``manual``
 one, driven by temperature: put on manual once it took the temperature, so it
 keeps it; one that goes back to its schedule by itself is left there (as the
 TRVs that go back to auto, #15)."""
@@ -144,4 +144,56 @@ async def test_its_schedule_chosen_by_hand_later_is_a_manual_change(
     assert room.decision.rule == "manual_override"
     assert "climate.bosch" not in room.keeps_auto
     assert len(presets) == 1
+    await _unload(hass, entry)
+
+
+async def test_one_that_refuses_the_temperature_on_its_schedule_is_put_on_manual(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """On its schedule it keeps the temperature of the schedule (18): put on
+    manual first, then it takes the temperature, without being sent it again
+    and again."""
+    temps: list[ServiceCall] = []
+    presets: list[ServiceCall] = []
+
+    @callback
+    def _set_temperature(call: ServiceCall) -> None:
+        temps.append(call)
+        state = hass.states.get("climate.trv")
+        on_schedule = state.attributes["preset_mode"] == "schedule"
+        value = 18.0 if on_schedule else call.data["temperature"]
+        new = {**state.attributes, "temperature": value}
+        hass.states.async_set("climate.trv", state.state, new, context=call.context)
+
+    @callback
+    def _set_preset(call: ServiceCall) -> None:
+        presets.append(call)
+        state = hass.states.get("climate.trv")
+        new = {**state.attributes, "preset_mode": call.data["preset_mode"]}
+        hass.states.async_set("climate.trv", state.state, new, context=call.context)
+
+    hass.services.async_register("climate", "set_temperature", _set_temperature)
+    hass.services.async_register("climate", "set_preset_mode", _set_preset)
+    async_mock_service(hass, "climate", "set_hvac_mode")
+    hass.states.async_set(
+        "climate.trv",
+        "heat",
+        {
+            **BOSCH,
+            "preset_modes": ["schedule", "manual", "holiday"],
+            "preset_mode": "schedule",
+            "temperature": 18.0,
+        },
+    )
+    entry = await _house(hass, freezer, [("Office", {**ROOM, "climates": ["climate.trv"]})])
+    for _ in range(30):
+        await _tick(hass, freezer, 60)
+    state = hass.states.get("climate.trv")
+    assert state.attributes["preset_mode"] == "manual"
+    assert state.attributes["temperature"] == 21.0
+    assert [c.data["preset_mode"] for c in presets] == ["manual"]
+    assert len(temps) <= 2
+    room = _room(entry, "Office")
+    assert room.decision.rule != "manual_override"
+    assert "climate.trv" not in room.keeps_auto
     await _unload(hass, entry)

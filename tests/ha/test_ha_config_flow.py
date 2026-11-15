@@ -51,6 +51,8 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home"
     assert result["options"]["home_rule"] == "any"
+    # A new house is of the current version: nothing to bring up to date.
+    assert result["result"].minor_version == 2
     zone = next(iter(result["result"].subentries.values()))
     assert zone.title == "Whole house"
     assert zone.unique_id == "whole_house"

@@ -87,7 +87,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__.rsplit(".", 1)[0] + ".room")
 # Back in auto within this time after being put in heat: the thermostat keeps auto.
 AUTO_RETURN_WINDOW = timedelta(minutes=5)
-# Presets of a thermostat that follows its own schedule (e.g. Bosch), and the one
+# Presets of a thermostat that follows its own schedule (e.g. Aqara, Tuya, Moes), and the one
 # that keeps the temperature sent.
 SCHEDULE_PRESETS = frozenset({"schedule", "auto", "program", "programme", "timer"})
 MANUAL_PRESET = "manual"
@@ -439,8 +439,9 @@ class RoomDevices:
         temperature is set (Netatmo, Tado), and for some heat means a boost to
         the maximum. A device with only auto keeps it (that is its heating
         mode), and the Preset command leaves the mode alone (presets may need
-        auto). The same for a thermostat on its schedule preset (e.g. Bosch:
-        ``schedule``) that has a ``manual`` one: it is put on manual.
+        auto). The same for a thermostat on its schedule preset (``schedule``,
+        ``auto``, ``program``: e.g. Aqara, Tuya, Moes) that has a ``manual``
+        one: it is put on manual, also before it took the temperature.
         """
         if self.command_mode != COMMAND_TEMPERATURE or not (
             _auto_with_heat(state) or _manual_preset(state) is not None
@@ -537,15 +538,20 @@ class RoomDevices:
                 return False
             return await self._send(entity_id, "set_temperature", ATTR_TEMPERATURE, minimum)
 
-        own_schedule = self._own_schedule_mode(state) and self._holds(state, target)
-        if (state.state == STATE_OFF and on_mode) or (own_schedule and _auto_with_heat(state)):
+        own_schedule = self._own_schedule_mode(state)
+        holds = own_schedule and self._holds(state, target)
+        if (state.state == STATE_OFF and on_mode) or (holds and _auto_with_heat(state)):
             if state.state != STATE_OFF:
                 self.auto_left_at[entity_id] = dt_util.utcnow()
             await self._send(entity_id, "set_hvac_mode", "hvac_mode", on_mode or "heat", "state")
         elif own_schedule and (manual := _manual_preset(state)) is not None:
             # On its schedule preset: put on manual, so it keeps the temperature.
+            # Also when it did not take the temperature: some refuse it on their
+            # schedule, and manual is no boost (unlike heat for some).
             self.auto_left_at[entity_id] = dt_util.utcnow()
-            return await self._send(entity_id, "set_preset_mode", "preset_mode", manual)
+            sent = await self._send(entity_id, "set_preset_mode", "preset_mode", manual)
+            if holds:
+                return sent
 
         if target.kind == KIND_PRESET and self.command_mode == COMMAND_PRESET:
             available = list(state.attributes.get("preset_modes") or [])
@@ -1032,7 +1038,7 @@ def _auto_with_heat(state: State) -> bool:
 
 
 def _on_schedule_preset(state: State) -> bool:
-    """On the preset of its own schedule (e.g. Bosch: ``schedule``)."""
+    """On the preset of its own schedule (e.g. ``schedule``, ``auto``, ``program``)."""
     preset = state.attributes.get("preset_mode")
     return isinstance(preset, str) and preset.lower() in SCHEDULE_PRESETS
 

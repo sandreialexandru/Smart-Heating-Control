@@ -1143,6 +1143,9 @@ class AdvancedClimateConfigFlow(_UnitForms, _HouseHeatingSteps, ConfigFlow, doma
     """Create the house."""
 
     VERSION = 1
+    # 2: circuit relays work also without a heat source (those left from a
+    # removed heat source are cleared once, see async_migrate_entry).
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize."""

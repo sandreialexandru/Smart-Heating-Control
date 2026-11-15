@@ -44,6 +44,7 @@ async def _house(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
+        minor_version=2,
         options={"persons": ["person.andrei"], "nearby_zones": [], **options},
         subentries_data=[
             {"data": data, "subentry_type": SUBENTRY_ROOM, "title": title, "unique_id": None}

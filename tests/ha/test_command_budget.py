@@ -83,6 +83,9 @@ class House:
         self.commands: list[tuple[datetime, str, str]] = []
         # Nobody touches a device here: a manual change seen is a misreading.
         self.manual: list[tuple[datetime, str]] = []
+        # Rooms topped up while the heat source runs for others, how often.
+        self.top_ups: dict[str, int] = {}
+        self._topped: set[str] = set()
         hass.bus.async_listen(EVENT_CALL_SERVICE, self._count)
         for service in ("set_temperature", "set_hvac_mode", "set_preset_mode"):
             hass.services.async_register("climate", service, self._climate)
@@ -212,6 +215,12 @@ class House:
                 for room in house.rooms.values() if house else []:
                     if room.decision is not None and room.decision.rule == "manual_override":
                         self.manual.append((dt_util.utcnow(), room.name))
+                    if room.topped_up and room.name not in self._topped:
+                        self.top_ups[room.name] = self.top_ups.get(room.name, 0) + 1
+                    if room.topped_up:
+                        self._topped.add(room.name)
+                    else:
+                        self._topped.discard(room.name)
             now = dt_util.utcnow()
             due = [a for at, a in self.later if at <= now]
             self.later = [(at, a) for at, a in self.later if at > now]
@@ -571,4 +580,6 @@ async def test_two_days_of_a_relay_room_topped_up(
     entry = await _house(hass, freezer, rooms, boiler_entity="input_boolean.boiler")
     await house.run(48)
     house.check(2)
+    # And it is topped up indeed, again and again (never in 2.6.5rc21-24).
+    assert house.top_ups.get("Office", 0) >= 5, house.top_ups
     await _unload(hass, entry)

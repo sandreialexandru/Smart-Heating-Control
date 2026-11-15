@@ -376,3 +376,34 @@ async def test_at_its_target_not_topped_up_again_until_it_asks(
     assert office.heat_demand
     assert not office._top_up_reached
     await _unload(hass, entry)
+
+
+async def test_topped_up_again_after_it_heated_by_itself(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Topped up to its target, then down by the whole hysteresis: it asks and
+    heats by itself up to its target. A little below it again while the boiler
+    runs for the bedroom: it is topped up again (reaching the target by its own
+    heating does not count as topped up; in 2.6.5rc21-24 it was never topped up
+    again)."""
+    entry, trvs = await _setup(hass, freezer)
+    office = _room(entry, "Office")
+    trvs.report("climate.bedroom", "heating", 20.0)
+    trvs.report("climate.office", "idle", 20.8)
+    await _steps(hass, freezer)
+    assert office.topped_up
+    trvs.report("climate.office", "idle", 21.0)
+    await _steps(hass, freezer)
+    assert not office.topped_up
+    # Down by the whole hysteresis: it asks itself, its TRV heats it to 21.2.
+    trvs.report("climate.office", "heating", 20.6)
+    await _steps(hass, freezer)
+    assert office.heat_demand
+    trvs.report("climate.office", "idle", 21.2)
+    await _steps(hass, freezer)
+    assert not office.heat_demand
+    # A little below its target again, the boiler still running: topped up.
+    trvs.report("climate.office", "idle", 20.9)
+    await _steps(hass, freezer)
+    assert office.topped_up
+    await _unload(hass, entry)

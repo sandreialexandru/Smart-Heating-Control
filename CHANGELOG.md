@@ -136,9 +136,11 @@ which the reference room could not.
   turned on, it now gets the maximum of the room as well, so its own target
   does not close it before the room is warm.
 - ♨️ **Top up while the boiler runs started and stopped in a loop** with a
-  sensor of a tenth of a degree: once at its target, a room is topped up again
-  only after it fell by the whole hysteresis (it asks itself then), or when its
-  target changes (e.g. 18 to 21 at 06:00).
+  sensor of a tenth of a degree: once topped up to its target, a room is
+  topped up again only after it fell by the whole hysteresis (it asks itself
+  then), or when its target changes (e.g. 18 to 21 at 06:00). Reaching the
+  target by its own heating does not count (in 2.6.5rc21-24 the room was
+  then never topped up again).
 - 🔂 **The same command is not sent again** to a TRV that confirms late, while
   it has not reported a change (up to the verification after 2 minutes).
 - ⏱️ **Secondary heat source: each source keeps its minimum on / off times**

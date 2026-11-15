@@ -148,8 +148,8 @@ rămână sub țintă până când altă cameră pornește din nou centrala.
   Vară, cald afară, oprirea optimă). Un TRV care încă încălzește în histerezis
   după aceea nu pornește din nou centrala; sub histerezis, camera cere căldură
   ca de obicei.
-- Odată ajunsă la țintă, camera nu mai e încălzită la ocazie până nu coboară
-  cu tot histerezisul și cere singură (altfel un senzor cu o zecime de grad ar
+- Odată încălzită la ocazie până la țintă, camera nu mai e încălzită la ocazie
+  până nu coboară cu tot histerezisul și cere singură (altfel un senzor cu o zecime de grad ar
   porni-o și opri-o din nou și din nou). Când i se schimbă ținta (de exemplu
   de la 18 la 21 °C la 06:00), se verifică din nou față de ținta nouă.
 - Cu un circuit, doar cât acel circuit e deja deschis (nu se pornește o pompă

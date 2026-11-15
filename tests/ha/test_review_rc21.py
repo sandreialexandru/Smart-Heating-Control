@@ -1003,7 +1003,6 @@ async def test_topped_up_after_its_target_went_up(
     trvs.report("climate.office", "idle", 20.8)
     await _steps(hass, freezer)
     assert office.target_temperature == 18.0
-    assert office._top_up_reached
     trvs.report("climate.bedroom", "heating", 20.0)
     await _steps(hass, freezer)
     assert not office.topped_up

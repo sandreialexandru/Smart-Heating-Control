@@ -144,8 +144,8 @@ stay below its target until another room starts the boiler again.
   the room (window, manual change, pause, mode Off or Summer, warm outside, the
   optimal stop). A TRV still heating inside the hysteresis afterwards does not
   start the boiler again; below it, the room asks for heat as usual.
-- Once at its target, the room is not topped up again until it fell by the
-  whole hysteresis and asked by itself (a sensor of a tenth of a degree would
+- Once topped up to its target, the room is not topped up again until it fell
+  by the whole hysteresis and asked by itself (a sensor of a tenth of a degree would
   otherwise start and stop it again and again). When its target changes (e.g.
   from 18 to 21 °C at 06:00), it is looked at again against the new target.
 - With a circuit, only while that circuit is already open (no pump is started

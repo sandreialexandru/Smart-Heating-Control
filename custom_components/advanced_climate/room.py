@@ -343,7 +343,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             str(k): float(v) for k, v in (stored.get("preset_stale") or {}).items()
         }
         # Topped up to its target: not again until the room asks by itself
-        # (and the target it was reached for: a new target is looked at again).
+        # (and the target it was topped up to: a new target is looked at again).
         self._top_up_reached = False
         self._top_up_target: float | None = None
         # The last command to each device, until it reports a change: not sent twice.
@@ -1191,22 +1191,24 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             return False
         if self.circuit is not None and self.house.circuit_on(self.circuit) is not True:
             return False
-        self._track_top_up()
-        # Once at its target it is not topped up again until it asks by itself
-        # (down by the whole hysteresis): no loop of a tenth of a degree.
+        self._track_top_up(active)
+        # Topped up to its target once, it is not topped up again until it fell
+        # by the whole hysteresis (it asks itself there) or got another target:
+        # no loop of a tenth of a degree. Reaching the target by its own heating
+        # does not count: the next time it is a little below, it is topped up.
         return not self._top_up_reached and self._in_top_up_band()
 
-    def _track_top_up(self) -> None:
-        """At its target: topped up enough; down by the whole hysteresis: may again."""
+    def _track_top_up(self, active: bool = False) -> None:
+        """Topped up to its target: enough; down by the whole hysteresis, or
+        another target: it may be topped up again."""
         current, target = self.current_temp, self.target_temperature
         if current is None or target is None:
             return
         if self._top_up_target is not None and abs(target - self._top_up_target) > 1e-9:
-            # Another target (e.g. sleep 18 -> home 21 at 06:00): reached or not
-            # is decided again against it.
-            self._top_up_reached = current >= target
+            # Another target (e.g. sleep 18 -> home 21 at 06:00).
+            self._top_up_reached = False
         self._top_up_target = target
-        if current >= target:
+        if active and current >= target:
             self._top_up_reached = True
         elif current <= target - float(self.config[CONF_HYSTERESIS]):
             self._top_up_reached = False

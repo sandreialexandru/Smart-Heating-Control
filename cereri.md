@@ -23,6 +23,7 @@ Stare: **de decis** · **mai târziu** · **există deja** · **nu facem** · **
 | Mesaje despre vreme: încălzirea oprită (cald afară) / pornită din nou (se face frig), după media măsurată sau prognoză | noi | făcut | 2.6.5rc18: informații (`weather_off`, `weather_off_forecast`, `weather_on`, `weather_on_forecast`), cu media și orele. |
 | Verificări de sănătate (din Raumklima): TRV pe programul lui intern, valvă deschisă permanent (preset `on`), TRV cu corecție proprie de temperatură, contact de fereastră care raportează foarte des, cameră care nu se încălzește niciodată, calorifer care abia ține pasul, TRV cu multe comenzi pe zi + zile rămase de baterie | Raumklima | de decis | Avem deja: senzor mut (`sensor_silent`), fereastră deschisă mult (`window_long`), baterie, aparat/sursă/circuit indisponibil, comenzi neacceptate (`not_accepted`), fără efect (`no_effect`), diferență între camere (`room_difference`). |
 | Entitate `climate` pe cameră + dashboard | Raumklima / alte integrări | mai târziu | Împreună, într-un release spre Crăciun. |
+| Eurotronic Spirit / Comet (SPZB0001, COZB0001, CoZB_dha): *heat* = boost (ventil deschis la maxim, Z2M setează flag-ul boost); cu comanda Temperatură SHC trece TRV-ul de pe *auto* pe *heat* (din 2.6.4) | noi (verificare baza Z2M, 2026-11-15) | mai târziu | **Risc asumat deocamdată.** Variante discutate: opțiune în cameră „Lasă termostatul pe auto” (implicit oprită, universală) sau detectare automată (pe *heat* doar dacă TRV-ul își schimbă singur ținta pe *auto*). Fără listă de modele hardcodată. |
 
 ## Idei
 

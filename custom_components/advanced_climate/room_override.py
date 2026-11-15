@@ -61,6 +61,8 @@ class RoomOverride:
         """Learn the temperatures of the thermostat presets from the climate state."""
         if not valid(state):
             return
+        if state.entity_id in self.preset_stale:  # type: ignore[union-attr]
+            return  # sent a temperature: the preset shown is not what it holds
         preset = self.level_of_device_preset(state.attributes.get("preset_mode"))  # type: ignore[union-attr]
         temperature = climate_temp(self.hass, state, ATTR_TEMPERATURE)
         if preset is not None and temperature is not None:

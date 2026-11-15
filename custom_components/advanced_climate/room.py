@@ -333,8 +333,18 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self.range_min_told: dict[str, float] = {}
         # Thermostats put from auto in heat, and when (to see if they go back by themselves).
         self.auto_left_at: dict[str, datetime] = {}
-        # Thermostats that go back to auto by themselves: left in auto.
+        # Thermostats that go back to auto by themselves: how often, and those left in auto.
+        self.auto_returns: dict[str, int] = {}
         self.keeps_auto: set[str] = set()
+        # Commanded by preset and sent a temperature since: the preset shown no
+        # longer says what the device holds (some keep the preset with it).
+        self.preset_stale: dict[str, float] = {
+            str(k): float(v) for k, v in (stored.get("preset_stale") or {}).items()
+        }
+        # Topped up to its target: not again until the room asks by itself.
+        self._top_up_reached = False
+        # The last command to each device, until it reports a change: not sent twice.
+        self.pending_command: dict[str, dict[str, tuple[str, Any, datetime]]] = {}
         # Commands to each device (a loop guard), and the pauses after too many.
         self.command_times: dict[str, list[datetime]] = {}
         self.commands_paused_until: dict[str, datetime] = {}
@@ -457,6 +467,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             "thermal": self.learner.as_dict(),
             "runtime_s": round(self.runtime_s, 1),
             "observed_temps": self.observed_temps,
+            "preset_stale": self.preset_stale,
             "decisions": list(self.decisions),
             "last_exercise": self.last_exercise,
             "chosen_profile": self.chosen_profile,
@@ -660,10 +671,11 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         new: State | None = event.data["new_state"]
         now = dt_util.utcnow()
         if entity_id in self.climates:
+            self._note_report(entity_id, old, new)
             self._remember_preset_temp(new)
             if self._check_device_limit(entity_id, old, new):
                 pass  # its own limit, not a person
-            elif self._check_auto_return(entity_id, old, new):
+            elif self._check_auto_return(entity_id, old, new, event.context):
                 pass  # back in auto by itself after heat, not a person
             elif self._is_manual_change(event, old, new):
                 self._device_changed(entity_id, new)
@@ -981,6 +993,8 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         await self._async_calibrate(now)
         self._update_demand()
         self._learn(now)
+        self._check_commands_calm(now)
+        self._track_top_up()
         self._check_alerts(now)
         self.next_wakeup = self._next_wakeup(now, state)
 
@@ -1173,7 +1187,20 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             return False
         if self.circuit is not None and self.house.circuit_on(self.circuit) is not True:
             return False
-        return self._in_top_up_band()
+        self._track_top_up()
+        # Once at its target it is not topped up again until it asks by itself
+        # (down by the whole hysteresis): no loop of a tenth of a degree.
+        return not self._top_up_reached and self._in_top_up_band()
+
+    def _track_top_up(self) -> None:
+        """At its target: topped up enough; down by the whole hysteresis: may again."""
+        current, target = self.current_temp, self.target_temperature
+        if current is None or target is None:
+            return
+        if current >= target:
+            self._top_up_reached = True
+        elif current <= target - float(self.config[CONF_HYSTERESIS]):
+            self._top_up_reached = False
 
     @property
     def can_keep_open(self) -> bool:

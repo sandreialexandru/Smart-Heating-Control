@@ -223,7 +223,7 @@ class House:
         self.top_up_rooms: set[str] = set()
         self._last_askers: list[str] = []
         self.boiler_on: bool | None = None
-        self.boiler_changed: datetime | None = None
+        self.source_changed: dict[str, datetime] = {}
         self._source_running_since: datetime | None = None
         self._frost_started = False  # heat source started for frost protection while paused
         # Circuits turned on in a pause for frost protection: off again once it
@@ -285,7 +285,16 @@ class House:
         self.outdoor.max_age = timedelta(hours=self.average_hours)
         self.boiler_runtime_s = float(house.get("boiler_runtime_s", 0.0))
         self._frost_started = bool(house.get("frost_started", False))
-        self.boiler_changed = from_iso(house.get("boiler_changed"))
+        # When each heat source last started or stopped (its minimum on / off times).
+        self.source_changed: dict[str, datetime] = {
+            str(k): t
+            for k, v in (house.get("source_changed") or {}).items()
+            if (t := from_iso(v)) is not None
+        }
+        old = from_iso(house.get("boiler_changed"))
+        if not self.source_changed and old and (primary := self.options.get(CONF_BOILER_ENTITY)):
+            # Saved before 2.6.5: one time, that of the heat source (the primary).
+            self.source_changed[str(primary)] = old
         self.source_chooser = SourceChooser(house.get("source_choice"), house.get("source_active"))
         self.workday_cache = dict(house.get("workday_cache", {}))
 
@@ -432,7 +441,7 @@ class House:
                 # Kept over a restart: a heat source started for frost protection
                 # in a pause is stopped again, and the minimum on / off time holds.
                 "frost_started": self._frost_started,
-                "boiler_changed": iso(self.boiler_changed),
+                "source_changed": {k: iso(v) for k, v in self.source_changed.items()},
                 "source_choice": self.source_chooser.choice,
                 "source_active": self.source_chooser.active,
                 "workday_cache": dict(list(self.workday_cache.items())[-20:]),
@@ -1372,13 +1381,15 @@ class House:
 
         self.source_waiting = None
         self._source_wait_until = None
+        other_runs = False
         if self.secondary_source and not self.paused:
             # The source not in use stays stopped, before the other one starts.
             # In a pause something else controls the heating: left alone.
             for entity_id in self.source_entities:
                 if entity_id != self.source_entity:
-                    await self._async_stop_source(entity_id)
-        await self._async_switch_source(now, demand, frost)
+                    other_runs |= not await self._async_stop_source(entity_id, now)
+        if not other_runs:
+            await self._async_switch_source(now, demand, frost)
         if circuits:
             # Closed only once the heat source is off, or while another one stays
             # open; without a heat source at once (the boiler stops with its valves).
@@ -1519,7 +1530,11 @@ class House:
         """When Automatic will change the source (the criterion changed, not for long yet)."""
         if self.source_choice != HEAT_SOURCE_AUTO:
             return None
-        return self.source_chooser.switch_at(self.criterion_on(), self._source_switch_delay)
+        at = self.source_chooser.switch_at(self.criterion_on(), self._source_switch_delay)
+        # Past already: the source wanted is unavailable (the other one heats).
+        if at is not None and at <= dt_util.utcnow():
+            return None
+        return at
 
     @property
     def _source_switch_delay(self) -> timedelta:
@@ -1554,26 +1569,52 @@ class House:
         chooser.active = want
         if previous is None or previous == want:
             return None
-        # The new source starts without the minimum off time of the old one.
-        self.boiler_changed = None
+        # Each source keeps its own minimum on / off times: the old one stops
+        # after its minimum on time, the new one starts after its minimum off
+        # time (and once the old one stopped).
         self.async_save()
         return entity[previous]
 
-    async def _async_stop_source(self, entity_id: str) -> None:
-        """Keep a heat source not in use stopped (off, or at its idle temperature if boosted)."""
+    @property
+    def boiler_changed(self) -> datetime | None:
+        """When the heat source in use last started or stopped."""
+        entity = self.source_entity
+        return self.source_changed.get(entity) if entity else None
+
+    def _source_min_wait(self, entity_id: str, is_on: bool, now: datetime) -> datetime | None:
+        """Until when the minimum on (or off) time of a heat source runs (None: over)."""
+        changed = self.source_changed.get(entity_id)
+        if changed is None:
+            return None
+        opts = self.options
+        minimum = timedelta(
+            minutes=float(opts[CONF_BOILER_MIN_ON] if is_on else opts[CONF_BOILER_MIN_OFF])
+        )
+        return changed + minimum if now - changed < minimum else None
+
+    async def _async_stop_source(self, entity_id: str, now: datetime) -> bool:
+        """Keep a heat source not in use stopped (off, or at its idle temperature if
+        boosted); False while it still runs its minimum on time."""
         state = self.hass.states.get(entity_id)
         if not valid(state):
-            return
+            return True
         boost = self._source_boost(state)  # type: ignore[arg-type]
-        if not self._source_is_on(state, boost) and (  # type: ignore[arg-type]
+        is_on = self._source_is_on(state, boost)  # type: ignore[arg-type]
+        if not is_on and (
             boost is None or self._source_settled(state, boost, False)  # type: ignore[arg-type]
         ):
-            return
-        await self._async_command_source(entity_id, state, boost, False)  # type: ignore[arg-type]
+            return True
+        if is_on and (until := self._source_min_wait(entity_id, True, now)) is not None:
+            self.source_waiting = "min_on"
+            self._source_wait_until = until
+            return False
+        stopped = await self._async_command_source(entity_id, state, boost, False)  # type: ignore[arg-type]
+        if stopped and is_on:
+            self.source_changed[entity_id] = now
+        return True
 
     async def _async_switch_source(self, now: datetime, demand: bool, frost: bool) -> None:
         """Start or stop the heat source in use, with its minimum on / off times."""
-        opts = self.options
         boiler = self.source_entity
         if not boiler:
             return
@@ -1600,19 +1641,15 @@ class House:
         # Only the stop temperature of a boosted source is taken back (it was
         # changed by hand): not a start or a stop, no minimum time to wait for.
         correction = is_on == want
-        if not correction and self.boiler_changed is not None:
-            minimum = timedelta(
-                minutes=float(opts[CONF_BOILER_MIN_ON] if is_on else opts[CONF_BOILER_MIN_OFF])
-            )
-            if now - self.boiler_changed < minimum:
-                self.source_waiting = "min_on" if is_on else "min_off"
-                self._source_wait_until = self.boiler_changed + minimum
-                return
+        if not correction and (until := self._source_min_wait(boiler, is_on, now)) is not None:
+            self.source_waiting = "min_on" if is_on else "min_off"
+            self._source_wait_until = until
+            return
         if not await self._async_command_source(boiler, state, boost, want):  # type: ignore[arg-type]
             return
         self.boiler_on = want
         if not correction:
-            self.boiler_changed = now
+            self.source_changed[boiler] = now
             self._frost_started = bool(want and self.paused)
 
     async def _async_command_source(
@@ -1853,6 +1890,7 @@ class House:
         # The default is never used (the options have every key): not mutated.
         boost = self.options.get(CONF_BOILER_BOOST, True)  # pragma: no mutate
         if state.domain != "climate" or not boost:
+            self.clear_alert(f"source_mode_{state.entity_id}")
             return None
         attrs = state.attributes
         features = attrs.get("supported_features")
@@ -1869,10 +1907,27 @@ class House:
         step = float_attr(state, "target_temp_step") or (1.0 if unit == FAHRENHEIT else 0.5)
         start = math.floor(start / step + 1e-9) * step
         stop = math.ceil(stop / step - 1e-9) * step
-        if (high := float_attr(state, "max_temp")) is not None:
+        high = float_attr(state, "max_temp")
+        low = float_attr(state, "min_temp")
+        if high is not None:
             start = min(start, high)
-        if (low := float_attr(state, "min_temp")) is not None:
+        if low is not None:
             stop = max(stop, low)
+        key = f"source_mode_{state.entity_id}"
+        if (low is not None and start < low - 1e-9) or start <= stop + 1e-9:
+            # Its range is that of the water (e.g. 30-80 °C), above the maximum of
+            # the house: by its temperature it would never start (or Home Assistant
+            # would refuse it), so it is switched by its mode, and told once.
+            span = "–".join("?" if v is None else f"{v:g}" for v in (low, high)) + f" {unit}"
+            self.notify(
+                key,
+                f"The heat source {state.entity_id} cannot be started by its temperature "
+                f"(its range is {span}): it is started and stopped by its mode.",
+                code="source_by_mode",
+                params={"entity": state.entity_id, "range": span},
+            )
+            return None
+        self.clear_alert(key)
         return round(start, 2), round(min(stop, start), 2)
 
     @staticmethod

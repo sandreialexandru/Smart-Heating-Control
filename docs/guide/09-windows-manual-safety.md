@@ -120,8 +120,10 @@ The room's *Child lock* switch (also in the card, under *Set for a while*): any
 manual change on the device is undone at once, and the room returns to the
 integration's decision. Useful for a TRV within reach of children. With the
 *Temperature* command this also takes a TRV switched to *auto* (its own
-schedule) back to *heat*; without the child lock, *auto* chosen by hand is a
-manual change like any other, kept as long as the manual change lasts.
+schedule) back to *heat*; without the child lock, *auto* chosen in Home
+Assistant is a manual change like any other, kept as long as the manual change
+lasts. *Auto* that the device goes back to by itself (or that is pressed on the
+device) is not a manual change: the target is sent again.
 
 ## Pause
 

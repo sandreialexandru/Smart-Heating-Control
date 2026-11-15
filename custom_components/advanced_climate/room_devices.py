@@ -23,7 +23,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import State
+from homeassistant.core import Context, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     entity_registry as er,
@@ -85,8 +85,8 @@ if TYPE_CHECKING:
 
 # The same logger as the rest of the room, so the log lines keep their name.
 _LOGGER = logging.getLogger(__name__.rsplit(".", 1)[0] + ".room")
-# Back in auto within this time after being put in heat: the thermostat keeps auto.
-AUTO_RETURN_WINDOW = timedelta(minutes=5)
+# Put in heat (or on manual) and back in auto by itself this many times: left in auto.
+AUTO_RETURNS_KEPT = 2
 # Presets of a thermostat that follows its own schedule (e.g. Aqara, Tuya, Moes), and the one
 # that keeps the temperature sent.
 SCHEDULE_PRESETS = frozenset({"schedule", "auto", "program", "programme", "timer"})
@@ -131,11 +131,7 @@ class RoomDevices:
         until = self.commands_paused_until.get(entity_id)
         if until is not None and now < until:
             return False
-        last = self.commands_paused_at.get(entity_id)
-        if last is not None and now - last >= COMMAND_PAUSE + COMMAND_CALM:
-            # Calm again for long enough: the alert ends.
-            del self.commands_paused_at[entity_id]
-            self.house.clear_alert(f"commands_{entity_id}")
+        self._check_commands_calm(now)
         times = [t for t in self.command_times.get(entity_id, []) if now - t < COMMAND_WINDOW]
         times.append(now)
         self.command_times[entity_id] = times
@@ -166,6 +162,13 @@ class RoomDevices:
             room=self.id,
         )
         return False
+
+    def _check_commands_calm(self, now: datetime) -> None:
+        """The alert of a device paused for too many commands ends once calm for long enough."""
+        for entity_id, last in list(self.commands_paused_at.items()):
+            if now - last >= COMMAND_PAUSE + COMMAND_CALM:
+                del self.commands_paused_at[entity_id]
+                self.house.clear_alert(f"commands_{entity_id}")
 
     async def _async_apply(self, target: Target, *, force: bool = False) -> None:
         """Send the commands needed to reach ``target``."""
@@ -447,45 +450,41 @@ class RoomDevices:
             _auto_with_heat(state) or _manual_preset(state) is not None
         ):
             return False
-        entity_id = state.entity_id
-        if entity_id in self.keeps_auto:
-            return False
-        left = self.auto_left_at.get(entity_id)
-        if left is not None and dt_util.utcnow() - left < AUTO_RETURN_WINDOW:
-            # Put in heat a moment ago and back in auto by itself (some Tuya TRVs
-            # cannot be put in heat from Home Assistant): left in auto from now
-            # on, as before 2.6.4, instead of being put in heat again and again.
-            self.keeps_auto.add(entity_id)
-            _LOGGER.info(
-                "Room %s: %s goes back to auto by itself, it is left in auto", self.name, entity_id
-            )
-            return False
-        return True
+        # One that goes back to auto by itself again and again is left in auto.
+        return state.entity_id not in self.keeps_auto
 
-    def _check_auto_return(self, entity_id: str, old: State | None, new: State | None) -> bool:
-        """True when a thermostat put in heat goes back to auto by itself (not a person).
+    def _check_auto_return(
+        self, entity_id: str, old: State | None, new: State | None, context: Context
+    ) -> bool:
+        """True when a thermostat goes back to auto (or its schedule preset) by itself.
 
-        Within ``AUTO_RETURN_WINDOW`` of being put in heat, with the same
-        temperature: the device does it (some Tuya TRVs cannot stay in heat),
-        also when it reports late, after the context of the command. It is left
-        in auto from then on.
+        Not set from Home Assistant by a user: the device did it, whenever it
+        reports it (some Tuya TRVs cannot stay in heat; a Netatmo or tado goes
+        back to its schedule after its manual time). It is not a manual change:
+        the target is sent again. Pressing auto on the device itself is taken
+        the same way (a temperature changed there stays a manual change). After
+        it went back twice once put in heat (or on manual) it is left in auto,
+        as before 2.6.4.
         """
         if old is None or new is None or not valid(old) or not valid(new):
             return False
-        back_auto = new.state == "auto" and old.state != "auto"
+        if context.user_id is not None:
+            return False  # chosen in Home Assistant by a person
+        # Back from heating (turned on from off is something else).
+        back_auto = new.state == "auto" and old.state not in ("auto", STATE_OFF)
         back_schedule = _on_schedule_preset(new) and not _on_schedule_preset(old)
         if not (back_auto or back_schedule):
             return False
-        left = self.auto_left_at.get(entity_id)
-        if left is None or dt_util.utcnow() - left >= AUTO_RETURN_WINDOW:
-            return False
-        if float_attr(old, ATTR_TEMPERATURE) != float_attr(new, ATTR_TEMPERATURE):
-            return False
-        if entity_id not in self.keeps_auto:
-            self.keeps_auto.add(entity_id)
-            _LOGGER.info(
-                "Room %s: %s goes back to auto by itself, it is left in auto", self.name, entity_id
-            )
+        if self.auto_left_at.pop(entity_id, None) is not None:
+            returns = self.auto_returns.get(entity_id, 0) + 1
+            self.auto_returns[entity_id] = returns
+            if returns >= AUTO_RETURNS_KEPT and entity_id not in self.keeps_auto:
+                self.keeps_auto.add(entity_id)
+                _LOGGER.info(
+                    "Room %s: %s goes back to auto by itself, it is left in auto",
+                    self.name,
+                    entity_id,
+                )
         return True
 
     def _holds(self, state: State, target: Target) -> bool:
@@ -510,7 +509,11 @@ class RoomDevices:
                 target.preset or "", list(state.attributes.get("preset_modes") or [])
             )
             if name is not None:
-                return state.attributes.get("preset_mode") == name
+                # Sent a temperature since: the preset is sent again.
+                return (
+                    state.attributes.get("preset_mode") == name
+                    and state.entity_id not in self.preset_stale
+                )
         # A level the thermostat has no preset for, and whose temperature is
         # unknown, is not reached, so the room says so (``preset_missing``).
         # Compared in the unit of the thermostat, as sent; taken in auto (its own
@@ -536,20 +539,26 @@ class RoomDevices:
             minimum = float_attr(state, "min_temp")
             if minimum is None:
                 return False
-            return await self._send(entity_id, "set_temperature", ATTR_TEMPERATURE, minimum)
+            return await self._send(
+                entity_id, "set_temperature", ATTR_TEMPERATURE, minimum, force=force
+            )
 
         own_schedule = self._own_schedule_mode(state)
         holds = own_schedule and self._holds(state, target)
         if (state.state == STATE_OFF and on_mode) or (holds and _auto_with_heat(state)):
             if state.state != STATE_OFF:
                 self.auto_left_at[entity_id] = dt_util.utcnow()
-            await self._send(entity_id, "set_hvac_mode", "hvac_mode", on_mode or "heat", "state")
+            await self._send(
+                entity_id, "set_hvac_mode", "hvac_mode", on_mode or "heat", "state", force=force
+            )
         elif own_schedule and (manual := _manual_preset(state)) is not None:
             # On its schedule preset: put on manual, so it keeps the temperature.
             # Also when it did not take the temperature: some refuse it on their
             # schedule, and manual is no boost (unlike heat for some).
             self.auto_left_at[entity_id] = dt_util.utcnow()
-            sent = await self._send(entity_id, "set_preset_mode", "preset_mode", manual)
+            sent = await self._send(
+                entity_id, "set_preset_mode", "preset_mode", manual, force=force
+            )
             if holds:
                 return sent
 
@@ -558,7 +567,14 @@ class RoomDevices:
             name = self._device_preset(target.preset or "", available)
             if name is not None:
                 self.house.clear_alert(f"preset_{self.id}_{target.preset}")
-                return await self._send(entity_id, "set_preset_mode", "preset_mode", name)
+                stale = self.preset_stale.get(entity_id)
+                sent = await self._send(
+                    entity_id, "set_preset_mode", "preset_mode", name, force=force
+                )
+                if sent and stale is not None:
+                    del self.preset_stale[entity_id]
+                    await self._async_preset_temperature(entity_id, target.preset or "", stale)
+                return sent
         temperature = self._climate_temperature(target)
         if temperature is None:
             self.house.notify(
@@ -572,8 +588,28 @@ class RoomDevices:
             )
             return False
         return await self._send(
-            entity_id, "set_temperature", ATTR_TEMPERATURE, self._device_value(state, temperature)
+            entity_id,
+            "set_temperature",
+            ATTR_TEMPERATURE,
+            self._device_value(state, temperature),
+            force=force,
         )
+
+    async def _async_preset_temperature(self, entity_id: str, preset: str, sent: float) -> None:
+        """After a temperature, the preset sent again: a device still holding that
+        temperature (it keeps the preset with it) gets the one known for the level."""
+        state = self.hass.states.get(entity_id)
+        known = self.observed_temps.get(preset)
+        if not valid(state) or known is None:
+            return
+        assert state is not None
+        if float_attr(state, ATTR_TEMPERATURE) != sent:
+            return
+        value = self._device_value(state, known)
+        if value != sent:
+            await self._send(
+                entity_id, "set_temperature", ATTR_TEMPERATURE, value, keep_preset=True
+            )
 
     def _device_value(self, state: State, temperature: float) -> float:
         """Temperature to send, in the unit of the thermostat.
@@ -617,6 +653,16 @@ class RoomDevices:
             self.house.clear_alert(f"range_{entity_id}_min")
         if high is not None and value > high:
             value = high
+        if (
+            told is not None
+            and low is not None
+            and value >= low - 1e-9
+            and entity_id in self.range_min_told
+        ):
+            # The room wants it at or above the minimum again: the alert ends.
+            del self.range_min_told[entity_id]
+            self.house.clear_alert(f"range_{entity_id}_min")
+            told = None
         if low is not None and value < low - 1e-9:
             if told is None or told != low:
                 self.range_min_told[entity_id] = low
@@ -729,10 +775,33 @@ class RoomDevices:
         return True
 
     async def _send(
-        self, entity_id: str, service: str, key: str, value: Any, field: str | None = None
+        self,
+        entity_id: str,
+        service: str,
+        key: str,
+        value: Any,
+        field: str | None = None,
+        *,
+        force: bool = False,
+        keep_preset: bool = False,
     ) -> bool:
-        """Send one climate command and remember the value it sets."""
+        """Send one climate command and remember the value it sets.
+
+        The same command is not sent again while the device has not reported a
+        change since (a TRV that confirms late), for up to the verification
+        delay; ``force`` (the verification) sends it anyway.
+        """
         name = field or key
+        now = dt_util.utcnow()
+        waiting = self.pending_command.setdefault(entity_id, {})
+        pending = waiting.get(name)
+        if (
+            not force
+            and pending is not None
+            and pending[:2] == (service, value)
+            and now - pending[2] < timedelta(seconds=VERIFY_DELAY)
+        ):
+            return False
         # What the device shows before the command: some TRVs report it once more
         # after showing the new value, however long ago it was set. Only for the
         # temperature and the preset: turning a device off by hand right after it
@@ -741,10 +810,37 @@ class RoomDevices:
         shown = None
         if valid(before) and name != "state":
             shown = before.state if name == "state" else before.attributes.get(name)  # type: ignore[union-attr]
+        # Marked before the call: the device may report before it returns.
+        stale = self.preset_stale.get(entity_id)
+        if service == "set_temperature" and self.command_mode == COMMAND_PRESET and not keep_preset:
+            self.preset_stale[entity_id] = float(value)
+        waiting[name] = (service, value, now)
         ok = await self._call("climate", service, {ATTR_ENTITY_ID: entity_id, key: value})
         if ok:
-            self.sent.record(entity_id, name, value, shown, dt_util.utcnow())
+            self.sent.record(entity_id, name, value, shown, now)
+            return ok
+        if pending is None:
+            waiting.pop(name, None)
+        else:
+            waiting[name] = pending
+        if stale is None:
+            self.preset_stale.pop(entity_id, None)
+        else:
+            self.preset_stale[entity_id] = stale
         return ok
+
+    def _note_report(self, entity_id: str, old: State | None, new: State | None) -> None:
+        """A device reported a change of what was sent to it: no longer pending."""
+        waiting = self.pending_command.get(entity_id)
+        if not waiting or old is None or new is None:
+            return
+        for name in list(waiting):
+            if name == "state":
+                changed = old.state != new.state
+            else:
+                changed = old.attributes.get(name) != new.attributes.get(name)
+            if changed:
+                del waiting[name]
 
     async def _async_apply_relay(self, target: Target) -> bool:
         """On/off control for switches or climates in hvac_mode command mode."""
@@ -805,6 +901,15 @@ class RoomDevices:
                 ok &= await self._send(
                     entity_id, "set_hvac_mode", "hvac_mode", on_mode if want else STATE_OFF, "state"
                 )
+                if want and valid(state):
+                    # Turned on, it heats as far as it can: its own target (at
+                    # 20 with the room at 21) would close it before the room is
+                    # warm. The room sensor turns it off.
+                    assert state is not None
+                    current = float_attr(state, ATTR_TEMPERATURE)
+                    value = self._device_value(state, self.max_temp())
+                    if current is not None and current != value:
+                        await self._send(entity_id, "set_temperature", ATTR_TEMPERATURE, value)
         if ok:
             self._relay_on = want
             self._relay_held = held and want

@@ -485,13 +485,32 @@ async def test_with_circuits_the_relays_stay_open_while_the_source_changes(
 async def test_minimum_times_and_the_pause(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """A change of source does not wait for the minimum off time; a pause leaves both alone."""
+    """Each source keeps its minimum times: the one left stops after its minimum
+    on time, the new one starts once it stopped (and after its own minimum off
+    time); a pause leaves both alone."""
     entry = await _setup(hass, freezer, boiler_min_on=10, boiler_min_off=10)
     _report(hass, "heating")
     await _tick(hass, freezer, 5)
     assert _on(hass, BOILER)
+    await _tick(hass, freezer, 4 * 60)
     await _choose(hass, freezer, "secondary")
+    # The boiler ran 4 minutes: it goes on until 10, the pump waits for it.
+    assert _on(hass, BOILER) and not _on(hass, PUMP)
+    assert entry.runtime_data.source_waiting == "min_on"
+    await _tick(hass, freezer, 6 * 60)
+    await _tick(hass, freezer, 5)
     assert _on(hass, PUMP) and not _on(hass, BOILER)
+    # Back to the boiler at once: the pump runs its 10 minutes, the boiler
+    # also waits its own minimum off time (stopped a moment ago).
+    await _choose(hass, freezer, "primary")
+    assert _on(hass, PUMP) and not _on(hass, BOILER)
+    await _tick(hass, freezer, 10 * 60)
+    await _tick(hass, freezer, 5)
+    assert _on(hass, BOILER) and not _on(hass, PUMP)
+    await _choose(hass, freezer, "secondary")
+    await _tick(hass, freezer, 10 * 60)
+    await _tick(hass, freezer, 5)
+    assert _on(hass, PUMP)
 
     # Paused: something else controls the heating; a boiler turned on by hand stays on.
     await hass.services.async_call(

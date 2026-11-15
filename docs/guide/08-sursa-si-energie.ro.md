@@ -148,6 +148,9 @@ rămână sub țintă până când altă cameră pornește din nou centrala.
   Vară, cald afară, oprirea optimă). Un TRV care încă încălzește în histerezis
   după aceea nu pornește din nou centrala; sub histerezis, camera cere căldură
   ca de obicei.
+- Odată ajunsă la țintă, camera nu mai e încălzită la ocazie până nu coboară
+  cu tot histerezisul și cere singură (altfel un senzor cu o zecime de grad ar
+  porni-o și opri-o din nou și din nou).
 - Cu un circuit, doar cât acel circuit e deja deschis (nu se pornește o pompă
   pentru câteva zecimi de grad). Învățarea ei sare peste acest timp, ca la
   ținerea deschisă.
@@ -267,8 +270,9 @@ criteriul *Frig afară* sub −5 °C.
 Ce face integrarea:
 
 - Sursa care nu e în uz e ținută oprită (un termostat cu boost, la temperatura
-  de repaus). La o schimbare, întâi se oprește cea veche, apoi pornește cea
-  nouă, fără să aștepte timpul minim oprită al celei vechi.
+  de repaus). La o schimbare, întâi se oprește cea veche, după timpul ei minim
+  pornită; apoi pornește cea nouă, după timpul ei minim oprită. Fiecare sursă
+  își are timpii ei minimi.
 - Dacă sursa aleasă e indisponibilă și cealaltă merge, încălzește cealaltă.
   Indisponibilă mai mult decât *Alertă când un dispozitiv e indisponibil mai
   mult de*: un avertisment care spune care încălzește între timp; amândouă

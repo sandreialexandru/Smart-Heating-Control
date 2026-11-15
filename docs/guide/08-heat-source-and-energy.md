@@ -144,6 +144,9 @@ stay below its target until another room starts the boiler again.
   the room (window, manual change, pause, mode Off or Summer, warm outside, the
   optimal stop). A TRV still heating inside the hysteresis afterwards does not
   start the boiler again; below it, the room asks for heat as usual.
+- Once at its target, the room is not topped up again until it fell by the
+  whole hysteresis and asked by itself (a sensor of a tenth of a degree would
+  otherwise start and stop it again and again).
 - With a circuit, only while that circuit is already open (no pump is started
   for a few tenths of a degree). Its learning skips that time, as when kept
   open.
@@ -265,8 +268,9 @@ secondary one, the criterion *Cold outside* below −5 °C.
 What the integration does:
 
 - The source not in use is kept off (a boosted thermostat at its idle
-  temperature). At a change, the old one stops first, then the new one starts,
-  without waiting for the minimum off time of the old one.
+  temperature). At a change, the old one stops first, after its own minimum on
+  time; then the new one starts, after its own minimum off time. Each source
+  keeps its own minimum times.
 - If the chosen source is unavailable and the other one works, the other one
   heats. Unavailable longer than *Alert when a device is unavailable longer
   than*: a warning that says which one heats meanwhile; both unavailable: the

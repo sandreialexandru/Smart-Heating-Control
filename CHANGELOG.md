@@ -34,8 +34,8 @@ which the reference room could not.
   `auto`, `program`) that has a `manual` preset is put on `manual`, so its own
   schedule no longer changes it, as the TRVs in *auto* are put in *heat*. Also
   one that refuses the temperature while on its schedule (it was sent again
-  and again). One that goes back to its schedule by itself within 5 minutes is
-  left there, and that is not a manual change.
+  and again). One that goes back to its schedule by itself is not a manual
+  change (see below).
 - 🌦️ **The weather tells what it does**: when the heating stops because it is
   warm outside, or starts again because it gets cold, the house says so
   (information), by the measured average or by the forecast, with its mean.
@@ -106,9 +106,39 @@ which the reference room could not.
 - 🔁 **A TRV switching between auto and heat again and again** (#15, Tuya
   TRV602Z, since 2.6.4): put in *heat* from *auto*, some TRVs report *auto*
   again a second later, and they were put in *heat* again, every second. A TRV
-  that goes back to *auto* by itself within 5 minutes is now left in *auto*,
-  as before 2.6.4. That return is the device, not a manual change, also when
-  it is reported late (with the same temperature).
+  that goes back to *auto* by itself twice is now left in *auto*, as before
+  2.6.4.
+- 🔄 **Back to its schedule is not a manual change**: a thermostat that goes
+  back to *auto* (or its schedule preset) by itself, whenever (a TRV minutes
+  later, Netatmo or Tado when their manual time ends), was taken as a manual
+  change and kept at the schedule of the thermostat for hours. Only *auto*
+  chosen in Home Assistant by a user is a manual change now; otherwise the
+  target is sent again. *Auto* pressed on the device itself is taken the same
+  way; a temperature changed on it stays a manual change.
+- 🎛️ **Commanded by preset, left at the frost temperature**: a thermostat
+  that keeps its preset when it gets a temperature (window open, no *off*
+  mode) stayed at that temperature after the window closed, and that value
+  was learned as the temperature of the level. The preset is now sent again,
+  with the temperature known for it, and nothing is learned meanwhile.
+- 🔥 **A heat source with the range of the water** (e.g. 30–80 °C) with
+  *Start and stop the source by its temperature*: it was sent 25 °C again and
+  again (refused), or never heated (25–60 °C). It is now switched by its mode,
+  and an alert says so once.
+- 🔌 ***On / off* with the target of the thermostat below that of the room**:
+  turned on, it now gets the maximum of the room as well, so its own target
+  does not close it before the room is warm.
+- ♨️ **Top up while the boiler runs started and stopped in a loop** with a
+  sensor of a tenth of a degree: once at its target, a room is topped up again
+  only after it fell by the whole hysteresis (it asks itself then).
+- 🔂 **The same command is not sent again** to a TRV that confirms late, while
+  it has not reported a change (up to the verification after 2 minutes).
+- ⏱️ **Secondary heat source: each source keeps its minimum on / off times**
+  at a change: the old one stops after its minimum on time, the new one starts
+  after its minimum off time.
+- 🔕 The *commands paused* alert ends after a calm hour also when no command
+  follows; the *minimum of the device* alert ends when the room wants more
+  than that minimum again; the time the source changes is no longer shown in
+  the past (while the source wanted is unavailable).
 - 🌡️ **A thermostat that goes no lower than a minimum** (#14): the temperatures
   sent stay within the *min_temp* of its entity, as they already did within its
   *max_temp*. A heat pump whose entity stops at 16 °C was sent 12 °C in a

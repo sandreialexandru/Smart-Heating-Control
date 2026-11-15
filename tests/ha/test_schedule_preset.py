@@ -81,7 +81,7 @@ async def test_one_that_goes_back_to_its_schedule_is_left_there(
         await _tick(hass, freezer, 2)
     await _tick(hass, freezer, 310)
     await _tick(hass, freezer, 310)
-    assert len(presets) == 1  # tried once
+    assert len(presets) == 2  # tried twice
     assert hass.states.get("climate.bosch").attributes["preset_mode"] == "schedule"
     room = _room(entry, "Office")
     assert "climate.bosch" in room.keeps_auto
@@ -92,16 +92,20 @@ async def test_one_that_goes_back_to_its_schedule_is_left_there(
 async def test_a_late_return_to_the_schedule_is_not_a_manual_change(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
+    """Back on its schedule by itself, whenever (e.g. after its manual time): put
+    on manual again; the second time it is left there."""
     entry, presets, _temps, _modes = await _bosch(hass, freezer)
     await _tick(hass, freezer, 5)
     room = _room(entry, "Office")
-    await _tick(hass, freezer, 60)
-    state = hass.states.get("climate.bosch")
-    hass.states.async_set(
-        "climate.bosch", "heat", {**state.attributes, "preset_mode": "schedule"}, Context()
-    )
-    await _tick(hass, freezer, 5)
-    assert room.decision.rule != "manual_override"
+    for back in (1, 2):
+        await _tick(hass, freezer, 3 * 3600)
+        state = hass.states.get("climate.bosch")
+        hass.states.async_set(
+            "climate.bosch", "heat", {**state.attributes, "preset_mode": "schedule"}, Context()
+        )
+        await _tick(hass, freezer, 5)
+        assert room.decision.rule != "manual_override"
+        assert len(presets) == 2  # put on manual again once, then left on its schedule
     assert "climate.bosch" in room.keeps_auto
     sent = len(presets)
     await _tick(hass, freezer, 310)
@@ -129,16 +133,20 @@ async def test_the_preset_command_keeps_its_schedule(
     await _unload(hass, entry)
 
 
-async def test_its_schedule_chosen_by_hand_later_is_a_manual_change(
+async def test_its_schedule_chosen_in_home_assistant_is_a_manual_change(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     entry, presets, _temps, _modes = await _bosch(hass, freezer)
     await _tick(hass, freezer, 5)
     room = _room(entry, "Office")
+    # After the time a TRV may still report its old preset once more.
     await _tick(hass, freezer, 6 * 60)
     state = hass.states.get("climate.bosch")
     hass.states.async_set(
-        "climate.bosch", "heat", {**state.attributes, "preset_mode": "schedule"}, Context()
+        "climate.bosch",
+        "heat",
+        {**state.attributes, "preset_mode": "schedule"},
+        context=Context(user_id="someone"),
     )
     await _tick(hass, freezer, 5)
     assert room.decision.rule == "manual_override"

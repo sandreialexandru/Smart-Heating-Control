@@ -345,3 +345,34 @@ async def test_not_counted_for_the_rooms_needed(
     assert not _on(hass, "input_boolean.boiler")
     assert not office.topped_up
     await _unload(hass, entry)
+
+
+async def test_at_its_target_not_topped_up_again_until_it_asks(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A sensor of a tenth of a degree: at the target, then 0.1 below it. Not
+    topped up again (no loop of commands), until the room asks by itself."""
+    entry, trvs = await _setup(hass, freezer)
+    office = _room(entry, "Office")
+    trvs.report("climate.office", "idle", 20.8)
+    trvs.report("climate.bedroom", "heating", 20.0)
+    await _steps(hass, freezer)
+    assert office.topped_up
+    trvs.report("climate.office", "heating", 21.0)
+    await _steps(hass, freezer)
+    assert not office.topped_up
+    sent = len(trvs.temperature)
+    # The boiler still runs for the bedroom; the office cools a tenth.
+    for _ in range(5):
+        trvs.report("climate.office", "idle", 20.9)
+        await _steps(hass, freezer)
+        assert not office.topped_up
+        trvs.report("climate.office", "idle", 21.0)
+        await _steps(hass, freezer)
+    assert len(trvs.temperature) == sent
+    # Down by the whole hysteresis: it asks itself.
+    trvs.report("climate.office", "heating", 20.6)
+    await _steps(hass, freezer)
+    assert office.heat_demand
+    assert not office._top_up_reached
+    await _unload(hass, entry)

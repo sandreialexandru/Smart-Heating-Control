@@ -121,8 +121,9 @@ Comutatorul *Blocare modificări* al camerei (și în card, la *Setează tempora
 modificare manuală pe dispozitiv e anulată imediat, iar camera revine la decizia
 integrării. Util pentru un TRV la îndemâna copiilor. Cu comanda *Temperatură*, un
 TRV trecut pe *auto* (programul lui) e adus înapoi pe *heat*; fără blocare, *auto*
-ales de mână e o modificare manuală ca oricare alta, păstrată cât ține
-modificarea manuală.
+ales în Home Assistant e o modificare manuală ca oricare alta, păstrată cât ține
+modificarea manuală. *Auto* la care dispozitivul revine singur (sau apăsat pe
+dispozitiv) nu e modificare manuală: ținta e trimisă din nou.
 
 ## Pauza
 

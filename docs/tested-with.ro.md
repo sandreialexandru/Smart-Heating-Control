@@ -10,6 +10,10 @@ dispozitivele confirmate până acum de utilizatori:
 | --- | --- |
 | Sonoff TRVZB (Zigbee2MQTT) | TRV-uri comandate prin temperatură, cu calibrare *Offset* sau *Temperatură externă* după un senzor de cameră (*Temperatură externă* cere `temperature_sensor_select` pus pe extern în Zigbee2MQTT) |
 | TRV-uri Zigbee (mai multe pe cameră) | TRV-uri comandate prin temperatură |
+| Tuya TRV602Z (Zigbee2MQTT) | TRV-uri comandate prin temperatură. Modul nu se poate schimba din Home Assistant, așa că rămâne pe *auto* (2.6.5 sau mai nou); nu folosi presetul `on` (valva 100 %). *Lock*-ul camerei păstrează valoarea SHC dacă programul propriu al TRV-ului o schimbă |
+| EARU TRV06, AVATTO ME167, AVATTO TRV26 (Zigbee2MQTT) | TRV-uri comandate prin temperatură |
+| Sonoff MINI-ZBD (Zigbee2MQTT) | Releu |
+| HOBEIAN ZG-227Z (Zigbee2MQTT) | Senzorul camerei |
 | Termostat Hive (local, Zigbee) | Sursă de căldură care pornește centrala |
 | Releu Shelly | Sursă de căldură (releul centralei) |
 | Contact uscat Tuya Zigbee (TS0001) | Sursă de căldură, printr-un template switch (apare ca `light`) |

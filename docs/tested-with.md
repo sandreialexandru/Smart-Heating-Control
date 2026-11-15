@@ -10,6 +10,10 @@ users have confirmed so far:
 | --- | --- |
 | Sonoff TRVZB (Zigbee2MQTT) | TRVs commanded by temperature, with *Offset* or *External temperature* calibration from a room sensor (*External temperature* needs `temperature_sensor_select` set to external in Zigbee2MQTT) |
 | Zigbee TRVs (several per room) | TRVs commanded by temperature |
+| Tuya TRV602Z (Zigbee2MQTT) | TRVs commanded by temperature. The mode can't be changed from Home Assistant, so it stays in *auto* (2.6.5 or newer); don't use its `on` preset (valve 100 %). The room's *Lock* keeps SHC's value if the TRV's own schedule changes it |
+| EARU TRV06, AVATTO ME167, AVATTO TRV26 (Zigbee2MQTT) | TRVs commanded by temperature |
+| Sonoff MINI-ZBD (Zigbee2MQTT) | Relay |
+| HOBEIAN ZG-227Z (Zigbee2MQTT) | Room sensor |
 | Hive thermostat (local, Zigbee) | Heat source that starts the boiler |
 | Shelly relay | Heat source (the boiler relay) |
 | Tuya Zigbee dry contact (TS0001) | Heat source, through a template switch (it shows up as a `light`) |

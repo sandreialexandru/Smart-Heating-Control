@@ -151,4 +151,19 @@ const ACTIONS = [
   ["act-level", {}, { rooms: R1 }, steps(click('[data-key="levels-r1"]'), input('input[data-action="number"]', "20.5"))],
 ];
 
-module.exports = { SCENES, ACTIONS, NOW };
+// The panel: wide (the house, the list, the chosen room); on a phone (the
+// phone variants, narrow as Home Assistant sets it) the list, or the room in
+// the address.
+const P = { panel: true };
+const PANEL = [
+  ["panel", P, { rooms: ROOMS }],
+  ["panel-room-office", { ...P, hash: "r2" }, { rooms: ROOMS }],
+  ["panel-source-scenarios", P, { rooms: R1, source: { state: "auto", options: ["auto", "primary", "secondary"], active: "primary" }, scenarios: ["Home office"], scenario: "Home office" }],
+  ["panel-details", { ...P, hash: "r1" }, { rooms: ROOMS }, click('.pmain [data-key="details-r1"]')],
+  ["panel-schedule-edit", { ...P, hash: "r1" }, { rooms: R1 }, steps(click('.pmain [data-key="sched-r1"]'), click('.pmain [data-action="edit"][data-room="r1"]'))],
+  ["panel-chart", { ...P, hash: "r1" }, { rooms: R1 }, openChart()],
+  ["panel-room-living", { ...P, hash: "r3" }, { rooms: ROOMS }],
+  ["act-panel-choose", P, { rooms: ROOMS }, steps(click('.pside [data-key="room-r4"]'), click('.pmain [data-key="quick-r4"]'), click('.pmain [data-action="quick-preset"][data-preset="eco"]'))],
+];
+
+module.exports = { SCENES, ACTIONS, PANEL, NOW };

@@ -7,6 +7,8 @@
 //   node compare.js --only chart     only the scenes whose name contains "chart"
 //   node compare.js --full           every scene in every variant (slow)
 //
+// The panel is compared too (scenes.js, PANEL) when the base has one.
+//
 // The base is by default where the current branch left dev (git merge-base
 // HEAD dev), so a refactoring is compared with the code it started from, and
 // fixes merged from dev are in the base too.
@@ -23,7 +25,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { start, REPO } = require("./server");
-const { SCENES, ACTIONS, NOW } = require("./scenes");
+const { SCENES, ACTIONS, PANEL, NOW } = require("./scenes");
 
 const args = process.argv.slice(2);
 const opt = (name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
@@ -96,7 +98,9 @@ const STUBS = () => {
 async function shoot(browser, srv, scene, variant) {
   const [name, config, hass, act] = scene;
   const ctx = await browser.newContext({
-    viewport: { width: variant.width, height: 900 },
+    // The panel fills the window (its list is as high as the window): one fixed
+    // tall window, not a full-page picture that resizes it while taking it.
+    viewport: { width: variant.width, height: config.panel ? 1800 : 900 },
     deviceScaleFactor: 1,
     colorScheme: variant.dark ? "dark" : "light",
     timezoneId: "Europe/Bucharest",
@@ -108,12 +112,18 @@ async function shoot(browser, srv, scene, variant) {
   const p = await ctx.newPage();
   const errors = [];
   p.on("pageerror", (e) => errors.push(e.message));
-  await p.goto(srv.url + "/tests/card/page.html");
+  await p.goto(srv.url + "/tests/card/page.html" + (config.panel && config.hash ? `#${config.hash}` : ""));
   if (variant.dark) {
     await p.evaluate((vars) => { for (const [k, v] of Object.entries(vars)) document.body.style.setProperty(k, v); document.body.style.background = vars["--primary-background-color"]; }, DARK);
   }
   const options = { now: NOW, ...hass, dark: !!variant.dark, lang: variant.lang || hass.lang, timeFormat: variant.timeFormat || hass.timeFormat };
-  await p.evaluate(([c, h]) => mount(c, h), [config, options]);
+  if (config.panel) {
+    // The panel; the actions of the scenes reach it as `card` too.
+    // Narrow as Home Assistant sets it (below 870 px).
+    await p.evaluate(([h, o]) => { mountPanel(h, o); window.card = window.panel; }, [options, { narrow: variant.width < 870 }]);
+  } else {
+    await p.evaluate(([c, h]) => mount(c, h), [config, options]);
+  }
   await p.waitForTimeout(250);
   let failed = null;
   if (act) {
@@ -126,7 +136,7 @@ async function shoot(browser, srv, scene, variant) {
   // Wait until two pictures in a row are the same (the card finished drawing).
   let png = null;
   for (let i = 0; i < 20; i++) {
-    const next = await p.screenshot({ fullPage: true, animations: "disabled", caret: "hide" });
+    const next = await p.screenshot({ fullPage: !config.panel, animations: "disabled", caret: "hide" });
     if (png && png.equals(next)) break;
     png = next;
     await p.waitForTimeout(150);
@@ -179,7 +189,10 @@ async function pool(items, n, fn) {
   const cur = args.includes("--self") ? base : await start();
   const only = opt("--only");
   const full = args.includes("--full");
-  const scenes = [...SCENES, ...ACTIONS].filter((s) => !only || s[0].includes(only));
+  // The panel only when the base has one (it came with 2.7.0a2).
+  const panel = fs.existsSync(path.join(baseDir, "custom_components/advanced_climate/www/shc/panel.js")) ? PANEL : [];
+  if (!panel.length) console.log("the base has no panel: the panel scenes are left out");
+  const scenes = [...SCENES, ...ACTIONS, ...panel].filter((s) => !only || s[0].includes(only));
   const jobs = [];
   for (const s of scenes) for (const v of VARIANTS) if (full || BASIC.includes(v.id)) jobs.push([s, v]);
   console.log(`base ${ref.slice(0, 12)}${args.includes("--self") ? " against itself" : ""}: ${scenes.length} scenes, ${jobs.length} pictures`);

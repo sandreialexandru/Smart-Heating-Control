@@ -408,7 +408,7 @@ type: custom:smart-heating-control-card
 | `show_quick_override` | `true` | Setează un nivel sau o temperatură pentru un număr de ore (gol = regula configurată) |
 | `show_levels` | `true` | Temperaturile nivelurilor (camere fără Generic Thermostat, temperatura fixă pentru *aproape*) |
 | `show_details` | `true` | Temperatura camerei și ținta, învățarea (două bare de progres în timpul învățării; apoi câte o placă pentru încălzire, inerție, curba de temperatură, soare și pierderea de căldură), timpul de încălzire, ajustările active, temperaturile nivelurilor |
-| `show_schedule_editor` | `true` | Profilurile programului cu editor: orele de început se trag pe bara zilei (pași de 5 minute), un profil se copiază peste altul |
+| `show_schedule_editor` | `true` | Profilurile programului cu editor: orele de început se trag pe bara zilei (pași de 5 minute), un profil se copiază peste altul; *Copiază în alte camere* copiază programul salvat (profilurile și `profile_days`) în camerele alese ale casei, cu `set_schedule` pentru fiecare (camerele cu helper de program nu sunt oferite) |
 | `collapsed` | `false` | Camerele încep pliate (un rând cu un arc mic, numele, timpul până la țintă, iconițe de stare, nivelul și ținta); camera se deschide atingând rândul |
 | `compact` | `false` | O placă pe cameră (numele, iconițele de stare, arc cu temperatura, nivel, țintă; sub nume timpul până la țintă cât încălzește, altfel următoarea schimbare) și un rând pentru casă; se deschide la atingere |
 | `runtime_period` | `day` | Timpul de încălzire arătat pentru `day`, `week` sau `month` (perioade calendaristice, din statisticile pe termen lung; se schimbă și atingând valoarea în card). Senzorii *Timp de încălzire* rămân totaluri cumulate |
@@ -490,13 +490,17 @@ active). Taburi (ultimul se păstrează în browser):
   toate zilele; zile lucrătoare de luni până vineri, fără calendar), *acum* în
   ziua de azi, *Niciun profil activ* (protecție la îngheț) într-o zi pe care
   nu o acoperă niciun profil activ. O atingere deschide camera cu editorul
-  programului.
+  programului; butonul de copiere, cu *Copiază în alte camere*.
 - **Statistici**: `recorder/statistics_during_period` (`change` al senzorilor
   *Timp de încălzire*, `mean` / `min` / `max` ai senzorilor *Medie afară*,
   *Temperatura camerei* și *Temperatură țintă*) pentru ultimele 14 zile, 12
   săptămâni sau 12 luni; pornirile cerute pe zi din
   `history/history_during_period` al senzorului *Cerere de căldură* al casei.
   Se reîmprospătează la fiecare 5 minute cât timp tabul este afișat.
+- **Dispozitive**: entitățile din atributul `devices` al fiecărei camere, o
+  singură dată, cele indisponibile primele, apoi bateria descărcată; bateria
+  este un senzor sau senzor binar cu clasa `battery` pe același dispozitiv
+  (registrul de entități din frontend); ora este `last_updated`.
 - **Istoric**: alertele active (din `alerts` ale camerelor, o singură dată;
   camera și începutul din jurnal), apoi `advanced_climate/history`.
 

@@ -13,8 +13,8 @@ administrators. It is drawn by the same code as the card, so a room looks and
 works the same in both: what is said about a room in [chapter 10](10-card.md)
 holds here too.
 
-The panel has four tabs: **Rooms**, **Schedule**, **Statistics** and
-**History**. The tab last used is kept in the browser.
+The panel has five tabs: **Rooms**, **Schedule**, **Statistics**,
+**History** and **Devices**. The tab last used is kept in the browser.
 
 ## Rooms
 
@@ -41,6 +41,9 @@ a shared time line from 00:00 to 24:00.
 - A room that follows a Schedule helper shows that its schedule is edited in
   the helper.
 - A tap on a room opens it on the Rooms tab with its schedule editor open.
+- The copy button at the end of a row opens the room with *Copy to other
+  rooms*: its whole schedule is copied to the rooms chosen (see
+  [chapter 10](10-card.md)).
 
 The profile of a day is chosen as the integration chooses it: a profile of
 that weekday, else the one of workdays or weekend days, else the one of all
@@ -87,3 +90,20 @@ The integration keeps the last 100 decisions of each room and the last 100
 alerts of each house, also across restarts. An alert still on when Home
 Assistant stops ends at the restart and is told again after it if it still
 applies.
+
+## Devices
+
+Every entity the rooms use, of every house, in one list: thermostats, TRVs,
+switches, temperature and humidity sensors, windows, occupancy sensors and
+calibration entities. An entity used by several rooms (a window shared by two
+rooms) is listed once, with all its rooms.
+
+- The **unavailable** ones come first (their number is in the title), then
+  those whose battery Home Assistant reports as low, then the rest by room.
+- Each row shows the name, the role and the room, the state now (for a
+  thermostat its temperature, its target and whether it heats), the
+  **battery** and how long ago the entity last changed.
+- The battery is that of the device of the entity in Home Assistant: a battery
+  sensor in % or a binary *battery* sensor (*low*). An entity whose device has
+  no battery entity shows none. Nothing is set up for this.
+- A tap on a row opens the entity.

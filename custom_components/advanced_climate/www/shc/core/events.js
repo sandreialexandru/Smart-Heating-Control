@@ -129,6 +129,13 @@ export const EventsMixin = (Base) =>
           this._draft[el.value] = JSON.parse(JSON.stringify(this._draft[d.copy]));
         }
         this._render();
+      } else if (d.copyto !== undefined) {
+        // A room chosen to take a copy of the schedule.
+        this._copyTo = this._copyTo || new Set();
+        if (el.checked) this._copyTo.add(d.copyto);
+        else this._copyTo.delete(d.copyto);
+        el.blur();
+        this._render();
       } else if (d.days !== undefined && this._draftDays) {
         // Days of a profile; when it is on, the active profiles that now overlap it are turned off.
         const m = this._draftDays[d.days] || { days: "all", enabled: false };
@@ -390,6 +397,18 @@ export const EventsMixin = (Base) =>
           }
           break;
         }
+        case "copy-open":
+          this._copyFrom = room;
+          this._copyTo = new Set();
+          this._copyDone = null;
+          break;
+        case "copy-cancel":
+          this._copyFrom = null;
+          this._copyTo = null;
+          break;
+        case "copy-run":
+          await this._copySchedule(room);
+          break;
         case "save": {
           const ok = await this._call(
             "advanced_climate",

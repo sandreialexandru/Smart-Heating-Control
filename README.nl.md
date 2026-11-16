@@ -101,10 +101,11 @@ Elk onderdeel kan verborgen worden; de opties staan in de
 ## Het paneel
 
 Een eigen pagina in de zijbalk, **SHC**, voor alle gebruikers: het hele huis
-op één scherm, het schema van alle kamers op één dag, statistieken
-(verwarmingstijd en temperaturen per dag, week of maand) en de geschiedenis van beslissingen en meldingen, met de
-huidige meldingen bovenaan. Niets in te stellen; details in de
-[handleiding](docs/guide/13-panel.md) (Engels).
+op één scherm, het schema van alle kamers op één dag (met één tik naar andere
+kamers gekopieerd), statistieken (verwarmingstijd en temperaturen per dag,
+week of maand), de geschiedenis van beslissingen en meldingen met de huidige
+meldingen bovenaan en alle apparaten van de kamers met hun batterij. Niets in
+te stellen; details in de [handleiding](docs/guide/13-panel.md) (Engels).
 
 ## Aan de slag
 

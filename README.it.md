@@ -102,11 +102,12 @@ Ogni parte si può nascondere; le opzioni sono nella
 ## Il pannello
 
 Una pagina propria nella barra laterale, **SHC**, per tutti gli utenti: tutta
-la casa su una schermata, il programma di tutte le stanze in un giorno,
-statistiche (tempo di riscaldamento e temperature per giorno, settimana o
-mese) e la cronologia delle decisioni e degli
-avvisi, con gli avvisi attuali in alto. Nulla da configurare; i dettagli sono
-nella [guida](docs/guide/13-panel.md) (in inglese).
+la casa su una schermata, il programma di tutte le stanze in un giorno
+(copiato in altre stanze con un tocco), statistiche (tempo di riscaldamento e
+temperature per giorno, settimana o mese), la cronologia delle decisioni e
+degli avvisi con gli avvisi attuali in alto e tutti i dispositivi delle stanze
+con la loro batteria. Nulla da configurare; i dettagli sono nella
+[guida](docs/guide/13-panel.md) (in inglese).
 
 ## Per iniziare
 

@@ -106,10 +106,12 @@ Chaque partie peut être masquée ; les options sont dans le
 ## Le panneau
 
 Une page à part dans la barre latérale, **SHC**, pour tous les utilisateurs :
-toute la maison sur un écran, le planning de toutes les pièces sur un jour,
-des statistiques (temps de chauffe et températures par jour, semaine ou mois) et l'historique des décisions et des
-alertes, avec les alertes en cours en haut. Rien à configurer ; les détails
-sont dans le [guide](docs/guide/13-panel.md) (en anglais).
+toute la maison sur un écran, le planning de toutes les pièces sur un jour
+(copié vers d'autres pièces en une touche), des statistiques (temps de chauffe
+et températures par jour, semaine ou mois), l'historique des décisions et des
+alertes avec les alertes en cours en haut, et tous les appareils des pièces
+avec leur batterie. Rien à configurer ; les détails sont dans le
+[guide](docs/guide/13-panel.md) (en anglais).
 
 ## Démarrer
 

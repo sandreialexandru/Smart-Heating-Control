@@ -238,6 +238,9 @@ Fiecare profil cu zilele lui și un comutator pornit / oprit:
 - **nivelul** fiecărei ore se alege din lista de lângă ea;
 - **zilele** se aleg în editor (toate, lucrătoare, weekend, zile anume);
 - un profil se poate **copia** peste altul;
+- tot programul (fiecare profil cu zilele lui) se poate **copia în alte camere**
+  ale casei, cu *Copiază în alte camere*: camerele alese îl primesc în locul
+  programului lor (camerele care urmează un helper de program nu apar);
 - cardul avertizează înainte ca pornirea sau oprirea unui profil să lase
   zile fără profil (care ar rămâne pe antiîngheț).
 

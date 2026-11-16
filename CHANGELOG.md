@@ -28,7 +28,15 @@ GitHub releases.
 - 🗓️ **Schedule of the week** (panel, *Schedule* tab): every room on one day,
   the bars of the profile each one uses that day on a shared time line, with
   the time now on today; a day without an active profile says so. A tap on a
-  room opens it with its schedule editor.
+  room opens it with its schedule editor; its copy button, with the rooms to
+  copy its schedule to.
+- 📋 **Copy a schedule to other rooms** (card and panel, *Schedule* of a room):
+  *Copy to other rooms* gives the rooms chosen of the house the same schedule,
+  every profile with its days, in place of their own.
+- 🔋 **Devices** (panel, *Devices* tab): every thermostat, TRV, switch and
+  sensor of the rooms in one list, the unavailable ones first, with the
+  battery of its device (when Home Assistant has one) and how long ago it last
+  changed; a tap opens it.
 - 🕘 **History** (panel, *History* tab): the decisions of every room and the
   alerts with their start and end, newest first, by day; only decisions or
   alerts, one room or all. The integration now keeps the alerts too (the last

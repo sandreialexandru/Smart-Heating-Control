@@ -240,6 +240,9 @@ Every profile with its days and an on / off switch:
 - the **level** of each start is picked in the list next to it;
 - the **days** are chosen in the editor (all, workdays, weekend, chosen days);
 - a profile can be **copied** over another;
+- the whole schedule (every profile with its days) can be **copied to other
+  rooms** of the house with *Copy to other rooms*: the rooms chosen get it in
+  place of their own (rooms that follow a Schedule helper are not listed);
 - the card warns before turning a profile on or off would leave days without a
   profile (which would stay on frost protection).
 

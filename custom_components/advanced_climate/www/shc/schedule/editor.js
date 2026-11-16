@@ -51,14 +51,19 @@ export const ScheduleMixin = (Base) =>
                 <ul class="intervals">${rows}</ul></div>`;
           })
           .join("");
+        const targets = this._copyTargets(a);
         return this._fold(
           `sched-${a.room_id}`,
           this._t("schedule"),
           `${intro}${notice}<div class="profiles">${profiles}</div>
-           <div class="row">${this._btn(this._t("edit"), `data-action="edit" data-room="${esc(a.room_id)}"`, {
+           <div class="row wrap">${this._btn(this._t("edit"), `data-action="edit" data-room="${esc(a.room_id)}"`, {
              icon: "pencil",
              kind: "primary",
-           })}</div>`
+           })}${
+             targets.length && this._copyFrom !== a.room_id
+               ? this._btn(this._t("copy_rooms"), `data-action="copy-open" data-room="${esc(a.room_id)}"`, { icon: "content-copy" })
+               : ""
+           }</div>${this._copyBox(a, targets)}`
         );
       }
       const presets = a.presets || Object.keys(PRESET_COLORS);
@@ -146,6 +151,69 @@ export const ScheduleMixin = (Base) =>
             })}
           </div>
         </div>`;
+    }
+
+    /** The other rooms of the house whose schedule can be written (not those on a Schedule helper). */
+    _copyTargets(a) {
+      return this._discover()
+        .rooms.map((id) => this._hass.states[id]?.attributes)
+        .filter((x) => x && x.entry_id === a.entry_id && x.room_id !== a.room_id && x.schedule_editable)
+        .sort((x, y) => String(x.room_name).localeCompare(String(y.room_name)));
+    }
+
+    /**
+     * Copying the saved schedule of a room (its profiles and their days) over
+     * the schedules of other rooms: the rooms to choose, then Copy; what was
+     * copied, or the error, stays shown.
+     */
+    _copyBox(a, targets) {
+      const done = this._copyDone?.room === a.room_id ? this._copyDone : null;
+      const result = done
+        ? `<p class="hint ok">${esc(this._t("copy_done").replace("{rooms}", done.names.join(", ")))}</p>`
+        : "";
+      if (this._copyFrom !== a.room_id) return result;
+      const chosen = this._copyTo || new Set();
+      const boxes = targets
+        .map(
+          (t) => `<label class="copyroom"><input type="checkbox" data-copyto="${esc(t.room_id)}" ${chosen.has(t.room_id) ? "checked" : ""}>${esc(
+            t.room_name
+          )}</label>`
+        )
+        .join("");
+      return `${result}<div class="copybox"><b>${esc(this._t("copy_to_rooms"))}</b><div class="daychecks">${boxes}</div>
+          <p class="hint">${esc(this._t("copy_hint"))}</p>
+          ${this._error[`sched-${a.room_id}`] ? `<p class="error">${esc(this._error[`sched-${a.room_id}`])}</p>` : ""}
+          <div class="row wrap end">${this._btn(this._t("cancel"), `data-action="copy-cancel"`, {})}${this._btn(
+            this._t("copy_run"),
+            `data-action="copy-run" data-room="${esc(a.room_id)}" ${chosen.size ? "" : "disabled"}`,
+            { icon: "content-copy", kind: "primary" }
+          )}</div></div>`;
+    }
+
+    /** Copy the schedule of a room to the rooms chosen, one by one; the names of those that took it. */
+    async _copySchedule(room) {
+      const from = this._rooms().find((s) => s.attributes.room_id === room)?.attributes;
+      if (!from) return;
+      delete this._error[`sched-${room}`];
+      const targets = this._copyTargets(from).filter((t) => this._copyTo?.has(t.room_id));
+      const names = [];
+      for (const t of targets) {
+        const ok = await this._call(
+          "advanced_climate",
+          "set_schedule",
+          { room: t.room_id, profiles: from.schedule, profile_days: from.profile_days || {} },
+          `sched-${room}`
+        );
+        if (ok) names.push(t.room_name);
+      }
+      this._copyDone = names.length ? { room, names } : null;
+      if (names.length === targets.length) {
+        this._copyFrom = null;
+        this._copyTo = null;
+      } else {
+        // The rooms that did not take it stay chosen (the error says why).
+        for (const t of targets) if (names.includes(t.room_name)) this._copyTo.delete(t.room_id);
+      }
     }
 
     /** Day bar of a profile; in the editor every start time has a handle that can be dragged. */

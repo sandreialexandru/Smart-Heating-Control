@@ -386,7 +386,7 @@ type: custom:smart-heating-control-card
 | `show_quick_override` | `true` | Set a level or a temperature for a number of hours (empty = the configured rule) |
 | `show_levels` | `true` | Level temperatures (rooms without Generic Thermostat, fixed *nearby* temperature) |
 | `show_details` | `true` | Room and target temperature, the learning (two progress bars while learning; then one tile each for heating, inertia, weather curve, sun and heat loss), heating time, active adjustments, level temperatures |
-| `show_schedule_editor` | `true` | Schedule profiles with an editor: drag the start times on the day bar (5-minute steps), copy a profile over another one |
+| `show_schedule_editor` | `true` | Schedule profiles with an editor: drag the start times on the day bar (5-minute steps), copy a profile over another one; *Copy to other rooms* copies the saved schedule (profiles and `profile_days`) to the rooms of the house chosen, with `set_schedule` for each (rooms on a Schedule helper are not offered) |
 | `collapsed` | `false` | Rooms start folded (a row with a small arc, the name, the time to target, state icons, the level and the target); tap it to open the room |
 | `compact` | `false` | One tile per room (the name, the status icons, arc with the temperature, level, target; under the name the time to target while heating, else the next change) and one row for the house; tap to open |
 | `runtime_period` | `day` | Heating time shown for `day`, `week` or `month` (calendar periods, from the long-term statistics; tap the value in the card to change it). The *Heating time* sensors stay cumulative totals |
@@ -463,12 +463,17 @@ kept in the browser):
   for it as the integration does (weekday profile, else workday / weekend, else
   all days; workdays Monday to Friday, without the calendar), *now* on today,
   *No active profile* (frost protection) for a day no active profile covers.
-  A tap opens the room with its schedule editor.
+  A tap opens the room with its schedule editor; the copy button, with *Copy
+  to other rooms*.
 - **Statistics**: `recorder/statistics_during_period` (`change` of the
   *Heating time* sensors, `mean` / `min` / `max` of *Outdoor average*,
   *Room temperature* and *Target temperature*) for the last 14 days, 12
   weeks or 12 months; starts asked per day from `history/history_during_period`
   of the house *Heat demand*. Refreshed every 5 minutes while shown.
+- **Devices**: the entities of the `devices` attribute of every room, once
+  each, unavailable first, then a low battery; the battery is a `battery`
+  device class sensor or binary sensor on the same device (entity registry of
+  the frontend); the time is `last_updated`.
 - **History**: the alerts on now (from the `alerts` of the rooms, once each;
   room and start from the journal), then `advanced_climate/history`.
 

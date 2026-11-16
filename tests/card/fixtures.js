@@ -90,10 +90,10 @@
     for (const [id, state, attributes] of o.extra || []) st(id, state, attributes || {});
     window.calls = window.calls || { ws: [], service: [] };
     return {
-      states, user: { name: "Andrei", is_admin: true }, themes: { darkMode: !!o.dark }, language: o.lang || "en", dockedSidebar: o.sidebar || "docked",
+      states, user: { name: "Andrei", is_admin: true }, themes: { darkMode: !!o.dark }, language: o.lang || "en", dockedSidebar: o.sidebar || "docked", entities: o.registry || {},
       locale: { language: o.lang || "en", time_format: o.timeFormat || "24", time_zone: "local" },
       config: { time_zone: o.tz || "Europe/Bucharest", unit_system: { temperature: unit } },
-      callService: async (domain, service, data) => { window.calls.service.push({ domain, service, data }); if (o.serviceFails) throw new Error("boom"); },
+      callService: async (domain, service, data) => { window.calls.service.push({ domain, service, data }); if (o.serviceFails || (o.serviceFailsFor && data?.room === o.serviceFailsFor)) throw new Error("boom"); },
       callWS: async (msg) => {
         window.calls.ws.push(msg);
         if (o.historyFails) throw new Error("history down");

@@ -1,6 +1,7 @@
 // The schedule of the week in the panel: every room on one day, the bars of the
 // profile that day uses on a shared time line (with now on today). A tap on a
-// room opens it with the schedule editor.
+// room opens it with the schedule editor; its copy button, with the rooms to
+// copy its schedule to.
 
 import { PRESET_COLORS } from "../core/constants.js";
 import { esc } from "../core/format.js";
@@ -31,9 +32,16 @@ export const WeekMixin = (Base) =>
           }</span>`
         : `<span class="pw-gap" style="--c:${PRESET_COLORS.frost}">${esc(this._t("wk_none"))}</span>`;
       const label = this._t("wk_edit").replace("{room}", a.room_name);
-      return `<button class="pw-row" data-action="week-edit" data-room="${esc(a.room_id)}" aria-label="${esc(label)}" title="${esc(
+      const copy = this._t("wk_copy").replace("{room}", a.room_name);
+      return `<div class="pw-row"><button class="pw-main" data-action="week-edit" data-room="${esc(a.room_id)}" aria-label="${esc(
         label
-      )}">${name}${bar}<span class="pw-prof muted">${esc(profile || "")}</span></button>`;
+      )}" title="${esc(label)}">${name}${bar}<span class="pw-prof muted">${esc(profile || "")}</span></button>${
+        this._copyTargets(a).length
+          ? `<button class="pw-copy" data-action="week-copy" data-room="${esc(a.room_id)}" aria-label="${esc(copy)}" title="${esc(copy)}">${this._icon(
+              "content-copy"
+            )}</button>`
+          : "<span></span>"
+      }</div>`;
     }
 
     /** The week: a day to choose, then every room of every house on that day. */
@@ -51,7 +59,7 @@ export const WeekMixin = (Base) =>
         `<div class="segmented many pw-days" style="--n:7" role="group" aria-label="${esc(this._t("wk_day"))}">${days}</div>`,
         `<h3 class="ps-title">${esc(this._weekdayName(day))}${day === today ? ` · ${esc(this._t("today"))}` : ""}</h3>`,
       ];
-      const ticks = `<div class="pw-ticks" aria-hidden="true"><span></span><span class="bar-ticks"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></span><span></span></div>`;
+      const ticks = `<div class="pw-ticks" aria-hidden="true"><span></span><span class="bar-ticks"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></span><span></span><span></span></div>`;
       for (const house of houses) {
         if (!house.rooms.length) continue;
         if (houses.length > 1) parts.push(`<h3 class="ps-house">${esc(house.name || "")}</h3>`);

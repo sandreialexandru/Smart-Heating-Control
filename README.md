@@ -98,9 +98,11 @@ Every part can be hidden; the options are in the [guide](docs/guide/10-card.md).
 ## The panel
 
 A page of its own in the sidebar, **SHC**, for every user: the whole house on
-one screen, the schedule of every room on one day, statistics (heating time
-and temperatures by day, week or month) and the history of the decisions and alerts, with the alerts on now on top. Nothing
-to set up; the [guide](docs/guide/13-panel.md) has the details.
+one screen, the schedule of every room on one day (copied to other rooms with
+one tap), statistics (heating time and temperatures by day, week or month),
+the history of the decisions and alerts with the alerts on now on top, and
+every device of the rooms with its battery. Nothing to set up; the
+[guide](docs/guide/13-panel.md) has the details.
 
 ## Get started
 

@@ -13,8 +13,8 @@ administratorii. Este desenat de același cod ca și cardul, așa că o cameră
 arată și funcționează la fel în amândouă: ce spune [capitolul 10](10-card.ro.md)
 despre o cameră este valabil și aici.
 
-Panoul are patru taburi: **Camere**, **Program**, **Statistici** și
-**Istoric**. Ultimul tab folosit se păstrează în browser.
+Panoul are cinci taburi: **Camere**, **Program**, **Statistici**,
+**Istoric** și **Dispozitive**. Ultimul tab folosit se păstrează în browser.
 
 ## Camere
 
@@ -43,6 +43,9 @@ cameră în ziua aceea, pe o axă comună de la 00:00 la 24:00.
   în helper.
 - O atingere pe o cameră o deschide în tabul Camere, cu editorul programului
   deschis.
+- Butonul de copiere de la capătul unui rând deschide camera cu *Copiază în
+  alte camere*: tot programul ei se copiază în camerele alese (vezi
+  [capitolul 10](10-card.ro.md)).
 
 Profilul unei zile se alege la fel ca în integrare: un profil al acelei zile
 din săptămână, altfel cel al zilelor lucrătoare sau al zilelor de weekend,
@@ -91,3 +94,23 @@ Integrarea păstrează ultimele 100 de decizii ale fiecărei camere și ultimele
 100 de alerte ale fiecărei case, și după reporniri. O alertă încă activă când
 Home Assistant se oprește se încheie la repornire și este anunțată din nou
 după aceea, dacă încă este valabilă.
+
+## Dispozitive
+
+Toate entitățile folosite de camere, din toate casele, într-o singură listă:
+termostate, TRV-uri, relee, senzori de temperatură și umiditate, ferestre,
+senzori de prezență și entități de calibrare. O entitate folosită de mai multe
+camere (o fereastră comună a două camere) apare o singură dată, cu toate
+camerele ei.
+
+- Primele sunt cele **indisponibile** (numărul lor apare în titlu), apoi cele
+  a căror baterie Home Assistant o raportează descărcată, apoi restul, pe
+  camere.
+- Fiecare rând arată numele, rolul și camera, starea de acum (la un termostat
+  temperatura, ținta și dacă încălzește), **bateria** și de cât timp s-a
+  schimbat ultima dată entitatea.
+- Bateria este a dispozitivului entității din Home Assistant: un senzor de
+  baterie în % sau un senzor binar *battery* (*descărcată*). O entitate al
+  cărei dispozitiv nu are entitate de baterie nu arată nimic. Nu cere nicio
+  setare.
+- O atingere pe un rând deschide entitatea.

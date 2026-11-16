@@ -105,10 +105,12 @@ Jeder Teil lässt sich ausblenden; die Optionen stehen in der
 ## Das Panel
 
 Eine eigene Seite in der Seitenleiste, **SHC**, für alle Benutzer: das ganze
-Haus auf einem Bildschirm, der Zeitplan aller Räume an einem Tag, Statistiken
-(Heizzeit und Temperaturen nach Tag, Woche oder Monat) und der Verlauf der Entscheidungen und Warnungen, mit den
-aktuellen Warnungen oben. Keine Einrichtung nötig; Details im
-[Anleitung](docs/guide/13-panel.md) (Englisch).
+Haus auf einem Bildschirm, der Zeitplan aller Räume an einem Tag (mit einem
+Tippen in andere Räume kopiert), Statistiken (Heizzeit und Temperaturen nach
+Tag, Woche oder Monat), der Verlauf der Entscheidungen und Warnungen mit den
+aktuellen Warnungen oben und alle Geräte der Räume mit ihrer Batterie. Keine
+Einrichtung nötig; Details in der [Anleitung](docs/guide/13-panel.md)
+(Englisch).
 
 ## Loslegen
 

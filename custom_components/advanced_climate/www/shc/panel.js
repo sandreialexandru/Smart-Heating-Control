@@ -7,7 +7,8 @@
  * the rooms is the card's own code, only the layout is the panel's.
  * The chosen room is kept in the address (#room) and in the browser.
  * More tabs: the schedule of the week (every room on one day), the statistics
- * (heating time and temperatures by day, week, month) and the history (the alerts on now, the decisions of the rooms, the alerts with
+ * (heating time and temperatures by day, week, month), the devices of every
+ * room (the unavailable ones first, with their battery) and the history (the alerts on now, the decisions of the rooms, the alerts with
  * their start and end).
  */
 
@@ -18,7 +19,7 @@ import { STYLE } from "./core/style.js";
 
 const STORE = "shc-panel-room";
 const TAB_STORE = "shc-panel-tab";
-const TABS = ["rooms", "week", "stats", "history"];
+const TABS = ["rooms", "week", "stats", "history", "devices"];
 
 const PANEL_STYLE = `
   :host { display: block; min-height: 100%; background: var(--primary-background-color); }
@@ -49,7 +50,7 @@ const PANEL_STYLE = `
   :host([narrow]:not([room])) .pmain { display: none !important; }
   /* The tabs: rooms, statistics, history. */
   .ptabs { box-sizing: border-box; max-width: 1400px; margin: 0 auto; padding: 16px 16px 0; display: flex; justify-content: center; }
-  .ptabs .segmented { flex: 0 1 480px; }
+  .ptabs .segmented { flex: 0 1 600px; }
   :host([narrow]) .ptabs { padding: 8px 8px 0; }
   :host([narrow][room][tab="rooms"]) .ptabs { display: none; }
   .pextra { grid-column: 1 / -1; }
@@ -106,13 +107,17 @@ const PANEL_STYLE = `
   /* The week: every room on one day, its bar on a shared time line. */
   .pw-days .seg { position: relative; }
   .pw-today { position: absolute; left: 50%; bottom: 3px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: currentColor; }
-  .pw-rows { display: grid; grid-template-columns: minmax(70px, 180px) minmax(0, 1fr) minmax(0, 8em); gap: 4px 12px; margin-top: 8px; }
-  .pw-ticks, .pw-row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; }
+  .pw-rows { display: grid; grid-template-columns: minmax(70px, 180px) minmax(0, 1fr) minmax(0, 8em) 40px; gap: 4px 12px; margin-top: 8px; }
+  .pw-ticks, .pw-row, .pw-main { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; }
+  .pw-main { grid-column: 1 / 4; }
   .pw-ticks .bar-ticks { margin: 0; }
-  button.pw-row { border: 0; background: none; font: inherit; color: inherit; text-align: left; padding: 8px 6px; margin: 0 -6px;
+  button.pw-main { border: 0; background: none; font: inherit; color: inherit; text-align: left; padding: 8px 6px; margin: 0 -6px;
     border-radius: 10px; cursor: pointer; }
-  button.pw-row:hover { background: var(--ac-surface-2); }
-  div.pw-row { padding: 8px 0; }
+  button.pw-main:hover { background: var(--ac-surface-2); }
+  div.pw-row > .pw-name { padding: 8px 0; }
+  .pw-copy { width: 40px; height: 40px; border: 0; border-radius: 50%; background: none; color: var(--ac-muted); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+  .pw-copy:hover { background: var(--ac-surface-2); color: var(--primary-text-color); }
   .pw-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
   .pw-bar.sbar.ro { height: 22px; border-radius: 6px; }
   .pw-now { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--primary-text-color); border-radius: 1px; }
@@ -120,12 +125,38 @@ const PANEL_STYLE = `
     background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--c) 22%, transparent) 0 6px, transparent 6px 12px); }
   .pw-prof, .pw-ext { font-size: 0.85em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pw-ext { grid-column: 2 / -1; }
+  :host([narrow]) .pw-rows { grid-template-columns: minmax(0, 1fr) auto 40px; }
+  :host([narrow]) .pw-ticks > span:not(.bar-ticks) { display: none; }
+  :host([narrow]) .pw-ticks .bar-ticks { grid-column: 1 / 3; }
+  :host([narrow]) .pw-main { grid-column: 1 / 3; row-gap: 6px; }
+  :host([narrow]) .pw-bar, :host([narrow]) .pw-gap { grid-column: 1 / -1; grid-row: 2; }
+  :host([narrow]) .pw-ext { grid-column: 1 / -1; grid-row: 2; }
+  :host([narrow]) .pw-copy { grid-row: 1; grid-column: 3; }
   .pw-note { margin-top: 12px; }
   :host([narrow]) .pw-rows { grid-template-columns: minmax(0, 1fr) auto; }
   :host([narrow]) .pw-ticks > span:first-child, :host([narrow]) .pw-ticks > span:last-child { display: none; }
   :host([narrow]) .pw-ticks .bar-ticks { grid-column: 1 / -1; }
   :host([narrow]) .pw-bar, :host([narrow]) .pw-gap, :host([narrow]) .pw-ext { grid-column: 1 / -1; grid-row: 2; }
   :host([narrow]) .pw-row { row-gap: 6px; }
+  /* Every device of the rooms. */
+  .pd-badcount { color: var(--ac-err); }
+  .pd-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; }
+  .pd-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) minmax(0, 14em) 6em 9em; gap: 4px 12px; align-items: center;
+    padding: 8px 6px; margin: 0 -6px; border-radius: 10px; border-bottom: 1px solid var(--ac-line); cursor: pointer; }
+  .pd-row:hover { background: var(--ac-surface-2); }
+  .pd-ico { display: inline-flex; color: var(--ac-muted); }
+  .pd-row.bad .pd-ico, .pd-row.bad .pd-val { color: var(--ac-err); }
+  .pd-name { display: flex; flex-direction: column; min-width: 0; }
+  .pd-name > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pd-name small { color: var(--ac-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pd-val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pd-bat { display: inline-flex; align-items: center; gap: 2px; font-size: 0.9em; white-space: nowrap; }
+  .pd-bat.low { color: var(--ac-err); }
+  .pd-ago { font-size: 0.85em; text-align: right; white-space: nowrap; }
+  :host([narrow]) .pd-row { grid-template-columns: 28px minmax(0, 1fr) auto; }
+  :host([narrow]) .pd-val { grid-column: 2 / 3; grid-row: 2; font-size: 0.9em; }
+  :host([narrow]) .pd-bat { grid-column: 3; grid-row: 1; }
+  :host([narrow]) .pd-ago { grid-column: 3; grid-row: 2; }
   /* The alerts on now, on top of the history. */
   .pa-now { margin-bottom: 16px; }
   .pa-now .acount { display: inline-flex; min-width: 1.4em; justify-content: center; padding: 0 6px; border-radius: 999px; font-size: 0.8em;
@@ -138,6 +169,8 @@ const PANEL_STYLE = `
     font-size: 0.78em; background: var(--ac-warn); color: #000; }
   /* On a phone the count sits on the corner of the tab, so its name keeps its room. */
   .ptabs .seg { position: relative; }
+  :host([narrow]) .ptabs .segmented { padding: 3px; gap: 2px; }
+  :host([narrow]) .ptabs .seg { font-size: 0.78em; padding: 0 2px; }
   :host([narrow]) .tabcount { position: absolute; top: 1px; right: 1px; margin: 0; min-width: 1.1em; padding: 0 3px; font-size: 0.68em; }
   /* The open room is not folded from its title in the panel. */
   .pmain .room-title { cursor: default; }
@@ -270,6 +303,13 @@ class ShcPanel extends ShcBase {
     this._card = body.querySelector(".pmain");
   }
 
+  /** What redraws the panel: on the Devices tab also every device, its battery, and each minute (how long ago). */
+  _watched() {
+    const ids = super._watched();
+    if (this._tab !== "devices") return ids;
+    return [...ids, ...this._deviceIds(this._houses()), `minute:${Math.floor(Date.now() / 60000)}`];
+  }
+
   /** Open a room on the Rooms tab; with a part of it (its schedule, its Details) shown. */
   _openRoom(room, key = null) {
     this._tab = "rooms";
@@ -354,6 +394,7 @@ class ShcPanel extends ShcBase {
     const extra = [];
     if (tab === "week") extra.push({ k: "week", html: this._weekHtml(houses) });
     if (tab === "stats") extra.push({ k: "stats", html: this._statsHtml(houses) });
+    if (tab === "devices") extra.push({ k: "devices", html: this._devicesTabHtml(houses) });
     if (tab === "history") {
       const history = this._historyHtml(houses);
       extra.push({ k: "alerts-now", html: this._alertsNowHtml(houses) }, { k: "history", html: history });
@@ -378,13 +419,18 @@ class ShcPanel extends ShcBase {
     const fold = ev.target.closest?.('[data-action="fold"][data-key^="room-"]');
     if (fold && this._card?.contains(fold)) return;
     // The tabs and the choices of the statistics and the history.
-    // A room opened from the week (its schedule editor) or from an alert.
-    const go = ev.target.closest?.('[data-action="week-edit"], [data-action="alert-room"]');
+    // A room opened from the week (its schedule editor, or the rooms to copy its schedule to) or from an alert.
+    const go = ev.target.closest?.('[data-action="week-edit"], [data-action="week-copy"], [data-action="alert-room"]');
     if (go) {
       const room = go.dataset.room;
       const action = go.dataset.action;
       if (action === "week-edit") this._startEdit(room);
-      const key = action === "week-edit" ? `sched-${room}` : null;
+      if (action === "week-copy") {
+        this._copyFrom = room;
+        this._copyTo = new Set();
+        this._copyDone = null;
+      }
+      const key = action === "week-edit" || action === "week-copy" ? `sched-${room}` : null;
       if (key) this._open[key] = true;
       this._openRoom(room, key);
       return;

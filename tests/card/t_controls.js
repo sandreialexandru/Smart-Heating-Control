@@ -160,3 +160,48 @@ test("alerts: a silent sensor says whether it is left out or still controls the 
   ok(texts[0].includes("sensor.room_temp has sent no temperature for more than 12 h; it is left out until it reports again."), "left out: " + texts[0]);
   ok(texts[1].includes("sensor.room_temp has sent no temperature for more than 12 h; the room is controlled by an old value."), "still controls: " + texts[1]);
 });
+
+test("the schedule copied to other rooms of the house: only the rooms whose schedule can be written; each one replaced", async (p) => {
+  const rooms = [
+    { id: "r1", name: "Bedroom" },
+    { id: "r2", name: "Kid" },
+    { id: "r3", name: "Living", scheduleEditable: false },
+  ];
+  await mount(p, {}, { rooms });
+  await click(p, '[data-key="sched-r1"]'); await p.waitForTimeout(100);
+  await click(p, '[data-action="copy-open"][data-room="r1"]'); await p.waitForTimeout(100);
+  const box = await p.evaluate(() => ({
+    rooms: [...card.shadowRoot.querySelectorAll("[data-copyto]")].map((c) => c.dataset.copyto),
+    disabled: card.shadowRoot.querySelector('[data-action="copy-run"]').disabled,
+  }));
+  eq(box, { rooms: ["r2"], disabled: true }, "the other rooms that can take it; nothing chosen yet");
+  await click(p, '[data-copyto="r2"]'); await p.waitForTimeout(100);
+  await p.evaluate(() => { window.calls.service = []; });
+  await click(p, '[data-action="copy-run"]'); await p.waitForTimeout(200);
+  const sent = await p.evaluate(() => window.calls.service);
+  eq(sent.length, 1, "one call");
+  eq([sent[0].service, sent[0].data.room, Object.keys(sent[0].data.profiles), sent[0].data.profile_days.weekend],
+    ["set_schedule", "r2", ["workday", "weekend"], { days: "weekend", enabled: true }], "the profiles and their days of the room");
+  const after = await p.evaluate(() => ({
+    box: !!card.shadowRoot.querySelector(".copybox"),
+    done: card.shadowRoot.querySelector('[data-section="sched-r1"] .hint.ok:last-of-type')?.innerText || [...card.shadowRoot.querySelectorAll('[data-section="sched-r1"] .hint.ok')].map((h) => h.innerText).join("|"),
+  }));
+  ok(!after.box && /Copied to: Kid/.test(after.done), "said so: " + after.done);
+});
+
+test("a copy that a room refuses: the error, and that room stays chosen", async (p) => {
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom" }, { id: "r2", name: "Kid" }, { id: "r3", name: "Office" }], serviceFailsFor: "r3" });
+  await click(p, '[data-key="sched-r1"]'); await p.waitForTimeout(100);
+  await click(p, '[data-action="copy-open"][data-room="r1"]'); await p.waitForTimeout(100);
+  await click(p, '[data-copyto="r2"]'); await p.waitForTimeout(50);
+  await click(p, '[data-copyto="r3"]'); await p.waitForTimeout(50);
+  await click(p, '[data-action="copy-run"]'); await p.waitForTimeout(200);
+  const r = await p.evaluate(() => ({
+    error: card.shadowRoot.querySelector('[data-section="sched-r1"] .error')?.innerText || "",
+    chosen: [...card.shadowRoot.querySelectorAll("[data-copyto]")].filter((c) => c.checked).map((c) => c.dataset.copyto),
+    text: card.shadowRoot.querySelector('[data-section="sched-r1"]').innerText,
+  }));
+  ok(/boom/.test(r.error) || /boom/.test(r.text), "the error: " + r.error);
+  eq(r.chosen, ["r3"], "the room that refused stays chosen");
+  ok(/Copied to: Kid/.test(r.text), "the one that took it");
+});

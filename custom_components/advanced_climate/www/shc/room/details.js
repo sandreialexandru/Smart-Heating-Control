@@ -3,6 +3,18 @@
 import { PRESET_COLORS } from "../core/constants.js";
 import { esc, num } from "../core/format.js";
 
+// The icon of each role of an entity of a room.
+const DEVICE_ICONS = {
+  thermostat: "thermostat",
+  switch: "power-socket-eu",
+  temperature: "thermometer",
+  humidity: "water-percent",
+  window: "window-closed-variant",
+  window_linked: "window-closed-variant",
+  occupancy: "motion-sensor",
+  calibration: "tune-vertical",
+};
+
 export const DetailsMixin = (Base) =>
   class extends Base {
     /** Details: temperatures, heating rate and time, device preset, adjustments, levels. */
@@ -185,53 +197,49 @@ export const DetailsMixin = (Base) =>
       return html;
     }
 
+    /** One entity of a room: its name, icon, its state now in words and whether it is unavailable. */
+    _deviceInfo(entityId, role) {
+      const st = this._state(entityId);
+      const name = st?.attributes?.friendly_name || entityId;
+      let value;
+      let bad = false;
+      if (!st) {
+        value = this._t("dev_missing");
+        bad = true;
+      } else if (st.state === "unavailable" || st.state === "unknown") {
+        value = this._t(st.state === "unavailable" ? "dev_unavailable" : "dev_unknown");
+        bad = true;
+      } else if (role === "thermostat") {
+        const at = st.attributes || {};
+        const parts = [];
+        if (num(at.current_temperature) !== null) parts.push(this._temp(at.current_temperature));
+        if (num(at.temperature) !== null) parts.push(`→ ${this._temp(at.temperature)}`);
+        if (st.state === "off") parts.push(this._t("off").toLowerCase());
+        else if (at.hvac_action === "heating") parts.push(this._t("dev_heating"));
+        else if (at.hvac_action === "idle") parts.push(this._t("dev_idle"));
+        value = parts.join(" ") || st.state;
+      } else if (role === "window" || role === "window_linked") {
+        value = this._t(st.state === "on" ? "dev_open" : "dev_closed");
+      } else if (role === "occupancy") {
+        value = this._t(st.state === "on" ? "dev_present" : "dev_clear");
+      } else if (role === "switch") {
+        value = this._t(st.state === "on" ? "on" : "off");
+      } else {
+        const unit = st.attributes?.unit_of_measurement || "";
+        value = `${st.state}${unit ? ` ${unit}` : ""}`;
+      }
+      return { st, name, value, bad, icon: DEVICE_ICONS[role] || "devices" };
+    }
+
     /** The entities of the room with their state now; an unavailable one stands out (opens its dialog). */
     _devicesHtml(a) {
       const list = Array.isArray(a.devices) ? a.devices : [];
       if (!list.length) return "";
-      const icons = {
-        thermostat: "thermostat",
-        switch: "power-socket-eu",
-        temperature: "thermometer",
-        humidity: "water-percent",
-        window: "window-closed-variant",
-        window_linked: "window-closed-variant",
-        occupancy: "motion-sensor",
-        calibration: "tune-vertical",
-      };
       const rows = list
         .map(([entityId, role]) => {
-          const st = this._state(entityId);
-          const name = st?.attributes?.friendly_name || entityId;
-          let value;
-          let bad = false;
-          if (!st) {
-            value = this._t("dev_missing");
-            bad = true;
-          } else if (st.state === "unavailable" || st.state === "unknown") {
-            value = this._t(st.state === "unavailable" ? "dev_unavailable" : "dev_unknown");
-            bad = true;
-          } else if (role === "thermostat") {
-            const at = st.attributes || {};
-            const parts = [];
-            if (num(at.current_temperature) !== null) parts.push(this._temp(at.current_temperature));
-            if (num(at.temperature) !== null) parts.push(`→ ${this._temp(at.temperature)}`);
-            if (st.state === "off") parts.push(this._t("off").toLowerCase());
-            else if (at.hvac_action === "heating") parts.push(this._t("dev_heating"));
-            else if (at.hvac_action === "idle") parts.push(this._t("dev_idle"));
-            value = parts.join(" ") || st.state;
-          } else if (role === "window" || role === "window_linked") {
-            value = this._t(st.state === "on" ? "dev_open" : "dev_closed");
-          } else if (role === "occupancy") {
-            value = this._t(st.state === "on" ? "dev_present" : "dev_clear");
-          } else if (role === "switch") {
-            value = this._t(st.state === "on" ? "on" : "off");
-          } else {
-            const unit = st.attributes?.unit_of_measurement || "";
-            value = `${st.state}${unit ? ` ${unit}` : ""}`;
-          }
+          const { name, value, bad, icon } = this._deviceInfo(entityId, role);
           return `<div class="wide dev link ${bad ? "bad" : ""}" ${this._more(entityId)}>
-              ${this._icon(icons[role] || "devices")}
+              ${this._icon(icon)}
               <span class="dname"><span>${esc(name)}</span><small>${esc(this._t(`dev_${role}`))}</small></span>
               <span class="dval">${esc(value)}</span>
             </div>`;

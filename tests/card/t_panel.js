@@ -303,7 +303,7 @@ test("history that fails says so; Romanian texts", async (p) => {
   await p.waitForTimeout(300);
   const t = await extraText(p);
   ok(t.includes("Decizii") && t.includes("Toate camerele") && t.includes("Toată casa") && t.includes("Home Assistant a repornit"), t.slice(0, 300));
-  eq(await inPanel(p, (sr) => [...sr.querySelectorAll('[data-action="panel-tab"]')].map((b) => b.innerText)), ["Camere", "Program", "Statistici", "Istoric"], "tabs");
+  eq(await inPanel(p, (sr) => [...sr.querySelectorAll('[data-action="panel-tab"]')].map((b) => b.innerText)), ["Camere", "Program", "Statistici", "Istoric", "Dispozitive"], "tabs");
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });
 
@@ -406,12 +406,12 @@ test("schedule tab: every room on today, another day, no active profile, an outs
   const look = () => inPanel(p, (sr) => ({
     day: [...sr.querySelectorAll('[data-action="week-day"]')].findIndex((b) => b.classList.contains("active")),
     rows: [...sr.querySelectorAll(".pw-row")].map((r) => r.querySelector(".pw-name").innerText),
-    profile: sr.querySelector('.pw-row[data-room="r1"] .pw-prof').innerText,
-    segs: sr.querySelectorAll('.pw-row[data-room="r1"] .sseg').length,
-    now: !!sr.querySelector('.pw-row[data-room="r1"] .pw-now'),
-    gap: sr.querySelector('.pw-row[data-room="r2"] .pw-gap')?.innerText || null,
+    profile: sr.querySelector('.pw-main[data-room="r1"] .pw-prof').innerText,
+    segs: sr.querySelectorAll('.pw-main[data-room="r1"] .sseg').length,
+    now: !!sr.querySelector('.pw-main[data-room="r1"] .pw-now'),
+    gap: sr.querySelector('.pw-main[data-room="r2"] .pw-gap')?.innerText || null,
     outside: sr.querySelector(".pw-row .pw-ext")?.innerText || null,
-    outsideButton: !!sr.querySelector('button.pw-row[data-room="r3"]'),
+    outsideButton: !!sr.querySelector('button.pw-main[data-room="r3"]'),
   }));
   const first = await look();
   eq([first.day, first.rows, first.now], [today, ["Bedroom", "Living", "Office"], true], "today, every room (in the order of the card), now on the bar");
@@ -424,7 +424,7 @@ test("schedule tab: every room on today, another day, no active profile, an outs
   const second = await look();
   eq([second.day, second.profile, second.now], [other, other < 5 ? "workday" : "weekend", false], "another day: its profile, no now");
   // A tap on a room: the Rooms tab with that room and its schedule editor open.
-  await clickIn(p, 'button.pw-row[data-room="r1"]'); await p.waitForTimeout(150);
+  await clickIn(p, 'button.pw-main[data-room="r1"]'); await p.waitForTimeout(150);
   const opened = await inPanel(p, (sr) => ({
     tab: panel.getAttribute("tab"),
     room: sr.querySelector(".pmain .block.room")?.dataset.key || sr.querySelector(".pmain [data-key^='room-']")?.dataset.key,
@@ -499,5 +499,56 @@ test("statistics: the period now has the heating time the card shows (with the m
   ok(/: 1 h 30 min$/.test(r.last), "today as the card asks for it (the fake answers 1.5 h): " + r.last);
   const asked = await p.evaluate(() => window.calls.ws.filter((c) => c.type === "recorder/statistic_during_period" && c.calendar?.period === "day").map((c) => c.statistic_id));
   ok(asked.includes("sensor.home_heating_runtime") && asked.includes("sensor.bedroom_heating_runtime"), "asked for the house and the rooms: " + asked);
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("devices: every entity of the rooms once, the unavailable first, with the battery of its device and how long ago", async (p) => {
+  const rooms = [
+    { id: "r1", name: "Bedroom", devices: [["climate.bed_trv", "thermostat"], ["binary_sensor.bed_window", "window"]] },
+    { id: "r2", name: "Kid", devices: [["climate.kid_trv", "thermostat"], ["binary_sensor.bed_window", "window"]] },
+  ];
+  const extra = [
+    ["climate.bed_trv", "heat", { friendly_name: "Bedroom TRV", current_temperature: 20.1, temperature: 21, hvac_action: "heating" }],
+    ["binary_sensor.bed_window", "off", { friendly_name: "Bedroom window" }],
+    ["climate.kid_trv", "unavailable", { friendly_name: "Kid TRV" }],
+    ["sensor.bed_trv_battery", "64", { device_class: "battery", unit_of_measurement: "%" }],
+    ["binary_sensor.bed_window_battery", "on", { device_class: "battery" }],
+  ];
+  const registry = { "climate.bed_trv": { device_id: "d1" }, "sensor.bed_trv_battery": { device_id: "d1" },
+    "binary_sensor.bed_window": { device_id: "d2" }, "binary_sensor.bed_window_battery": { device_id: "d2" } };
+  await openPanel(p, { rooms, extra, registry });
+  await clickIn(p, '[data-action="panel-tab"][data-option="devices"]'); await p.waitForTimeout(150);
+  const r = await inPanel(p, (sr) => ({
+    title: sr.querySelector(".pd-devices .ps-title").innerText,
+    rows: [...sr.querySelectorAll(".pd-row")].map((li) => ({
+      id: li.dataset.entity,
+      where: li.querySelector(".pd-name small").innerText,
+      value: li.querySelector(".pd-val").innerText,
+      battery: li.querySelector(".pd-bat").innerText.trim(),
+      low: li.querySelector(".pd-bat").classList.contains("low"),
+      bad: li.classList.contains("bad"),
+      ago: li.querySelector(".pd-ago").innerText,
+    })),
+  }));
+  ok(/^Devices of the rooms · 3 · 1 unavailable$/.test(r.title), "the count: " + r.title);
+  eq(r.rows.map((x) => x.id), ["climate.kid_trv", "binary_sensor.bed_window", "climate.bed_trv"], "unavailable, then a low battery, then the rest");
+  eq([r.rows[0].bad, r.rows[0].value], [true, "unavailable"], "unavailable");
+  eq([r.rows[1].where, r.rows[1].battery, r.rows[1].low], ["Window · Bedroom, Kid", "low", true], "an entity of two rooms once; a low battery");
+  eq([r.rows[2].value, r.rows[2].battery, r.rows[2].low], ["20.1° → 21.0° heating", "64%", false], "the battery in %");
+  ok(r.rows.every((x) => x.ago === "now"), "how long ago: " + r.rows.map((x) => x.ago));
+  await clickIn(p, '.pd-row[data-entity="climate.kid_trv"]');
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("schedule tab: the copy button opens the room with the rooms to copy its schedule to", async (p) => {
+  await openPanel(p, { rooms: [{ id: "r1", name: "Bedroom" }, { id: "r2", name: "Kid" }] });
+  await clickIn(p, '[data-action="panel-tab"][data-option="week"]'); await p.waitForTimeout(100);
+  await clickIn(p, '[data-action="week-copy"][data-room="r2"]'); await p.waitForTimeout(150);
+  const r = await inPanel(p, (sr) => ({
+    tab: panel.getAttribute("tab"),
+    box: !!sr.querySelector('.pmain [data-section="sched-r2"] .copybox'),
+    rooms: [...sr.querySelectorAll(".pmain [data-copyto]")].map((c) => c.dataset.copyto),
+  }));
+  eq(r, { tab: "rooms", box: true, rooms: ["r1"] }, "the room, its copy box, the other room");
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });

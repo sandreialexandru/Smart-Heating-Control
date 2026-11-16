@@ -148,6 +148,9 @@ export const STYLE = `
   .confirmbox { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 10px;
     background: color-mix(in srgb, var(--ac-warn) 14%, transparent); }
   .confirmbox > span { flex: 1 1 200px; }
+  .copybox { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--ac-surface-2); }
+  .copybox .daychecks label { min-height: 32px; }
+  .btn[disabled] { opacity: 0.5; cursor: default; }
   .daychecks { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 0.9em; }
   .daychecks label { display: inline-flex; gap: 4px; align-items: center; }
   dd small.sub { display: block; font-size: 0.8em; color: var(--ac-muted); }

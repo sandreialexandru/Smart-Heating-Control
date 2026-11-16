@@ -87,13 +87,13 @@ jobs:
             *) shards="${SHARDS:-20}"; limit="${LIMIT:-0}"; files="$FILES"; ref="$REF"
                python="${PYTHON:-true}"; card="${CARD:-true}" ;;
           esac
-          # The card in ranges of lines with about as many mutants each
+          # The card modules in groups with about as many mutants each
           # (tests/mutation/card_parts.py); the short try only a few lines.
-          card_file=custom_components/advanced_climate/www/shc/card.js
+          card_dir=custom_components/advanced_climate/www/shc
           if [ "$EVENT" = push ]; then
-            card_matrix='[{"part": 0, "range": "1200-1215"}]'
+            card_matrix='[{"part": 0, "mutate": "'"$card_dir"'/room/gauge.js:10-25", "label": "room/gauge.js:10-25"}]'
           else
-            card_matrix=$(python3 tests/mutation/card_parts.py "$card_file" "$card_shards")
+            card_matrix=$(python3 tests/mutation/card_parts.py "$card_dir" "$card_shards")
           fi
           if ! [[ "$shards" =~ ^[0-9]+$ ]] || (( shards < 1 || shards > 20 )); then shards=20; fi
           if ! [[ "$limit" =~ ^[0-9]+$ ]]; then limit=0; fi
@@ -153,7 +153,7 @@ jobs:
           retention-days: 7
 
   card:
-    name: Card mutants ${{ matrix.part.part }} (lines ${{ matrix.part.range }})
+    name: Card mutants ${{ matrix.part.part }} (${{ matrix.part.label }})
     needs: plan
     if: needs.plan.outputs.card == 'true'
     # Playwright 1.56 has its Chromium for Ubuntu 24.04, not yet for the newest runner.
@@ -176,10 +176,10 @@ jobs:
       - name: Mutants of the card
         env:
           CARD_TEST_FAIL_FAST: "1"
-          RANGE: ${{ matrix.part.range }}
+          MUTATE: ${{ matrix.part.mutate }}
         run: >-
           npx stryker run tests/mutation/stryker.card.json
-          --mutate "custom_components/advanced_climate/www/shc/card.js:$RANGE"
+          --mutate "$MUTATE"
       - name: Results
         if: always()
         run: |

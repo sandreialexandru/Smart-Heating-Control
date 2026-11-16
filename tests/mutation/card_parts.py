@@ -1,12 +1,12 @@
-"""Split the card into line ranges with about as many mutants each (one job per range).
+"""Split the card modules into groups with about as many mutants each (one job per group).
 
-The mutants are far from even along the card: the drawing of the chart and the
-house have many, the styles at the end almost none. ``DENSITY`` holds how many
-mutants each tenth of the card had in a full run (2026-11-04: 120 … 74, 4,739 in
-all); the ranges follow it, so the jobs take about the same time. When the card
-changes a lot, update it from the totals the card jobs print (``All files``).
+The card is in modules (custom_components/advanced_climate/www/shc). Each job
+mutates a group of whole modules; the groups are made so that their sizes are
+about equal. The size of a module is its number of lines, except the CSS
+(core/style.js) and the texts (core/i18n.js): strings are not mutated, so they
+count for little.
 
-    python tests/mutation/card_parts.py <card.js> <parts>   → JSON for the matrix
+    python tests/mutation/card_parts.py <folder of the modules> <parts>   → JSON for the matrix
 """
 
 from __future__ import annotations
@@ -15,26 +15,36 @@ import json
 import sys
 from pathlib import Path
 
-DENSITY = [120, 333, 503, 473, 912, 919, 479, 598, 328, 74]
+# Modules that are mostly strings (not mutated): a tenth of their lines.
+LIGHT = {"style.js", "i18n.js"}
 
 
-def parts(lines: int, count: int, density: list[int] = DENSITY) -> list[dict]:
-    """``count`` ranges of the lines 1 … ``lines`` with equal shares of the mutants."""
-    size = lines / len(density)
-    # Mutants per line, the same within each tenth.
-    per_line = [density[min(len(density) - 1, int(i / size))] / size for i in range(lines)]
-    total = sum(per_line)
-    out, start, acc = [], 1, 0.0
-    for line, weight in enumerate(per_line, 1):
-        acc += weight
-        if acc >= total * (len(out) + 1) / count and len(out) < count - 1:
-            out.append({"part": len(out), "range": f"{start}-{line}"})
-            start = line + 1
-    out.append({"part": len(out), "range": f"{start}-{lines}"})
-    return out
+def weight(path: Path) -> float:
+    lines = len([line for line in path.read_text("utf-8").splitlines() if line.strip()])
+    return lines / 10 if path.name in LIGHT else lines
+
+
+def parts(folder: Path, count: int, root: Path) -> list[dict]:
+    """``count`` groups of the modules in ``folder`` (paths relative to ``root``), largest first."""
+    files = sorted(folder.rglob("*.js"), key=lambda p: (-weight(p), str(p)))
+    groups: list[tuple[float, list[str]]] = [
+        (0.0, []) for _ in range(max(1, min(count, len(files))))
+    ]
+    for f in files:
+        i = min(range(len(groups)), key=lambda k: groups[k][0])
+        size, names = groups[i]
+        groups[i] = (size + weight(f), [*names, f.relative_to(root).as_posix()])
+    base = folder.relative_to(root)
+    return [
+        {
+            "part": i,
+            "mutate": ",".join(sorted(names)),
+            "label": ", ".join(Path(n).relative_to(base).as_posix() for n in sorted(names)),
+        }
+        for i, (_, names) in enumerate(groups)
+    ]
 
 
 if __name__ == "__main__":
-    card, count = sys.argv[1], int(sys.argv[2])
-    lines = len(Path(card).read_text("utf-8").splitlines())
-    print(json.dumps(parts(lines, count)))
+    folder, count = Path(sys.argv[1]).resolve(), int(sys.argv[2])
+    print(json.dumps(parts(folder, count, Path.cwd().resolve())))

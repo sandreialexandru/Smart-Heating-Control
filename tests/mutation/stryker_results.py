@@ -34,7 +34,8 @@ def main() -> int:
     results = []
     for path, item in data.get("files", {}).items():
         lines = item.get("source", "").splitlines()
-        name = Path(path).name
+        # The module within the card folder (two modules may share a file name).
+        name = path.replace("\\", "/").split("www/")[-1]
         for index, mutant in enumerate(item.get("mutants", [])):
             if mutant.get("status") == "Ignored":
                 continue  # outside the lines of this job: another job tests it

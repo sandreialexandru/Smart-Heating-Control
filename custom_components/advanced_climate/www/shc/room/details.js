@@ -7,7 +7,6 @@ export const DetailsMixin = (Base) =>
   class extends Base {
     /** Details: temperatures, heating rate and time, device preset, adjustments, levels. */
     _detailsHtml(a, e) {
-      const rate = this._state(e.heating_rate);
       const runtime = this._state(e.heating_runtime);
       const offsets =
         (a.offsets || []).map(([label, delta]) => `${this._offsetName(label)} ${delta > 0 ? "+" : ""}${delta}°`).join(", ") ||

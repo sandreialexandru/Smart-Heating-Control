@@ -58,7 +58,10 @@ unei ferestre deschise, și cea mai mică valoare pe care o poate avea un nivel.
 O țintă pusă manual pe el e readusă. Fără *Pornește și oprește sursa prin temperatura ei*, sau pentru un termostat fără
 temperatură țintă, i se schimbă doar modul: `heat` (sau `auto`, dacă nu are
 `heat`) la pornire și `off` la oprire; atunci încălzește după ținta lui, care
-trebuie să fie peste senzorul lui.
+trebuie să fie peste senzorul lui. Dezactiveaz-o pentru o pompă de căldură sau
+o centrală cu curbă de încălzire sau temperatură a apei proprii: acestea rămân
+controlate de dispozitiv. Opțiunea apare când sursa principală sau cea
+secundară e termostat și se aplică amândurora.
 
 > **Exemplu (un Hive pe hol, TRV-uri în camere):** livingul cere căldură, Hive
 > primește 25 °C și pornește centrala deși pe hol sunt 20 °C; când livingul s-a

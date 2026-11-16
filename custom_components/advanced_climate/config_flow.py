@@ -628,8 +628,12 @@ def _boiler_details(
             chosen = v.get(CONF_SOURCE_CRITERION)
             shown = {CONF_SOURCE_CRITERION: chosen if chosen in criteria else CRITERION_NONE}
             fields[_req(CONF_SOURCE_CRITERION, shown, d)] = _select(criteria, "source_criterion")
-        if str(v[CONF_BOILER_ENTITY]).startswith("climate."):
-            # A thermostat as the heat source: boosted like the TRVs.
+        if any(
+            str(v.get(key) or "").startswith("climate.")
+            for key in (CONF_BOILER_ENTITY, CONF_SECONDARY_SOURCE)
+        ):
+            # A thermostat as a heat source (primary or secondary): boosted like
+            # the TRVs, or switched by its mode only.
             fields[_req(CONF_BOILER_BOOST, v, d)] = selector.BooleanSelector()
             # Empty: the frost protection of the house (only with the boost).
             fields[_opt(CONF_BOILER_IDLE_TEMP, v)] = _number(3, 30, 0.5, "°C")

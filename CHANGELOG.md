@@ -98,6 +98,13 @@ which the reference room could not.
 
 ### Fixed
 
+- 🎚️ **A thermostat as the secondary source can be switched by its mode only**:
+  *Start and stop the source by its temperature* (and the *Heat source idle
+  temperature*) was asked only when the primary source was a thermostat, so a
+  heat pump thermostat next to a boiler relay was always held at its minimum
+  while not in use, a target set on it taken back, with no way to turn that
+  off. It is now asked when either source is a thermostat; off, the heat pump
+  is only turned on and off, its own target and curve left alone.
 - ⏱️ **Heating time of a thermostat commanded on / off** (#16): it now
   follows the thermostat (`hvac_action`), not the on / off decision. A
   thermostat left on keeps heating only in short bursts at its own target, and

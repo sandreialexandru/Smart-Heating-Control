@@ -59,7 +59,10 @@ window, and the lowest any level can go.
 A target set on it by hand is taken back. Without *Start and stop the source by its temperature*, or for a
 thermostat without a target temperature, only its mode is switched: `heat` (or
 `auto`, without `heat`) to start and `off` to stop; it then heats by its own
-target, which must be above its sensor.
+target, which must be above its sensor. Turn it off for a heat pump or a boiler
+with its own heating curve or water temperature: those stay controlled by the
+device. The option is asked when the primary or the secondary source is a
+thermostat, and applies to both.
 
 > **Example (a Hive in the hallway, TRVs in the rooms):** the living room asks
 > for heat, the Hive gets 25 °C and fires the boiler although the hallway is at

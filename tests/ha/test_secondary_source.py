@@ -597,3 +597,73 @@ async def test_cheap_power_needs_the_low_price_in_the_options(hass: HomeAssistan
     )
     field = next(k for k in result["data_schema"].schema if str(k) == "source_criterion")
     assert result["data_schema"].schema[field].config["options"] == ["none", "entity"]
+
+
+async def test_a_thermostat_as_the_secondary_source_can_be_switched_by_its_mode(
+    hass: HomeAssistant,
+) -> None:
+    """A relay as the primary source and a heat pump thermostat as the secondary:
+    *Start and stop the source by its temperature* (and its idle temperature) are
+    asked too, so the heat pump can be switched by its mode only, its own target
+    left alone."""
+    entry = _house_with_rooms(hass)
+    options, result = await _boiler_flow(
+        hass,
+        entry,
+        {"boiler_entity": "switch.boiler", "secondary_source": "climate.heat_pump"},
+    )
+    assert result["step_id"] == "boiler_details"
+    assert {"boiler_boost", "boiler_idle_temp"} <= _keys(result)
+    result = await options.async_configure(
+        result["flow_id"], {"source_criterion": "none", "boiler_boost": False}
+    )
+    while result["type"] is not FlowResultType.CREATE_ENTRY:
+        result = await options.async_configure(result["flow_id"], {})
+    assert entry.options["boiler_boost"] is False
+
+
+async def test_a_relay_alone_is_not_asked_about_the_temperature(hass: HomeAssistant) -> None:
+    entry = _house_with_rooms(hass)
+    _options, result = await _boiler_flow(
+        hass, entry, {"boiler_entity": "switch.boiler", "secondary_source": "switch.pump"}
+    )
+    assert "boiler_boost" not in _keys(result)
+
+
+async def test_a_secondary_thermostat_switched_by_its_mode_keeps_its_target(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Not in use, it is turned off (not held at its minimum); its target is not touched."""
+    temps = async_mock_service(hass, "climate", "set_temperature")
+    modes: list = []
+
+    @callback
+    def _mode(call) -> None:
+        modes.append(call.data["hvac_mode"])
+        state = hass.states.get(call.data["entity_id"])
+        hass.states.async_set(
+            call.data["entity_id"], call.data["hvac_mode"], state.attributes, context=call.context
+        )
+
+    hass.services.async_register("climate", "set_hvac_mode", _mode)
+    assert await async_setup_component(hass, "input_boolean", {"input_boolean": {"boiler": {}}})
+    hass.states.async_set(
+        "climate.heat_pump",
+        "heat",
+        {**TRV, "min_temp": 16.0, "temperature": 23.0, "supported_features": 385},
+    )
+    hass.states.async_set("climate.bedroom", "heat", {**TRV, "temperature": 21.0})
+    entry = await _house(
+        hass,
+        freezer,
+        [("Bedroom", ROOM)],
+        boiler_entity=BOILER,
+        secondary_source="climate.heat_pump",
+        boiler_boost=False,
+    )
+    await _tick(hass, freezer, 60)
+    state = hass.states.get("climate.heat_pump")
+    assert state.state == "off"
+    assert state.attributes["temperature"] == 23.0
+    assert not [c for c in temps if c.data.get("entity_id") == "climate.heat_pump"]
+    await _unload(hass, entry)

@@ -72,8 +72,11 @@ const PANEL_STYLE = `
   .ps-unpick { width: 32px; height: 32px; border: 0; border-radius: 50%; background: none; color: inherit; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center; padding: 0; }
   .ps-unpick:hover { background: var(--ac-surface-2); }
-  .ps-rows { display: flex; flex-direction: column; gap: 8px; }
-  .ps-row { display: grid; grid-template-columns: minmax(70px, 160px) minmax(40px, 1fr) auto 3em; gap: 10px; align-items: center; }
+  /* One grid for all the rooms, so their bars and values line up. */
+  .ps-rows { display: grid; grid-template-columns: minmax(70px, 160px) minmax(40px, 1fr) auto auto 3em; gap: 8px 10px; }
+  .ps-row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; }
+  .ps-temp { font-size: 0.85em; color: var(--ac-muted); white-space: nowrap; text-align: right; }
+  .ps-out { font-size: 0.68em; color: var(--ac-out); white-space: nowrap; min-height: 1.2em; }
   .ps-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ps-track { height: 10px; border-radius: 5px; background: var(--ac-surface-2); overflow: hidden; }
   .ps-fill { display: block; height: 100%; background: var(--c); border-radius: 5px; }
@@ -83,7 +86,10 @@ const PANEL_STYLE = `
   :host([narrow]) .ps-cols { gap: 3px; }
   :host([narrow]) .ps-col { flex-basis: 16px; }
   :host([narrow]) .ps-val { display: none; }
-  :host([narrow]) .ps-row { grid-template-columns: minmax(0, 1fr) auto 3em; row-gap: 4px; }
+  :host([narrow]) .ps-rows { grid-template-columns: minmax(0, 1fr) auto 3em; column-gap: 8px; }
+  :host([narrow]) .ps-temp { grid-column: 1 / -1; grid-row: 3; text-align: left; margin-top: -2px; }
+  :host([narrow]) .ps-row { row-gap: 4px; }
+  :host([narrow]) .ps-out { display: none; }
   :host([narrow]) .ps-track { grid-column: 1 / -1; grid-row: 2; }
   .ph-filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .ph-filters .segmented { flex: 1 1 260px; }

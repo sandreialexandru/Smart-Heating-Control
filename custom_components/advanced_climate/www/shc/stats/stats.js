@@ -1,6 +1,8 @@
 // Statistics of the panel: the heating time of the house and of each room, by
-// day, week or month (the long-term statistics of Home Assistant), and how many
-// times a day the heat source was asked to start (the history of the house demand).
+// day, week or month (the long-term statistics of Home Assistant), with the
+// temperature outside and in each room and its target (their mean, minimum and
+// maximum), and how many times a day the heat source was asked to start (the
+// history of the house demand).
 
 import { esc, num } from "../core/format.js";
 
@@ -17,21 +19,34 @@ export const StatsMixin = (Base) =>
       return this._statsP || "day";
     }
 
-    /** The heating time sensors: the house first, then every room. */
+    /**
+     * The sensors of a house: its heating time and the outdoor temperature, then
+     * every room with its heating time, temperature and target.
+     */
     _statsSeries(house) {
       const out = [];
-      if (house.entities?.heating_runtime) out.push({ id: house.entities.heating_runtime, house: true, name: house.name });
+      if (house.entities?.heating_runtime) {
+        out.push({ id: house.entities.heating_runtime, house: true, name: house.name, outdoor: house.entities.outdoor_average });
+      }
       for (const r of house.rooms) {
         const a = r.attributes;
-        if (a.entities?.heating_runtime) out.push({ id: a.entities.heating_runtime, room: a.room_id, name: a.room_name, color: this._roomColor(a) });
+        const e = a.entities || {};
+        if (e.heating_runtime) {
+          out.push({ id: e.heating_runtime, room: a.room_id, name: a.room_name, color: this._roomColor(a), temp: e.room_temperature, target: e.target_temperature });
+        }
       }
       return out;
+    }
+
+    /** Every statistic asked for: the heating times and the temperatures. */
+    _statsIds(houses) {
+      return houses.flatMap((h) => this._statsSeries(h).flatMap((s) => [s.id, s.outdoor, s.temp, s.target])).filter(Boolean);
     }
 
     /** The statistics of a period, fetched when missing or old (drawn again when they come). */
     _statsData(houses, period) {
       this._stats = this._stats || {};
-      const ids = houses.flatMap((h) => this._statsSeries(h).map((s) => s.id));
+      const ids = this._statsIds(houses);
       const key = `${period}|${ids.join(",")}`;
       const cached = this._stats[key];
       if (!cached || (!cached.loading && Date.now() - cached.at > STATS_REFRESH_MS)) this._fetchStats(key, period, ids, houses);
@@ -49,7 +64,7 @@ export const StatsMixin = (Base) =>
       let failed = false;
       try {
         data = ids.length
-          ? await this._hass.callWS({ type: "recorder/statistics_during_period", start_time: start, end_time: end, statistic_ids: ids, period, types: ["change"] })
+          ? await this._hass.callWS({ type: "recorder/statistics_during_period", start_time: start, end_time: end, statistic_ids: ids, period, types: ["change", "mean", "min", "max"] })
           : {};
       } catch (_err) {
         failed = true;
@@ -106,6 +121,38 @@ export const StatsMixin = (Base) =>
       return rows.slice(-STATS_RANGE[period]);
     }
 
+    /** A temperature of each period: [[start ms, {mean, min, max}], …] (only the periods it has). */
+    _statsTemps(data, id) {
+      return new Map(
+        (data?.[id] || []).map((r) => [
+          typeof r.start === "number" ? r.start : Date.parse(r.start),
+          { mean: num(r.mean), min: num(r.min), max: num(r.max) },
+        ])
+      );
+    }
+
+    /**
+     * A temperature over some periods: the mean of their means, the lowest
+     * minimum and the highest maximum (null when none has a value).
+     */
+    _statsTempOver(temps, starts) {
+      const rows = starts.map((t) => temps.get(t)).filter((r) => r && r.mean !== null);
+      if (!rows.length) return null;
+      const mins = rows.map((r) => r.min).filter((v) => v !== null);
+      const maxs = rows.map((r) => r.max).filter((v) => v !== null);
+      return {
+        mean: rows.reduce((a, r) => a + r.mean, 0) / rows.length,
+        min: mins.length ? Math.min(...mins) : null,
+        max: maxs.length ? Math.max(...maxs) : null,
+      };
+    }
+
+    /** "4.2° (−1.0° … 9.3°)": a temperature with its range. */
+    _statsTempText(v) {
+      if (!v) return "–";
+      return v.min !== null && v.max !== null ? `${this._temp(v.mean)} (${this._temp(v.min)} … ${this._temp(v.max)})` : this._temp(v.mean);
+    }
+
     /** The label of a period under its bar. */
     _statsLabel(t, period) {
       if (period === "month") return this._fmt(t, { month: "short" });
@@ -139,7 +186,7 @@ export const StatsMixin = (Base) =>
     }
 
     /** Bars standing up, one per period, the value over each; a tap chooses the period. */
-    _statsColumns(values, label, fmt, color, short = fmt) {
+    _statsColumns(values, label, fmt, color, short = fmt, under = null) {
       // null: not known (no bar, a dash in its title).
       const max = Math.max(0, ...values.map(([, v]) => v ?? 0));
       const picked = this._statsPicked(values);
@@ -151,7 +198,7 @@ export const StatsMixin = (Base) =>
             title="${esc(`${label(t)}: ${fmt(v)}`)}"><span class="ps-val">${esc(v > 0 ? short(v) : "")}</span>
             <span class="ps-area"><span class="ps-bar" style="height:${h.toFixed(1)}%;--c:${color}"></span></span><span class="ps-lab">${esc(
               label(t)
-            )}</span></button>`;
+            )}</span>${under ? `<span class="ps-out">${esc(under(t))}</span>` : ""}</button>`;
         })
         .join("");
       return `<div class="ps-cols">${cols}</div>`;
@@ -176,25 +223,49 @@ export const StatsMixin = (Base) =>
         const own = series.find((s) => s.house);
         const rooms = series.filter((s) => s.room);
         const total = own ? this._statsValues(stats.data, own.id, period) : [];
+        const starts = total.map(([t]) => t);
+        const outdoor = own?.outdoor ? this._statsTemps(stats.data, own.outdoor) : new Map();
+        const outdoorMean = (t) => {
+          const v = outdoor.get(t)?.mean;
+          return v === null || v === undefined ? "" : this._temp(v);
+        };
         const range = this._t(`st_last_${period}`).replace("{n}", STATS_RANGE[period]);
         const sum = (vals) => vals.reduce((a, [, v]) => a + v, 0);
         // A chosen period: the rooms in that period; else over the whole range.
         const picked = this._statsPicked(total);
         const inPick = (vals) => (picked === null ? sum(vals) : (vals.find(([t]) => t === picked)?.[1] ?? 0));
-        const roomTotals = rooms.map((r) => ({ ...r, hours: inPick(this._statsValues(stats.data, r.id, period)) })).sort((a, b) => b.hours - a.hours);
+        const span = picked === null ? starts : [picked];
+        const roomTotals = rooms
+          .map((r) => ({
+            ...r,
+            hours: inPick(this._statsValues(stats.data, r.id, period)),
+            tempOver: r.temp ? this._statsTempOver(this._statsTemps(stats.data, r.temp), span) : null,
+            targetOver: r.target ? this._statsTempOver(this._statsTemps(stats.data, r.target), span) : null,
+          }))
+          .sort((a, b) => b.hours - a.hours);
         const roomMax = Math.max(0, ...roomTotals.map((r) => r.hours));
         const roomSum = sum(roomTotals.map((r) => [0, r.hours]));
         const roomRows = roomTotals
           .map(
-            (r) => `<div class="ps-row"><span class="ps-name">${esc(r.name)}</span><span class="ps-track"><span class="ps-fill" style="width:${
+            (r) => `<div class="ps-row" title="${esc(this._statsTempText(r.tempOver))}"><span class="ps-name">${esc(
+              r.name
+            )}</span><span class="ps-track"><span class="ps-fill" style="width:${
               roomMax > 0 ? ((r.hours / roomMax) * 100).toFixed(1) : 0
-            }%;--c:${r.color}"></span></span><span class="ps-h">${esc(this._hours(r.hours))}</span><span class="ps-pct">${
+            }%;--c:${r.color}"></span></span><span class="ps-temp">${
+              r.tempOver
+                ? esc(
+                    this._t("st_room_temp")
+                      .replace("{t}", this._temp(r.tempOver.mean))
+                      .replace("{target}", r.targetOver ? this._temp(r.targetOver.mean) : "–")
+                  )
+                : ""
+            }</span><span class="ps-h">${esc(this._hours(r.hours))}</span><span class="ps-pct">${
               roomSum > 0 ? Math.round((r.hours / roomSum) * 100) : 0
             }%</span></div>`
           )
           .join("");
         let requests = "";
-        let starts = null;
+        let asked = null;
         const demand = house.entities?.heat_demand;
         if (period === "day" && stats.requests && demand && total.length) {
           const { days = {}, from = null } = stats.requests[demand] || {};
@@ -202,7 +273,7 @@ export const StatsMixin = (Base) =>
             const day = this._dayKey(t);
             return [t, from === null || day < from ? null : (days[day] ?? 0)];
           });
-          if (picked !== null) starts = values.find(([t]) => t === picked)?.[1] ?? null;
+          if (picked !== null) asked = values.find(([t]) => t === picked)?.[1] ?? null;
           requests = `<h3 class="ps-title">${esc(this._t("st_requests"))}</h3>
             ${this._statsColumns(values, (t) => this._statsLabel(t, period), (v) => (v === null ? "–" : String(v)), "var(--ac-hot)")}
             <p class="muted">${esc(this._t("st_requests_note"))}</p>`;
@@ -214,12 +285,26 @@ export const StatsMixin = (Base) =>
           picked === null
             ? ""
             : `<div class="ps-detail"><span><b>${esc(when)}</b> · ${esc(this._hours(total.find(([t]) => t === picked)?.[1] ?? 0))}${
-                starts !== null ? ` · ${esc(this._t("st_starts").replace("{n}", starts))}` : ""
+                outdoor.size ? ` · ${esc(this._t("st_outdoor").replace("{t}", this._statsTempText(this._statsTempOver(outdoor, [picked]))))}` : ""
+              }${asked !== null ? ` · ${esc(this._t("st_starts").replace("{n}", asked))}` : ""
               }</span><button class="ps-unpick" data-action="stats-pick" data-t="" title="${esc(this._t("close"))}" aria-label="${esc(
                 this._t("close")
               )}">${this._icon("close")}</button></div>`;
-        return `${name}<h3 class="ps-title">${esc(this._t("st_house"))} · ${esc(range)} · ${esc(this._hours(sum(total)))}</h3>
-          ${total.length ? this._statsColumns(total, (t) => this._statsLabel(t, period), (v) => this._hours(v), "var(--ac-accent)", (v) => this._shortHours(v)) : `<p class="muted">${esc(this._t("st_none"))}</p>`}
+        const wholeOutdoor = outdoor.size ? this._statsTempOver(outdoor, starts) : null;
+        const outdoorTitle = wholeOutdoor ? ` · ${esc(this._t("st_outdoor").replace("{t}", this._statsTempText(wholeOutdoor)))}` : "";
+        return `${name}<h3 class="ps-title">${esc(this._t("st_house"))} · ${esc(range)} · ${esc(this._hours(sum(total)))}${outdoorTitle}</h3>
+          ${
+            total.length
+              ? this._statsColumns(
+                  total,
+                  (t) => this._statsLabel(t, period),
+                  (v) => this._hours(v),
+                  "var(--ac-accent)",
+                  (v) => this._shortHours(v),
+                  outdoor.size ? outdoorMean : null
+                )
+              : `<p class="muted">${esc(this._t("st_none"))}</p>`
+          }
           ${detail}
           <h3 class="ps-title">${esc(this._t("st_rooms"))} · ${esc(when)}</h3>
           ${roomRows ? `<div class="ps-rows">${roomRows}</div>` : `<p class="muted">${esc(this._t("st_none"))}</p>`}

@@ -225,7 +225,8 @@ test("statistics: the house by day, the rooms by their time, the starts asked; w
   const t = await extraText(p);
   ok(t.includes("Heating time of the house") && t.includes("last 14 days") && t.includes("Times the heat source was asked to start"), t.slice(0, 200));
   const ask = await p.evaluate(() => calls.ws.filter((m) => m.type === "recorder/statistics_during_period").at(-1));
-  eq([ask.period, ask.types, ask.statistic_ids.length, !!ask.end_time], ["day", ["change"], 4, true], "the statistics asked");
+  eq([ask.period, ask.types, ask.statistic_ids.length, !!ask.end_time], ["day", ["change", "mean", "min", "max"], 11, true], "the statistics asked: heating times and temperatures, in one call");
+  ok(["sensor.home_outdoor_average", "sensor.kid_room_temperature", "sensor.kid_target_temperature"].every((id) => ask.statistic_ids.includes(id)), "the temperatures");
   ok(ask.statistic_ids.includes("sensor.home_heating_runtime") && ask.statistic_ids.includes("sensor.kid_heating_runtime"), "house and rooms");
   await clickIn(p, '[data-action="stats-period"][data-option="month"]'); await p.waitForTimeout(300);
   eq(await inPanel(p, (sr) => sr.querySelectorAll(".ps-cols").length), 1, "no starts by month (only by day)");
@@ -349,5 +350,46 @@ test("statistics: a tap on a bar shows its period (the house, the rooms, the sta
   eq((await look()).detail, null, "another period: the whole range");
   await pick(11); await p.waitForTimeout(150);
   ok(/ – /.test((await look()).detail), "a week from its first to its last day");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("statistics: the outdoor temperature under each period and in its detail; the temperature and target of each room", async (p) => {
+  await openPanel(p, { rooms: R4 });
+  await tab(p, "stats");
+  const look = () => inPanel(p, (sr) => ({
+    title: sr.querySelector(".ps-title").innerText,
+    outs: [...sr.querySelectorAll(".ps-cols")[0].querySelectorAll(".ps-out")].map((o) => o.innerText),
+    startsOut: sr.querySelectorAll(".ps-cols")[1].querySelectorAll(".ps-out").length,
+    temps: [...sr.querySelectorAll(".ps-row .ps-temp")].map((t) => t.innerText),
+    tip: sr.querySelector(".ps-row").title,
+    detail: sr.querySelector(".ps-detail")?.innerText.replace(/\s+/g, " ") || null,
+  }));
+  const whole = await look();
+  eq(whole.outs.length, 14, "one outdoor mean a day");
+  ok(whole.outs.every((o) => /^\d+\.\d°$/.test(o)), "outdoor means: " + whole.outs);
+  eq(whole.startsOut, 0, "none under the starts");
+  ok(/outdoor 4\.\d° \(1\.0° … 8\.0°\)/.test(whole.title), "the range of the whole interval in the title: " + whole.title);
+  eq(whole.temps.length, 3, "every room");
+  ok(whole.temps.every((t) => /^2\d\.\d° \(target 2\d\.\d°\)$/.test(t)), "room temperatures: " + whole.temps);
+  ok(/^2\d\.\d° \(1\d\.\d° … 2\d\.\d°\)$/.test(whole.tip), "minimum and maximum of the room on hover: " + whole.tip);
+  await inPanel(p, (sr) => sr.querySelectorAll(".ps-cols")[0].querySelectorAll(".ps-col")[9].click()); await p.waitForTimeout(150);
+  const one = await look();
+  ok(/outdoor \d+\.\d° \(\d\.0° … \d\.0°\)/.test(one.detail), "the outdoor of that day in the detail: " + one.detail);
+  ok(JSON.stringify(one.temps) !== JSON.stringify(whole.temps), "the rooms of that day only: " + one.temps);
+  // Statistics without temperatures (a recorder that kept none): only the times.
+  await openPanel(p, { rooms: R4, noTempStats: true });
+  await p.waitForTimeout(300);
+  const none = await look();
+  eq([none.outs.length, none.title.includes("outdoor")], [0, false], "no outdoor line");
+  ok(none.temps.every((t) => t === ""), "no room temperatures: " + none.temps);
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("statistics in °F and in Romanian", async (p) => {
+  await openPanel(p, { rooms: R4, unit: "°F", lang: "ro" });
+  await tab(p, "stats");
+  const r = await inPanel(p, (sr) => ({ title: sr.querySelector(".ps-title").innerText, temp: sr.querySelector(".ps-row .ps-temp").innerText }));
+  ok(/afară 4\d\.\d° \(33\.8° … 46\.4°\)/.test(r.title), "°F outdoor: " + r.title);
+  ok(/^6\d\.\d° \(țintă [67]\d\.\d°\)$/.test(r.temp), "°F room: " + r.temp);
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });

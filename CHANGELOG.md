@@ -21,7 +21,10 @@ GitHub releases.
   source was asked to start. From the long-term statistics of Home Assistant;
   the starts from its history, so only the days it still keeps (10 by default).
   A tap on a bar shows that day, week or month: the time of the house, of each
-  room and the starts asked; a tap again (or ✕) the whole span.
+  room and the starts asked; a tap again (or ✕) the whole span. With the
+  temperatures: the mean outdoor temperature under each bar, the mean with the
+  lowest and highest in the title and in the detail of a bar, and each room's
+  mean temperature and target (its lowest and highest when hovered).
 - 🕘 **History** (panel, *History* tab): the decisions of every room and the
   alerts with their start and end, newest first, by day; only decisions or
   alerts, one room or all. The integration now keeps the alerts too (the last

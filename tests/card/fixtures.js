@@ -105,7 +105,12 @@
           const out = {};
           msg.statistic_ids.forEach((id, k) => {
             const rows = [];
-            for (let t = Date.parse(msg.start_time), i = 0; t < now; t += len, i++) rows.push({ start: t, end: t + len, change: ((i + k) % 5) * 0.75 + (id.startsWith("sensor.home") ? 2 : 0.5) });
+            // The temperatures (outdoor, room, target) have a mean, minimum and maximum instead.
+            const base = id.endsWith("_outdoor_average") ? 4 : id.endsWith("_room_temperature") ? 20.4 : id.endsWith("_target_temperature") ? 21 : null;
+            for (let t = Date.parse(msg.start_time), i = 0; t < now; t += len, i++) {
+              if (base === null) rows.push({ start: t, end: t + len, change: ((i + k) % 5) * 0.75 + (id.startsWith("sensor.home") ? 2 : 0.5) });
+              else if (!o.noTempStats) rows.push({ start: t, end: t + len, mean: T(base + ((i + k) % 3) * 0.5), min: T(base - 3 + (i % 2)), max: T(base + 4 - (i % 2)) });
+            }
             out[id] = rows;
           });
           return out;

@@ -103,6 +103,44 @@ export const HostMixin = (Base) =>
       return cycle === "h11" || cycle === "h12";
     }
 
+    /** Add a style sheet to the shadow root (adopted where the browser can). */
+    _addStyle(css) {
+      const root = this.shadowRoot;
+      if ("adoptedStyleSheets" in root && typeof CSSStyleSheet !== "undefined" && "replaceSync" in CSSStyleSheet.prototype) {
+        const sheet = new CSSStyleSheet();
+        sheet.replaceSync(css);
+        root.adoptedStyleSheets = [...root.adoptedStyleSheets, sheet];
+      } else {
+        const style = document.createElement("style");
+        style.textContent = css;
+        root.appendChild(style);
+      }
+    }
+
+    /** The chart window, once drawn, shown as a modal (Esc closes it). */
+    _chartModal() {
+      const dlg = this.shadowRoot.querySelector("dialog.chartpop");
+      const modal = (d) => {
+        try {
+          return d.matches(":modal");
+        } catch (_err) {
+          return d.open; // a browser without :modal
+        }
+      };
+      if (dlg && typeof dlg.showModal === "function" && !modal(dlg)) {
+        if (!dlg.__cancel) {
+          dlg.__cancel = true;
+          dlg.addEventListener("cancel", (ev) => {
+            ev.preventDefault();
+            this._closeChart();
+          });
+        }
+        if (dlg.open) dlg.close();
+        dlg.showModal();
+        this._opaque(dlg);
+      }
+    }
+
     /** Put the blocks in ``parent``: a block drawn the same as before keeps its element. */
     _patch(parent, blocks) {
       const old = new Map();

@@ -143,6 +143,11 @@ export const RoomMixin = (Base) =>
       return `<div class="sbtns" style="--cols:${cols}">${buttons}</div>${bodies}`;
     }
 
+    /** The colour of the level of a room (its name, arc and marks). */
+    _roomColor(a) {
+      return PRESET_COLORS[a.preset] || "var(--secondary-text-color)";
+    }
+
     /** Room block (or one compact tile / folded row); the sections are shown when it is open. */
     _roomHtml(stateObj) {
       const cfg = this._config;
@@ -151,7 +156,7 @@ export const RoomMixin = (Base) =>
       const key = a.room_id;
       const folded =
         this._open[`room-${key}`] === undefined ? cfg.collapsed || cfg.compact : !this._open[`room-${key}`];
-      const color = PRESET_COLORS[a.preset] || "var(--secondary-text-color)";
+      const color = this._roomColor(a);
       if (cfg.compact && folded) return this._compactRow(stateObj, color);
       if (folded) return this._foldedRow(stateObj, color);
 

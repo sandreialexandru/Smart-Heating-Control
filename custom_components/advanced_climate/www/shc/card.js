@@ -152,45 +152,16 @@ class SmartHeatingControlCard extends ShcBase {
     this._card.className = cfg.compact ? "compact" : "";
     this._patch(this._card, blocks);
     this._tipColor();
-    const dlg = this.shadowRoot.querySelector("dialog.chartpop");
-    const modal = (d) => {
-      try {
-        return d.matches(":modal");
-      } catch (_err) {
-        return d.open; // a browser without :modal
-      }
-    };
-    if (dlg && typeof dlg.showModal === "function" && !modal(dlg)) {
-      if (!dlg.__cancel) {
-        dlg.__cancel = true;
-        dlg.addEventListener("cancel", (ev) => {
-          ev.preventDefault();
-          this._closeChart();
-        });
-      }
-      if (dlg.open) dlg.close();
-      dlg.showModal();
-      this._opaque(dlg);
-    }
+    this._chartModal();
   }
 
   /** The card element and the styles, made once. */
   _ensureCard() {
     if (this._card) return;
-    const root = this.shadowRoot;
-    if ("adoptedStyleSheets" in root && typeof CSSStyleSheet !== "undefined" && "replaceSync" in CSSStyleSheet.prototype) {
-      const sheet = new CSSStyleSheet();
-      sheet.replaceSync(STYLE);
-      root.adoptedStyleSheets = [...root.adoptedStyleSheets, sheet];
-    } else {
-      const style = document.createElement("style");
-      style.textContent = STYLE;
-      root.appendChild(style);
-    }
+    this._addStyle(STYLE);
     this._card = document.createElement("ha-card");
-    root.appendChild(this._card);
+    this.shadowRoot.appendChild(this._card);
   }
-
 }
 
 // ---------------------------------------------------------------- register

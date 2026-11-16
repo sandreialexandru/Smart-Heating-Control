@@ -85,3 +85,23 @@ test("editor: the periods of the heating time in the language of the user", asyn
   });
   eq(labels, ["Tag", "Woche", "Monat"], "German periods");
 });
+
+test("editor: a switch not set shows what the card does (issue #19)", async (p) => {
+  const fields = await p.evaluate(() => {
+    const form = customElements.get("smart-heating-control-card").getConfigForm();
+    const flat = (s) => s.flatMap((f) => (f.schema ? flat(f.schema) : [f]));
+    return Object.fromEntries(flat(form.schema).map((f) => [f.name, f.default]));
+  });
+  eq(fields, {
+    title: undefined, rooms: undefined,
+    show_house: true, show_rooms: true, show_timeline: true, show_quick_override: true, show_levels: true,
+    show_details: true, show_schedule_editor: true, collapsed: false, compact: false, runtime_period: "day",
+  }, "the default of every field");
+  // A new card (empty configuration) shows exactly the parts the switches show on.
+  await p.evaluate(() => mount({}, { rooms: [{ id: "r1", name: "Bedroom" }] })); await p.waitForTimeout(200);
+  const shown = await p.evaluate(() => {
+    const sr = card.shadowRoot;
+    return { house: !!sr.querySelector(".house-head"), quick: !!sr.querySelector('[data-key="quick-r1"]'), compact: !!sr.querySelector("ha-card.compact") };
+  });
+  eq(shown, { house: true, quick: true, compact: false }, "the card with the defaults");
+});

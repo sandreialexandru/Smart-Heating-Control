@@ -484,10 +484,24 @@ async def test_history_of_the_decisions_and_alerts(
     assert first["params"]["minutes"] == 25
     assert first["end"] is not None and second["end"] is None
     (rooms,) = result["rooms"]
-    assert rooms["room_id"] == room.id and rooms["decisions"]
-    last = rooms["decisions"][-1]
-    assert last["rule"] == room.decision.rule
-    assert last["reason_key"] == room.decision.key
+    assert rooms["room_id"] == room.id
+    assert len(rooms["decisions"]) == len(room.decisions)
+    # A logged decision: its reason as a key and values, the temperatures in the unit.
+    room.decisions.append(
+        {
+            "time": "2026-10-12T09:30:00+00:00",
+            "rule": "manual_override",
+            "target": {"kind": "temperature", "preset": None, "temperature": 22.5},
+            "description": "Manual change: 22.5 °C",
+            "key": "manual_override",
+            "params": {"temperature": 22.5},
+        }
+    )
+    ws_history(hass, Connection(), {"id": 2, "type": HISTORY})
+    last = sent["result"]["houses"][0]["rooms"][0]["decisions"][-1]
+    assert last["rule"] == "manual_override" and last["reason_key"] == "manual_override"
+    assert last["reason_params"] == {"temperature": 22.5}
+    assert last["target"]["temperature"] == 22.5
 
     # Kept over a restart: an alert still open then ends at the restart.
     saved = house._data_to_save()["house"]["alert_journal"]

@@ -445,8 +445,7 @@ class RoomDevices:
         current = state.attributes.get("preset_mode")
         if PRESET_NONE not in available or current in (None, PRESET_NONE):
             return False
-        if target.kind == KIND_PRESET and self._device_preset(target.preset or "", available):
-            return False  # the level has its preset: that one is sent
+        # A level with a preset of its own never gets here: that preset is sent.
         used = {self._device_preset(level, available) for level in PRESETS}
         return current in used
 

@@ -5,10 +5,12 @@
 //   node run.js t_chart.js      one file
 //   node run.js t_chart.js sun  the tests of one file whose name contains "sun"
 //
-// page.html loads the card from custom_components and a fake Home Assistant
+// page.html (served over HTTP by server.js, as ES modules need) loads the
+// card from custom_components and a fake Home Assistant
 // (fixtures.js). A failing test saves a screenshot in $CARD_TEST_SHOTS (or the
 // system temp folder).
 const { chromium } = require("playwright");
+const { start } = require("./server");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
@@ -31,6 +33,7 @@ global.eq = (a, b, msg) => {
 
 (async () => {
   const browser = await chromium.launch();
+  const srv = await start();
   let pass = 0;
   let fail = 0;
   for (const file of files) {
@@ -59,7 +62,7 @@ global.eq = (a, b, msg) => {
       p.on("console", (m) => {
         if (m.type() === "error" && !/ERR_|net::/.test(m.text())) errs.push("console: " + m.text());
       });
-      await p.goto("file://" + path.join(here, "page.html"));
+      await p.goto(srv.url + "/tests/card/page.html");
       try {
         await t.fn(p);
         if (errs.length && !t.opts.allowErrors) throw new Error("JS errors: " + errs.join(" | "));
@@ -82,5 +85,6 @@ global.eq = (a, b, msg) => {
   }
   console.log(`\n${pass} passed, ${fail} failed`);
   await browser.close();
+  await srv.close();
   process.exit(fail ? 1 : 0);
 })();

@@ -9,6 +9,8 @@
 // Everything is served from the repository, except the files of the
 // integration (/custom_components/...), which come from `card` when given:
 // the tests and their fixtures stay the same while the card under test changes.
+// /advanced_climate/<version>/shc/... is the folder of the card modules, as
+// Home Assistant serves it (frontend.py).
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
@@ -27,7 +29,9 @@ const TYPES = {
 function start({ card = REPO } = {}) {
   const roots = { repo: REPO, card: path.resolve(card) };
   const server = http.createServer((req, res) => {
-    const url = decodeURIComponent(new URL(req.url, "http://x").pathname);
+    let url = decodeURIComponent(new URL(req.url, "http://x").pathname);
+    const modules = url.match(/^\/advanced_climate\/[^/]+\/shc\/(.*)$/);
+    if (modules) url = `/custom_components/advanced_climate/www/shc/${modules[1]}`;
     const root = url.startsWith("/custom_components/") ? roots.card : roots.repo;
     const file = path.normalize(path.join(root, url));
     if (!file.startsWith(root + path.sep)) {

@@ -89,7 +89,7 @@ jobs:
           esac
           # The card in ranges of lines with about as many mutants each
           # (tests/mutation/card_parts.py); the short try only a few lines.
-          card_file=custom_components/advanced_climate/www/smart-heating-control-card.js
+          card_file=custom_components/advanced_climate/www/shc/card.js
           if [ "$EVENT" = push ]; then
             card_matrix='[{"part": 0, "range": "1200-1215"}]'
           else
@@ -179,7 +179,7 @@ jobs:
           RANGE: ${{ matrix.part.range }}
         run: >-
           npx stryker run tests/mutation/stryker.card.json
-          --mutate "custom_components/advanced_climate/www/smart-heating-control-card.js:$RANGE"
+          --mutate "custom_components/advanced_climate/www/shc/card.js:$RANGE"
       - name: Results
         if: always()
         run: |

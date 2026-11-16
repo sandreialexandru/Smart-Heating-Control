@@ -379,6 +379,30 @@ async def test_card_resource(hass: HomeAssistant) -> None:
     assert not [i for i in resources.async_items() if i["url"].startswith(CARD_URL)]
 
 
+async def test_card_modules_served_under_the_version(hass: HomeAssistant) -> None:
+    """The card file is served as before, its modules from a folder of the version."""
+    import json
+    from unittest.mock import AsyncMock, MagicMock
+
+    from custom_components.advanced_climate import frontend
+    from custom_components.advanced_climate.const import CARD_URL
+
+    version = json.loads(frontend.MANIFEST.read_text())["version"]
+    hass.http = MagicMock()
+    hass.http.async_register_static_paths = AsyncMock()
+    await frontend.async_register_card(hass)
+    paths = hass.http.async_register_static_paths.call_args.args[0]
+    served = {p.url_path: (p.path, p.cache_headers) for p in paths}
+    assert served == {
+        CARD_URL: (str(frontend.CARD_FILE), False),
+        f"/{DOMAIN}/{version}/shc": (str(frontend.CARD_MODULES), True),
+    }
+    # The card file imports from that folder.
+    assert f'"/{DOMAIN}/{version}/shc/card.js"' in frontend.CARD_FILE.read_text()
+    assert (frontend.CARD_MODULES / "card.js").is_file()
+    hass.data.pop(f"{DOMAIN}_card_registered")
+
+
 async def test_card_resource_moved_after_the_rename(hass: HomeAssistant) -> None:
     """The resource of the card before the rename is moved to the new URL."""
     from custom_components.advanced_climate.const import CARD_URL, LEGACY_CARD_URL

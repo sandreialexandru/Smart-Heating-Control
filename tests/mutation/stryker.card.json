@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker-js/master/packages/core/schema/stryker-schema.json",
   "testRunner": "command",
   "commandRunner": { "command": "node tests/card/run.js" },
-  "mutate": ["custom_components/advanced_climate/www/smart-heating-control-card.js"],
+  "mutate": ["custom_components/advanced_climate/www/shc/card.js"],
   "mutator": { "excludedMutations": ["StringLiteral", "Regex"] },
   "coverageAnalysis": "off",
   "concurrency": 4,

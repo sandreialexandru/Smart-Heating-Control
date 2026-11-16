@@ -1,6 +1,9 @@
 """Serve the Smart Heating Control Lovelace card and add it to the dashboards.
 
-1. The file is served by the integration at CARD_URL (no cache headers).
+1. The file is served by the integration at CARD_URL (no cache headers). It
+   only imports the card from its modules (www/shc), served at
+   ``/advanced_climate/<version>/shc`` with cache headers: a new version is a
+   new path, so no browser keeps the modules of an old version.
 2. It is added as a Lovelace **resource** (storage mode). Resources are loaded
    every time a dashboard loads, so the card is found even after the browser /
    companion app cache expires.
@@ -26,20 +29,33 @@ from .const import CARD_URL, DOMAIN, LEGACY_CARD_URL
 _LOGGER = logging.getLogger(__name__)
 
 CARD_FILE = Path(__file__).parent / "www" / "smart-heating-control-card.js"
+# The modules of the card, served under the version (cached for long: a new
+# version is a new path).
+CARD_MODULES = Path(__file__).parent / "www" / "shc"
 # The resources of the card, the one before the rename included (moved / removed).
 CARD_URLS = (CARD_URL, LEGACY_CARD_URL)
 MANIFEST = Path(__file__).parent / "manifest.json"
+
+
+def modules_url(version: str) -> str:
+    """URL of the folder of the card modules of a version (what the card file imports)."""
+    return f"/{DOMAIN}/{version}/shc"
 
 
 async def async_register_card(hass: HomeAssistant) -> None:
     """Serve the card and make every dashboard load it."""
     if hass.data.get(f"{DOMAIN}_card_registered"):
         return
+    manifest = json.loads(await hass.async_add_executor_job(MANIFEST.read_text, "utf-8"))
+    version = manifest.get("version", "0")
     try:
         from homeassistant.components.http import StaticPathConfig
 
         await hass.http.async_register_static_paths(
-            [StaticPathConfig(CARD_URL, str(CARD_FILE), False)]
+            [
+                StaticPathConfig(CARD_URL, str(CARD_FILE), False),
+                StaticPathConfig(modules_url(version), str(CARD_MODULES), True),
+            ]
         )
     except RuntimeError:
         pass  # already registered (integration reloaded)
@@ -48,8 +64,7 @@ async def async_register_card(hass: HomeAssistant) -> None:
         return
     hass.data[f"{DOMAIN}_card_registered"] = True
 
-    manifest = json.loads(await hass.async_add_executor_job(MANIFEST.read_text, "utf-8"))
-    url = f"{CARD_URL}?v={manifest.get('version', '0')}"
+    url = f"{CARD_URL}?v={version}"
 
     def _extra_module() -> None:
         """Load the card on every page (when it cannot be a dashboard resource)."""

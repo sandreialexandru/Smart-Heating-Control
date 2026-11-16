@@ -131,7 +131,7 @@ def week(house: House) -> dict[str, Any]:
                 )
             first = schedule.lookup(start, room._day_info)
             changes = schedule.upcoming(start, room._day_info, end - start)
-        except Exception:  # noqa: BLE001 - informative: the other rooms still show
+        except Exception:  # informative: the other rooms still show
             _LOGGER.exception("Room %s: the next days could not be computed", room.name)
             item.update(editable=True, failed=True)
             rooms.append(item)

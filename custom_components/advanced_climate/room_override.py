@@ -28,12 +28,14 @@ from .const import (
     PRESET_NONE,
     RULE_VACATION,
 )
+from .device_echo import close, step_margin
 from .engine import (
     KIND_PRESET,
     KIND_TEMPERATURE,
     Target,
 )
 from .room_common import (
+    SENT_RECENT,
     device_values,
 )
 from .util import (
@@ -68,6 +70,60 @@ class RoomOverride:
         if preset is not None and temperature is not None:
             self.observed_temps[preset] = temperature
 
+    def _remember_before_window(self) -> None:
+        """Remember what the thermostats held before the window changed them.
+
+        The window rule sends off or the frost protection; the device keeps its
+        old target. A sleepy TRV woken after the window may report that target
+        again. Those values are not a person's choice.
+        """
+        before: dict[str, dict[str, Any]] = {}
+        for entity_id in self.climates:
+            state = self.hass.states.get(entity_id)
+            if valid(state):
+                before[entity_id] = device_values(state)
+        self._window_before = before
+        self._window_before_until = None
+
+    def _window_closed(self, now: datetime) -> None:
+        """A device may still report the values it had before the window for a while."""
+        if self._window_before:
+            self._window_before_until = now + SENT_RECENT
+
+    def _window_before_active(self, now: datetime) -> bool:
+        """True while a device coming back with its old values is expected."""
+        if not self._window_before:
+            return False
+        if self._window_before_until is None:
+            return self.window.open
+        if now >= self._window_before_until:
+            self._window_before = {}
+            self._window_before_until = None
+            return False
+        return True
+
+    def _reports_before_window(self, entity_id: str, new: State, now: datetime) -> bool:
+        """True when a thermostat only reports the target it had before the window.
+
+        A window turns the room off or to the frost protection; the thermostat
+        keeps its target meanwhile. When the window closes it may report that
+        old target again (or go back to auto with it). That is the device, not a
+        person. Turning it off stays a person's change.
+        """
+        if new.state == STATE_OFF or not self._window_before_active(now):
+            return False
+        before = self._window_before.get(entity_id)
+        if before is None:
+            return False
+        if new.state not in (before.get("state"), "auto"):
+            return False  # another mode (off is above): a person, or another rule
+        old_temp = before.get(ATTR_TEMPERATURE)
+        new_temp = new.attributes.get(ATTR_TEMPERATURE)
+        if old_temp is None and new_temp is None:
+            # No temperature attributes (preset only): the preset is the value.
+            return new.attributes.get("preset_mode") == before.get("preset_mode")
+        return close(new_temp, old_temp, step_margin(new))
+
     def _is_manual_change(self, event: Event, old: State | None, new: State | None) -> bool:
         """True when a person changed the thermostat (not the integration, nor a late confirmation)."""
         if old is None or new is None or not valid(old) or not valid(new):
@@ -76,7 +132,15 @@ class RoomOverride:
             return False
         if not self.house.started:
             return False
-        if self.sent.is_echo(event.data["entity_id"], old, new, dt_util.utcnow()):
+        now = dt_util.utcnow()
+        if self.sent.is_echo(event.data["entity_id"], old, new, now):
+            return False
+        if self._reports_before_window(event.data["entity_id"], new, now):
+            _LOGGER.debug(
+                "Room %s: %s came back from the window with its old values; not a manual change",
+                self.name,
+                event.data["entity_id"],
+            )
             return False
         if old.state != new.state:
             return True
@@ -90,6 +154,7 @@ class RoomOverride:
         # From now on the device shows a person's values, not ours: if the person
         # later sets the value we sent before, that is a manual change too.
         self.sent.forget(entity_id)
+        self._window_before.pop(entity_id, None)
         self._boosted = False  # the person's value replaced the boost
         # In a pause the change is kept (it applies after the pause); the child
         # lock does not undo it then, since a pause sends nothing.

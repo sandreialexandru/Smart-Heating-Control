@@ -517,6 +517,8 @@ class RoomDevices:
         self.max_sent.clear()
         self.auto_returns.clear()
         self.auto_left_at.clear()
+        self._window_before = {}
+        self._window_before_until = None
         self.house.async_save()
 
     def _holds(self, state: State, target: Target) -> bool:

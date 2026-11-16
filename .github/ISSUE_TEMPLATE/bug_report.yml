@@ -19,6 +19,17 @@ body:
     validations:
       required: true
   - type: dropdown
+    id: where
+    attributes:
+      label: Where is the problem
+      options:
+        - The heating (a decision, a device, the heat source)
+        - The card
+        - The panel (SHC in the sidebar)
+        - Setting up (adding the house or a room, the options)
+    validations:
+      required: true
+  - type: dropdown
     id: heating
     attributes:
       label: How the room is heated
@@ -49,10 +60,22 @@ body:
     id: diagnostics
     attributes:
       label: Diagnostics
-      description: Settings → Devices & services → Smart Heating Control → ⋮ → Download diagnostics, then drag the file here.
+      description: >-
+        Settings → Devices & services → Smart Heating Control → ⋮ → Download
+        diagnostics, then drag the file here. It has the settings and the last
+        100 decisions of every room, with their reasons.
+    validations:
+      required: true
   - type: textarea
     id: logs
     attributes:
-      label: Logs
-      description: Lines with `advanced_climate` from Settings → System → Logs.
-      render: text
+      label: Debug logs
+      description: >-
+        1. Settings → Devices & services → Smart Heating Control → ⋮ → Enable
+        debug logging. 2. Make the problem happen again (or wait until it
+        does). 3. ⋮ → Disable debug logging: Home Assistant downloads the log
+        file; drag it here. For a problem only in the card or the panel, paste
+        here the errors of the browser console instead (F12 → Console) and add
+        a screenshot.
+    validations:
+      required: true

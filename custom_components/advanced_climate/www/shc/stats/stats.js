@@ -69,9 +69,41 @@ export const StatsMixin = (Base) =>
       } catch (_err) {
         failed = true;
       }
+      if (data) await this._fetchNow(data, period, houses);
       if (period === "day") requests = await this._fetchRequests(houses, start, end);
       this._stats[key] = { at: Date.now(), loading: false, data, requests, failed };
       if (this._tab === "stats") this._render();
+    }
+
+    /**
+     * The heating time of the period now, as the card shows it. The long-term
+     * statistics have it only up to the last full hour; the statistic of the
+     * calendar period (what the card asks for) also counts the minutes since.
+     * It replaces the last row when that is the period now, or is added after
+     * it when the period now has no row yet (its first hour).
+     */
+    async _fetchNow(data, period, houses) {
+      const ids = houses.flatMap((h) => this._statsSeries(h).map((x) => x.id));
+      const ms = (v) => (typeof v === "number" ? v : Date.parse(v));
+      const now = Date.now();
+      await Promise.all(
+        ids.map(async (id) => {
+          const rows = data[id];
+          const last = rows?.[rows.length - 1];
+          if (!last) return;
+          let value;
+          try {
+            const res = await this._hass.callWS({ type: "recorder/statistic_during_period", statistic_id: id, calendar: { period }, types: ["change"] });
+            value = num(res?.change);
+          } catch (_err) {
+            return;
+          }
+          if (value === null) return;
+          const end = ms(last.end);
+          if (end > now) last.change = value;
+          else if (now - end < PERIOD_MS[period]) rows.push({ start: end, end: now, change: value });
+        })
+      );
     }
 
     /** Times a day each house asked its heat source to start (off → on of the house demand). */

@@ -487,3 +487,17 @@ test("statistics: the time over a bar as 2h25, the same time as elsewhere", asyn
   ok(/^\d+h(\d\d)?$/.test(r.short), "over the bar: " + r.short);
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });
+
+test("statistics: the period now has the heating time the card shows (with the minutes since the last full hour)", async (p) => {
+  await openPanel(p, { rooms: ROOMS });
+  await clickIn(p, '[data-action="panel-tab"][data-option="stats"]'); await p.waitForTimeout(200);
+  const r = await inPanel(p, (sr) => {
+    const cols = [...sr.querySelectorAll(".ps-cols")[0].querySelectorAll(".ps-col")];
+    return { last: cols[cols.length - 1].title, count: cols.length };
+  });
+  eq(r.count, 14, "14 days");
+  ok(/: 1 h 30 min$/.test(r.last), "today as the card asks for it (the fake answers 1.5 h): " + r.last);
+  const asked = await p.evaluate(() => window.calls.ws.filter((c) => c.type === "recorder/statistic_during_period" && c.calendar?.period === "day").map((c) => c.statistic_id));
+  ok(asked.includes("sensor.home_heating_runtime") && asked.includes("sensor.bedroom_heating_runtime"), "asked for the house and the rooms: " + asked);
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});

@@ -43,7 +43,8 @@ day chosen, with its levels on a shared time line from 00:00 to 24:00.
   - a **level from the calendar**: a calendar event titled with the name of a
     level sets that level for its hours; it is drawn over the bars, hatched;
   - the **vacation** planned in the house, with its start and end; it is drawn
-    over the bars, hatched, until the heating starts again before its end.
+    over the bars, hatched, until the heating starts again before its end;
+    while guest mode is on the vacation is held off, so it is only told.
 - Next to each bar is the name of the profile used that day (*calendar* when
   a calendar event chose it).
 - A room with no active profile that day shows *No active profile: frost
@@ -56,7 +57,9 @@ day chosen, with its levels on a shared time line from 00:00 to 24:00.
   [chapter 10](10-card.md)).
 
 The days are computed by the integration as the rooms compute them, with the
-start of the schedule day of the house. What cannot be known ahead is not in
+start of the schedule day of the house, and shown in the time zone of the
+house (on a day the clock changes the hours fall where they really are). They
+are read again at once when a schedule, the vacation or guest mode changes. What cannot be known ahead is not in
 them: presence (home or away), open windows, manual changes and a house mode
 changed by hand. The holidays and the calendar events are read for today and
 the next 7 days, every hour.

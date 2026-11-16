@@ -515,7 +515,10 @@ profile, forced}], changes: [{at, preset}], levels: [{start, end, preset,
 summary}]}]}`. `changes` încep la începutul zilei de azi și sunt calculate la
 fel cum își calculează camera programul (`Schedule.upcoming` cu zilele
 lucrătoare și calendarul); o cameră cu helper de program are doar
-`editable: false`.
+`editable: false`, o cameră ale cărei zile nu pot fi calculate are
+`failed: true`; `vacation.guests` este adevărat cât timp modul oaspeți o
+oprește. Panoul desenează zilele în fusul orar al casei și le cere din nou
+când se schimbă un program, `profile_days`, vacanța, modul oaspeți sau data.
 
 Comanda WebSocket `advanced_climate/history` (opțional `entry_id`): pentru
 fiecare casă încărcată `{entry_id, name, temperature_unit, rooms: [{room_id,

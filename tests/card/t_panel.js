@@ -423,7 +423,7 @@ test("schedule tab: today and the next 6 days as the integration runs them; no a
   eq(first.gap, "No active profile: frost protection", "a room without an active profile");
   ok(/Schedule helper/.test(first.outside) && !first.outsideButton, "a room on a Schedule helper is not opened from here: " + first.outside);
   eq(first.asked, 1, "asked once");
-  await clickIn(p, '[data-action="week-day"][data-option="3"]'); await p.waitForTimeout(100);
+  await clickIn(p, '.pw-days .seg:nth-child(4)'); await p.waitForTimeout(100);
   const later = await look();
   eq([later.day, later.now], [3, false], "another day: no now");
   // A tap on a room: the Rooms tab with that room and its schedule editor open.
@@ -443,7 +443,7 @@ test("schedule tab: a holiday, a profile and a level from the calendar, the vaca
   await openPanel(p, { rooms: [{ id: "r1", name: "Bedroom" }], week });
   await clickIn(p, '[data-action="panel-tab"][data-option="week"]'); await p.waitForTimeout(200);
   const day = async (i) => {
-    await clickIn(p, `[data-action="week-day"][data-option="${i}"]`); await p.waitForTimeout(80);
+    await clickIn(p, `.pw-days .seg:nth-child(${i + 1})`); await p.waitForTimeout(80);
     return inPanel(p, (sr) => ({
       notes: [...sr.querySelectorAll(".pw-notes li")].map((li) => li.innerText),
       profile: sr.querySelector('.pw-main[data-room="r1"] .pw-prof').innerText,
@@ -590,5 +590,48 @@ test("schedule tab: the copy button opens the room with the rooms to copy its sc
     rooms: [...sr.querySelectorAll(".pmain [data-copyto]")].map((c) => c.dataset.copyto),
   }));
   eq(r, { tab: "rooms", box: true, rooms: ["r1"] }, "the room, its copy box, the other room");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("schedule tab: asked again at once when a schedule changes; the day kept by its date; ticks where the hours fall", async (p) => {
+  await openPanel(p, { rooms: [{ id: "r1", name: "Bedroom" }] });
+  await clickIn(p, '[data-action="panel-tab"][data-option="week"]'); await p.waitForTimeout(200);
+  await clickIn(p, ".pw-days .seg:nth-child(3)"); await p.waitForTimeout(80);
+  const chosen = await inPanel(p, (sr) => sr.querySelector(".pw-days .seg.active").dataset.option);
+  const asked = () => p.evaluate(() => window.calls.ws.filter((c) => c.type === "advanced_climate/week").length);
+  const before = await asked();
+  // The schedule of the room changes (saved from the card, another device or a service).
+  await p.evaluate(() => {
+    const h = { ...panel._hass, states: { ...panel._hass.states } };
+    const d = h.states["sensor.bedroom_decision"];
+    h.states["sensor.bedroom_decision"] = { ...d, last_updated: new Date().toISOString(), attributes: { ...d.attributes, profile_days: { workday: { days: "all", enabled: true }, weekend: { days: "weekend", enabled: false } } } };
+    panel.hass = h;
+  });
+  await p.waitForTimeout(200);
+  eq(await asked(), before + 1, "asked again at once");
+  const r = await inPanel(p, (sr) => ({
+    active: sr.querySelector(".pw-days .seg.active").dataset.option,
+    ticks: [...sr.querySelectorAll(".pw-tickline > span")].map((t) => [t.innerText, t.style.left]),
+  }));
+  eq(r.active, chosen, "the same date still chosen");
+  eq(r.ticks.map((t) => t[0]), ["00:00", "06:00", "12:00", "18:00", "24:00"], "the hours");
+  eq(r.ticks[0][1], "0%", "midnight at the start");
+  eq(r.ticks[4][1], "100%", "the next midnight at the end");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("schedule tab: a vacation held off by guest mode is told, not drawn; a room whose days failed says so", async (p) => {
+  await openPanel(p, { rooms: [{ id: "r1", name: "Bedroom" }, { id: "r2", name: "Kid" }],
+    week: { vacation: { fromDay: 0, from: "00:00", toDay: 2, to: "20:00", guests: true }, failedRoom: "r2" } });
+  await clickIn(p, '[data-action="panel-tab"][data-option="week"]'); await p.waitForTimeout(200);
+  const r = await inPanel(p, (sr) => ({
+    notes: [...sr.querySelectorAll(".pw-notes li")].map((li) => li.innerText),
+    over: sr.querySelectorAll('.pw-main[data-room="r1"] .pw-ov').length,
+    failed: sr.querySelector(".pw-row .pw-ext")?.innerText || "",
+    failedButton: !!sr.querySelector('button.pw-main[data-room="r2"]'),
+  }));
+  ok(r.notes.some((n) => /held off while guest mode is on$/.test(n)), "told: " + r.notes);
+  eq(r.over, 0, "not drawn");
+  eq([r.failed, r.failedButton], ["The next days of this room could not be computed.", false], "the room that failed");
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });

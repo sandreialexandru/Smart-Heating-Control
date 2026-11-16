@@ -3,6 +3,7 @@ and the schedule of the next days as the rooms will follow it."""
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, time, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -13,6 +14,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_SCHEDULE_SOURCE, DOMAIN, PRESET_AWAY, SCHEDULE_INTERNAL
+
+_LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .house import House
@@ -104,6 +107,8 @@ def week(house: House) -> dict[str, Any]:
             "end": house.vacation_end.isoformat(),
             "resume": resume.isoformat() if resume else None,
             "preset": PRESET_AWAY,
+            # Guest mode holds the vacation off while it is on.
+            "guests": bool(house.guest),
         }
     rooms = []
     for room in house.rooms.values():
@@ -113,18 +118,24 @@ def week(house: House) -> dict[str, Any]:
             rooms.append(item)
             continue
         schedule = room.schedule
-        profiles = []
-        for day in days:
-            workday, forced = room._day_info(day)  # as the room decides
-            profiles.append(
-                {
-                    "date": day.isoformat(),
-                    "profile": schedule.profile_for(day, workday, forced),
-                    "forced": forced is not None,
-                }
-            )
-        first = schedule.lookup(start, room._day_info)
-        changes = schedule.upcoming(start, room._day_info, end - start)
+        try:
+            profiles = []
+            for day in days:
+                workday, forced = room._day_info(day)  # as the room decides
+                profiles.append(
+                    {
+                        "date": day.isoformat(),
+                        "profile": schedule.profile_for(day, workday, forced),
+                        "forced": forced is not None,
+                    }
+                )
+            first = schedule.lookup(start, room._day_info)
+            changes = schedule.upcoming(start, room._day_info, end - start)
+        except Exception:  # noqa: BLE001 - informative: the other rooms still show
+            _LOGGER.exception("Room %s: the next days could not be computed", room.name)
+            item.update(editable=True, failed=True)
+            rooms.append(item)
+            continue
         item.update(
             editable=True,
             profiles=profiles,

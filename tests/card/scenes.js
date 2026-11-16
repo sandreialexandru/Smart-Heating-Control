@@ -172,7 +172,7 @@ const PANEL = [
     registry: { "climate.bed_trv": { device_id: "d1" }, "sensor.bed_trv_battery": { device_id: "d1" } } }, click('[data-action="panel-tab"][data-option="devices"]')],
   ["panel-week-copy", P, { rooms: ROOMS }, steps(click('[data-action="panel-tab"][data-option="week"]'), click('[data-action="week-copy"]'))],
   ["panel-week", P, { rooms: ROOMS }, click('[data-action="panel-tab"][data-option="week"]')],
-  ["panel-week-saturday", P, { rooms: ROOMS }, steps(click('[data-action="panel-tab"][data-option="week"]'), click('[data-action="week-day"][data-option="5"]'))],
+  ["panel-week-saturday", P, { rooms: ROOMS }, steps(click('[data-action="panel-tab"][data-option="week"]'), click('.pw-days .seg:nth-child(6)'))],
   ["panel-week-edit", P, { rooms: ROOMS }, steps(click('[data-action="panel-tab"][data-option="week"]'), click('button.pw-main'))],
   ["panel-history-alerts", P, { rooms: [{ id: "r1", name: "Bedroom", alerts: [{ key: "mold", code: "mold_risk", params: { surface: 84, humidity: 62 }, message: "m" }] }, { id: "r2", name: "Kid" }] }, click('[data-action="panel-tab"][data-option="history"]')],
   ["panel-history", P, { rooms: ROOMS }, click('[data-action="panel-tab"][data-option="history"]')],

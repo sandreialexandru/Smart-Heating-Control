@@ -187,6 +187,10 @@ test("the schedule copied to other rooms of the house: only the rooms whose sche
     done: card.shadowRoot.querySelector('[data-section="sched-r1"] .hint.ok:last-of-type')?.innerText || [...card.shadowRoot.querySelectorAll('[data-section="sched-r1"] .hint.ok')].map((h) => h.innerText).join("|"),
   }));
   ok(!after.box && /Copied to: Kid/.test(after.done), "said so: " + after.done);
+  // Closing the schedule ends the message.
+  await click(p, '[data-key="sched-r1"]'); await p.waitForTimeout(80);
+  await click(p, '[data-key="sched-r1"]'); await p.waitForTimeout(80);
+  eq(await p.evaluate(() => /Copied to/.test(card.shadowRoot.querySelector('[data-section="sched-r1"]').innerText)), false, "gone after closing the schedule");
 });
 
 test("a copy that a room refuses: the error, and that room stays chosen", async (p) => {

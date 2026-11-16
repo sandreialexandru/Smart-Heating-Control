@@ -58,6 +58,8 @@ export const FormatMixin = (Base) =>
      * Home Assistant profile (Time zone: server), otherwise the device's.
      */
     _tz() {
+      // The time zone of the house, for a part drawn in it (the next days of the panel).
+      if (this._tzForce) return this._tzForce;
       const h = this._hass;
       return h?.locale?.time_zone === "server" && h?.config?.time_zone ? h.config.time_zone : undefined;
     }

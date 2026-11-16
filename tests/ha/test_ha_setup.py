@@ -575,6 +575,16 @@ async def test_week_of_the_schedule_with_holidays_calendar_and_vacation(
             "summary": "Eco",
         }
     ]
+    assert result["vacation"]["guests"] is False
+
+    # A room whose schedule cannot be computed is told so; the command still answers.
+    def broken(*_args: object) -> None:
+        raise ValueError("broken")
+
+    room.schedule.upcoming = broken
+    ws_week(hass, Connection(), {"id": 4, "type": WEEK})
+    (rooms,) = sent["result"]["houses"][0]["rooms"]
+    assert rooms == {"room_id": room.id, "name": room.name, "editable": True, "failed": True}
 
 
 async def test_card_resource_moved_after_the_rename(hass: HomeAssistant) -> None:

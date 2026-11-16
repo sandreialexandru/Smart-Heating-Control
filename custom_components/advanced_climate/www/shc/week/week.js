@@ -9,20 +9,41 @@
 import { PRESET_COLORS } from "../core/constants.js";
 import { esc } from "../core/format.js";
 
-// The days are asked for again after this long (and the hour after midnight they move on).
+// The days are asked for again after this long; at once when a schedule, the
+// vacation or guest mode changes, and when the day changes.
 const WEEK_REFRESH_MS = 5 * 60e3;
 
 export const WeekMixin = (Base) =>
   class extends Base {
-    /** The next days of every house, fetched when missing or old (drawn again when they come). */
-    _weekData() {
+    /**
+     * What the next days depend on, as the panel sees it: the schedules and
+     * their days, the vacation and guest mode, and the date of today. When it
+     * changes, the days are asked for again at once.
+     */
+    _weekKey(houses) {
+      const st = (id) => (id ? this._hass.states[id]?.state : "");
+      const parts = [this._dayKey(Date.now())];
+      for (const h of houses) {
+        const e = h.entities || {};
+        parts.push(st(e.vacation_start), st(e.vacation_end), st(e.guest_mode), st(e.mode));
+        for (const r of h.rooms) {
+          const a = r.attributes;
+          parts.push(a.room_id, JSON.stringify(a.schedule || {}), JSON.stringify(a.profile_days || {}));
+        }
+      }
+      return parts.join("|");
+    }
+
+    /** The next days of every house, fetched when missing, old or out of date (drawn again when they come). */
+    _weekData(houses) {
       const w = this._weekLog;
-      if (!w || (!w.loading && Date.now() - w.at > WEEK_REFRESH_MS)) this._fetchWeek();
+      const key = this._weekKey(houses);
+      if (!w || (!w.loading && (Date.now() - w.at > WEEK_REFRESH_MS || w.key !== key))) this._fetchWeek(key);
       return w && (w.data || w.failed) ? w : null;
     }
 
-    async _fetchWeek() {
-      this._weekLog = { ...(this._weekLog || {}), at: Date.now(), loading: true };
+    async _fetchWeek(key) {
+      this._weekLog = { ...(this._weekLog || {}), at: Date.now(), loading: true, key };
       let data = null;
       let failed = false;
       try {
@@ -30,14 +51,14 @@ export const WeekMixin = (Base) =>
       } catch (_err) {
         failed = true;
       }
-      this._weekLog = { at: Date.now(), loading: false, data, failed };
+      this._weekLog = { at: Date.now(), loading: false, data, failed, key };
       if (this._tab === "week") this._render();
     }
 
-    /** The moment a day (yyyy-mm-dd) starts in the time zone of Home Assistant. */
-    _localMidnight(date) {
+    /** The moment a clock hour of a day (yyyy-mm-dd) comes in the time zone shown (that of the house here). */
+    _localMidnight(date, hour = 0) {
       const [y, m, d] = date.split("-").map(Number);
-      const wall = Date.UTC(y, m - 1, d);
+      const wall = Date.UTC(y, m - 1, d, hour);
       return wall - this._offset(wall - this._offset(wall));
     }
 
@@ -66,6 +87,9 @@ export const WeekMixin = (Base) =>
       if (!a.schedule_editable || w?.editable === false) {
         return `<div class="pw-row">${name}<span class="pw-ext muted">${esc(this._t("not_editable"))}</span></div>`;
       }
+      if (w?.failed) {
+        return `<div class="pw-row">${name}<span class="pw-ext muted">${esc(this._t("wk_room_failed"))}</span></div>`;
+      }
       const len = end - start;
       const hm = (t) => this._fmt(t, { hour: "2-digit", minute: "2-digit" });
       const segs = this._weekSegments(w?.changes, start, end)
@@ -90,7 +114,7 @@ export const WeekMixin = (Base) =>
         }
       }
       const vac = this._weekVacation;
-      if (vac) {
+      if (vac && !vac.guests) {
         const a0 = Math.max(vac.from, start);
         const b0 = Math.min(vac.to, end);
         if (b0 > a0) {
@@ -148,23 +172,44 @@ export const WeekMixin = (Base) =>
       const v = this._weekVacation;
       if (v && v.to > start && v.from < end) {
         const when = (t) => this._fmt(t, { weekday: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-        notes.push(this._t("wk_vacation").replace("{from}", when(v.from)).replace("{to}", when(v.end)));
+        notes.push(this._t(v.guests ? "wk_vacation_guests" : "wk_vacation").replace("{from}", when(v.from)).replace("{to}", when(v.end)));
       }
       return notes;
     }
 
     /** The next days: a day to choose, what is special about it, then every room of every house. */
     _weekHtml(houses) {
-      const w = this._weekData();
+      // In the time zone of the house: the schedule is set in it, whatever the profile shows elsewhere.
+      this._tzForce = this._hass?.config?.time_zone || null;
+      try {
+        return this._weekBody(houses);
+      } finally {
+        this._tzForce = null;
+      }
+    }
+
+    /** The marks of the hours over the bars, where those hours fall on that day (a day may have 23 or 25). */
+    _weekTicks(date, start, end) {
+      const marks = [0, 6, 12, 18]
+        .map((h) => [h, this._localMidnight(date, h)])
+        .concat([[24, end]])
+        .map(([h, t]) => `<span style="left:${(((t - start) / (end - start)) * 100).toFixed(3)}%">${String(h).padStart(2, "0")}:00</span>`)
+        .join("");
+      return `<div class="pw-ticks" aria-hidden="true"><span></span><span class="bar-ticks pw-tickline">${marks}</span><span></span><span></span></div>`;
+    }
+
+    _weekBody(houses) {
+      const w = this._weekData(houses);
       if (w?.failed) return `<section class="block pw-week"><p class="muted">${esc(this._t("wk_failed"))}</p></section>`;
       const data = Object.fromEntries((w?.data?.houses || []).map((h) => [h.entry_id, h]));
       const first = (w?.data?.houses || [])[0];
       const dates = first?.days?.map((d) => d.date) || [];
-      const day = Math.min(Number.isInteger(this._weekDay) ? this._weekDay : 0, Math.max(dates.length - 1, 0));
+      // The day chosen is kept by its date: once it is past, today.
+      const day = Math.max(dates.indexOf(this._weekDay), 0);
       const chips = dates
         .map((date, i) => {
           const t = this._localMidnight(date) + 12 * 3600e3;
-          return `<button class="seg ${i === day ? "active" : ""}" data-action="week-day" data-option="${i}" aria-pressed="${i === day}" title="${esc(
+          return `<button class="seg ${i === day ? "active" : ""}" data-action="week-day" data-option="${esc(date)}" aria-pressed="${i === day}" title="${esc(
             this._fmt(t, { weekday: "long", day: "numeric", month: "long" })
           )}"><span class="pw-wd">${esc(this._fmt(t, { weekday: "short" }))}</span> <span class="pw-dn">${esc(this._fmt(t, { day: "numeric" }))}</span>${
             i === 0 ? '<span class="pw-today" aria-hidden="true"></span>' : ""
@@ -187,7 +232,7 @@ export const WeekMixin = (Base) =>
       }
       const now = Date.now();
       const nowPct = start !== null && now >= start && now < end ? (((now - start) / (end - start)) * 100).toFixed(2) : null;
-      const ticks = `<div class="pw-ticks" aria-hidden="true"><span></span><span class="bar-ticks"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></span><span></span><span></span></div>`;
+      const ticks = date ? this._weekTicks(date, start, end) : "";
       for (const house of houses) {
         if (!house.rooms.length) continue;
         const h = data[house.id] || {};
@@ -198,6 +243,7 @@ export const WeekMixin = (Base) =>
               to: Date.parse(v.resume || v.end),
               end: Date.parse(v.end),
               preset: v.preset,
+              guests: !!v.guests,
             }
           : null;
         if (houses.length > 1) parts.push(`<h3 class="ps-house">${esc(house.name || "")}</h3>`);

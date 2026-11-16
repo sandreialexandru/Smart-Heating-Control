@@ -115,6 +115,11 @@ const PANEL_STYLE = `
   .pw-ticks, .pw-row, .pw-main { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; }
   .pw-main { grid-column: 1 / 4; }
   .pw-ticks .bar-ticks { margin: 0; }
+  /* Each hour where it falls on that day (23 or 25 hours at a change of the clock). */
+  .pw-tickline { position: relative; display: block; height: 1.3em; }
+  .pw-tickline > span { position: absolute; top: 0; transform: translateX(-50%); }
+  .pw-tickline > span:first-child { transform: none; }
+  .pw-tickline > span:last-child { transform: translateX(-100%); }
   button.pw-main { border: 0; background: none; font: inherit; color: inherit; text-align: left; padding: 8px 6px; margin: 0 -6px;
     border-radius: 10px; cursor: pointer; }
   button.pw-main:hover { background: var(--ac-surface-2); }
@@ -457,7 +462,7 @@ class ShcPanel extends ShcBase {
         // A tap on a bar chooses its period; on the chosen one (or ✕) the whole range again.
         const t = own.dataset.t ? Number(own.dataset.t) : null;
         this._statsPick = t === this._statsPick ? null : t;
-      } else if (action === "week-day") this._weekDay = Number(option);
+      } else if (action === "week-day") this._weekDay = option;
       else this._historyKind = option;
       this._render();
       return;

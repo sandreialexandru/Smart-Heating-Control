@@ -115,6 +115,7 @@
           }
           const roomsOut = rooms.map((r) => {
             if (r.scheduleEditable === false) return { room_id: r.id, name: r.name, editable: false };
+            if (wk.failedRoom === r.id) return { room_id: r.id, name: r.name, editable: true, failed: true };
             const profiles = days.map((d, i) => {
               const forced = wk.forced && wk.forced.day === i ? wk.forced.profile : null;
               return { date: d.date, profile: forced || (r.profileDays && !Object.values(r.profileDays).some((m) => m.enabled) ? null : d.workday ? "workday" : "weekend"), forced: !!forced };
@@ -133,7 +134,7 @@
           const v = wk.vacation;
           return { houses: [{ entry_id: entry, name: house, days,
             events: (wk.levels || []).map((lv) => ({ start: at(days[lv.day].date, lv.from), end: at(days[lv.day].date, lv.to), summary: lv.summary })),
-            vacation: v ? { start: at(days[v.fromDay].date, v.from), end: at(days[v.toDay].date, v.to), resume: at(days[v.toDay].date, v.resume || v.to), preset: "away" } : null,
+            vacation: v ? { start: at(days[v.fromDay].date, v.from), end: at(days[v.toDay].date, v.to), resume: at(days[v.toDay].date, v.resume || v.to), preset: "away", guests: !!v.guests } : null,
             rooms: roomsOut }] };
         }
         if (msg.type === "recorder/statistics_during_period") {

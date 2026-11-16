@@ -486,7 +486,10 @@ preset} | null, rooms: [{room_id, name, editable, profiles: [{date, profile,
 forced}], changes: [{at, preset}], levels: [{start, end, preset, summary}]}]}`.
 `changes` start at the start of today and are computed as the room computes
 its schedule (`Schedule.upcoming` with the workdays and the calendar); a room
-on a Schedule helper has `editable: false` only.
+on a Schedule helper has `editable: false` only, a room whose days cannot be
+computed `failed: true`; `vacation.guests` is true while guest mode holds it
+off. The panel draws the days in the time zone of the house and asks again
+when a schedule, `profile_days`, the vacation, guest mode or the date changes.
 
 WebSocket command `advanced_climate/history` (optional `entry_id`): for every
 loaded house `{entry_id, name, temperature_unit, rooms: [{room_id, name,

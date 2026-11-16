@@ -95,6 +95,7 @@ export const EventsMixin = (Base) =>
       if (!stateObj) return;
       this._editing = room;
       this._open[`sched-${room}`] = true;
+      this._copyDone = this._copyFrom = this._copyTo = null;
       this._draft = JSON.parse(JSON.stringify(stateObj.attributes.schedule));
       this._draftDays = JSON.parse(JSON.stringify(stateObj.attributes.profile_days || {}));
       this._pendingProfile = null;
@@ -215,6 +216,10 @@ export const EventsMixin = (Base) =>
       switch (action) {
         case "fold":
           this._open[key] = el.getAttribute("aria-expanded") !== "true";
+          // Closing the schedule ends a copy and its message.
+          if (key === `sched-${this._copyDone?.room}` || key === `sched-${this._copyFrom}`) {
+            if (!this._open[key]) this._copyDone = this._copyFrom = this._copyTo = null;
+          }
           // One chart window at a time.
           if (key.startsWith("chart-") && this._open[key]) {
             for (const k of Object.keys(this._open)) if (k !== key && k.startsWith("chart-")) this._open[k] = false;

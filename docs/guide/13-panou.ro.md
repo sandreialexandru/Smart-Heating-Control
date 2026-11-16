@@ -46,7 +46,8 @@ ziua aleasă, cu nivelurile lor pe o axă comună de la 00:00 la 24:00.
     pune acel nivel pe orele lui; apare peste bare, hașurat;
   - **vacanța** programată a casei, cu începutul și sfârșitul ei; apare peste
     bare, hașurată, până când încălzirea pornește din nou înaintea sfârșitului
-    ei.
+    ei; cât timp modul oaspeți este pornit vacanța este oprită, așa că doar
+    este menționată.
 - Lângă fiecare bară este numele profilului folosit în ziua aceea
   (*calendar* când l-a ales un eveniment din calendar).
 - O cameră fără profil activ în ziua aceea arată *Niciun profil activ:
@@ -60,7 +61,9 @@ ziua aleasă, cu nivelurile lor pe o axă comună de la 00:00 la 24:00.
   [capitolul 10](10-card.ro.md)).
 
 Zilele sunt calculate de integrare la fel cum le calculează camerele, cu
-începutul zilei de program al casei. Ce nu se poate ști dinainte nu apare:
+începutul zilei de program al casei, și sunt arătate în fusul orar al casei
+(în ziua în care se schimbă ora, orele cad unde sunt de fapt). Se citesc din
+nou imediat ce se schimbă un program, vacanța sau modul oaspeți. Ce nu se poate ști dinainte nu apare:
 prezența (acasă sau plecat), ferestrele deschise, schimbările manuale și modul
 casei schimbat de mână. Sărbătorile și evenimentele din calendar se citesc
 pentru azi și următoarele 7 zile, la fiecare oră.

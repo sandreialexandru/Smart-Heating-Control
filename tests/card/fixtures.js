@@ -90,7 +90,7 @@
     for (const [id, state, attributes] of o.extra || []) st(id, state, attributes || {});
     window.calls = window.calls || { ws: [], service: [] };
     return {
-      states, user: { name: "Andrei", is_admin: true }, themes: { darkMode: !!o.dark }, language: o.lang || "en",
+      states, user: { name: "Andrei", is_admin: true }, themes: { darkMode: !!o.dark }, language: o.lang || "en", dockedSidebar: o.sidebar || "docked",
       locale: { language: o.lang || "en", time_format: o.timeFormat || "24", time_zone: "local" },
       config: { time_zone: o.tz || "Europe/Bucharest", unit_system: { temperature: unit } },
       callService: async (domain, service, data) => { window.calls.service.push({ domain, service, data }); if (o.serviceFails) throw new Error("boom"); },

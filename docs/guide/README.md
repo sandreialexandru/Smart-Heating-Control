@@ -30,7 +30,7 @@ browser).
 | [10. The card](10-card.md) | The Lovelace card: what it shows, how to use it, every option |
 | [11. Entities, services and automations](11-entities-and-services.md) | Every entity, the services, the event, diagnostics, automation examples |
 | [12. Examples and questions](12-examples-and-faq.md) | Complete setups for common homes, frequent questions, what to do when something does not work |
-| [13. The SHC panel](13-panel.md) | The page in the sidebar: the rooms, the schedule of the week, statistics, what each room learned, the history and the alerts now |
+| [13. The SHC panel](13-panel.md) | The page in the sidebar: the rooms, the schedule of the week, statistics, the history and the alerts now |
 
 ## Other documents
 

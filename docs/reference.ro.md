@@ -497,8 +497,6 @@ active). Taburi (ultimul se păstrează în browser):
   săptămâni sau 12 luni; pornirile cerute pe zi din
   `history/history_during_period` al senzorului *Cerere de căldură* al casei.
   Se reîmprospătează la fiecare 5 minute cât timp tabul este afișat.
-  Dedesubt, modelul învățat al fiecărei camere (senzorii *Viteză de încălzire*
-  și *Viteză de răcire*).
 - **Istoric**: alertele active (din `alerts` ale camerelor, o singură dată;
   camera și începutul din jurnal), apoi `advanced_climate/history`.
 

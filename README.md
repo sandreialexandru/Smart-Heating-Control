@@ -99,8 +99,7 @@ Every part can be hidden; the options are in the [guide](docs/guide/10-card.md).
 
 A page of its own in the sidebar, **SHC**, for every user: the whole house on
 one screen, the schedule of every room on one day, statistics (heating time
-and temperatures by day, week or month, and what each room learned) and the
-history of the decisions and alerts, with the alerts on now on top. Nothing
+and temperatures by day, week or month) and the history of the decisions and alerts, with the alerts on now on top. Nothing
 to set up; the [guide](docs/guide/13-panel.md) has the details.
 
 ## Get started

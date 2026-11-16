@@ -68,12 +68,6 @@ are kept for as long as Home Assistant keeps those.
 - **Times the heat source was asked to start**, by day. These come from the
   history of Home Assistant, which is kept for 10 days by default: older days
   have no bar.
-- **What SHC learned**: every room side by side, with the values its Details
-  show (see [chapter 7](07-optimal-start-stop-and-learning.md)): the state of
-  the learning with its usual error, the heating, the inertia, the heat loss
-  and the weather curve. A room still learning shows how many hours with and
-  without heating it has seen of the hours it needs. A tap on a room opens it
-  with its Details.
 
 The statistics are asked for again every 5 minutes while the tab is open.
 

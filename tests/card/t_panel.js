@@ -435,26 +435,6 @@ test("schedule tab: every room on today, another day, no active profile, an outs
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });
 
-test("statistics: what each room learned, or how far its learning is; a tap opens its Details", async (p) => {
-  await openPanel(p, { rooms: ROOMS });
-  await clickIn(p, '[data-action="panel-tab"][data-option="stats"]'); await p.waitForTimeout(150);
-  const r = await inPanel(p, (sr) => [...sr.querySelectorAll(".pl-row")].map((row) => ({
-    room: row.dataset.room,
-    learning: row.classList.contains("pl-learning"),
-    values: [...row.querySelectorAll(".pl-val")].map((v) => v.innerText.replace(/\s+/g, " ")),
-    state: row.querySelector(".pl-state").innerText,
-  })));
-  eq(r.map((x) => [x.room, x.learning]), [["r1", false], ["r4", true], ["r3", false], ["r2", true]], "every room (in the order of the card), learned or not");
-  eq(r[0].values, ["Heating 40 min/°C", "Inertia 30 min", "Heat loss 0.75 °C/h", "Weather curve +0.050 °C/h"], "the learned values");
-  ok(/^learned/.test(r[0].state), "learned: " + r[0].state);
-  eq(r[1].values, [], "no values while learning");
-  ok(/^learning… with heating [\d.]+ of 4 h, without heating [\d.]+ of 4 h$/.test(r[1].state), "the progress: " + r[1].state);
-  await clickIn(p, '.pl-row[data-room="r2"]'); await p.waitForTimeout(150);
-  const opened = await inPanel(p, (sr) => ({ tab: panel.getAttribute("tab"), details: !!sr.querySelector('.pmain [data-section="details-r2"]') }));
-  eq(opened, { tab: "rooms", details: true }, "the Details of that room");
-  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
-});
-
 test("history: the alerts on now on top, once each, with their room and since when; counted on the tab", async (p) => {
   const house = { key: "out", code: "outdoor_unavailable", params: {}, message: "m" };
   const rooms = [
@@ -485,5 +465,25 @@ test("history: the alerts on now on top, once each, with their room and since wh
     count: !!sr.querySelector(".tabcount"),
   }));
   eq(none, { text: "No alerts now", count: false }, "no alerts");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("the menu button only where Home Assistant shows none: a phone, or the sidebar always hidden", async (p) => {
+  const menu = () => inPanel(p, (sr) => !sr.querySelector(".pmenu").hidden);
+  await openPanel(p, { rooms: ROOMS });
+  eq(await menu(), false, "wide, sidebar docked: the sidebar has its own");
+  await openPanel(p, { rooms: ROOMS, sidebar: "always_hidden" });
+  eq(await menu(), true, "sidebar always hidden");
+  await openPanel(p, { rooms: ROOMS }, { narrow: true });
+  eq(await menu(), true, "a phone");
+});
+
+test("statistics: the time over a bar as 2h25, the same time as elsewhere", async (p) => {
+  await openPanel(p, { rooms: ROOMS });
+  const f = await inPanel(p, () => [0.5, 2 + 25 / 60, 3, 12.75, 150.2].map((h) => panel._shortHours(h)));
+  eq(f, ["30min", "2h25", "3h", "12h45", "150h"], "short times");
+  await clickIn(p, '[data-action="panel-tab"][data-option="stats"]'); await p.waitForTimeout(150);
+  const r = await inPanel(p, (sr) => { const c = sr.querySelector(".ps-cols .ps-col"); return { short: c.querySelector(".ps-val").innerText, title: c.title }; });
+  ok(/^\d+h(\d\d)?$/.test(r.short), "over the bar: " + r.short);
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });

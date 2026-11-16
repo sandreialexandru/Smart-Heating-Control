@@ -72,12 +72,6 @@ cât timp le păstrează Home Assistant.
 - **De câte ori a fost cerută pornirea sursei de căldură**, pe zile. Acestea
   vin din istoricul Home Assistant, păstrat implicit 10 zile: zilele mai vechi
   nu au bară.
-- **Ce a învățat SHC**: toate camerele alături, cu valorile din Detaliile lor
-  (vezi [capitolul 7](07-anticipare-si-invatare.ro.md)): starea învățării cu
-  eroarea obișnuită, încălzirea, inerția, pierderea de căldură și curba de
-  vreme. O cameră care încă învață arată câte ore cu și fără încălzire a văzut
-  din orele de care are nevoie. O atingere pe o cameră o deschide, cu
-  Detaliile ei.
 
 Cât timp tabul este deschis, statisticile se cer din nou la fiecare 5 minute.
 

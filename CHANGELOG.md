@@ -29,9 +29,6 @@ GitHub releases.
   the bars of the profile each one uses that day on a shared time line, with
   the time now on today; a day without an active profile says so. A tap on a
   room opens it with its schedule editor.
-- 🧠 **What SHC learned** (panel, *Statistics* tab): every room side by side,
-  with the heating, the inertia, the heat loss, the weather curve and the usual
-  error of its model, or how far its learning is. A tap opens its Details.
 - 🕘 **History** (panel, *History* tab): the decisions of every room and the
   alerts with their start and end, newest first, by day; only decisions or
   alerts, one room or all. The integration now keeps the alerts too (the last

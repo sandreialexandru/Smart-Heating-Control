@@ -30,7 +30,7 @@ Pentru o configurare pas cu pas, cu o explicație pentru fiecare alegere, exist�
 | [10. Cardul](10-card.ro.md) | Cardul Lovelace: ce arată, cum se folosește, toate opțiunile |
 | [11. Entități, servicii și automatizări](11-entitati-si-servicii.ro.md) | Toate entitățile, serviciile, evenimentul, diagnosticul, exemple de automatizări |
 | [12. Exemple și întrebări](12-exemple-si-intrebari.ro.md) | Configurări complete pentru case obișnuite, întrebări frecvente, ce e de făcut când ceva nu merge |
-| [13. Panoul SHC](13-panou.ro.md) | Pagina din bara laterală: camerele, programul săptămânii, statistici, ce a învățat fiecare cameră, istoricul și alertele active |
+| [13. Panoul SHC](13-panou.ro.md) | Pagina din bara laterală: camerele, programul săptămânii, statistici, istoricul și alertele active |
 
 ## Alte documente
 

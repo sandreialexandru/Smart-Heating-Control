@@ -164,7 +164,12 @@ export const StatsMixin = (Base) =>
 
     /** Hours with one decimal, short enough to stand over a bar ("3.3 h"). */
     _shortHours(h) {
-      return `${h.toLocaleString(this._lang(), { maximumFractionDigits: h < 10 ? 1 : 0 })} h`;
+      // "2h25", the same time as "2 h 25 min" elsewhere in a narrow column; whole hours from 100 h.
+      const minutes = Math.round(h * 60);
+      if (minutes < 60) return `${minutes}min`;
+      if (minutes >= 6000) return `${Math.round(minutes / 60)}h`;
+      const m = minutes % 60;
+      return `${Math.floor(minutes / 60)}h${m ? String(m).padStart(2, "0") : ""}`;
     }
 
     /** Hours as "3 h 20 min". */

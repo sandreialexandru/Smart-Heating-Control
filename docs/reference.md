@@ -468,8 +468,7 @@ kept in the browser):
   *Heating time* sensors, `mean` / `min` / `max` of *Outdoor average*,
   *Room temperature* and *Target temperature*) for the last 14 days, 12
   weeks or 12 months; starts asked per day from `history/history_during_period`
-  of the house *Heat demand*. Refreshed every 5 minutes while shown. Below, the
-  learned model of every room (the *Heating rate* and *Cooling rate* sensors).
+  of the house *Heat demand*. Refreshed every 5 minutes while shown.
 - **History**: the alerts on now (from the `alerts` of the rooms, once each;
   room and start from the journal), then `advanced_climate/history`.
 

@@ -6,7 +6,6 @@ import { ChartDataMixin } from "../chart/data.js";
 import { ChartInteractMixin } from "../chart/interact.js";
 import { HistoryMixin } from "../history/history.js";
 import { HouseMixin } from "../house/house.js";
-import { LearnedMixin } from "../learn/learned.js";
 import { AlertsMixin } from "../room/alerts.js";
 import { CompactMixin } from "../room/compact.js";
 import { DetailsMixin } from "../room/details.js";
@@ -42,7 +41,6 @@ const MIXINS = [
   CompactMixin,
   HouseMixin,
   StatsMixin,
-  LearnedMixin,
   WeekMixin,
   HistoryMixin,
   EventsMixin,

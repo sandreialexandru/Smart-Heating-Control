@@ -7,8 +7,7 @@
  * the rooms is the card's own code, only the layout is the panel's.
  * The chosen room is kept in the address (#room) and in the browser.
  * More tabs: the schedule of the week (every room on one day), the statistics
- * (heating time by day, week, month, and what each room learned) and the
- * history (the alerts on now, the decisions of the rooms, the alerts with
+ * (heating time and temperatures by day, week, month) and the history (the alerts on now, the decisions of the rooms, the alerts with
  * their start and end).
  */
 
@@ -127,21 +126,6 @@ const PANEL_STYLE = `
   :host([narrow]) .pw-ticks .bar-ticks { grid-column: 1 / -1; }
   :host([narrow]) .pw-bar, :host([narrow]) .pw-gap, :host([narrow]) .pw-ext { grid-column: 1 / -1; grid-row: 2; }
   :host([narrow]) .pw-row { row-gap: 6px; }
-  /* What each room learned, side by side. */
-  .pl-learned { margin-top: 16px; }
-  .pl-rows { display: grid; grid-template-columns: minmax(70px, 160px) minmax(0, 1.4fr) repeat(4, minmax(0, 1fr)); gap: 4px 12px; margin-top: 8px; }
-  button.pl-row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; border: 0; background: none;
-    font: inherit; color: inherit; text-align: left; padding: 8px 6px; margin: 0 -6px; border-radius: 10px; cursor: pointer;
-    border-bottom: 1px solid var(--ac-line); }
-  button.pl-row:hover { background: var(--ac-surface-2); }
-  .pl-row.pl-learning .pl-state { grid-column: 2 / -1; }
-  .pl-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .pl-state { font-size: 0.85em; }
-  .pl-val { display: flex; flex-direction: column; font-size: 0.95em; white-space: nowrap; }
-  .pl-lab { font-size: 0.72em; color: var(--ac-muted); }
-  :host([narrow]) .pl-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  :host([narrow]) button.pl-row { row-gap: 6px; padding: 10px 6px; }
-  :host([narrow]) .pl-name, :host([narrow]) .pl-state, :host([narrow]) .pl-row.pl-learning .pl-state { grid-column: 1 / -1; }
   /* The alerts on now, on top of the history. */
   .pa-now { margin-bottom: 16px; }
   .pa-now .acount { display: inline-flex; min-width: 1.4em; justify-content: center; padding: 0 6px; border-radius: 999px; font-size: 0.8em;
@@ -329,7 +313,10 @@ class ShcPanel extends ShcBase {
     const back = this._top.querySelector(".pback");
     back.hidden = !(this._narrow && chosen);
     back.setAttribute("aria-label", this._t("back"));
-    this._top.querySelector(".pmenu").hidden = !!(this._narrow && chosen);
+    // The menu of Home Assistant: its sidebar has its own button when docked,
+    // so ours only on a phone or with the sidebar always hidden.
+    const sidebar = this._hass?.dockedSidebar === "always_hidden";
+    this._top.querySelector(".pmenu").hidden = !!(this._narrow && chosen) || !(this._narrow || sidebar);
     this._top.querySelector("h1").textContent = this._narrow && chosen ? chosen.attributes.room_name : "SHC";
 
     // The house (each house, with its banners).
@@ -362,15 +349,11 @@ class ShcPanel extends ShcBase {
     this._card.hidden = !chosen;
     this._patch(this._card, chosen ? [{ k: `room-${room}`, html: this._roomHtml(chosen) }] : []);
 
-    // The week, the statistics (with what each room learned) or the history
+    // The week, the statistics or the history
     // (the alerts on now on top); fetched only while shown.
     const extra = [];
     if (tab === "week") extra.push({ k: "week", html: this._weekHtml(houses) });
-    if (tab === "stats") {
-      extra.push({ k: "stats", html: this._statsHtml(houses) });
-      const learned = this._learnedHtml(houses);
-      if (learned) extra.push({ k: "learned", html: learned });
-    }
+    if (tab === "stats") extra.push({ k: "stats", html: this._statsHtml(houses) });
     if (tab === "history") {
       const history = this._historyHtml(houses);
       extra.push({ k: "alerts-now", html: this._alertsNowHtml(houses) }, { k: "history", html: history });
@@ -395,13 +378,13 @@ class ShcPanel extends ShcBase {
     const fold = ev.target.closest?.('[data-action="fold"][data-key^="room-"]');
     if (fold && this._card?.contains(fold)) return;
     // The tabs and the choices of the statistics and the history.
-    // A room opened from the week (its schedule editor), what it learned (its Details) or an alert.
-    const go = ev.target.closest?.('[data-action="week-edit"], [data-action="learned-open"], [data-action="alert-room"]');
+    // A room opened from the week (its schedule editor) or from an alert.
+    const go = ev.target.closest?.('[data-action="week-edit"], [data-action="alert-room"]');
     if (go) {
       const room = go.dataset.room;
       const action = go.dataset.action;
       if (action === "week-edit") this._startEdit(room);
-      const key = action === "week-edit" ? `sched-${room}` : action === "learned-open" ? `details-${room}` : null;
+      const key = action === "week-edit" ? `sched-${room}` : null;
       if (key) this._open[key] = true;
       this._openRoom(room, key);
       return;

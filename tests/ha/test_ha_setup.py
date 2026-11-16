@@ -442,7 +442,7 @@ async def test_panel_in_the_sidebar_until_the_last_house_is_deleted(
 
 
 async def test_history_of_the_decisions_and_alerts(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_ws_client
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """The panel reads every decision of the rooms and every alert with its start and end."""
     entry = await _setup(hass, freezer)
@@ -464,11 +464,20 @@ async def test_history_of_the_decisions_and_alerts(
     notifier.clear("dev")
     notifier.notify("dev", "Unavailable", code="device_unavailable", params=params, room=room.id)
 
-    client = await hass_ws_client(hass)
-    await client.send_json({"id": 1, "type": "advanced_climate/history"})
-    msg = await client.receive_json()
-    assert msg["success"], msg
-    (result,) = msg["result"]["houses"]
+    # The command, registered and answered (called directly: the frozen clock
+    # would make the login of a websocket client fail).
+    from custom_components.advanced_climate.websocket import HISTORY, ws_history
+
+    assert HISTORY in hass.data["websocket_api"]
+    sent: dict = {}
+
+    class Connection:
+        def send_result(self, msg_id: int, result: dict) -> None:
+            sent.update(id=msg_id, result=result)
+
+    ws_history(hass, Connection(), {"id": 1, "type": HISTORY})
+    assert sent["id"] == 1
+    (result,) = sent["result"]["houses"]
     assert result["entry_id"] == entry.entry_id
     first, second = result["alerts"]
     assert first["code"] == "device_unavailable" and first["room"] == room.id

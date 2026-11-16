@@ -4059,10 +4059,11 @@ class SmartHeatingControlCard extends HTMLElement {
       return [temp + (heating * qMean - loss + sunGain * sunAt(t - 30000)) / 60, qEnd];
     };
     // As the integration: the highest temperature ahead without heating, or the
-    // lowest one with heating (at most 8 hours, until the room turned by 0.05 °C).
+    // lowest one with heating (at most 24 hours, twice the longest inertia,
+    // until the room turned by 0.05 °C).
     const extreme = (temp, q, heating, t) => {
       let best = temp;
-      for (let j = 1; j <= 480; j++) {
+      for (let j = 1; j <= 1440; j++) {
         [temp, q] = step(temp, q, heating ? 1 : 0, t + j * 60000);
         if (heating ? temp < best : temp > best) best = temp;
         if (heating ? temp > best + 0.05 : temp < best - 0.05) break;

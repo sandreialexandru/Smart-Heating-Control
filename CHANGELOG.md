@@ -98,6 +98,11 @@ which the reference room could not.
 
 ### Fixed
 
+- 🧱 **An inertia longer than 4 hours is learned** (up to 12 hours): rooms with
+  underfloor heating in a thick screed or in a heavy building learned the
+  longest candidate, 4 hours, as the best, so the optimal start began too late.
+  Three longer candidates (6, 8 and 12 hours) are added; the learning saved
+  until now is kept, and they are chosen only once they learned a week.
 - 🎚️ **A thermostat as the secondary source can be switched by its mode only**:
   *Start and stop the source by its temperature* (and the *Heat source idle
   temperature*) was asked only when the primary source was a thermostat, so a

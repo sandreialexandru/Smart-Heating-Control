@@ -223,16 +223,21 @@ temperatures vary far more than that.
 ## 5. How the inertia is learned
 
 τ cannot be calculated like h and k (q depends on it in a curved way). The
-integration learns **ten candidates at the same time**, each with its own τ:
+integration learns **thirteen candidates at the same time**, each with its own τ:
 
 ```
-0, 10, 20, 30, 45, 60, 90, 120, 180, 240 minutes
+0, 10, 20, 30, 45, 60, 90, 120, 180, 240, 360, 480, 720 minutes
 ```
+
+The longest ones (6 to 12 hours) are for underfloor heating in a thick screed
+or a heavy building. Learning saved before they were added (2.6.4) is kept;
+they start learning then and are chosen only once they learned a week of
+stretches, so they are not judged on a few.
 
 For each candidate q is followed with its τ, and h, c, k and s are fitted as in
 section 4. Before learning from a stretch, each candidate **predicts** it; the
 candidate with the smallest mean squared prediction error (forgotten like the
-stretches) is the one used. The diagnostics show all ten with their errors.
+stretches) is the one used. The diagnostics show all of them with their errors.
 
 **Why it matters** (the room of section 2, 18 → 21 °C, outdoors 0 °C, the
 heating starts from cold, q = 0):

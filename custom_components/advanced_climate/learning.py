@@ -77,8 +77,17 @@ DATA_VERSION = 7  # saved learning of other versions is discarded (6 is converte
 WINDOW_MINUTES = 30.0
 # Two observations further apart than this (minutes): the stretch is dropped.
 MAX_GAP_MINUTES = 20.0
-# Inertia candidates (minutes): 0 = none, up to 4 hours (underfloor heating).
-TAU_GRID: tuple[float, ...] = (0.0, 10.0, 20.0, 30.0, 45.0, 60.0, 90.0, 120.0, 180.0, 240.0)
+# Inertia candidates (minutes): 0 = none, up to 12 hours (underfloor heating in
+# a screed, a heavy building: a room whose best candidate was the longest one).
+TAU_GRID: tuple[float, ...] = (
+    0.0, 10.0, 20.0, 30.0, 45.0, 60.0, 90.0, 120.0, 180.0, 240.0, 360.0, 480.0, 720.0
+)  # fmt: skip
+# The candidates before 2.6.5: their learning is kept, the longer ones are added.
+OLD_TAU_GRID: tuple[float, ...] = TAU_GRID[:10]
+# A candidate added later (fewer stretches than the others) is chosen only once
+# it learned this many stretches (a week of 30-minute stretches), or as many as
+# the others when they have fewer: its error is not judged on a few stretches.
+CATCH_UP_WINDOWS = 7 * 24 * 2
 # Weight of a stretch halves after this many days (stretches of 30 minutes).
 HALF_LIFE_DAYS = 7.0
 FORGET = 0.5 ** (1.0 / (HALF_LIFE_DAYS * 24 * 60 / WINDOW_MINUTES))
@@ -111,7 +120,7 @@ SUN_T_MIN = 5.0
 # The highest / lowest temperature ahead (the inertia of the heating) is
 # looked for at most this far (minutes: twice the longest inertia), and ends
 # once the room turned by this much (°C).
-EXTREME_MINUTES = 480
+EXTREME_MINUTES = 2 * int(TAU_GRID[-1])
 TURN_MARGIN = 0.05
 # Predictions look at most this far ahead (minutes), in steps of one minute.
 MAX_MINUTES = 24 * 60
@@ -508,9 +517,10 @@ class ThermalLearner:
 
     def _best(self) -> tuple[_Fit, tuple[float, float, float, float]] | None:
         best = None
+        enough = min(CATCH_UP_WINDOWS, max((fit.windows for fit in self.fits), default=0))
         for fit in self.fits:
             solved = fit.solve()
-            if solved is None or fit.weight <= 0:
+            if solved is None or fit.weight <= 0 or fit.windows < enough:
                 continue
             score = fit.error / fit.weight
             if best is None or score < best[0]:
@@ -704,7 +714,11 @@ class ThermalLearner:
         version = int(data["version"])
         try:
             fits = [_Fit.from_list(item, version) for item in data.get("fits") or []]
-            if [fit.tau for fit in fits] != list(TAU_GRID):
+            taus = [fit.tau for fit in fits]
+            if taus == list(OLD_TAU_GRID):
+                # Learned before the longer candidates: kept, those start now.
+                fits += [_Fit(tau) for tau in TAU_GRID[len(OLD_TAU_GRID) :]]
+            elif taus != list(TAU_GRID):
                 return obj
             heat = float(data.get("heat_windows", 0.0))
             idle = float(data.get("idle_windows", 0.0))

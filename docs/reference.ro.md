@@ -246,8 +246,8 @@ Fiecare cameră își învață un mic model fizic, continuu, cu și fără înc
 - **Inerția** (`inertia_minutes`): q, partea din încălzire care ajunge în
   cameră, urmează pornirea / oprirea încălzirii cu această întârziere:
   centrala, apa, caloriferele sau pardoseala se încălzesc întâi după pornire
-  și mai dau căldură după oprire. Se învață, nu se setează: zece candidați
-  (0 – 240 de minute) se învață împreună și se folosește cel care prezice cel
+  și mai dau căldură după oprire. Se învață, nu se setează: treisprezece candidați
+  (0 – 720 de minute) se învață împreună și se folosește cel care prezice cel
   mai bine camera.
 - Fiecare **30 de minute** de măsurători sunt o ecuație; încălzirea, curba,
   pierderea și câștigul solar sunt soluția ei prin **metoda celor mai mici pătrate**. Intervalele

@@ -232,7 +232,7 @@ without heating:
 - **Inertia** (`inertia_minutes`): q, the part of the heating that reaches the
   room, follows the heating on / off with this delay: the boiler, the water,
   the radiators or the floor warm up first after a start and keep giving heat
-  after a stop. It is learned, not set: ten candidates (0 – 240 minutes) are
+  after a stop. It is learned, not set: thirteen candidates (0 – 720 minutes) are
   learned together and the one that predicts the room best is used.
 - Every **30 minutes** of measurements is one equation; heating, curve, loss
   and sun gain are its **least squares** fit. Older stretches count less (half after 7 days),

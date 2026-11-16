@@ -229,17 +229,22 @@ de afară variază mult mai mult de atât.
 ## 5. Cum se învață inerția
 
 τ nu se poate calcula ca h și k (q depinde de el într-un mod curb). Integrarea
-învață **zece candidați în același timp**, fiecare cu τ-ul lui:
+învață **treisprezece candidați în același timp**, fiecare cu τ-ul lui:
 
 ```
-0, 10, 20, 30, 45, 60, 90, 120, 180, 240 de minute
+0, 10, 20, 30, 45, 60, 90, 120, 180, 240, 360, 480, 720 de minute
 ```
+
+Cei mai lungi (6 până la 12 ore) sunt pentru pardoseala în șapă groasă sau o
+clădire masivă. Învățarea salvată înainte să fie adăugați (2.6.4) se păstrează;
+ei încep să învețe atunci și sunt aleși abia după ce au învățat o săptămână de
+intervale, ca să nu fie judecați pe câteva.
 
 Pentru fiecare candidat q se urmărește cu τ-ul lui, iar h, c, k și s se potrivesc
 ca în secțiunea 4. Înainte de a învăța dintr-un interval, fiecare candidat îl
 **prezice**; se folosește candidatul cu cea mai mică eroare pătratică medie de
-predicție (uitată la fel ca intervalele). Diagnosticul îi arată pe toți zece,
-cu erorile lor.
+predicție (uitată la fel ca intervalele). Diagnosticul îi arată pe toți, cu
+erorile lor.
 
 **De ce contează** (camera din secțiunea 2, 18 → 21 °C, afară 0 °C, încălzirea
 pornește la rece, q = 0):

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import math
 import unittest
 from datetime import UTC, date, datetime, timedelta
@@ -238,6 +239,31 @@ class ThermalModelTest(unittest.TestCase):
             self.assertAlmostEqual(model.h, h, delta=0.05 * h)
             self.assertAlmostEqual(model.k, k, delta=0.1 * k)
             self.assertEqual(model.tau, tau)
+
+    def test_learns_an_inertia_longer_than_four_hours(self) -> None:
+        """Underfloor heating in a screed (6 hours): learned, not stopped at 4 hours."""
+        for tau in (360.0, 720.0):
+            learner = learning.ThermalLearner()
+            _room(learner, h=1.0, k=0.03, tau=tau, days=12)
+            model = learner.model
+            self.assertTrue(model.learned)
+            self.assertGreater(model.tau, 240.0, tau)
+
+    def test_learning_saved_before_the_longer_inertias_is_kept(self) -> None:
+        """Saved with the ten candidates up to 4 hours (2.6.4): kept, the longer
+        ones added, and chosen only once they learned a week of stretches."""
+        learner = learning.ThermalLearner()
+        _room(learner, h=1.5, k=0.04, tau=180.0, days=3)
+        saved = learner.as_dict()
+        saved["fits"] = saved["fits"][: len(learning.OLD_TAU_GRID)]
+        again = learning.ThermalLearner.from_dict(json.loads(json.dumps(saved)))
+        self.assertEqual([f.tau for f in again.fits], list(learning.TAU_GRID))
+        self.assertTrue(again.learned)
+        self.assertEqual(again.model.tau, learner.model.tau)
+        self.assertAlmostEqual(again.model.h, learner.model.h)
+        # The added ones are not judged on a few stretches.
+        _room(again, h=1.5, k=0.04, tau=180.0, days=1)
+        self.assertLessEqual(again.model.tau, 240.0)
 
     def test_learned_within_a_day(self) -> None:
         learner = learning.ThermalLearner()

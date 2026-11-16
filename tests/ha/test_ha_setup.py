@@ -2559,7 +2559,7 @@ async def test_diagnostics_show_the_thermal_model(
     assert model["learned"] is False
     assert model["heating_per_hour"] == 1.0
     assert [c["inertia_minutes"] for c in model["candidates"]] == [
-        0.0, 10.0, 20.0, 30.0, 45.0, 60.0, 90.0, 120.0, 180.0, 240.0,
+        0.0, 10.0, 20.0, 30.0, 45.0, 60.0, 90.0, 120.0, 180.0, 240.0, 360.0, 480.0, 720.0,
     ]  # fmt: skip
 
     assert await hass.config_entries.async_unload(entry.entry_id)

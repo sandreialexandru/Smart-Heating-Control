@@ -129,7 +129,10 @@ def week(house: House) -> dict[str, Any]:
             editable=True,
             profiles=profiles,
             changes=[{"at": start.isoformat(), "preset": first.preset}]
-            + [{"at": at.isoformat(), "preset": preset} for at, preset in changes],
+            + [
+                {"at": dt_util.as_local(at).isoformat(), "preset": preset}
+                for at, preset in changes
+            ],
             levels=[
                 {
                     "start": s.isoformat(),

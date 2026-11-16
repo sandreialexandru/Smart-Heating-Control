@@ -5,6 +5,23 @@ release (and of each beta pre-release) are taken from here: a beta shows the
 *Unreleased* section, a release its own section. Older versions: see the
 GitHub releases.
 
+## Unreleased
+
+### New
+
+- 🗂️ **SHC panel**: a page of its own in the sidebar (*SHC*, for every user)
+  with the whole house: the house on top, the rooms on the side, the chosen
+  room in the middle, with everything the card shows and does. On a phone the
+  rooms are a list and a room opens on the whole screen, with *Back*. The
+  chosen room is kept in the address (`/shc#<room>`) and in the browser.
+  Nothing to set up; the panel goes away with the last house deleted.
+
+### Changed
+
+- The card is made of modules that the card and the panel share; it looks and
+  works as before. It loads from a folder with the version in its path, so
+  every browser and the companion app load the new files after an update.
+
 ## 2.6.5 – 2026-11-16
 
 ### ⚠️ Before you update: the *Reference room* is removed

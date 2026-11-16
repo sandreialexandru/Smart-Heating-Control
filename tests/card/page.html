@@ -6,12 +6,18 @@
 import * as card from "../../custom_components/advanced_climate/www/smart-heating-control-card.js";
 Object.assign(window, card);
 </script>
+<script type="module" src="../../custom_components/advanced_climate/www/shc/panel.js"></script>
 <div id="host" style="max-width:900px;margin:8px"></div>
 <script>
 window.mount = (config, hassOpts) => {
   const host = document.getElementById("host"); host.innerHTML = "";
   window.card = document.createElement("smart-heating-control-card");
   card.setConfig(config); host.appendChild(card); card.hass = makeHass(hassOpts); return true;
+};
+window.mountPanel = (hassOpts, { narrow = false } = {}) => {
+  const host = document.getElementById("host"); host.innerHTML = ""; host.style.maxWidth = "none"; host.style.margin = "0";
+  window.panel = document.createElement("shc-panel");
+  panel.narrow = narrow; panel.hass = makeHass(hassOpts); host.appendChild(panel); return true;
 };
 window.sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 </script></body></html>

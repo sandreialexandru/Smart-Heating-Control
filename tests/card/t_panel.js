@@ -66,6 +66,8 @@ test("a room row opens that room; the address and the browser keep it", async (p
 });
 
 test("nothing of the card is missing: every text and control of the house and of each room", async (p) => {
+  // One clock for the card and the panel (times like "Sleep at 20:24" would differ across a minute).
+  await p.clock.setFixedTime(new Date());
   for (const room of ROOMS) {
     const hass = { rooms: [room], source: { state: "auto", options: ["auto", "primary", "secondary"], active: "primary" }, scenarios: ["Home office"], scenario: "Home office" };
     await p.evaluate(([c, h]) => mount(c, h), [{}, hass]); await p.waitForTimeout(250);
@@ -316,3 +318,36 @@ test("phone: the tabs over the list, none over an open room; statistics without 
   eq(await inPanel(p, (sr) => getComputedStyle(sr.querySelector(".ps-val")).display), "none", "no values over the bars");
   await p.evaluate(() => { localStorage.removeItem("shc-panel-tab"); localStorage.removeItem("shc-panel-room"); history.replaceState(null, "", location.pathname); });
 }, { viewport: { width: 390, height: 844 }, touch: true });
+
+test("statistics: a tap on a bar shows its period (the house, the rooms, the starts); again or ✕ the whole range", async (p) => {
+  await openPanel(p, { rooms: R4 });
+  await tab(p, "stats");
+  const pick = (i, chart = 0) => inPanel(p, (sr, a) => sr.querySelectorAll(".ps-cols")[a[1]].querySelectorAll(".ps-col")[a[0]].click(), [i, chart]);
+  const look = () => inPanel(p, (sr) => ({
+    detail: sr.querySelector(".ps-detail")?.innerText.replace(/\s+/g, " ") || null,
+    rooms: sr.querySelectorAll(".ps-title")[1].innerText,
+    picked: [...sr.querySelectorAll(".ps-col.picked")].length,
+    dim: [...sr.querySelectorAll(".ps-col.dim")].length,
+    hours: [...sr.querySelectorAll(".ps-row")].map((r) => r.querySelector(".ps-h").innerText),
+  }));
+  const whole = await look();
+  await pick(9); await p.waitForTimeout(150);
+  const one = await look();
+  ok(one.detail && /\d+ starts asked/.test(one.detail), "detail: " + one.detail);
+  ok(!one.rooms.includes("last 14 days") && one.rooms.startsWith("Heating time by room"), "rooms of that day: " + one.rooms);
+  eq([one.picked, one.dim], [2, 26], "the day marked in both charts");
+  ok(JSON.stringify(one.hours) !== JSON.stringify(whole.hours), "the rooms of that day only");
+  // The day of the starts chart chooses the same day.
+  await pick(9, 1); await p.waitForTimeout(150);
+  eq((await look()).detail, null, "the same day again: the whole range");
+  await pick(3, 1); await p.waitForTimeout(150);
+  eq((await look()).picked, 2, "from the starts chart");
+  await clickIn(p, ".ps-unpick"); await p.waitForTimeout(150);
+  eq(await look(), whole, "✕: the whole range");
+  await pick(2); await p.waitForTimeout(150);
+  await clickIn(p, '[data-action="stats-period"][data-option="week"]'); await p.waitForTimeout(300);
+  eq((await look()).detail, null, "another period: the whole range");
+  await pick(11); await p.waitForTimeout(150);
+  ok(/ – /.test((await look()).detail), "a week from its first to its last day");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});

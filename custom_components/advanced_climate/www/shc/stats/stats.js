@@ -125,17 +125,33 @@ export const StatsMixin = (Base) =>
       return h > 0 ? this._duration(h * 60) : "0 min";
     }
 
-    /** Bars standing up, one per period, the value over each. */
+    /** The period chosen by a tap on its bar (its start), or null: the whole range. */
+    _statsPicked(values) {
+      const t = this._statsPick;
+      return t != null && values.some(([s]) => s === t) ? t : null;
+    }
+
+    /** The whole name of a period: "Tuesday, 11 November", "10 Nov – 16 Nov", "November 2026". */
+    _statsLong(t, period) {
+      if (period === "month") return this._fmt(t, { month: "long", year: "numeric" });
+      if (period === "week") return `${this._fmt(t, { day: "numeric", month: "short" })} – ${this._fmt(t + 6 * 864e5, { day: "numeric", month: "short" })}`;
+      return this._fmt(t, { weekday: "long", day: "numeric", month: "long" });
+    }
+
+    /** Bars standing up, one per period, the value over each; a tap chooses the period. */
     _statsColumns(values, label, fmt, color, short = fmt) {
       // null: not known (no bar, a dash in its title).
       const max = Math.max(0, ...values.map(([, v]) => v ?? 0));
+      const picked = this._statsPicked(values);
       const cols = values
         .map(([t, v]) => {
           const h = max > 0 && v > 0 ? Math.max(2, (v / max) * 100) : 0;
-          return `<div class="ps-col" title="${esc(`${label(t)}: ${fmt(v)}`)}"><span class="ps-val">${esc(v > 0 ? short(v) : "")}</span>
+          const state = picked === null ? "" : picked === t ? "picked" : "dim";
+          return `<button class="ps-col ${state}" data-action="stats-pick" data-t="${t}" aria-pressed="${picked === t}"
+            title="${esc(`${label(t)}: ${fmt(v)}`)}"><span class="ps-val">${esc(v > 0 ? short(v) : "")}</span>
             <span class="ps-area"><span class="ps-bar" style="height:${h.toFixed(1)}%;--c:${color}"></span></span><span class="ps-lab">${esc(
               label(t)
-            )}</span></div>`;
+            )}</span></button>`;
         })
         .join("");
       return `<div class="ps-cols">${cols}</div>`;
@@ -162,7 +178,10 @@ export const StatsMixin = (Base) =>
         const total = own ? this._statsValues(stats.data, own.id, period) : [];
         const range = this._t(`st_last_${period}`).replace("{n}", STATS_RANGE[period]);
         const sum = (vals) => vals.reduce((a, [, v]) => a + v, 0);
-        const roomTotals = rooms.map((r) => ({ ...r, hours: sum(this._statsValues(stats.data, r.id, period)) })).sort((a, b) => b.hours - a.hours);
+        // A chosen period: the rooms in that period; else over the whole range.
+        const picked = this._statsPicked(total);
+        const inPick = (vals) => (picked === null ? sum(vals) : (vals.find(([t]) => t === picked)?.[1] ?? 0));
+        const roomTotals = rooms.map((r) => ({ ...r, hours: inPick(this._statsValues(stats.data, r.id, period)) })).sort((a, b) => b.hours - a.hours);
         const roomMax = Math.max(0, ...roomTotals.map((r) => r.hours));
         const roomSum = sum(roomTotals.map((r) => [0, r.hours]));
         const roomRows = roomTotals
@@ -175,6 +194,7 @@ export const StatsMixin = (Base) =>
           )
           .join("");
         let requests = "";
+        let starts = null;
         const demand = house.entities?.heat_demand;
         if (period === "day" && stats.requests && demand && total.length) {
           const { days = {}, from = null } = stats.requests[demand] || {};
@@ -182,14 +202,26 @@ export const StatsMixin = (Base) =>
             const day = this._dayKey(t);
             return [t, from === null || day < from ? null : (days[day] ?? 0)];
           });
+          if (picked !== null) starts = values.find(([t]) => t === picked)?.[1] ?? null;
           requests = `<h3 class="ps-title">${esc(this._t("st_requests"))}</h3>
             ${this._statsColumns(values, (t) => this._statsLabel(t, period), (v) => (v === null ? "–" : String(v)), "var(--ac-hot)")}
             <p class="muted">${esc(this._t("st_requests_note"))}</p>`;
         }
         const name = houses.length > 1 ? `<h2 class="ps-house">${esc(house.name || "")}</h2>` : "";
+        // The chosen period: its name, the time of the house, the starts asked; ✕ back to the range.
+        const when = picked === null ? range : this._statsLong(picked, period);
+        const detail =
+          picked === null
+            ? ""
+            : `<div class="ps-detail"><span><b>${esc(when)}</b> · ${esc(this._hours(total.find(([t]) => t === picked)?.[1] ?? 0))}${
+                starts !== null ? ` · ${esc(this._t("st_starts").replace("{n}", starts))}` : ""
+              }</span><button class="ps-unpick" data-action="stats-pick" data-t="" title="${esc(this._t("close"))}" aria-label="${esc(
+                this._t("close")
+              )}">${this._icon("close")}</button></div>`;
         return `${name}<h3 class="ps-title">${esc(this._t("st_house"))} · ${esc(range)} · ${esc(this._hours(sum(total)))}</h3>
           ${total.length ? this._statsColumns(total, (t) => this._statsLabel(t, period), (v) => this._hours(v), "var(--ac-accent)", (v) => this._shortHours(v)) : `<p class="muted">${esc(this._t("st_none"))}</p>`}
-          <h3 class="ps-title">${esc(this._t("st_rooms"))} · ${esc(range)}</h3>
+          ${detail}
+          <h3 class="ps-title">${esc(this._t("st_rooms"))} · ${esc(when)}</h3>
           ${roomRows ? `<div class="ps-rows">${roomRows}</div>` : `<p class="muted">${esc(this._t("st_none"))}</p>`}
           ${requests}`;
       });

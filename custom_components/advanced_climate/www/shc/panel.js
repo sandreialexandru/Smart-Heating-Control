@@ -62,6 +62,16 @@ const PANEL_STYLE = `
   .ps-area { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
   .ps-bar { width: 100%; max-width: 40px; background: var(--c); border-radius: 6px 6px 2px 2px; }
   .ps-val, .ps-lab { font-size: 0.72em; color: var(--ac-muted); white-space: nowrap; }
+  button.ps-col { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; border-radius: 6px; }
+  button.ps-col:hover .ps-bar { filter: brightness(1.1); }
+  .ps-col.dim .ps-bar { opacity: 0.35; }
+  .ps-col.picked .ps-lab, .ps-col.picked .ps-val { color: var(--primary-text-color); font-weight: 600; }
+  .ps-detail { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; border-radius: 10px;
+    background: var(--ac-active-bg); box-shadow: inset 0 0 0 1px var(--ac-active-line); }
+  .ps-detail > span { flex: 1; min-width: 0; }
+  .ps-unpick { width: 32px; height: 32px; border: 0; border-radius: 50%; background: none; color: inherit; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+  .ps-unpick:hover { background: var(--ac-surface-2); }
   .ps-rows { display: flex; flex-direction: column; gap: 8px; }
   .ps-row { display: grid; grid-template-columns: minmax(70px, 160px) minmax(40px, 1fr) auto 3em; gap: 10px; align-items: center; }
   .ps-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -297,12 +307,21 @@ class ShcPanel extends ShcBase {
     const fold = ev.target.closest?.('[data-action="fold"][data-key^="room-"]');
     if (fold && this._card?.contains(fold)) return;
     // The tabs and the choices of the statistics and the history.
-    const own = ev.target.closest?.('[data-action="panel-tab"], [data-action="stats-period"], [data-action="history-kind"]');
+    const own = ev.target.closest?.(
+      '[data-action="panel-tab"], [data-action="stats-period"], [data-action="stats-pick"], [data-action="history-kind"]'
+    );
     if (own) {
       const option = own.dataset.option;
-      if (own.dataset.action === "panel-tab") this._showTab(option);
-      else if (own.dataset.action === "stats-period") this._statsP = option;
-      else this._historyKind = option;
+      const action = own.dataset.action;
+      if (action === "panel-tab") this._showTab(option);
+      else if (action === "stats-period") {
+        this._statsP = option;
+        this._statsPick = null; // another period: the whole range again
+      } else if (action === "stats-pick") {
+        // A tap on a bar chooses its period; on the chosen one (or ✕) the whole range again.
+        const t = own.dataset.t ? Number(own.dataset.t) : null;
+        this._statsPick = t === this._statsPick ? null : t;
+      } else this._historyKind = option;
       this._render();
       return;
     }

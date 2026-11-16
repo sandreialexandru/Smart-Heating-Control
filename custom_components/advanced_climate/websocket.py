@@ -10,7 +10,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
-from .sensor import _reason_params, _t
 
 if TYPE_CHECKING:
     from .house import House
@@ -26,6 +25,9 @@ def async_setup_websocket(hass: HomeAssistant) -> None:
 
 def _decision(item: dict[str, Any], unit: str) -> dict[str, Any]:
     """A logged decision with its temperatures in the unit of the house."""
+    # Here, not at the top: sensor.py imports the package, which imports this module.
+    from .sensor import _reason_params, _t
+
     target = dict(item.get("target") or {})
     if target.get("temperature") is not None:
         target["temperature"] = _t(target["temperature"], unit, 1)

@@ -512,6 +512,71 @@ async def test_history_of_the_decisions_and_alerts(
     assert "restart" not in notifier.journal[0]
 
 
+async def test_week_of_the_schedule_with_holidays_calendar_and_vacation(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The panel reads the next 7 days as the rooms will run them."""
+    from custom_components.advanced_climate.websocket import WEEK, ws_week
+
+    entry = await _setup(hass, freezer)
+    house = entry.runtime_data
+    room = next(iter(house.rooms.values()))
+    zone = dt_util.get_default_time_zone()
+    # Tuesday a holiday (the Workday integration), Wednesday eco from a calendar
+    # event 10:00-14:00, Thursday the profile "weekend" from a calendar event,
+    # a vacation from Friday 08:00 to Saturday 20:00.
+    house.workday_cache["2026-10-13"] = False
+    house.calendar_events = [
+        (datetime(2026, 10, 14, 10, tzinfo=zone), datetime(2026, 10, 14, 14, tzinfo=zone), "Eco"),
+        (datetime(2026, 10, 15, 0, tzinfo=zone), datetime(2026, 10, 16, 0, tzinfo=zone), "weekend"),
+        (datetime(2026, 10, 30, 0, tzinfo=zone), datetime(2026, 10, 31, 0, tzinfo=zone), "eco"),
+    ]
+    house.vacation_start = datetime(2026, 10, 16, 8, tzinfo=zone)
+    house.vacation_end = datetime(2026, 10, 17, 20, tzinfo=zone)
+
+    assert WEEK in hass.data["websocket_api"]
+    sent: dict = {}
+
+    class Connection:
+        def send_result(self, msg_id: int, result: dict) -> None:
+            sent.update(id=msg_id, result=result)
+
+    ws_week(hass, Connection(), {"id": 3, "type": WEEK})
+    (result,) = sent["result"]["houses"]
+    days = result["days"]
+    assert [d["date"] for d in days][:2] == ["2026-10-12", "2026-10-13"] and len(days) == 7
+    assert [d["workday"] for d in days] == [True, False, True, True, True, False, False]
+    # Only the events of these 7 days.
+    assert [e["summary"] for e in result["events"]] == ["Eco", "weekend"]
+    assert result["vacation"]["preset"] == "away"
+    assert result["vacation"]["end"] == house.vacation_end.isoformat()
+    (rooms,) = result["rooms"]
+    assert rooms["editable"] is True and rooms["room_id"] == room.id
+    profiles = [(p["profile"], p["forced"]) for p in rooms["profiles"]]
+    assert profiles[:5] == [
+        ("workday", False),
+        ("weekend", False),  # the holiday
+        ("workday", False),
+        ("weekend", True),  # from the calendar
+        ("workday", False),
+    ]
+    assert profiles[5:] == [("weekend", False), ("weekend", False)]
+    # The changes: from the start of today, the holiday wakes at 08:00 (weekend).
+    changes = rooms["changes"]
+    assert changes[0] == {"at": "2026-10-12T00:00:00+03:00", "preset": "sleep"}
+    assert {"at": "2026-10-13T08:00:00+03:00", "preset": "home"} in changes
+    assert {"at": "2026-10-13T06:00:00+03:00", "preset": "home"} not in changes
+    # The calendar event titled with a level, with that level.
+    assert rooms["levels"] == [
+        {
+            "start": "2026-10-14T10:00:00+03:00",
+            "end": "2026-10-14T14:00:00+03:00",
+            "preset": "eco",
+            "summary": "Eco",
+        }
+    ]
+
+
 async def test_card_resource_moved_after_the_rename(hass: HomeAssistant) -> None:
     """The resource of the card before the rename is moved to the new URL."""
     from custom_components.advanced_climate.const import CARD_URL, LEGACY_CARD_URL

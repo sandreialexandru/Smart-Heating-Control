@@ -394,44 +394,84 @@ test("statistics in °F and in Romanian", async (p) => {
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });
 
-test("schedule tab: every room on today, another day, no active profile, an outside schedule; a tap opens the editor", async (p) => {
+test("schedule tab: today and the next 6 days as the integration runs them; no active profile; an outside schedule; a tap opens the editor", async (p) => {
   const rooms = [
     { id: "r1", name: "Bedroom" },
     { id: "r2", name: "Office", profileDays: { workday: { days: "workday", enabled: false }, weekend: { days: "weekend", enabled: false } } },
     { id: "r3", name: "Living", scheduleEditable: false },
   ];
   await openPanel(p, { rooms });
-  await clickIn(p, '[data-action="panel-tab"][data-option="week"]'); await p.waitForTimeout(100);
-  const today = await p.evaluate(() => (new Date().getDay() + 6) % 7);
+  await clickIn(p, '[data-action="panel-tab"][data-option="week"]'); await p.waitForTimeout(200);
   const look = () => inPanel(p, (sr) => ({
+    days: [...sr.querySelectorAll('[data-action="week-day"]')].map((b) => b.innerText.trim()),
     day: [...sr.querySelectorAll('[data-action="week-day"]')].findIndex((b) => b.classList.contains("active")),
     rows: [...sr.querySelectorAll(".pw-row")].map((r) => r.querySelector(".pw-name").innerText),
     profile: sr.querySelector('.pw-main[data-room="r1"] .pw-prof').innerText,
-    segs: sr.querySelectorAll('.pw-main[data-room="r1"] .sseg').length,
+    segs: [...sr.querySelectorAll('.pw-main[data-room="r1"] .sseg')].map((x) => x.title),
     now: !!sr.querySelector('.pw-main[data-room="r1"] .pw-now'),
     gap: sr.querySelector('.pw-main[data-room="r2"] .pw-gap')?.innerText || null,
     outside: sr.querySelector(".pw-row .pw-ext")?.innerText || null,
     outsideButton: !!sr.querySelector('button.pw-main[data-room="r3"]'),
+    asked: window.calls.ws.filter((c) => c.type === "advanced_climate/week").length,
   }));
   const first = await look();
-  eq([first.day, first.rows, first.now], [today, ["Bedroom", "Living", "Office"], true], "today, every room (in the order of the card), now on the bar");
-  eq(first.profile, today < 5 ? "workday" : "weekend", "the profile of today");
-  eq(first.segs, 3, "the slots of the profile");
+  const weekday = await p.evaluate(() => (new Date().getDay() + 6) % 7);
+  eq([first.days.length, first.day, first.rows, first.now], [7, 0, ["Bedroom", "Living", "Office"], true], "7 days from today, every room, now on today");
+  ok(/^\w{3} \d{1,2}$/.test(first.days[0]), "a day with its date: " + first.days[0]);
+  eq(first.profile, weekday < 5 ? "workday" : "weekend", "the profile of today");
+  ok(first.segs.length >= 2 && /^Sleep 00:00–/.test(first.segs[0]), "the levels of the day from midnight: " + first.segs);
   eq(first.gap, "No active profile: frost protection", "a room without an active profile");
   ok(/Schedule helper/.test(first.outside) && !first.outsideButton, "a room on a Schedule helper is not opened from here: " + first.outside);
-  const other = today < 5 ? 5 : 0;
-  await clickIn(p, `[data-action="week-day"][data-option="${other}"]`); await p.waitForTimeout(100);
-  const second = await look();
-  eq([second.day, second.profile, second.now], [other, other < 5 ? "workday" : "weekend", false], "another day: its profile, no now");
+  eq(first.asked, 1, "asked once");
+  await clickIn(p, '[data-action="week-day"][data-option="3"]'); await p.waitForTimeout(100);
+  const later = await look();
+  eq([later.day, later.now], [3, false], "another day: no now");
   // A tap on a room: the Rooms tab with that room and its schedule editor open.
   await clickIn(p, 'button.pw-main[data-room="r1"]'); await p.waitForTimeout(150);
-  const opened = await inPanel(p, (sr) => ({
-    tab: panel.getAttribute("tab"),
-    room: sr.querySelector(".pmain .block.room")?.dataset.key || sr.querySelector(".pmain [data-key^='room-']")?.dataset.key,
-    editor: !!sr.querySelector(".pmain .editor"),
-  }));
-  eq([opened.tab, opened.editor], ["rooms", true], "the editor of the room");
-  ok(String(opened.room).includes("r1"), "that room: " + opened.room);
+  const opened = await inPanel(p, (sr) => ({ tab: panel.getAttribute("tab"), editor: !!sr.querySelector(".pmain .editor") }));
+  eq(opened, { tab: "rooms", editor: true }, "the editor of the room");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("schedule tab: a holiday, a profile and a level from the calendar, the vacation", async (p) => {
+  const week = {
+    holiday: [1],
+    forced: { day: 2, profile: "weekend" },
+    levels: [{ day: 3, from: "10:00", to: "14:00", preset: "eco", summary: "Eco" }],
+    vacation: { fromDay: 4, from: "08:00", toDay: 5, to: "20:00", resume: "18:00" },
+  };
+  await openPanel(p, { rooms: [{ id: "r1", name: "Bedroom" }], week });
+  await clickIn(p, '[data-action="panel-tab"][data-option="week"]'); await p.waitForTimeout(200);
+  const day = async (i) => {
+    await clickIn(p, `[data-action="week-day"][data-option="${i}"]`); await p.waitForTimeout(80);
+    return inPanel(p, (sr) => ({
+      notes: [...sr.querySelectorAll(".pw-notes li")].map((li) => li.innerText),
+      profile: sr.querySelector('.pw-main[data-room="r1"] .pw-prof').innerText,
+      over: [...sr.querySelectorAll('.pw-main[data-room="r1"] .pw-ov')].map((o) => ({ title: o.title, vac: o.classList.contains("pw-vac") })),
+      first: sr.querySelector('.pw-main[data-room="r1"] .sseg')?.title || "",
+    }));
+  };
+  const d1 = await day(1);
+  ok(d1.notes.some((n) => /^Day off \(holiday\)/.test(n)), "the holiday: " + d1.notes);
+  eq(d1.profile, "weekend", "the profile of weekend days");
+  const d2 = await day(2);
+  ok(d2.notes.includes("From the calendar: the profile weekend"), "a profile from the calendar: " + d2.notes);
+  eq(d2.profile, "weekend · calendar", "marked in the row");
+  const d3 = await day(3);
+  ok(d3.notes.includes("From the calendar: Eco 10:00–14:00"), "a level from the calendar: " + d3.notes);
+  eq(d3.over, [{ title: "calendar: Eco 10:00–14:00", vac: false }], "over the bar");
+  const d4 = await day(4);
+  ok(d4.notes.some((n) => /^Vacation from /.test(n)), "the vacation: " + d4.notes);
+  eq(d4.over.map((o) => [o.vac, o.title]), [[true, "Vacation: Away 08:00–00:00"]], "from 08:00 to the end of the day");
+  const d5 = await day(5);
+  eq(d5.over.map((o) => o.title), ["Vacation: Away 00:00–18:00"], "until the heating starts again before its end");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("schedule tab: the next days that cannot be read say so", async (p) => {
+  await openPanel(p, { rooms: [{ id: "r1", name: "Bedroom" }], week: { fail: true } });
+  await clickIn(p, '[data-action="panel-tab"][data-option="week"]'); await p.waitForTimeout(200);
+  eq(await inPanel(p, (sr) => sr.querySelector(".pw-week p")?.innerText), "The next days could not be read.", "said so");
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });
 

@@ -106,6 +106,10 @@ const PANEL_STYLE = `
   .ph-text { flex: 1; min-width: 0; }
   /* The week: every room on one day, its bar on a shared time line. */
   .pw-days .seg { position: relative; }
+  /* On a phone the weekday over the day of the month, so both fit. */
+  :host([narrow]) .pw-days .seg { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; height: auto; min-height: 44px; }
+  :host([narrow]) .pw-wd { font-size: 0.85em; }
+  :host([narrow]) .pw-dn { font-weight: 600; }
   .pw-today { position: absolute; left: 50%; bottom: 3px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: currentColor; }
   .pw-rows { display: grid; grid-template-columns: minmax(70px, 180px) minmax(0, 1fr) minmax(0, 8em) 40px; gap: 4px 12px; margin-top: 8px; }
   .pw-ticks, .pw-row, .pw-main { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; }
@@ -133,6 +137,10 @@ const PANEL_STYLE = `
   :host([narrow]) .pw-ext { grid-column: 1 / -1; grid-row: 2; }
   :host([narrow]) .pw-copy { grid-row: 1; grid-column: 3; }
   .pw-note { margin-top: 12px; }
+  .pw-ov { position: absolute; top: 0; bottom: 0; box-sizing: border-box; border: 2px solid var(--c); border-radius: 4px;
+    background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--c) 75%, transparent) 0 5px, color-mix(in srgb, var(--c) 35%, transparent) 5px 10px); }
+  .pw-notes { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .pw-notes li { padding: 4px 10px; border-radius: 12px; font-size: 0.85em; background: var(--ac-active-bg); box-shadow: inset 0 0 0 1px var(--ac-active-line); }
   :host([narrow]) .pw-rows { grid-template-columns: minmax(0, 1fr) auto; }
   :host([narrow]) .pw-ticks > span:first-child, :host([narrow]) .pw-ticks > span:last-child { display: none; }
   :host([narrow]) .pw-ticks .bar-ticks { grid-column: 1 / -1; }

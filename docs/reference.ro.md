@@ -485,12 +485,15 @@ active). Taburi (ultimul se păstrează în browser):
 - **Camere**: casa, camerele, camera aleasă deschisă (păstrată în adresă ca
   `#<room_id>` și în browser). Sub 870 px o listă, o cameră pe tot ecranul cu
   *Înapoi*.
-- **Program**: toate camerele într-o zi aleasă, bara profilului ales pentru ea
-  ca în integrare (profilul zilei, altfel zile lucrătoare / weekend, altfel
-  toate zilele; zile lucrătoare de luni până vineri, fără calendar), *acum* în
-  ziua de azi, *Niciun profil activ* (protecție la îngheț) într-o zi pe care
-  nu o acoperă niciun profil activ. O atingere deschide camera cu editorul
-  programului; butonul de copiere, cu *Copiază în alte camere*.
+- **Program**: azi și următoarele 6 zile din `advanced_climate/week`: toate
+  camerele în ziua aleasă, nivelurile lor (`changes`), evenimentele din
+  calendar cu numele unui nivel (`levels`) și vacanța până la reluare, desenate
+  peste ele; deasupra, o sărbătoare (o zi de luni–vineri care nu este lucrătoare)
+  sau o zi lucrătoare în weekend, profilurile forțate de calendar, nivelurile
+  din calendar și vacanța. *Acum* în ziua de azi, *Niciun profil activ*
+  (protecție la îngheț) într-o zi pe care nu o acoperă niciun profil activ. O
+  atingere deschide camera cu editorul programului; butonul de copiere, cu
+  *Copiază în alte camere*.
 - **Statistici**: `recorder/statistics_during_period` (`change` al senzorilor
   *Timp de încălzire*, `mean` / `min` / `max` ai senzorilor *Medie afară*,
   *Temperatura camerei* și *Temperatură țintă*) pentru ultimele 14 zile, 12
@@ -503,6 +506,16 @@ active). Taburi (ultimul se păstrează în browser):
   (registrul de entități din frontend); ora este `last_updated`.
 - **Istoric**: alertele active (din `alerts` ale camerelor, o singură dată;
   camera și începutul din jurnal), apoi `advanced_climate/history`.
+
+Comanda WebSocket `advanced_climate/week` (opțional `entry_id`): pentru
+fiecare casă încărcată `{entry_id, name, days: [{date, workday, weekday}] (azi
+și următoarele 6), events: [{start, end, summary}], vacation: {start, end,
+resume, preset} | null, rooms: [{room_id, name, editable, profiles: [{date,
+profile, forced}], changes: [{at, preset}], levels: [{start, end, preset,
+summary}]}]}`. `changes` încep la începutul zilei de azi și sunt calculate la
+fel cum își calculează camera programul (`Schedule.upcoming` cu zilele
+lucrătoare și calendarul); o cameră cu helper de program are doar
+`editable: false`.
 
 Comanda WebSocket `advanced_climate/history` (opțional `entry_id`): pentru
 fiecare casă încărcată `{entry_id, name, temperature_unit, rooms: [{room_id,

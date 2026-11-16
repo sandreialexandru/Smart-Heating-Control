@@ -29,15 +29,25 @@ room is open in the middle, with everything the card shows and does.
 
 ## Schedule
 
-Every room on one day, with the bar of the profile that room uses that day on
-a shared time line from 00:00 to 24:00.
+Today and the next 6 days as the schedule will run them: every room on the
+day chosen, with its levels on a shared time line from 00:00 to 24:00.
 
-- The day is chosen above the bars; today is marked and opens first. On today
-  a line shows the time now.
-- Next to each bar is the name of the profile used that day.
-- A room with no active profile for that day shows *No active profile: frost
-  protection*: on such a day the room keeps the frost protection (see
-  [chapter 4](04-schedule.md)).
+- The days are chosen above the bars, each with its date; today is first and
+  marked. On today a line shows the time now.
+- Above the bars, what is special about the day:
+  - a **holiday**: a weekday that the Workday integration (the *Workday
+    sensor* of the house, see [chapter 4](04-schedule.md)) says is a day off,
+    run with the profile of weekend days; or a weekend day that is a workday;
+  - a **profile from the calendar**: a calendar event titled with the name
+    of a profile chooses it for that day;
+  - a **level from the calendar**: a calendar event titled with the name of a
+    level sets that level for its hours; it is drawn over the bars, hatched;
+  - the **vacation** planned in the house, with its start and end; it is drawn
+    over the bars, hatched, until the heating starts again before its end.
+- Next to each bar is the name of the profile used that day (*calendar* when
+  a calendar event chose it).
+- A room with no active profile that day shows *No active profile: frost
+  protection*.
 - A room that follows a Schedule helper shows that its schedule is edited in
   the helper.
 - A tap on a room opens it on the Rooms tab with its schedule editor open.
@@ -45,11 +55,11 @@ a shared time line from 00:00 to 24:00.
   rooms*: its whole schedule is copied to the rooms chosen (see
   [chapter 10](10-card.md)).
 
-The profile of a day is chosen as the integration chooses it: a profile of
-that weekday, else the one of workdays or weekend days, else the one of all
-days. Here workdays are Monday to Friday: days off from a calendar and
-profiles chosen by a calendar event are not shown in this tab (the room's own
-schedule and its chart show the day as it really is).
+The days are computed by the integration as the rooms compute them, with the
+start of the schedule day of the house. What cannot be known ahead is not in
+them: presence (home or away), open windows, manual changes and a house mode
+changed by hand. The holidays and the calendar events are read for today and
+the next 7 days, every hour.
 
 ## Statistics
 

@@ -28,23 +28,6 @@ export function uncoveredDays(meta) {
   };
 }
 
-/**
- * The profile a weekday uses (0 = Monday), as the integration chooses it: an
- * active profile of that weekday, else the one of workdays (Monday to Friday)
- * or weekend days, else the one of all days; null when none is active. A day
- * off or a profile forced from a calendar is not known here.
- */
-export function profileForDay(meta, day) {
-  const active = Object.entries(meta || {}).filter(([, m]) => m && m.enabled);
-  const own = active.find(([, m]) => Array.isArray(m.days) && m.days.includes(WEEKDAY_KEYS[day]));
-  if (own) return own[0];
-  for (const wanted of [day < 5 ? "workday" : "weekend", "all"]) {
-    const found = active.find(([, m]) => m.days === wanted);
-    if (found) return found[0];
-  }
-  return null;
-}
-
 /** Days a new profile is for, from its name (it starts off). */
 export function guessDays(name) {
   if (name === "workday" || name === "weekend") return name;

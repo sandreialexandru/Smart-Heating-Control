@@ -25,11 +25,13 @@ GitHub releases.
   temperatures: the mean outdoor temperature under each bar, the mean with the
   lowest and highest in the title and in the detail of a bar, and each room's
   mean temperature and target (its lowest and highest when hovered).
-- 🗓️ **Schedule of the week** (panel, *Schedule* tab): every room on one day,
-  the bars of the profile each one uses that day on a shared time line, with
-  the time now on today; a day without an active profile says so. A tap on a
-  room opens it with its schedule editor; its copy button, with the rooms to
-  copy its schedule to.
+- 🗓️ **The next days** (panel, *Schedule* tab): today and the next 6 days as
+  the schedule will run them, every room on the day chosen with its levels on
+  a shared time line and the time now on today. The holidays (Workday), the
+  profiles and the levels set by calendar events and the planned vacation are
+  in: said above the bars, the levels and the vacation drawn over them. A tap
+  on a room opens it with its schedule editor; its copy button, with the
+  rooms to copy its schedule to.
 - 📋 **Copy a schedule to other rooms** (card and panel, *Schedule* of a room):
   *Copy to other rooms* gives the rooms chosen of the house the same schedule,
   every profile with its days, in place of their own.

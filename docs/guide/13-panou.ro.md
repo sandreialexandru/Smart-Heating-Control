@@ -30,15 +30,27 @@ mijloc, cu tot ce arată și face cardul.
 
 ## Program
 
-Toate camerele într-o zi, cu bara profilului pe care îl folosește fiecare
-cameră în ziua aceea, pe o axă comună de la 00:00 la 24:00.
+Azi și următoarele 6 zile, așa cum le va rula programul: toate camerele în
+ziua aleasă, cu nivelurile lor pe o axă comună de la 00:00 la 24:00.
 
-- Ziua se alege deasupra barelor; ziua de azi este marcată și se deschide
-  prima. Azi, o linie arată ora curentă.
-- Lângă fiecare bară este numele profilului folosit în ziua aceea.
+- Zilele se aleg deasupra barelor, fiecare cu data ei; ziua de azi este prima
+  și este marcată. Azi, o linie arată ora curentă.
+- Deasupra barelor, ce are ziua deosebit:
+  - o **sărbătoare**: o zi lucrătoare pe care integrarea Workday (*senzorul
+    Workday* al casei, vezi [capitolul 4](04-program.ro.md)) o arată liberă,
+    rulată cu profilul zilelor de weekend; sau o zi de weekend care este
+    lucrătoare;
+  - un **profil din calendar**: un eveniment din calendar cu numele unui
+    profil îl alege pentru ziua aceea;
+  - un **nivel din calendar**: un eveniment din calendar cu numele unui nivel
+    pune acel nivel pe orele lui; apare peste bare, hașurat;
+  - **vacanța** programată a casei, cu începutul și sfârșitul ei; apare peste
+    bare, hașurată, până când încălzirea pornește din nou înaintea sfârșitului
+    ei.
+- Lângă fiecare bară este numele profilului folosit în ziua aceea
+  (*calendar* când l-a ales un eveniment din calendar).
 - O cameră fără profil activ în ziua aceea arată *Niciun profil activ:
-  protecție la îngheț*: într-o asemenea zi camera păstrează protecția la
-  îngheț (vezi [capitolul 4](04-program.ro.md)).
+  protecție la îngheț*.
 - O cameră care urmează un helper Schedule arată că programul ei se editează
   în helper.
 - O atingere pe o cameră o deschide în tabul Camere, cu editorul programului
@@ -47,12 +59,11 @@ cameră în ziua aceea, pe o axă comună de la 00:00 la 24:00.
   alte camere*: tot programul ei se copiază în camerele alese (vezi
   [capitolul 10](10-card.ro.md)).
 
-Profilul unei zile se alege la fel ca în integrare: un profil al acelei zile
-din săptămână, altfel cel al zilelor lucrătoare sau al zilelor de weekend,
-altfel cel al tuturor zilelor. Aici zilele lucrătoare sunt de luni până
-vineri: zilele libere dintr-un calendar și profilele alese de un eveniment din
-calendar nu apar în acest tab (programul camerei și graficul ei arată ziua așa
-cum este de fapt).
+Zilele sunt calculate de integrare la fel cum le calculează camerele, cu
+începutul zilei de program al casei. Ce nu se poate ști dinainte nu apare:
+prezența (acasă sau plecat), ferestrele deschise, schimbările manuale și modul
+casei schimbat de mână. Sărbătorile și evenimentele din calendar se citesc
+pentru azi și următoarele 7 zile, la fiecare oră.
 
 ## Statistici
 

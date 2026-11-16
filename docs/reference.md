@@ -459,12 +459,14 @@ kept in the browser):
 - **Rooms**: the house, the rooms, the chosen room open (kept in the address as
   `#<room_id>` and in the browser). Below 870 px a list, a room on the whole
   screen with *Back*.
-- **Schedule**: every room on a chosen weekday, the bar of the profile chosen
-  for it as the integration does (weekday profile, else workday / weekend, else
-  all days; workdays Monday to Friday, without the calendar), *now* on today,
-  *No active profile* (frost protection) for a day no active profile covers.
-  A tap opens the room with its schedule editor; the copy button, with *Copy
-  to other rooms*.
+- **Schedule**: today and the next 6 days from `advanced_climate/week`: every
+  room on the day chosen, its levels (`changes`), the calendar events titled
+  with a level (`levels`) and the vacation until it resumes drawn over them;
+  above, a holiday (a Monday–Friday that is not a workday) or a workday on a weekend
+  day, the profiles forced by the calendar, the levels from the calendar and
+  the vacation. *now* on today, *No active profile* (frost protection) for a
+  day no active profile covers. A tap opens the room with its schedule editor;
+  the copy button, with *Copy to other rooms*.
 - **Statistics**: `recorder/statistics_during_period` (`change` of the
   *Heating time* sensors, `mean` / `min` / `max` of *Outdoor average*,
   *Room temperature* and *Target temperature*) for the last 14 days, 12
@@ -476,6 +478,15 @@ kept in the browser):
   the frontend); the time is `last_updated`.
 - **History**: the alerts on now (from the `alerts` of the rooms, once each;
   room and start from the journal), then `advanced_climate/history`.
+
+WebSocket command `advanced_climate/week` (optional `entry_id`): for every
+loaded house `{entry_id, name, days: [{date, workday, weekday}] (today and the
+next 6), events: [{start, end, summary}], vacation: {start, end, resume,
+preset} | null, rooms: [{room_id, name, editable, profiles: [{date, profile,
+forced}], changes: [{at, preset}], levels: [{start, end, preset, summary}]}]}`.
+`changes` start at the start of today and are computed as the room computes
+its schedule (`Schedule.upcoming` with the workdays and the calendar); a room
+on a Schedule helper has `editable: false` only.
 
 WebSocket command `advanced_climate/history` (optional `entry_id`): for every
 loaded house `{entry_id, name, temperature_unit, rooms: [{room_id, name,

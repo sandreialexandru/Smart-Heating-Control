@@ -98,6 +98,44 @@
         window.calls.ws.push(msg);
         if (o.historyFails) throw new Error("history down");
         if (msg.type === "recorder/statistic_during_period") return { change: 1.5 };
+        if (msg.type === "advanced_climate/week") {
+          // Today and the next 6 days in the time zone of the house, as the integration computes them.
+          const wk = o.week || {};
+          if (wk.fail) throw new Error("week down");
+          const zone = o.tz || "Europe/Bucharest";
+          const dateOf = (t) => new Date(t).toLocaleDateString("en-CA", { timeZone: zone });
+          const offsetOf = (t) => (new Intl.DateTimeFormat("en-US", { timeZone: zone, timeZoneName: "longOffset" }).formatToParts(new Date(t))
+            .find((x) => x.type === "timeZoneName").value.replace("GMT", "") || "+00:00");
+          const at = (date, hm) => { const guess = Date.parse(`${date}T${hm}:00Z`); return `${date}T${hm}:00${offsetOf(guess)}`; };
+          const days = [];
+          for (let i = 0; i < 7; i++) {
+            const date = dateOf(now + i * 864e5);
+            const weekday = (new Date(`${date}T12:00:00Z`).getUTCDay() + 6) % 7;
+            days.push({ date, weekday, workday: (wk.holiday || []).includes(i) ? false : weekday < 5 });
+          }
+          const roomsOut = rooms.map((r) => {
+            if (r.scheduleEditable === false) return { room_id: r.id, name: r.name, editable: false };
+            const profiles = days.map((d, i) => {
+              const forced = wk.forced && wk.forced.day === i ? wk.forced.profile : null;
+              return { date: d.date, profile: forced || (r.profileDays && !Object.values(r.profileDays).some((m) => m.enabled) ? null : d.workday ? "workday" : "weekend"), forced: !!forced };
+            });
+            const changes = [];
+            profiles.forEach((p, i) => {
+              const slots = p.profile ? sched[p.profile] : [{ time: "00:00", preset: "frost" }];
+              for (const sl of slots) {
+                const c = { at: at(days[i].date, sl.time), preset: sl.preset };
+                if (!changes.length || changes[changes.length - 1].preset !== c.preset) changes.push(c);
+              }
+            });
+            const levels = (wk.levels || []).map((lv) => ({ start: at(days[lv.day].date, lv.from), end: at(days[lv.day].date, lv.to), preset: lv.preset, summary: lv.summary }));
+            return { room_id: r.id, name: r.name, editable: true, profiles, changes, levels };
+          });
+          const v = wk.vacation;
+          return { houses: [{ entry_id: entry, name: house, days,
+            events: (wk.levels || []).map((lv) => ({ start: at(days[lv.day].date, lv.from), end: at(days[lv.day].date, lv.to), summary: lv.summary })),
+            vacation: v ? { start: at(days[v.fromDay].date, v.from), end: at(days[v.toDay].date, v.to), resume: at(days[v.toDay].date, v.resume || v.to), preset: "away" } : null,
+            rooms: roomsOut }] };
+        }
         if (msg.type === "recorder/statistics_during_period") {
           if (o.statsFail) throw new Error("statistics down");
           // One row a period from the start to now: a changing heating time per sensor.

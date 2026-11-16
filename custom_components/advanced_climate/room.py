@@ -813,17 +813,10 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             timedelta(seconds=float(self.config[CONF_WINDOW_CLOSE_DELAY])),
         )
         if self.window.open and not was_open:
-            # The values before the window matter only while its rule changes
-            # the devices (a pause, mode Off / Summer or no season is above it).
-            if (
-                not self.house.paused
-                and self.house.mode not in (MODE_OFF, MODE_SUMMER)
-                and self.house.season_active
-            ):
-                self._remember_before_window()
-            else:
-                self._window_before = {}
-                self._window_before_until = None
+            # Also when a rule above the window holds the room (pause, mode Off
+            # or Summer, no season): nothing is sent then, the device keeps its
+            # values and the memory ends a few minutes after the window closes.
+            self._remember_before_window()
         if closed:
             self._window_closed(now)
             self.house.clear_alert(f"window_{self.id}")

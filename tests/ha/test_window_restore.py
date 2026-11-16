@@ -12,6 +12,7 @@ from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import Context, HomeAssistant
 from pytest_homeassistant_custom_component.common import async_mock_service
 
+from custom_components.advanced_climate.const import VERIFY_DELAY
 from tests.ha.test_ha_devices import _house, _room, _tick, _unload
 
 TRV = {
@@ -66,7 +67,7 @@ async def test_a_trv_reporting_its_old_target_after_a_window_is_not_manual(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """The 17:30 manual change ends at 19:30; after the window the schedule is eco."""
-    entry, room, modes, _temperatures = await _window_house(hass, freezer)
+    entry, room, modes, temperatures = await _window_house(hass, freezer)
     await _open_window(hass, freezer, modes)
     await _tick(hass, freezer, 35 * 60)  # 19:35: the fixed 2 h manual change ended
     assert room.override is None
@@ -77,6 +78,7 @@ async def test_a_trv_reporting_its_old_target_after_a_window_is_not_manual(
 
     # The TRV wakes and goes back to auto with the target it had before the
     # window (22), not with the eco of 06:30 (17).
+    sent = len(temperatures)
     hass.states.async_set(
         "climate.trv",
         "auto",
@@ -88,6 +90,11 @@ async def test_a_trv_reporting_its_old_target_after_a_window_is_not_manual(
     assert room.decision is not None
     assert room.decision.rule == "schedule"
     assert room.target_temperature == 17.0
+    # And the TRV is told the eco again, so it does not stay at its old 22: the
+    # eco sent at the close is still pending (the report left the target as it
+    # was), so it is sent again by the verification of that command.
+    await _tick(hass, freezer, VERIFY_DELAY)
+    assert [c.data["temperature"] for c in temperatures[sent:]][-1:] == [17.0]
     await _unload(hass, entry)
 
 

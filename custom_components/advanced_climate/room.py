@@ -1404,6 +1404,9 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             "rule": decision.rule,
             "target": decision.target.as_dict(),
             "description": decision.description,
+            # The reason in any language (the panel), temperatures in °C.
+            "key": decision.key,
+            "params": dict(decision.params),
         }
         self.decisions.append(entry)
         self.hass.bus.async_fire(

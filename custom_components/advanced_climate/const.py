@@ -479,3 +479,5 @@ SENT_STABLE_SECONDS: Final = 60
 # How long a limit learned from a thermostat is kept (then it is tried again).
 DEVICE_LIMIT_HOURS: Final = 24
 MAX_DECISION_LOG: Final = 100
+# Alerts kept for the history of the panel (each with its start and end), per house.
+MAX_ALERT_LOG: Final = MAX_DECISION_LOG

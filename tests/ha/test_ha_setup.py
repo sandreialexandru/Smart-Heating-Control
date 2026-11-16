@@ -441,6 +441,54 @@ async def test_panel_in_the_sidebar_until_the_last_house_is_deleted(
         assert PANEL_URL not in hass.data["frontend_panels"]
 
 
+async def test_history_of_the_decisions_and_alerts(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_ws_client
+) -> None:
+    """The panel reads every decision of the rooms and every alert with its start and end."""
+    entry = await _setup(hass, freezer)
+    house = entry.runtime_data
+    room = next(iter(house.rooms.values()))
+    notifier = house.notifier
+    params = {"entity": "climate.trv", "minutes": 15}
+    notifier.notify("dev", "Unavailable", code="device_unavailable", params=params, room=room.id)
+    freezer.tick(600)
+    # Told again while it applies: the same line, with the values of now.
+    notifier.notify(
+        "dev",
+        "Unavailable",
+        code="device_unavailable",
+        params={**params, "minutes": 25},
+        room=room.id,
+    )
+    freezer.tick(600)
+    notifier.clear("dev")
+    notifier.notify("dev", "Unavailable", code="device_unavailable", params=params, room=room.id)
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 1, "type": "advanced_climate/history"})
+    msg = await client.receive_json()
+    assert msg["success"], msg
+    (result,) = msg["result"]["houses"]
+    assert result["entry_id"] == entry.entry_id
+    first, second = result["alerts"]
+    assert first["code"] == "device_unavailable" and first["room"] == room.id
+    assert first["params"]["minutes"] == 25
+    assert first["end"] is not None and second["end"] is None
+    (rooms,) = result["rooms"]
+    assert rooms["room_id"] == room.id and rooms["decisions"]
+    last = rooms["decisions"][-1]
+    assert last["rule"] == room.decision.rule
+    assert last["reason_key"] == room.decision.key
+
+    # Kept over a restart: an alert still open then ends at the restart.
+    saved = house._data_to_save()["house"]["alert_journal"]
+    assert len(saved) == 2
+    notifier.journal.clear()
+    notifier.load_journal(saved, dt_util.utcnow())
+    assert notifier.journal[-1]["end"] is not None and notifier.journal[-1]["restart"] is True
+    assert "restart" not in notifier.journal[0]
+
+
 async def test_card_resource_moved_after_the_rename(hass: HomeAssistant) -> None:
     """The resource of the card before the rename is moved to the new URL."""
     from custom_components.advanced_climate.const import CARD_URL, LEGACY_CARD_URL

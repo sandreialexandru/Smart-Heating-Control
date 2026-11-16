@@ -41,6 +41,7 @@ from .house import House
 from .scenarios import check as check_scenarios
 from .scenarios import remove_issues as remove_scenario_issues
 from .services import async_setup_services
+from .websocket import async_setup_websocket
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +63,7 @@ type AdvancedClimateConfigEntry = ConfigEntry[House]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the integration (services and the Lovelace card)."""
     async_setup_services(hass)
+    async_setup_websocket(hass)
     await async_register_card(hass)
     return True
 

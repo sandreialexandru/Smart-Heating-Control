@@ -10,6 +10,7 @@
     "proximity",
     "schedule",
     "weather",
+    "websocket_api",
     "workday"
   ],
   "categories": [

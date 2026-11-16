@@ -10,6 +10,7 @@ the quiet hours and telling the end of an alert when worth it.
 from __future__ import annotations
 
 import logging
+from collections import deque
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -27,6 +28,7 @@ from .const import (
     CONF_QUIET_END,
     CONF_QUIET_START,
     DOMAIN,
+    MAX_ALERT_LOG,
 )
 
 if TYPE_CHECKING:
@@ -51,6 +53,30 @@ class Notifier:
         self.delivered: dict[str, dict[str, Any]] = {}
         # Messages held by the quiet hours, in order: (key or None, message dict).
         self.deferred: list[tuple[str | None, dict[str, Any]]] = []
+        # Every alert with its start and end (end None: it still applies), oldest first.
+        self.journal: deque[dict[str, Any]] = deque(maxlen=MAX_ALERT_LOG)
+
+    def load_journal(self, items: list[dict[str, Any]], now: datetime) -> None:
+        """The alerts saved before a restart: those still open end at the restart.
+
+        After a restart an alert that still applies is told again (a new line):
+        whether it applied in between is not known.
+        """
+        for item in items or []:
+            if not isinstance(item, dict) or not item.get("start"):
+                continue
+            entry = dict(item)
+            if entry.get("end") is None:
+                entry["end"] = now.isoformat()
+                entry["restart"] = True
+            self.journal.append(entry)
+
+    def _open_entry(self, key: str) -> dict[str, Any] | None:
+        """The line of the journal of an alert that still applies."""
+        for entry in reversed(self.journal):
+            if entry.get("key") == key and entry.get("end") is None:
+                return entry
+        return None
 
     @property
     def options(self) -> dict[str, Any]:
@@ -76,6 +102,21 @@ class Notifier:
         house). ``message`` is the English text, used when a code is unknown.
         """
         now = dt_util.utcnow()
+        entry = self._open_entry(key)
+        if entry is None:
+            self.journal.append(
+                {
+                    "key": key,
+                    "code": code,
+                    "params": params or {},
+                    "room": room,
+                    "start": now.isoformat(),
+                    "end": None,
+                }
+            )
+            self.house.async_save()
+        else:
+            entry["params"] = params or {}  # the values of now (minutes, humidity...)
         self.active[key] = {
             "code": code,
             "params": params or {},
@@ -100,6 +141,9 @@ class Notifier:
     def clear(self, key: str) -> None:
         """The alert no longer applies: tell it when worth it, allow it again."""
         self.active.pop(key, None)
+        if (entry := self._open_entry(key)) is not None:
+            entry["end"] = dt_util.utcnow().isoformat()
+            self.house.async_save()
         sent = self.sent_at.pop(key, None) is not None
         item = self.delivered.pop(key, None)
         if not sent:

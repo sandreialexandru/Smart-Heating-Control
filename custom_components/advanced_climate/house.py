@@ -445,6 +445,7 @@ class House:
                 "source_choice": self.source_chooser.choice,
                 "source_active": self.source_chooser.active,
                 "workday_cache": dict(list(self.workday_cache.items())[-20:]),
+                "alert_journal": list(self.notifier.journal),
             },
             "rooms": {room_id: room.as_dict() for room_id, room in self.rooms.items()},
         }

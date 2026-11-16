@@ -163,6 +163,10 @@ const PANEL = [
   ["panel-schedule-edit", { ...P, hash: "r1" }, { rooms: R1 }, steps(click('.pmain [data-key="sched-r1"]'), click('.pmain [data-action="edit"][data-room="r1"]'))],
   ["panel-chart", { ...P, hash: "r1" }, { rooms: R1 }, openChart()],
   ["panel-room-living", { ...P, hash: "r3" }, { rooms: ROOMS }],
+  ["panel-stats", P, { rooms: ROOMS }, click('[data-action="panel-tab"][data-option="stats"]')],
+  ["panel-stats-weeks", P, { rooms: ROOMS }, steps(click('[data-action="panel-tab"][data-option="stats"]'), click('[data-action="stats-period"][data-option="week"]'))],
+  ["panel-history", P, { rooms: ROOMS }, click('[data-action="panel-tab"][data-option="history"]')],
+  ["panel-history-alerts", P, { rooms: ROOMS }, steps(click('[data-action="panel-tab"][data-option="history"]'), click('[data-action="history-kind"][data-option="alert"]'))],
   ["act-panel-choose", P, { rooms: ROOMS }, steps(click('.pside [data-key="room-r4"]'), click('.pmain [data-key="quick-r4"]'), click('.pmain [data-action="quick-preset"][data-preset="eco"]'))],
 ];
 

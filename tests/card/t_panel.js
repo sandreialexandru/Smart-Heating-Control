@@ -127,7 +127,7 @@ test("no houses yet: says so", async (p) => {
 
 test("hover lights the whole row of a room, not a box inside it; a click on its margin opens it", async (p) => {
   await openPanel(p, { rooms: ROOMS });
-  const at = await inPanel(p, (sr) => { const r = sr.querySelector('.pside [data-key="room-r2"]').closest(".block").getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2, r.left + 4, r.top + r.height / 2]; });
+  const at = await inPanel(p, (sr) => { const b = sr.querySelector('.pside [data-key="room-r2"]').closest(".block"); b.scrollIntoView({ block: "center" }); const r = b.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2, r.left + 4, r.top + r.height / 2]; });
   const look = () => inPanel(p, (sr) => { const b = sr.querySelector('.pside [data-key="room-r2"]'); return { row: getComputedStyle(b.closest(".block")).backgroundColor, button: getComputedStyle(b).backgroundColor }; });
   const before = await look();
   await p.mouse.move(at[0], at[1]); await p.waitForTimeout(150);
@@ -201,3 +201,118 @@ test("dark theme: the panel and its rows follow the theme", async (p) => {
   const c = await inPanel(p, (sr) => ({ page: getComputedStyle(sr.host).backgroundColor, text: getComputedStyle(sr.querySelector(".pside .name")).color }));
   eq(c, { page: "rgb(17, 17, 17)", text: "rgb(225, 225, 225)" }, "theme colours");
 }, { dark: true });
+
+// ---------------------------------------------------------------- statistics and history
+const R4 = [{ id: "r1", name: "Bedroom" }, { id: "r2", name: "Kid", preset: "sleep" }, { id: "r3", name: "Living" }];
+const tab = async (p, t) => { await clickIn(p, `[data-action="panel-tab"][data-option="${t}"]`); await p.waitForTimeout(300); };
+const extraText = (p) => inPanel(p, (sr) => sr.querySelector(".pextra").innerText);
+
+test("statistics: the house by day, the rooms by their time, the starts asked; weeks and months", async (p) => {
+  await openPanel(p, { rooms: R4 });
+  await tab(p, "stats");
+  const r = await inPanel(p, (sr) => ({
+    bars: sr.querySelectorAll(".ps-cols")[0].querySelectorAll(".ps-col").length,
+    rooms: [...sr.querySelectorAll(".ps-row .ps-name")].map((n) => n.innerText),
+    pct: [...sr.querySelectorAll(".ps-row .ps-pct")].map((n) => parseInt(n.innerText, 10)),
+    hidden: ["phouse", "pside", "pmain"].map((c) => getComputedStyle(sr.querySelector(`.${c}`)).display),
+  }));
+  eq(r.bars, 14, "14 days");
+  eq(r.rooms.length, 3, "every room");
+  ok(Math.abs(r.pct.reduce((a, b) => a + b, 0) - 100) <= 2, "shares add up: " + r.pct);
+  eq(r.hidden, ["none", "none", "none"], "the rooms tab hidden");
+  const t = await extraText(p);
+  ok(t.includes("Heating time of the house") && t.includes("last 14 days") && t.includes("Times the heat source was asked to start"), t.slice(0, 200));
+  const ask = await p.evaluate(() => calls.ws.filter((m) => m.type === "recorder/statistics_during_period").at(-1));
+  eq([ask.period, ask.types, ask.statistic_ids.length, !!ask.end_time], ["day", ["change"], 4, true], "the statistics asked");
+  ok(ask.statistic_ids.includes("sensor.home_heating_runtime") && ask.statistic_ids.includes("sensor.kid_heating_runtime"), "house and rooms");
+  await clickIn(p, '[data-action="stats-period"][data-option="month"]'); await p.waitForTimeout(300);
+  eq(await inPanel(p, (sr) => sr.querySelectorAll(".ps-cols").length), 1, "no starts by month (only by day)");
+  ok((await extraText(p)).includes("last 12 months"), "months");
+  eq((await p.evaluate(() => calls.ws.filter((m) => m.type === "recorder/statistics_during_period").at(-1))).period, "month", "asked by month");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("statistics: the tab is kept in the browser; the rows sorted by time", async (p) => {
+  await openPanel(p, { rooms: R4 });
+  await tab(p, "stats");
+  await openPanel(p, { rooms: R4 });
+  await p.waitForTimeout(300);
+  ok(await inPanel(p, (sr) => getComputedStyle(sr.querySelector(".pextra")).display !== "none"), "statistics again");
+  const hours = await inPanel(p, (sr) => [...sr.querySelectorAll(".ps-row .ps-fill")].map((f) => parseFloat(f.style.width)));
+  eq([...hours].sort((a, b) => b - a), hours, "longest first");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("statistics: days without history kept have no bar; statistics that fail say so", async (p) => {
+  await openPanel(p, { rooms: R4, emptyHistory: true });
+  await tab(p, "stats");
+  const starts = await inPanel(p, (sr) => { const c = sr.querySelectorAll(".ps-cols")[1]; return [...c.querySelectorAll(".ps-bar")].map((b) => parseFloat(b.style.height)); });
+  eq(starts.filter((h) => h > 0).length, 0, "no bars");
+  ok((await inPanel(p, (sr) => sr.querySelectorAll(".ps-cols")[1].querySelector(".ps-col").title)).endsWith("–"), "a dash, not 0");
+  await openPanel(p, { rooms: R4, statsFail: true });
+  await p.waitForTimeout(300);
+  ok((await extraText(p)).includes("The statistics could not be read"), "failure");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("history: newest first by day; decisions and alerts with start, end and the restart", async (p) => {
+  await openPanel(p, { rooms: R4 });
+  await tab(p, "history");
+  const r = await inPanel(p, (sr) => ({
+    days: sr.querySelectorAll(".ph-day").length,
+    first: sr.querySelector(".ph-list li").innerText.replace(/\s+/g, " "),
+    lines: [...sr.querySelectorAll(".ph-list li")].map((li) => li.innerText.replace(/\s+/g, " ")),
+  }));
+  eq(r.days, 3, "three days");
+  ok(r.first.includes("Schedule: Home"), "newest first: " + r.first);
+  const mold = r.lines.find((l) => l.includes("Mold risk"));
+  ok(mold && mold.includes("still applies") && !mold.includes("Mold risk: Mold risk"), "mold once, still: " + mold);
+  const dev = r.lines.find((l) => l.includes("Device unavailable"));
+  ok(dev && dev.includes("(45 min)"), "how long: " + dev);
+  const out = r.lines.find((l) => l.includes("Whole house"));
+  ok(out && out.includes("Home Assistant restarted"), "the restart: " + out);
+  eq(await p.evaluate(() => calls.ws.filter((m) => m.type === "advanced_climate/history").length), 1, "asked once");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("history: only decisions, only alerts, one room (with the alerts of the whole house)", async (p) => {
+  await openPanel(p, { rooms: R4 });
+  await tab(p, "history");
+  const lines = () => inPanel(p, (sr) => [...sr.querySelectorAll(".ph-list li")].map((li) => [li.className, li.innerText.replace(/\s+/g, " ")]));
+  await clickIn(p, '[data-action="history-kind"][data-option="decision"]'); await p.waitForTimeout(150);
+  ok((await lines()).every(([c]) => c === "ph-decision"), "decisions only");
+  await clickIn(p, '[data-action="history-kind"][data-option="alert"]'); await p.waitForTimeout(150);
+  eq((await lines()).length, 3, "the three alerts");
+  await clickIn(p, '[data-action="history-kind"][data-option="all"]'); await p.waitForTimeout(150);
+  await inPanel(p, (sr) => { const s = sr.querySelector(".ph-room"); s.value = "r2"; s.dispatchEvent(new Event("change", { bubbles: true })); });
+  await p.waitForTimeout(150);
+  const kid = await lines();
+  ok(kid.every(([, t]) => t.includes("Kid") || t.includes("Whole house")), "Kid and the whole house: " + JSON.stringify(kid));
+  ok(kid.some(([, t]) => t.includes("Whole house")) && !kid.some(([, t]) => t.includes("Bedroom")), "not the alerts of Bedroom");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("history that fails says so; Romanian texts", async (p) => {
+  await openPanel(p, { rooms: R4, historyLogFails: true });
+  await tab(p, "history");
+  ok((await extraText(p)).includes("The history could not be read"), "failure");
+  await openPanel(p, { rooms: R4, lang: "ro" });
+  await p.waitForTimeout(300);
+  const t = await extraText(p);
+  ok(t.includes("Decizii") && t.includes("Toate camerele") && t.includes("Toată casa") && t.includes("Home Assistant a repornit"), t.slice(0, 300));
+  eq(await inPanel(p, (sr) => [...sr.querySelectorAll('[data-action="panel-tab"]')].map((b) => b.innerText)), ["Camere", "Statistici", "Istoric"], "tabs");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("phone: the tabs over the list, none over an open room; statistics without sideways scroll", async (p) => {
+  await openPanel(p, { rooms: R4 }, { narrow: true });
+  ok(await shown(p, ".ptabs"), "tabs over the list");
+  await clickIn(p, '.pside [data-key="room-r1"]'); await p.waitForTimeout(150);
+  ok(!(await shown(p, ".ptabs")), "no tabs over a room");
+  await clickIn(p, ".pback"); await p.waitForTimeout(150);
+  await tab(p, "stats");
+  const over = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  ok(over <= 0, "no sideways scroll: " + over);
+  eq(await inPanel(p, (sr) => getComputedStyle(sr.querySelector(".ps-val")).display), "none", "no values over the bars");
+  await p.evaluate(() => { localStorage.removeItem("shc-panel-tab"); localStorage.removeItem("shc-panel-room"); history.replaceState(null, "", location.pathname); });
+}, { viewport: { width: 390, height: 844 }, touch: true });

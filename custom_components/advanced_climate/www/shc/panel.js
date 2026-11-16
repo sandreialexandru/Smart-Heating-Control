@@ -6,6 +6,8 @@
  * It extends the same base as the card (ShcBase): every part of the house and
  * the rooms is the card's own code, only the layout is the panel's.
  * The chosen room is kept in the address (#room) and in the browser.
+ * Two more tabs: the statistics (heating time by day, week, month) and the
+ * history (the decisions of the rooms, the alerts with their start and end).
  */
 
 import { ShcBase } from "./core/base.js";
@@ -14,6 +16,8 @@ import { esc } from "./core/format.js";
 import { STYLE } from "./core/style.js";
 
 const STORE = "shc-panel-room";
+const TAB_STORE = "shc-panel-tab";
+const TABS = ["rooms", "stats", "history"];
 
 const PANEL_STYLE = `
   :host { display: block; min-height: 100%; background: var(--primary-background-color); }
@@ -42,6 +46,46 @@ const PANEL_STYLE = `
   /* !important: a card element may set its own display. */
   .pbody > [hidden], :host([narrow][room]) .phouse, :host([narrow][room]) .pside { display: none !important; }
   :host([narrow]:not([room])) .pmain { display: none !important; }
+  /* The tabs: rooms, statistics, history. */
+  .ptabs { box-sizing: border-box; max-width: 1400px; margin: 0 auto; padding: 16px 16px 0; display: flex; justify-content: center; }
+  .ptabs .segmented { flex: 0 1 480px; }
+  :host([narrow]) .ptabs { padding: 8px 8px 0; }
+  :host([narrow][room][tab="rooms"]) .ptabs { display: none; }
+  .pextra { grid-column: 1 / -1; }
+  :host(:not([tab="rooms"])) .phouse, :host(:not([tab="rooms"])) .pside, :host(:not([tab="rooms"])) .pmain,
+  :host([tab="rooms"]) .pextra { display: none !important; }
+  .ps-stats .segmented, .ph-filters .segmented { max-width: 420px; }
+  .ps-title { margin: 8px 0 0; font-size: 0.95em; font-weight: 600; }
+  .ps-house { margin: 12px 0 0; font-size: 1.1em; }
+  .ps-cols { display: flex; gap: 6px; height: 190px; overflow-x: auto; }
+  .ps-col { flex: 1 0 34px; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+  .ps-area { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+  .ps-bar { width: 100%; max-width: 40px; background: var(--c); border-radius: 6px 6px 2px 2px; }
+  .ps-val, .ps-lab { font-size: 0.72em; color: var(--ac-muted); white-space: nowrap; }
+  .ps-rows { display: flex; flex-direction: column; gap: 8px; }
+  .ps-row { display: grid; grid-template-columns: minmax(70px, 160px) minmax(40px, 1fr) auto 3em; gap: 10px; align-items: center; }
+  .ps-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ps-track { height: 10px; border-radius: 5px; background: var(--ac-surface-2); overflow: hidden; }
+  .ps-fill { display: block; height: 100%; background: var(--c); border-radius: 5px; }
+  .ps-h, .ps-pct { font-size: 0.9em; text-align: right; white-space: nowrap; }
+  .ps-pct { color: var(--ac-muted); }
+  /* On a phone: narrower bars without their values (the title of a bar has it), a room on two lines. */
+  :host([narrow]) .ps-cols { gap: 3px; }
+  :host([narrow]) .ps-col { flex-basis: 16px; }
+  :host([narrow]) .ps-val { display: none; }
+  :host([narrow]) .ps-row { grid-template-columns: minmax(0, 1fr) auto 3em; row-gap: 4px; }
+  :host([narrow]) .ps-track { grid-column: 1 / -1; grid-row: 2; }
+  .ph-filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .ph-filters .segmented { flex: 1 1 260px; }
+  .ph-day { margin: 12px 0 0; font-size: 0.9em; font-weight: 600; color: var(--ac-muted); }
+  .ph-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .ph-list li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--ac-line); }
+  .ph-list li:last-child { border-bottom: 0; }
+  .ph-time { flex: none; min-width: 3.2em; color: var(--ac-muted); padding-top: 2px; }
+  .ph-ico { flex: none; display: inline-flex; color: var(--ac-muted); }
+  .ph-ico.warn { color: var(--ac-warn); }
+  .ph-ico.error { color: var(--ac-err); }
+  .ph-text { flex: 1; min-width: 0; }
   /* The open room is not folded from its title in the panel. */
   .pmain .room-title { cursor: default; }
   .pmain .room-title .chev { display: none; }
@@ -64,6 +108,14 @@ const writeStore = (room) => {
     // No storage (private window): the address still keeps the room.
   }
 };
+const readTab = () => {
+  try {
+    const tab = localStorage.getItem(TAB_STORE);
+    return TABS.includes(tab) ? tab : "rooms";
+  } catch (_err) {
+    return "rooms";
+  }
+};
 const hashRoom = () => decodeURIComponent((location.hash || "").slice(1)) || null;
 
 class ShcPanel extends ShcBase {
@@ -72,6 +124,7 @@ class ShcPanel extends ShcBase {
     // The parts are drawn as in a card with every option on, each room open.
     this._config = { ...DEFAULTS };
     this._room = hashRoom();
+    this._tab = readTab();
     this._onHash = () => {
       this._room = hashRoom();
       this._render();
@@ -123,7 +176,18 @@ class ShcPanel extends ShcBase {
     if (this._narrow) window.scrollTo(0, 0);
   }
 
-  /** The skeleton (bar, house, list, room) and the styles, made once. */
+  /** Show a tab (rooms, statistics, history), kept in the browser. */
+  _showTab(tab) {
+    this._tab = TABS.includes(tab) ? tab : "rooms";
+    try {
+      localStorage.setItem(TAB_STORE, this._tab);
+    } catch (_err) {
+      // No storage: the tab is not kept.
+    }
+    this._render();
+  }
+
+  /** The skeleton (bar, tabs, house, list, room, statistics or history) and the styles, made once. */
   _ensureCard() {
     if (this._card) return;
     this._addStyle(STYLE + PANEL_STYLE);
@@ -138,10 +202,15 @@ class ShcPanel extends ShcBase {
     top.querySelector(".pback").addEventListener("click", () => this._choose(null));
     const body = document.createElement("div");
     body.className = "pbody";
-    body.innerHTML = `<ha-card class="phouse"></ha-card><ha-card class="pside"></ha-card><ha-card class="pmain"></ha-card>`;
+    body.innerHTML = `<ha-card class="phouse"></ha-card><ha-card class="pside"></ha-card><ha-card class="pmain"></ha-card>
+      <ha-card class="pextra"></ha-card>`;
+    const tabs = document.createElement("nav");
+    tabs.className = "ptabs";
     // The chart window: alone in its holder, so a patch never moves it (it stays modal).
     this._popHolder = document.createElement("div");
-    root.append(this._popHolder, top, body);
+    root.append(this._popHolder, top, tabs, body);
+    this._tabs = tabs;
+    this._extra = body.querySelector(".pextra");
     this._top = top;
     this._house = body.querySelector(".phouse");
     this._side = body.querySelector(".pside");
@@ -157,6 +226,17 @@ class ShcPanel extends ShcBase {
     const room = this._chosen(rooms);
     const chosen = rooms.find((r) => r.attributes.room_id === room);
     this.toggleAttribute("room", !!chosen);
+    const tab = this._tab;
+    this.setAttribute("tab", tab);
+    this._patch(this._tabs, [
+      {
+        k: "tabs",
+        html: `<div class="segmented" style="--n:3" role="tablist">${TABS.map(
+          (t) => `<button class="seg ${t === tab ? "active" : ""}" role="tab" aria-selected="${t === tab}" data-action="panel-tab"
+            data-option="${t}">${esc(this._t(`tab_${t}`))}</button>`
+        ).join("")}</div>`,
+      },
+    ]);
 
     // The bar: Back and the name of the room on a phone, else SHC.
     const back = this._top.querySelector(".pback");
@@ -195,6 +275,10 @@ class ShcPanel extends ShcBase {
     this._card.hidden = !chosen;
     this._patch(this._card, chosen ? [{ k: `room-${room}`, html: this._roomHtml(chosen) }] : []);
 
+    // The statistics or the history (fetched only while shown).
+    const extra = tab === "stats" ? this._statsHtml(houses) : tab === "history" ? this._historyHtml(houses) : "";
+    this._patch(this._extra, extra ? [{ k: tab, html: extra }] : []);
+
     const popup = this._chartPopup();
     this._patch(this._popHolder, popup ? [popup] : []);
     this._tipColor();
@@ -212,7 +296,28 @@ class ShcPanel extends ShcBase {
     }
     const fold = ev.target.closest?.('[data-action="fold"][data-key^="room-"]');
     if (fold && this._card?.contains(fold)) return;
+    // The tabs and the choices of the statistics and the history.
+    const own = ev.target.closest?.('[data-action="panel-tab"], [data-action="stats-period"], [data-action="history-kind"]');
+    if (own) {
+      const option = own.dataset.option;
+      if (own.dataset.action === "panel-tab") this._showTab(option);
+      else if (own.dataset.action === "stats-period") this._statsP = option;
+      else this._historyKind = option;
+      this._render();
+      return;
+    }
     return super._onClick(ev);
+  }
+
+  /** The room chosen for the history. */
+  async _onChange(ev) {
+    if (ev.target?.dataset?.action === "history-room") {
+      this._historyRoom = ev.target.value;
+      ev.target.blur();
+      this._render();
+      return;
+    }
+    return super._onChange(ev);
   }
 }
 

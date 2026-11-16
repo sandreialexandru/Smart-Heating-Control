@@ -15,6 +15,16 @@ GitHub releases.
   rooms are a list and a room opens on the whole screen, with *Back*. The
   chosen room is kept in the address (`/shc#<room>`) and in the browser.
   Nothing to set up; the panel goes away with the last house deleted.
+- 📊 **Statistics** (panel, *Statistics* tab): the heating time of the house
+  by day, week or month (the last 14 days, 12 weeks or 12 months), each room's
+  time and share over the same span, and by day how many times the heat
+  source was asked to start. From the long-term statistics of Home Assistant;
+  the starts from its history, so only the days it still keeps (10 by default).
+- 🕘 **History** (panel, *History* tab): the decisions of every room and the
+  alerts with their start and end, newest first, by day; only decisions or
+  alerts, one room or all. The integration now keeps the alerts too (the last
+  100 of each house, as the last 100 decisions of each room); an alert still
+  on at a restart ends there and is told again after it.
 
 ### Changed
 

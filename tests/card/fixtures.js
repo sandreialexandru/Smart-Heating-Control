@@ -98,6 +98,34 @@
         window.calls.ws.push(msg);
         if (o.historyFails) throw new Error("history down");
         if (msg.type === "recorder/statistic_during_period") return { change: 1.5 };
+        if (msg.type === "recorder/statistics_during_period") {
+          if (o.statsFail) throw new Error("statistics down");
+          // One row a period from the start to now: a changing heating time per sensor.
+          const len = { day: 864e5, week: 7 * 864e5, month: 30 * 864e5 }[msg.period] || 864e5;
+          const out = {};
+          msg.statistic_ids.forEach((id, k) => {
+            const rows = [];
+            for (let t = Date.parse(msg.start_time), i = 0; t < now; t += len, i++) rows.push({ start: t, end: t + len, change: ((i + k) % 5) * 0.75 + (id.startsWith("sensor.home") ? 2 : 0.5) });
+            out[id] = rows;
+          });
+          return out;
+        }
+        if (msg.type === "advanced_climate/history") {
+          if (o.historyLogFails) throw new Error("history log down");
+          // Each room: three decisions; the house: an alert that ended and one that still applies.
+          const at = (h) => iso(now - h * HOUR);
+          return { houses: [{ entry_id: entry, name: house, temperature_unit: unit,
+            rooms: rooms.map((r) => ({ room_id: r.id, name: r.name, decisions: [
+              { time: at(26), rule: "schedule", target: { kind: "preset", preset: "sleep", temperature: null }, description: "Schedule: sleep", reason_key: "schedule", reason_params: { preset: "sleep" } },
+              { time: at(5), rule: "window_open", target: { kind: "off" }, description: "Window open", reason_key: "window_open", reason_params: {} },
+              { time: at(1), rule: "schedule", target: { kind: "preset", preset: "home", temperature: null }, description: "Schedule: home", reason_key: "schedule", reason_params: { preset: "home" } },
+            ] })),
+            alerts: [
+              { key: "dev", code: "device_unavailable", params: { entity: "climate.trv", minutes: 15 }, room: rooms[0]?.id, start: at(30), end: at(29.25) },
+              { key: "mold", code: "mold_risk", params: { surface: 84, humidity: 62 }, room: rooms[0]?.id, start: at(3), end: null },
+              { key: "out", code: "outdoor_unavailable", params: {}, room: null, start: at(50), end: at(49), restart: true },
+            ] }] };
+        }
         if (msg.type !== "history/history_during_period") return {};
         const s = Date.parse(msg.start_time), en = Date.parse(msg.end_time), out = {};
         const step = (o.historyStepMin || 15) * 60e3;

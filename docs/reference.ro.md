@@ -473,3 +473,39 @@ multe deodată) și un buton *Blocare* pentru blocarea modificărilor în camer�
 - **Limbă**: motivul deciziei și numele ajustărilor apar în limba cardului
   (senzorul *Decizie* le are ca `reason_key` și `reason_params`; `reason`
   rămâne textul în engleză).
+
+## Panoul SHC
+
+Un panou în bara laterală (`/shc`, titlul *SHC*, pentru toți utilizatorii),
+înregistrat odată cu prima casă și scos odată cu ultima. Este elementul
+`shc-panel`, încărcat din `/advanced_climate/<versiune>/shc/panel.js`, și
+desenează casa și camerele cu codul cardului (toate opțiunile cardului
+active). Taburi (ultimul se păstrează în browser):
+
+- **Camere**: casa, camerele, camera aleasă deschisă (păstrată în adresă ca
+  `#<room_id>` și în browser). Sub 870 px o listă, o cameră pe tot ecranul cu
+  *Înapoi*.
+- **Program**: toate camerele într-o zi aleasă, bara profilului ales pentru ea
+  ca în integrare (profilul zilei, altfel zile lucrătoare / weekend, altfel
+  toate zilele; zile lucrătoare de luni până vineri, fără calendar), *acum* în
+  ziua de azi, *Niciun profil activ* (protecție la îngheț) într-o zi pe care
+  nu o acoperă niciun profil activ. O atingere deschide camera cu editorul
+  programului.
+- **Statistici**: `recorder/statistics_during_period` (`change` al senzorilor
+  *Timp de încălzire*, `mean` / `min` / `max` ai senzorilor *Medie afară*,
+  *Temperatura camerei* și *Temperatură țintă*) pentru ultimele 14 zile, 12
+  săptămâni sau 12 luni; pornirile cerute pe zi din
+  `history/history_during_period` al senzorului *Cerere de căldură* al casei.
+  Se reîmprospătează la fiecare 5 minute cât timp tabul este afișat.
+  Dedesubt, modelul învățat al fiecărei camere (senzorii *Viteză de încălzire*
+  și *Viteză de răcire*).
+- **Istoric**: alertele active (din `alerts` ale camerelor, o singură dată;
+  camera și începutul din jurnal), apoi `advanced_climate/history`.
+
+Comanda WebSocket `advanced_climate/history` (opțional `entry_id`): pentru
+fiecare casă încărcată `{entry_id, name, temperature_unit, rooms: [{room_id,
+name, decisions: [{time, rule, target, description, reason_key,
+reason_params}]}], alerts: [{key, code, params, room, start, end,
+restart?}]}`. Integrarea păstrează ultimele 100 de decizii ale fiecărei
+camere și ultimele 100 de alerte ale fiecărei case; o alertă deschisă la o
+repornire se închide atunci (`restart: true`).

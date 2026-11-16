@@ -59,7 +59,7 @@
         target_kind: "preset", preset: r.preset || "home", temperature_unit: unit, target_temperature: T(r.target ?? 21),
         current_temperature: cur === null ? null : T(cur), offsets: r.offsets || [], presence: "home", window_open: !!r.window,
         override: r.override || null, profile: "workday", next_change: plan[1].at, next_preset: "sleep", plan,
-        schedule: sched, profile_days: { workday: { days: "workday", enabled: true }, weekend: { days: "weekend", enabled: true } }, schedule_error: null, schedule_editable: true,
+        schedule: sched, profile_days: r.profileDays || { workday: { days: "workday", enabled: true }, weekend: { days: "weekend", enabled: true } }, schedule_error: null, schedule_editable: r.scheduleEditable ?? true,
         presets: ["home", "eco", "away", "sleep", "comfort", "activity"], preset_names: {},
         levels: { home: T(21), eco: T(18), away: T(16), sleep: T(18.5), comfort: T(22), activity: T(19) },
         min_temperature: T(7), max_temperature: T(25), climate_entities: r.climates || [], device_preset: null, trv_boost: null,

@@ -99,6 +99,15 @@ type: custom:smart-heating-control-card
 Ogni parte si può nascondere; le opzioni sono nella
 [guida](docs/guide/10-card.md) (in inglese).
 
+## Il pannello
+
+Una pagina propria nella barra laterale, **SHC**, per tutti gli utenti: tutta
+la casa su una schermata, il programma di tutte le stanze in un giorno,
+statistiche (tempo di riscaldamento e temperature per giorno, settimana o
+mese, e cosa ha imparato ogni stanza) e la cronologia delle decisioni e degli
+avvisi, con gli avvisi attuali in alto. Nulla da configurare; i dettagli sono
+nella [guida](docs/guide/13-panel.md) (in inglese).
+
 ## Per iniziare
 
 [![Apri il tuo Home Assistant e aggiungi questo repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sandreialexandru&repository=Smart-Heating-Control&category=integration)

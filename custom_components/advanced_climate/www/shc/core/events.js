@@ -89,6 +89,17 @@ export const EventsMixin = (Base) =>
       }
     }
 
+    /** Open the schedule editor of a room (a copy of its schedule to change). */
+    _startEdit(room) {
+      const stateObj = this._rooms().find((s) => s.attributes.room_id === room);
+      if (!stateObj) return;
+      this._editing = room;
+      this._open[`sched-${room}`] = true;
+      this._draft = JSON.parse(JSON.stringify(stateObj.attributes.schedule));
+      this._draftDays = JSON.parse(JSON.stringify(stateObj.attributes.profile_days || {}));
+      this._pendingProfile = null;
+    }
+
     /** An open section of a room (its button opens and closes it). */
     _fold(key, title, content) {
       return `<div class="section" data-section="${esc(key)}"><div class="section-head">${esc(title)}</div>
@@ -293,15 +304,9 @@ export const EventsMixin = (Base) =>
           this._quickDone(room);
           return;
         }
-        case "edit": {
-          const stateObj = this._rooms().find((s) => s.attributes.room_id === room);
-          this._editing = room;
-          this._open[`sched-${room}`] = true;
-          this._draft = JSON.parse(JSON.stringify(stateObj.attributes.schedule));
-          this._draftDays = JSON.parse(JSON.stringify(stateObj.attributes.profile_days || {}));
-          this._pendingProfile = null;
+        case "edit":
+          this._startEdit(room);
           break;
-        }
         case "cancel":
           this._editing = null;
           this._draft = null;

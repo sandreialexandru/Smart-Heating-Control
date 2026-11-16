@@ -3,7 +3,9 @@
 *[Română](10-card.ro.md) · [Contents](README.md)*
 
 The integration has a Lovelace card with every control: the house, the rooms,
-the chart, the editable schedule and the details.
+the chart, the editable schedule and the details. The same rooms, with the
+schedule of the week, statistics and the history, are also on a page of their
+own in the sidebar: [the SHC panel](13-panel.md).
 
 <p align="center"><img src="../images/card-demo.gif" alt="The card in use" width="400"><br><sub>▶️ <a href="https://github.com/user-attachments/assets/31181198-e0fa-4510-bbfa-af9f790a19c7">The whole video (30 s, MP4)</a> · invented data</sub></p>
 

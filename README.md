@@ -95,6 +95,14 @@ type: custom:smart-heating-control-card
 
 Every part can be hidden; the options are in the [guide](docs/guide/10-card.md).
 
+## The panel
+
+A page of its own in the sidebar, **SHC**, for every user: the whole house on
+one screen, the schedule of every room on one day, statistics (heating time
+and temperatures by day, week or month, and what each room learned) and the
+history of the decisions and alerts, with the alerts on now on top. Nothing
+to set up; the [guide](docs/guide/13-panel.md) has the details.
+
 ## Get started
 
 [![Open your Home Assistant and add this repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sandreialexandru&repository=Smart-Heating-Control&category=integration)

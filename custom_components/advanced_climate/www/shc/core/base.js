@@ -6,6 +6,7 @@ import { ChartDataMixin } from "../chart/data.js";
 import { ChartInteractMixin } from "../chart/interact.js";
 import { HistoryMixin } from "../history/history.js";
 import { HouseMixin } from "../house/house.js";
+import { LearnedMixin } from "../learn/learned.js";
 import { AlertsMixin } from "../room/alerts.js";
 import { CompactMixin } from "../room/compact.js";
 import { DetailsMixin } from "../room/details.js";
@@ -16,6 +17,7 @@ import { RoomMixin } from "../room/room.js";
 import { ScheduleMixin } from "../schedule/editor.js";
 import { ProfilesMixin } from "../schedule/profiles.js";
 import { StatsMixin } from "../stats/stats.js";
+import { WeekMixin } from "../week/week.js";
 import { EventsMixin } from "./events.js";
 import { FormatMixin } from "./format.js";
 import { HaMixin } from "./ha.js";
@@ -40,6 +42,8 @@ const MIXINS = [
   CompactMixin,
   HouseMixin,
   StatsMixin,
+  LearnedMixin,
+  WeekMixin,
   HistoryMixin,
   EventsMixin,
   HostMixin,

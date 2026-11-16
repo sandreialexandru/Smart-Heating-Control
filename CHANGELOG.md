@@ -25,11 +25,21 @@ GitHub releases.
   temperatures: the mean outdoor temperature under each bar, the mean with the
   lowest and highest in the title and in the detail of a bar, and each room's
   mean temperature and target (its lowest and highest when hovered).
+- 🗓️ **Schedule of the week** (panel, *Schedule* tab): every room on one day,
+  the bars of the profile each one uses that day on a shared time line, with
+  the time now on today; a day without an active profile says so. A tap on a
+  room opens it with its schedule editor.
+- 🧠 **What SHC learned** (panel, *Statistics* tab): every room side by side,
+  with the heating, the inertia, the heat loss, the weather curve and the usual
+  error of its model, or how far its learning is. A tap opens its Details.
 - 🕘 **History** (panel, *History* tab): the decisions of every room and the
   alerts with their start and end, newest first, by day; only decisions or
   alerts, one room or all. The integration now keeps the alerts too (the last
   100 of each house, as the last 100 decisions of each room); an alert still
-  on at a restart ends there and is told again after it.
+  on at a restart ends there and is told again after it. On top, the alerts on
+  now, of every house, once each, with their room and since when (their number
+  on the tab too); a tap opens the room.
+- 📘 A new chapter of the guide on the panel.
 
 ### Changed
 

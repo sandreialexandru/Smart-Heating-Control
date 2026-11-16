@@ -97,6 +97,14 @@ type: custom:smart-heating-control-card
 
 Orice parte se poate ascunde; opțiunile sunt în [ghid](docs/guide/10-card.ro.md).
 
+## Panoul
+
+O pagină proprie în bara laterală, **SHC**, pentru toți utilizatorii: toată
+casa pe un ecran, programul tuturor camerelor într-o zi, statistici (timpul
+de încălzire și temperaturile pe zile, săptămâni sau luni, și ce a învățat
+fiecare cameră) și istoricul deciziilor și al alertelor, cu alertele active
+sus. Nu cere nicio setare; detaliile sunt în [ghid](docs/guide/13-panou.ro.md).
+
 ## Primii pași
 
 [![Deschide Home Assistant și adaugă acest repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sandreialexandru&repository=Smart-Heating-Control&category=integration)

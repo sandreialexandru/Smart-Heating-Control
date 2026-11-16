@@ -98,6 +98,15 @@ type: custom:smart-heating-control-card
 Elk onderdeel kan verborgen worden; de opties staan in de
 [handleiding](docs/guide/10-card.md) (Engels).
 
+## Het paneel
+
+Een eigen pagina in de zijbalk, **SHC**, voor alle gebruikers: het hele huis
+op één scherm, het schema van alle kamers op één dag, statistieken
+(verwarmingstijd en temperaturen per dag, week of maand, en wat elke kamer
+heeft geleerd) en de geschiedenis van beslissingen en meldingen, met de
+huidige meldingen bovenaan. Niets in te stellen; details in de
+[handleiding](docs/guide/13-panel.md) (Engels).
+
 ## Aan de slag
 
 [![Open je Home Assistant en voeg deze repository toe](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sandreialexandru&repository=Smart-Heating-Control&category=integration)

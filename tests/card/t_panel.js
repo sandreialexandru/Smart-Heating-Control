@@ -303,7 +303,7 @@ test("history that fails says so; Romanian texts", async (p) => {
   await p.waitForTimeout(300);
   const t = await extraText(p);
   ok(t.includes("Decizii") && t.includes("Toate camerele") && t.includes("Toată casa") && t.includes("Home Assistant a repornit"), t.slice(0, 300));
-  eq(await inPanel(p, (sr) => [...sr.querySelectorAll('[data-action="panel-tab"]')].map((b) => b.innerText)), ["Camere", "Statistici", "Istoric"], "tabs");
+  eq(await inPanel(p, (sr) => [...sr.querySelectorAll('[data-action="panel-tab"]')].map((b) => b.innerText)), ["Camere", "Program", "Statistici", "Istoric"], "tabs");
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });
 
@@ -391,5 +391,99 @@ test("statistics in °F and in Romanian", async (p) => {
   const r = await inPanel(p, (sr) => ({ title: sr.querySelector(".ps-title").innerText, temp: sr.querySelector(".ps-row .ps-temp").innerText }));
   ok(/afară 4\d\.\d° \(33\.8° … 46\.4°\)/.test(r.title), "°F outdoor: " + r.title);
   ok(/^6\d\.\d° \(țintă [67]\d\.\d°\)$/.test(r.temp), "°F room: " + r.temp);
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("schedule tab: every room on today, another day, no active profile, an outside schedule; a tap opens the editor", async (p) => {
+  const rooms = [
+    { id: "r1", name: "Bedroom" },
+    { id: "r2", name: "Office", profileDays: { workday: { days: "workday", enabled: false }, weekend: { days: "weekend", enabled: false } } },
+    { id: "r3", name: "Living", scheduleEditable: false },
+  ];
+  await openPanel(p, { rooms });
+  await clickIn(p, '[data-action="panel-tab"][data-option="week"]'); await p.waitForTimeout(100);
+  const today = await p.evaluate(() => (new Date().getDay() + 6) % 7);
+  const look = () => inPanel(p, (sr) => ({
+    day: [...sr.querySelectorAll('[data-action="week-day"]')].findIndex((b) => b.classList.contains("active")),
+    rows: [...sr.querySelectorAll(".pw-row")].map((r) => r.querySelector(".pw-name").innerText),
+    profile: sr.querySelector('.pw-row[data-room="r1"] .pw-prof').innerText,
+    segs: sr.querySelectorAll('.pw-row[data-room="r1"] .sseg').length,
+    now: !!sr.querySelector('.pw-row[data-room="r1"] .pw-now'),
+    gap: sr.querySelector('.pw-row[data-room="r2"] .pw-gap')?.innerText || null,
+    outside: sr.querySelector(".pw-row .pw-ext")?.innerText || null,
+    outsideButton: !!sr.querySelector('button.pw-row[data-room="r3"]'),
+  }));
+  const first = await look();
+  eq([first.day, first.rows, first.now], [today, ["Bedroom", "Living", "Office"], true], "today, every room (in the order of the card), now on the bar");
+  eq(first.profile, today < 5 ? "workday" : "weekend", "the profile of today");
+  eq(first.segs, 3, "the slots of the profile");
+  eq(first.gap, "No active profile: frost protection", "a room without an active profile");
+  ok(/Schedule helper/.test(first.outside) && !first.outsideButton, "a room on a Schedule helper is not opened from here: " + first.outside);
+  const other = today < 5 ? 5 : 0;
+  await clickIn(p, `[data-action="week-day"][data-option="${other}"]`); await p.waitForTimeout(100);
+  const second = await look();
+  eq([second.day, second.profile, second.now], [other, other < 5 ? "workday" : "weekend", false], "another day: its profile, no now");
+  // A tap on a room: the Rooms tab with that room and its schedule editor open.
+  await clickIn(p, 'button.pw-row[data-room="r1"]'); await p.waitForTimeout(150);
+  const opened = await inPanel(p, (sr) => ({
+    tab: panel.getAttribute("tab"),
+    room: sr.querySelector(".pmain .block.room")?.dataset.key || sr.querySelector(".pmain [data-key^='room-']")?.dataset.key,
+    editor: !!sr.querySelector(".pmain .editor"),
+  }));
+  eq([opened.tab, opened.editor], ["rooms", true], "the editor of the room");
+  ok(String(opened.room).includes("r1"), "that room: " + opened.room);
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("statistics: what each room learned, or how far its learning is; a tap opens its Details", async (p) => {
+  await openPanel(p, { rooms: ROOMS });
+  await clickIn(p, '[data-action="panel-tab"][data-option="stats"]'); await p.waitForTimeout(150);
+  const r = await inPanel(p, (sr) => [...sr.querySelectorAll(".pl-row")].map((row) => ({
+    room: row.dataset.room,
+    learning: row.classList.contains("pl-learning"),
+    values: [...row.querySelectorAll(".pl-val")].map((v) => v.innerText.replace(/\s+/g, " ")),
+    state: row.querySelector(".pl-state").innerText,
+  })));
+  eq(r.map((x) => [x.room, x.learning]), [["r1", false], ["r4", true], ["r3", false], ["r2", true]], "every room (in the order of the card), learned or not");
+  eq(r[0].values, ["Heating 40 min/°C", "Inertia 30 min", "Heat loss 0.75 °C/h", "Weather curve +0.050 °C/h"], "the learned values");
+  ok(/^learned/.test(r[0].state), "learned: " + r[0].state);
+  eq(r[1].values, [], "no values while learning");
+  ok(/^learning… with heating [\d.]+ of 4 h, without heating [\d.]+ of 4 h$/.test(r[1].state), "the progress: " + r[1].state);
+  await clickIn(p, '.pl-row[data-room="r2"]'); await p.waitForTimeout(150);
+  const opened = await inPanel(p, (sr) => ({ tab: panel.getAttribute("tab"), details: !!sr.querySelector('.pmain [data-section="details-r2"]') }));
+  eq(opened, { tab: "rooms", details: true }, "the Details of that room");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("history: the alerts on now on top, once each, with their room and since when; counted on the tab", async (p) => {
+  const house = { key: "out", code: "outdoor_unavailable", params: {}, message: "m" };
+  const rooms = [
+    { id: "r1", name: "Bedroom", alerts: [{ key: "mold", code: "mold_risk", params: { surface: 84, humidity: 62 }, message: "m" }, house] },
+    { id: "r2", name: "Office", alerts: [house] },
+    { id: "r3", name: "Living", alerts: [house] },
+  ];
+  await openPanel(p, { rooms });
+  const count = await inPanel(p, (sr) => sr.querySelector('[data-action="panel-tab"][data-option="history"] .tabcount')?.innerText);
+  eq(count, "2", "two alerts on now, counted on the tab");
+  await clickIn(p, '[data-action="panel-tab"][data-option="history"]'); await p.waitForTimeout(300);
+  const r = await inPanel(p, (sr) => [...sr.querySelectorAll(".pa-list li")].map((li) => ({
+    text: li.querySelector(".ph-text").innerText.replace(/\s+/g, " "),
+    open: li.querySelector('[data-action="alert-room"]')?.dataset.room || null,
+  })));
+  eq(r.length, 2, "once each");
+  ok(/^Bedroom Mold risk: .* · since /.test(r[0].text), "the room and since when (from the journal): " + r[0].text);
+  eq(r[0].open, "r1", "its room opens");
+  ok(/^Whole house Outdoor temperature unavailable/.test(r[1].text), "reported by every room: the house's: " + r[1].text);
+  eq(r[1].open, null, "nothing to open for the house");
+  await clickIn(p, '[data-action="alert-room"][data-room="r1"]'); await p.waitForTimeout(150);
+  eq(await inPanel(p, () => panel.getAttribute("tab")), "rooms", "the room opens");
+  // No alerts: said so, no count on the tab.
+  await openPanel(p, { rooms: [{ id: "r1", name: "Bedroom" }] });
+  await clickIn(p, '[data-action="panel-tab"][data-option="history"]'); await p.waitForTimeout(300);
+  const none = await inPanel(p, (sr) => ({
+    text: sr.querySelector(".pa-now p")?.innerText,
+    count: !!sr.querySelector(".tabcount"),
+  }));
+  eq(none, { text: "No alerts now", count: false }, "no alerts");
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });

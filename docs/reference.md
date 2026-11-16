@@ -447,3 +447,35 @@ at once), and a *Lock* button for the child lock of the room.
 - **Language**: the reason of the decision and the names of the adjustments are
   shown in the language of the card (the *Decision* sensor has them as
   `reason_key` and `reason_params`; `reason` stays the English text).
+
+## SHC panel
+
+A sidebar panel (`/shc`, title *SHC*, for every user) registered with the
+first house and removed with the last one. It is the element `shc-panel`,
+loaded from `/advanced_climate/<version>/shc/panel.js`, and draws the house and
+the rooms with the card's own code (every card option on). Tabs (the last one
+kept in the browser):
+
+- **Rooms**: the house, the rooms, the chosen room open (kept in the address as
+  `#<room_id>` and in the browser). Below 870 px a list, a room on the whole
+  screen with *Back*.
+- **Schedule**: every room on a chosen weekday, the bar of the profile chosen
+  for it as the integration does (weekday profile, else workday / weekend, else
+  all days; workdays Monday to Friday, without the calendar), *now* on today,
+  *No active profile* (frost protection) for a day no active profile covers.
+  A tap opens the room with its schedule editor.
+- **Statistics**: `recorder/statistics_during_period` (`change` of the
+  *Heating time* sensors, `mean` / `min` / `max` of *Outdoor average*,
+  *Room temperature* and *Target temperature*) for the last 14 days, 12
+  weeks or 12 months; starts asked per day from `history/history_during_period`
+  of the house *Heat demand*. Refreshed every 5 minutes while shown. Below, the
+  learned model of every room (the *Heating rate* and *Cooling rate* sensors).
+- **History**: the alerts on now (from the `alerts` of the rooms, once each;
+  room and start from the journal), then `advanced_climate/history`.
+
+WebSocket command `advanced_climate/history` (optional `entry_id`): for every
+loaded house `{entry_id, name, temperature_unit, rooms: [{room_id, name,
+decisions: [{time, rule, target, description, reason_key, reason_params}]}],
+alerts: [{key, code, params, room, start, end, restart?}]}`. The integration
+keeps the last 100 decisions of each room and the last 100 alerts of each
+house; an alert open at a restart is closed then (`restart: true`).

@@ -3,7 +3,9 @@
 *[English](10-card.md) · [Cuprins](README.ro.md)*
 
 Integrarea are un card Lovelace cu toate comenzile: casa, camerele, graficul,
-programul editabil și detaliile.
+programul editabil și detaliile. Aceleași camere, împreună cu programul
+săptămânii, statisticile și istoricul, sunt și pe o pagină proprie în bara
+laterală: [panoul SHC](13-panou.ro.md).
 
 <p align="center"><img src="../images/card-demo.gif" alt="Cardul în folosire" width="400"><br><sub>▶️ <a href="https://github.com/user-attachments/assets/31181198-e0fa-4510-bbfa-af9f790a19c7">Tot videoclipul (30 s, MP4)</a> · date inventate</sub></p>
 

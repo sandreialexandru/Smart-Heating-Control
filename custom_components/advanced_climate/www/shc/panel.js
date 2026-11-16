@@ -6,8 +6,10 @@
  * It extends the same base as the card (ShcBase): every part of the house and
  * the rooms is the card's own code, only the layout is the panel's.
  * The chosen room is kept in the address (#room) and in the browser.
- * Two more tabs: the statistics (heating time by day, week, month) and the
- * history (the decisions of the rooms, the alerts with their start and end).
+ * More tabs: the schedule of the week (every room on one day), the statistics
+ * (heating time by day, week, month, and what each room learned) and the
+ * history (the alerts on now, the decisions of the rooms, the alerts with
+ * their start and end).
  */
 
 import { ShcBase } from "./core/base.js";
@@ -17,7 +19,7 @@ import { STYLE } from "./core/style.js";
 
 const STORE = "shc-panel-room";
 const TAB_STORE = "shc-panel-tab";
-const TABS = ["rooms", "stats", "history"];
+const TABS = ["rooms", "week", "stats", "history"];
 
 const PANEL_STYLE = `
   :host { display: block; min-height: 100%; background: var(--primary-background-color); }
@@ -102,6 +104,57 @@ const PANEL_STYLE = `
   .ph-ico.warn { color: var(--ac-warn); }
   .ph-ico.error { color: var(--ac-err); }
   .ph-text { flex: 1; min-width: 0; }
+  /* The week: every room on one day, its bar on a shared time line. */
+  .pw-days .seg { position: relative; }
+  .pw-today { position: absolute; left: 50%; bottom: 3px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: currentColor; }
+  .pw-rows { display: grid; grid-template-columns: minmax(70px, 180px) minmax(0, 1fr) minmax(0, 8em); gap: 4px 12px; margin-top: 8px; }
+  .pw-ticks, .pw-row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; }
+  .pw-ticks .bar-ticks { margin: 0; }
+  button.pw-row { border: 0; background: none; font: inherit; color: inherit; text-align: left; padding: 8px 6px; margin: 0 -6px;
+    border-radius: 10px; cursor: pointer; }
+  button.pw-row:hover { background: var(--ac-surface-2); }
+  div.pw-row { padding: 8px 0; }
+  .pw-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+  .pw-bar.sbar.ro { height: 22px; border-radius: 6px; }
+  .pw-now { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--primary-text-color); border-radius: 1px; }
+  .pw-gap { height: 22px; border-radius: 6px; display: flex; align-items: center; padding: 0 8px; font-size: 0.8em;
+    background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--c) 22%, transparent) 0 6px, transparent 6px 12px); }
+  .pw-prof, .pw-ext { font-size: 0.85em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pw-ext { grid-column: 2 / -1; }
+  .pw-note { margin-top: 12px; }
+  :host([narrow]) .pw-rows { grid-template-columns: minmax(0, 1fr) auto; }
+  :host([narrow]) .pw-ticks > span:first-child, :host([narrow]) .pw-ticks > span:last-child { display: none; }
+  :host([narrow]) .pw-ticks .bar-ticks { grid-column: 1 / -1; }
+  :host([narrow]) .pw-bar, :host([narrow]) .pw-gap, :host([narrow]) .pw-ext { grid-column: 1 / -1; grid-row: 2; }
+  :host([narrow]) .pw-row { row-gap: 6px; }
+  /* What each room learned, side by side. */
+  .pl-learned { margin-top: 16px; }
+  .pl-rows { display: grid; grid-template-columns: minmax(70px, 160px) minmax(0, 1.4fr) repeat(4, minmax(0, 1fr)); gap: 4px 12px; margin-top: 8px; }
+  button.pl-row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; border: 0; background: none;
+    font: inherit; color: inherit; text-align: left; padding: 8px 6px; margin: 0 -6px; border-radius: 10px; cursor: pointer;
+    border-bottom: 1px solid var(--ac-line); }
+  button.pl-row:hover { background: var(--ac-surface-2); }
+  .pl-row.pl-learning .pl-state { grid-column: 2 / -1; }
+  .pl-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pl-state { font-size: 0.85em; }
+  .pl-val { display: flex; flex-direction: column; font-size: 0.95em; white-space: nowrap; }
+  .pl-lab { font-size: 0.72em; color: var(--ac-muted); }
+  :host([narrow]) .pl-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  :host([narrow]) button.pl-row { row-gap: 6px; padding: 10px 6px; }
+  :host([narrow]) .pl-name, :host([narrow]) .pl-state, :host([narrow]) .pl-row.pl-learning .pl-state { grid-column: 1 / -1; }
+  /* The alerts on now, on top of the history. */
+  .pa-now { margin-bottom: 16px; }
+  .pa-now .acount { display: inline-flex; min-width: 1.4em; justify-content: center; padding: 0 6px; border-radius: 999px; font-size: 0.8em;
+    background: var(--ac-warn); color: #000; }
+  .pa-list li { align-items: center; flex-wrap: wrap; }
+  :host([narrow]) .pa-list .ph-text { flex-basis: calc(100% - 40px); }
+  :host([narrow]) .pa-list li > .btn { margin-left: auto; }
+  .pa-list .ph-text.link { cursor: pointer; }
+  .tabcount { display: inline-flex; min-width: 1.3em; justify-content: center; margin-left: 6px; padding: 0 5px; border-radius: 999px;
+    font-size: 0.78em; background: var(--ac-warn); color: #000; }
+  /* On a phone the count sits on the corner of the tab, so its name keeps its room. */
+  .ptabs .seg { position: relative; }
+  :host([narrow]) .tabcount { position: absolute; top: 1px; right: 1px; margin: 0; min-width: 1.1em; padding: 0 3px; font-size: 0.68em; }
   /* The open room is not folded from its title in the panel. */
   .pmain .room-title { cursor: default; }
   .pmain .room-title .chev { display: none; }
@@ -233,6 +286,20 @@ class ShcPanel extends ShcBase {
     this._card = body.querySelector(".pmain");
   }
 
+  /** Open a room on the Rooms tab; with a part of it (its schedule, its Details) shown. */
+  _openRoom(room, key = null) {
+    this._tab = "rooms";
+    try {
+      localStorage.setItem(TAB_STORE, this._tab);
+    } catch (_err) {
+      // No storage: the tab is not kept.
+    }
+    this._choose(room);
+    if (!key) return;
+    const part = this._card?.querySelector(`[data-section="${CSS.escape(key)}"], [data-key="${CSS.escape(key)}"]`);
+    part?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+
   /** Draw the panel: only the blocks that changed are replaced (as in the card). */
   _render() {
     if (!this._config || !this._hass) return;
@@ -244,12 +311,16 @@ class ShcPanel extends ShcBase {
     this.toggleAttribute("room", !!chosen);
     const tab = this._tab;
     this.setAttribute("tab", tab);
+    // The alerts on now, counted on the History tab.
+    const alerts = this._activeAlerts(houses).length;
     this._patch(this._tabs, [
       {
         k: "tabs",
-        html: `<div class="segmented" style="--n:3" role="tablist">${TABS.map(
+        html: `<div class="segmented" style="--n:${TABS.length}" role="tablist">${TABS.map(
           (t) => `<button class="seg ${t === tab ? "active" : ""}" role="tab" aria-selected="${t === tab}" data-action="panel-tab"
-            data-option="${t}">${esc(this._t(`tab_${t}`))}</button>`
+            data-option="${t}">${esc(this._t(`tab_${t}`))}${
+              t === "history" && alerts ? `<span class="tabcount" aria-label="${esc(`${this._t("an_title")}: ${alerts}`)}">${alerts}</span>` : ""
+            }</button>`
         ).join("")}</div>`,
       },
     ]);
@@ -291,9 +362,20 @@ class ShcPanel extends ShcBase {
     this._card.hidden = !chosen;
     this._patch(this._card, chosen ? [{ k: `room-${room}`, html: this._roomHtml(chosen) }] : []);
 
-    // The statistics or the history (fetched only while shown).
-    const extra = tab === "stats" ? this._statsHtml(houses) : tab === "history" ? this._historyHtml(houses) : "";
-    this._patch(this._extra, extra ? [{ k: tab, html: extra }] : []);
+    // The week, the statistics (with what each room learned) or the history
+    // (the alerts on now on top); fetched only while shown.
+    const extra = [];
+    if (tab === "week") extra.push({ k: "week", html: this._weekHtml(houses) });
+    if (tab === "stats") {
+      extra.push({ k: "stats", html: this._statsHtml(houses) });
+      const learned = this._learnedHtml(houses);
+      if (learned) extra.push({ k: "learned", html: learned });
+    }
+    if (tab === "history") {
+      const history = this._historyHtml(houses);
+      extra.push({ k: "alerts-now", html: this._alertsNowHtml(houses) }, { k: "history", html: history });
+    }
+    this._patch(this._extra, extra);
 
     const popup = this._chartPopup();
     this._patch(this._popHolder, popup ? [popup] : []);
@@ -313,8 +395,19 @@ class ShcPanel extends ShcBase {
     const fold = ev.target.closest?.('[data-action="fold"][data-key^="room-"]');
     if (fold && this._card?.contains(fold)) return;
     // The tabs and the choices of the statistics and the history.
+    // A room opened from the week (its schedule editor), what it learned (its Details) or an alert.
+    const go = ev.target.closest?.('[data-action="week-edit"], [data-action="learned-open"], [data-action="alert-room"]');
+    if (go) {
+      const room = go.dataset.room;
+      const action = go.dataset.action;
+      if (action === "week-edit") this._startEdit(room);
+      const key = action === "week-edit" ? `sched-${room}` : action === "learned-open" ? `details-${room}` : null;
+      if (key) this._open[key] = true;
+      this._openRoom(room, key);
+      return;
+    }
     const own = ev.target.closest?.(
-      '[data-action="panel-tab"], [data-action="stats-period"], [data-action="stats-pick"], [data-action="history-kind"]'
+      '[data-action="panel-tab"], [data-action="stats-period"], [data-action="stats-pick"], [data-action="history-kind"], [data-action="week-day"]'
     );
     if (own) {
       const option = own.dataset.option;
@@ -327,7 +420,8 @@ class ShcPanel extends ShcBase {
         // A tap on a bar chooses its period; on the chosen one (or ✕) the whole range again.
         const t = own.dataset.t ? Number(own.dataset.t) : null;
         this._statsPick = t === this._statsPick ? null : t;
-      } else this._historyKind = option;
+      } else if (action === "week-day") this._weekDay = Number(option);
+      else this._historyKind = option;
       this._render();
       return;
     }

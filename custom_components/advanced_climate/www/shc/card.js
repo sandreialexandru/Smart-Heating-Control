@@ -34,11 +34,15 @@ class SmartHeatingControlCard extends ShcBase {
     const labels = EDITOR_LABELS[lang] || EDITOR_LABELS.en;
     const periods = EDITOR_PERIODS[lang] || EDITOR_PERIODS.en;
     return {
-      schema: EDITOR_SCHEMA.map((field) =>
-        field.name === "runtime_period"
-          ? { ...field, selector: { select: { ...field.selector.select, options: field.selector.select.options.map((o) => ({ ...o, label: periods[o.value] || o.label })) } } }
-          : field
-      ),
+      // Each field with the value the card uses when it is not set: the form
+      // shows a switch without a value as off, while the card shows that part.
+      schema: EDITOR_SCHEMA.map(function shown(field) {
+        if (field.schema) return { ...field, schema: field.schema.map(shown) };
+        const f = field.name in DEFAULTS ? { ...field, default: DEFAULTS[field.name] } : field;
+        return f.name === "runtime_period"
+          ? { ...f, selector: { select: { ...f.selector.select, options: f.selector.select.options.map((o) => ({ ...o, label: periods[o.value] || o.label })) } } }
+          : f;
+      }),
       computeLabel: (schema) => labels[schema.name] || schema.name,
     };
   }

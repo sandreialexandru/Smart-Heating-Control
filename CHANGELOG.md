@@ -37,6 +37,13 @@ GitHub releases.
   works as before. It loads from a folder with the version in its path, so
   every browser and the companion app load the new files after an update.
 
+### Fixed
+
+- 🎛️ **Card editor: the switches show what the card does** ([#19](https://github.com/sandreialexandru/Smart-Heating-Control/issues/19)):
+  on a new card the switches of the parts shown by default were off while the
+  card showed those parts, so turning a part off took a switch on and off
+  again. They are now on, as the card is.
+
 ## 2.6.5 – 2026-11-16
 
 ### ⚠️ Before you update: the *Reference room* is removed

@@ -270,6 +270,11 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         # The window state after the delays, and a quick drop of the temperature.
         self.window = WindowState()
         self.temp_drop = TemperatureDrop()
+        # What the thermostats held before the window took the room, and until
+        # when a device may still report those values as its own: a sleepy TRV
+        # woken by the commands after the window restores its old target.
+        self._window_before: dict[str, dict[str, Any]] = {}
+        self._window_before_until: datetime | None = None
         # Warming or cooling now (the arrow of the card).
         self.trend = TemperatureTrend()
         self._window_timer: Callable[[], None] | None = None
@@ -800,13 +805,20 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
     def _update_window(self, now: datetime) -> None:
         """Debounce the window state with the open / close delays."""
         raw = self._window_raw(now)
+        was_open = self.window.open
         due, closed = self.window.update(
             now,
             raw,
             timedelta(seconds=float(self.config[CONF_WINDOW_OPEN_DELAY])),
             timedelta(seconds=float(self.config[CONF_WINDOW_CLOSE_DELAY])),
         )
+        if self.window.open and not was_open:
+            # Also when a rule above the window holds the room (pause, mode Off
+            # or Summer, no season): nothing is sent then, the device keeps its
+            # values and the memory ends a few minutes after the window closes.
+            self._remember_before_window()
         if closed:
+            self._window_closed(now)
             self.house.clear_alert(f"window_{self.id}")
         until = self.temp_drop.until
         if until is not None and now < until:

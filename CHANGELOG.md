@@ -43,6 +43,13 @@ GitHub releases.
   on a new card the switches of the parts shown by default were off while the
   card showed those parts, so turning a part off took a switch on and off
   again. They are now on, as the card is.
+- 🪟 **After a window, a thermostat's old target is not a manual change**
+  ([#18](https://github.com/sandreialexandru/Smart-Heating-Control/pull/18),
+  thanks @root-intruder): a TRV that wakes up after the window closed may report
+  the target it had before the window (or go back to auto with it). It was taken
+  for a manual change and held for hours instead of the schedule of that moment.
+  Now the room follows the schedule and the thermostat is told its target again.
+  A different temperature set while the window is open is still a manual change.
 
 ## 2.6.5 – 2026-11-16
 

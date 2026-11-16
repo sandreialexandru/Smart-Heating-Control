@@ -31,7 +31,12 @@ const PANEL_STYLE = `
   .pside { grid-area: side; position: sticky; top: 72px; max-height: calc(100vh - 88px); overflow: auto; }
   .pmain { grid-area: main; min-width: 0; }
   .pside .hname { margin: 4px 4px 0; font-size: 0.85em; color: var(--ac-muted); font-weight: 600; }
+  /* A row is lit whole on hover (not only the button inside it), the chosen one tinted. */
+  .pside .block.room.folded { cursor: pointer; }
+  .pside .frow:hover { background: none; }
+  .pside .block.room.folded:hover { background: var(--ac-surface-2); }
   .pside .block.room.folded.chosen { border-color: var(--ac-active-line); background: var(--ac-active-bg); }
+  .pside .block.room.folded.chosen:hover { background: color-mix(in srgb, var(--ac-accent) 24%, transparent); }
   :host([narrow]) .pbody { padding: 8px; gap: 8px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "house" "side" "main"; }
   :host([narrow]) .pside { position: static; max-height: none; overflow: visible; }
   /* !important: a card element may set its own display. */
@@ -196,13 +201,16 @@ class ShcPanel extends ShcBase {
     this._chartModal();
   }
 
-  /** A room row of the list opens that room; the title of the open room does not fold it. */
+  /** A row of the list opens its room; the title of the open room does not fold it. */
   async _onClick(ev) {
-    const fold = ev.target.closest?.('[data-action="fold"][data-key^="room-"]');
-    if (fold && this._side?.contains(fold)) {
-      this._choose(fold.dataset.key.slice(5));
+    // The whole row of a room, its margin too.
+    const row = ev.target.closest?.(".block.room.folded");
+    const pick = row && this._side?.contains(row) ? row.querySelector('[data-action="fold"][data-key^="room-"]') : null;
+    if (pick) {
+      this._choose(pick.dataset.key.slice(5));
       return;
     }
+    const fold = ev.target.closest?.('[data-action="fold"][data-key^="room-"]');
     if (fold && this._card?.contains(fold)) return;
     return super._onClick(ev);
   }

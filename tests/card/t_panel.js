@@ -124,3 +124,80 @@ test("no houses yet: says so", async (p) => {
   await p.waitForTimeout(200);
   ok(await inPanel(p, (sr) => sr.querySelector(".phouse").innerText.includes("No")), "empty message");
 });
+
+test("hover lights the whole row of a room, not a box inside it; a click on its margin opens it", async (p) => {
+  await openPanel(p, { rooms: ROOMS });
+  const at = await inPanel(p, (sr) => { const r = sr.querySelector('.pside [data-key="room-r2"]').closest(".block").getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2, r.left + 4, r.top + r.height / 2]; });
+  const look = () => inPanel(p, (sr) => { const b = sr.querySelector('.pside [data-key="room-r2"]'); return { row: getComputedStyle(b.closest(".block")).backgroundColor, button: getComputedStyle(b).backgroundColor }; });
+  const before = await look();
+  await p.mouse.move(at[0], at[1]); await p.waitForTimeout(150);
+  const hover = await look();
+  ok(hover.row !== before.row, "the row is lit: " + JSON.stringify([before, hover]));
+  eq(hover.button, "rgba(0, 0, 0, 0)", "no box inside the row");
+  await p.mouse.click(at[2], at[3]); await p.waitForTimeout(150);
+  ok(await inPanel(p, (sr) => sr.querySelector(".pmain .block.room").innerText.includes("Office")), "opened from the margin");
+  await p.evaluate(() => { localStorage.removeItem("shc-panel-room"); history.replaceState(null, "", location.pathname); });
+});
+
+test("two houses: both on top, the rooms under the name of their house", async (p) => {
+  await p.evaluate(() => {
+    const a = makeHass({ rooms: [{ id: "r1", name: "Bedroom" }] });
+    const b = makeHass({ entry: "e2", houseName: "Cabin", prefix: "cabin", rooms: [{ id: "c1", name: "Loft", prefix: "loft" }] });
+    Object.assign(a.states, b.states);
+    const host = document.getElementById("host"); host.innerHTML = ""; host.style.maxWidth = "none";
+    window.panel = document.createElement("shc-panel"); panel.hass = a; host.appendChild(panel);
+  });
+  await p.waitForTimeout(250);
+  const r = await inPanel(p, (sr) => ({
+    houses: sr.querySelectorAll(".phouse .block.house").length,
+    list: [...sr.querySelectorAll(".pside .hname, .pside .block.room .name")].map((n) => n.innerText),
+  }));
+  eq(r.houses, 2, "two houses");
+  eq(r.list, ["Home", "Bedroom", "Cabin", "Loft"], "rooms under their house, the houses as in the card");
+});
+
+test("a room that is gone (kept in the browser): the first room opens", async (p) => {
+  await p.evaluate(() => localStorage.setItem("shc-panel-room", "gone"));
+  await openPanel(p, { rooms: ROOMS });
+  ok(await inPanel(p, (sr) => sr.querySelector(".pmain .block.room").innerText.includes("Bedroom")), "first room");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-room"));
+});
+
+test("phone: a room unknown in the address shows the list", async (p) => {
+  await p.evaluate(() => { history.replaceState(null, "", location.pathname + "#nope"); });
+  await openPanel(p, { rooms: ROOMS }, { narrow: true });
+  ok((await shown(p, ".pside")) && !(await shown(p, ".pmain")), "the list");
+  await p.evaluate(() => { history.replaceState(null, "", location.pathname); });
+}, { viewport: { width: 390, height: 844 } });
+
+test("from wide to narrow (a window made smaller): the open room stays, with Back", async (p) => {
+  await openPanel(p, { rooms: ROOMS });
+  await clickIn(p, '.pside [data-key="room-r3"]'); await p.waitForTimeout(150);
+  await p.evaluate(() => { panel.narrow = true; }); await p.waitForTimeout(150);
+  ok((await shown(p, ".pmain")) && !(await shown(p, ".pside")), "the room");
+  eq(await inPanel(p, (sr) => sr.querySelector(".ptop h1").innerText), "Living", "its name");
+  await p.evaluate(() => { panel.narrow = false; }); await p.waitForTimeout(150);
+  ok((await shown(p, ".pmain")) && (await shown(p, ".pside")) && (await shown(p, ".phouse")), "all again");
+  await p.evaluate(() => { localStorage.removeItem("shc-panel-room"); history.replaceState(null, "", location.pathname); });
+});
+
+test("updates while the chart window is open: the same window, still modal; the open room kept", async (p) => {
+  await openPanel(p, { rooms: ROOMS });
+  await clickIn(p, '.pside [data-key="room-r2"]'); await p.waitForTimeout(150);
+  await clickIn(p, '.pmain [data-key="chart-r2"]'); await p.waitForTimeout(400);
+  const same = await p.evaluate(async (rooms) => {
+    const d1 = panel.shadowRoot.querySelector("dialog.chartpop");
+    for (let i = 1; i <= 10; i++) { panel.hass = makeHass({ rooms: rooms.map((r) => ({ ...r, current: 20 + i / 10 })), tick: i }); await sleep(30); }
+    const d2 = panel.shadowRoot.querySelector("dialog.chartpop");
+    return { same: d1 === d2, modal: d2.matches(":modal"), room: panel.shadowRoot.querySelector(".pmain .block.room").innerText.includes("Office") };
+  }, ROOMS);
+  eq(same, { same: true, modal: true, room: true }, "kept");
+  await p.evaluate(() => { localStorage.removeItem("shc-panel-room"); history.replaceState(null, "", location.pathname); });
+});
+
+test("dark theme: the panel and its rows follow the theme", async (p) => {
+  await p.evaluate(() => { const b = document.body.style; b.setProperty("--primary-background-color", "#111"); b.setProperty("--card-background-color", "#1c1c1c"); b.setProperty("--primary-text-color", "#e1e1e1"); });
+  await openPanel(p, { rooms: ROOMS, dark: true });
+  const c = await inPanel(p, (sr) => ({ page: getComputedStyle(sr.host).backgroundColor, text: getComputedStyle(sr.querySelector(".pside .name")).color }));
+  eq(c, { page: "rgb(17, 17, 17)", text: "rgb(225, 225, 225)" }, "theme colours");
+}, { dark: true });

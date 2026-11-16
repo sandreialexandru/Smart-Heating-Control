@@ -1190,9 +1190,7 @@ async def test_internal_offset_reads_any_temperature_number_without_writing_it(
         "heat",
         {**TRV, "current_temperature": 17.0, "hvac_action": "idle"},
     )
-    hass.states.async_set(
-        "number.trv_internal_delta", "-4.0", {"unit_of_measurement": "°C"}
-    )
+    hass.states.async_set("number.trv_internal_delta", "-4.0", {"unit_of_measurement": "°C"})
     numbers = async_mock_service(hass, "number", "set_value")
     entry = await _house(
         hass,

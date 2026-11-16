@@ -10,9 +10,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent / "custom_components" / "advanced_climate"
 WWW = ROOT / "www"
 VERSION = json.loads((ROOT / "manifest.json").read_text())["version"]
-# import ... from "x" / export ... from "x" / import "x"
+# import "x" / import ... from "x" / export ... from "x" (no "=": not a declaration)
 STATIC = re.compile(
-    r"""^\s*(?:import|export)\b[^;'"]*?(?:from\s*)?["']([^"']+)["']""", re.MULTILINE
+    r"""^\s*(?:import\s*|(?:import|export)\b[^;'"=]*?\bfrom\s*)["']([^"']+)["']""", re.MULTILINE
 )
 
 

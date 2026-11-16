@@ -130,8 +130,7 @@ def week(house: House) -> dict[str, Any]:
             profiles=profiles,
             changes=[{"at": start.isoformat(), "preset": first.preset}]
             + [
-                {"at": dt_util.as_local(at).isoformat(), "preset": preset}
-                for at, preset in changes
+                {"at": dt_util.as_local(at).isoformat(), "preset": preset} for at, preset in changes
             ],
             levels=[
                 {

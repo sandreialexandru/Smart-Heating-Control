@@ -31,9 +31,9 @@ from .const import (
     COMMAND_PRESET,
     COMMAND_TEMPERATURE,
     CONF_AREA,
+    CONF_BOILER_ENTITY,
     CONF_CALIBRATION_ENTITIES,
     CONF_CALIBRATION_MODE,
-    CONF_BOILER_ENTITY,
     CONF_CIRCUIT,
     CONF_CLIMATES,
     CONF_COMMAND_MODE,
@@ -699,18 +699,17 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             if self.command_mode == COMMAND_HVAC:
                 # On / off: the heating time follows the thermostat at once.
                 self._update_heating()
-        elif entity_id in self.switches:
-            if (
-                old is not None
-                and new is not None
-                and valid(old)
-                and valid(new)
-                and old.state != new.state
-                and not self.house.is_own_context(event.context)
-                and not self.sent.is_echo(entity_id, old, new, now)
-            ):
-                self._device_changed(entity_id, new)
-                self.max_sent.discard(entity_id)
+        elif entity_id in self.switches and (
+            old is not None
+            and new is not None
+            and valid(old)
+            and valid(new)
+            and old.state != new.state
+            and not self.house.is_own_context(event.context)
+            and not self.sent.is_echo(entity_id, old, new, now)
+        ):
+            self._device_changed(entity_id, new)
+            self.max_sent.discard(entity_id)
         if (
             entity_id in as_list(self.config.get(CONF_TEMP_SENSORS))
             or entity_id in as_list(self.config.get(CONF_CALIBRATION_ENTITIES))
@@ -737,20 +736,16 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         climate_device = climate_entry.device_id if climate_entry else None
         for entity_id in calibration_ids:
             number_entry = er.async_get(self.hass).async_get(entity_id)
-            if climate_device and number_entry and number_entry.device_id != climate_device:
+            if climate_device:
+                if not number_entry or number_entry.device_id != climate_device:
+                    continue
+            elif len(self.climates) != len(calibration_ids) or len(self.climates) != 1:
                 continue
-            if climate_device and number_entry and number_entry.device_id == climate_device:
-                state = self.hass.states.get(entity_id)
-                value = finite(state.state) if valid(state) else None
-                if value is not None:
-                    unit = state.attributes.get("unit_of_measurement") or system_unit(self.hass)
-                    return delta_to_celsius(value, unit) or 0.0
-            elif not climate_device and len(self.climates) == len(calibration_ids) == 1:
-                state = self.hass.states.get(entity_id)
-                value = finite(state.state) if valid(state) else None
-                if value is not None:
-                    unit = state.attributes.get("unit_of_measurement") or system_unit(self.hass)
-                    return delta_to_celsius(value, unit) or 0.0
+            state = self.hass.states.get(entity_id)
+            value = finite(state.state) if valid(state) else None
+            if value is not None:
+                unit = state.attributes.get("unit_of_measurement") or system_unit(self.hass)
+                return delta_to_celsius(value, unit) or 0.0
         return 0.0
 
     def _update_temperature(self, now: datetime) -> None:

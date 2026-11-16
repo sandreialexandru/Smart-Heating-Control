@@ -26,6 +26,7 @@ from .const import (
     AGG_MEDIAN,
     AGG_MIN,
     CALIBRATION_EXTERNAL,
+    CALIBRATION_INTERNAL,
     CALIBRATION_OFF,
     CALIBRATION_OFFSET,
     COMMAND_HVAC,
@@ -2055,7 +2056,13 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
         }
         if trv:
             fields[_req(CONF_CALIBRATION_MODE, d, ROOM_DEFAULTS)] = _select(
-                [CALIBRATION_OFF, CALIBRATION_OFFSET, CALIBRATION_EXTERNAL], "calibration"
+                [
+                    CALIBRATION_OFF,
+                    CALIBRATION_OFFSET,
+                    CALIBRATION_EXTERNAL,
+                    CALIBRATION_INTERNAL,
+                ],
+                "calibration",
             )
         fields[_req(CONF_OCCUPANCY_SENSORS, d, ROOM_DEFAULTS)] = _entity(
             ["binary_sensor", "input_boolean"], multiple=True
@@ -2071,11 +2078,18 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                 errors[CONF_TEMP_SENSORS] = "boost_sensor_required"
             elif (
                 trv
-                and user_input.get(CONF_CALIBRATION_MODE, CALIBRATION_OFF) != CALIBRATION_OFF
+                and user_input.get(CONF_CALIBRATION_MODE, CALIBRATION_OFF)
+                in (CALIBRATION_OFFSET, CALIBRATION_EXTERNAL)
                 and not user_input.get(CONF_TEMP_SENSORS)
             ):
                 # The calibration writes the room temperature into the TRV.
                 errors[CONF_CALIBRATION_MODE] = "calibration_sensor_required"
+            elif (
+                trv
+                and user_input.get(CONF_CALIBRATION_MODE) == CALIBRATION_INTERNAL
+                and user_input.get(CONF_TEMP_SENSORS)
+            ):
+                errors[CONF_TEMP_SENSORS] = "internal_offset_sensor_conflict"
             elif error := _outdoor_error(
                 self.hass, list(user_input.get(CONF_TEMP_SENSORS) or []), placeholders
             ):
@@ -2142,8 +2156,15 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                 [AGG_MEAN, AGG_MIN, AGG_MEDIAN], "aggregation"
             )
         if d.get(CONF_CALIBRATION_MODE, CALIBRATION_OFF) != CALIBRATION_OFF:
+            calibration_mode = d.get(CONF_CALIBRATION_MODE, CALIBRATION_OFF)
+            calibration_selector = {"multiple": True}
+            # Internal offset only consumes numeric temperature corrections.
+            # Filtering by device class keeps unrelated number helpers out of
+            # the picker, while still leaving the legacy modes unchanged.
+            if calibration_mode == CALIBRATION_INTERNAL:
+                calibration_selector["device_class"] = "temperature"
             fields[_req(CONF_CALIBRATION_ENTITIES, d, ROOM_DEFAULTS)] = _entity(
-                "number", multiple=True
+                "number", **calibration_selector
             )
         if as_list(d.get(CONF_OCCUPANCY_SENSORS)):
             fields[_req(CONF_OCCUPANCY_MINUTES, d, ROOM_DEFAULTS)] = _number(1, 720, 1, "min")

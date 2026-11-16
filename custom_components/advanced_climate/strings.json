@@ -621,7 +621,7 @@
           },
           "data_description": {
             "temperature_sensors": "Sensors in the room, used instead of the thermostat sensor (more accurate when the thermostat sits next to a heat source). Leave empty to use the thermostat sensor; needed for relays, which have no sensor.",
-            "calibration_mode": "Needs a room temperature sensor above. Offset: corrects the TRV sensor. External temperature: writes the room temperature into the TRV (if it supports it). Off otherwise.",
+            "calibration_mode": "Offset: adjusts the TRV from a room sensor. External temperature: writes the room temperature into the TRV (if it supports it). Internal offset: reads the TRV offset without changing it. Off otherwise.",
             "occupancy_sensors": "Motion / presence sensors of the room: when the room is empty for a while it goes to eco even if someone is home. Leave empty for rooms that should follow only the schedule.",
             "humidity_sensor": "Only for the mold risk alert: the humidity of the room, with the outdoor temperature of the house, gives the humidity at the coldest wall. Without it (or without an outdoor temperature) no mold alert is sent."
           }
@@ -695,7 +695,7 @@
           },
           "data_description": {
             "temperature_aggregation": "With several sensors: average, the coldest or the median.",
-            "calibration_entities": "The TRV number entities (offset or external temperature).",
+            "calibration_entities": "The TRV number entities (offset or external temperature). In Internal offset mode, the selected offset is read but never changed.",
             "occupancy_minutes": "How long the room must be empty before eco.",
             "occupancy_return_minutes": "How long someone must be present without a break before a room in eco for no occupancy follows its schedule again. 0 = at once (as before). A shorter visit (someone takes something and leaves) keeps the room in eco, and the count starts again at the next presence. Presence counts without a break: a motion sensor that turns off between movements starts the count again, so a presence sensor (mmWave) or a motion sensor with a long clear time suits it better.",
             "hysteresis": "With a room sensor, it decides the frost protection: below it the TRVs are boosted to open, until frost protection plus this value. With Top up while the boiler runs: while the boiler runs for other rooms, the room is topped up when it is below its target by less than this value (it does not ask for heat yet)."
@@ -799,6 +799,7 @@
         "invalid_level_name": "The level name “{name}” cannot be used in the schedule: use letters, digits, spaces, “_” or “-” (no “,” “:” “#”).",
         "level_name_is_key": "The name “{name}” is the name of another level inside the schedule (home, sleep, eco, away, comfort, activity, frost): choose another one.",
         "calibration_sensor_required": "TRV calibration writes the room temperature into the TRV, so it needs a temperature sensor of the room. Add one, or set the calibration to Off.",
+        "internal_offset_sensor_conflict": "Internal offset uses the TRV temperature and its configured offset. Leave the room temperature sensors empty.",
         "calibration_entities_required": "Pick the TRV number entities the calibration writes to (the offset or the external temperature input), or set the calibration to Off on the previous page.",
         "entity_is_circuit": "{entity} is a circuit relay of {owner}. It cannot also be a device of a room or another circuit."
       }
@@ -1083,7 +1084,8 @@
       "options": {
         "off": "Off",
         "offset": "Offset",
-        "external": "External temperature input"
+        "external": "External temperature input",
+        "internal": "Internal offset"
       }
     },
     "window_action": {

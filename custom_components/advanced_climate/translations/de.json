@@ -799,6 +799,7 @@
         "invalid_level_name": "Der Stufenname „{name}“ geht im Zeitplan nicht: Nutze Buchstaben, Ziffern, Leerzeichen, „_“ oder „-“ (kein „,“ „:“ „#“).",
         "level_name_is_key": "Der Name „{name}“ ist im Zeitplan schon der Name einer anderen Stufe (home, sleep, eco, away, comfort, activity, frost): Wähle einen anderen.",
         "calibration_sensor_required": "Die Kalibrierung schreibt die Raumtemperatur ins Heizkörperthermostat und braucht daher einen Temperatursensor im Raum. Füge einen hinzu oder stelle die Kalibrierung auf Aus.",
+        "internal_offset_sensor_conflict": "Der interne Offset verwendet die Temperatur des Heizkörperthermostats und seinen konfigurierten Offset. Lass die Raumtemperatursensoren leer.",
         "calibration_entities_required": "Wähle die number-Entitäten des Heizkörperthermostats, in die die Kalibrierung schreibt (Offset oder externe Temperatur), oder stelle die Kalibrierung auf der vorigen Seite auf Aus.",
         "entity_is_circuit": "{entity} ist ein Kreisrelais von {owner}. Es kann nicht zusätzlich Gerät eines Raums oder ein anderer Kreis sein."
       }
@@ -1083,7 +1084,8 @@
       "options": {
         "off": "Aus",
         "offset": "Offset",
-        "external": "Eingang für externe Temperatur"
+        "external": "Eingang für externe Temperatur",
+        "internal": "Interner Offset"
       }
     },
     "window_action": {

@@ -26,10 +26,13 @@ from homeassistant.helpers.event import async_call_later, async_track_state_chan
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CALIBRATION_INTERNAL,
     COMMAND_HVAC,
     COMMAND_PRESET,
     COMMAND_TEMPERATURE,
     CONF_AREA,
+    CONF_CALIBRATION_ENTITIES,
+    CONF_CALIBRATION_MODE,
     CONF_BOILER_ENTITY,
     CONF_CIRCUIT,
     CONF_CLIMATES,
@@ -144,6 +147,7 @@ from .util import (
     aggregate,
     as_list,
     climate_temp,
+    delta_to_celsius,
     finite,
     from_iso,
     iso,
@@ -707,7 +711,11 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             ):
                 self._device_changed(entity_id, new)
                 self.max_sent.discard(entity_id)
-        if entity_id in as_list(self.config.get(CONF_TEMP_SENSORS)) or entity_id in self.climates:
+        if (
+            entity_id in as_list(self.config.get(CONF_TEMP_SENSORS))
+            or entity_id in as_list(self.config.get(CONF_CALIBRATION_ENTITIES))
+            or entity_id in self.climates
+        ):
             self._update_temperature(now)
         self._update_window(now)
         self.house.async_request_evaluate()
@@ -720,6 +728,31 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
     # ------------------------------------------------------------------
     # Inputs
     # ------------------------------------------------------------------
+    def _internal_offset(self, climate_id: str) -> float:
+        """Return the configured calibration offset for a climate device."""
+        if self.config.get(CONF_CALIBRATION_MODE) != CALIBRATION_INTERNAL:
+            return 0.0
+        calibration_ids = as_list(self.config.get(CONF_CALIBRATION_ENTITIES))
+        climate_entry = er.async_get(self.hass).async_get(climate_id)
+        climate_device = climate_entry.device_id if climate_entry else None
+        for entity_id in calibration_ids:
+            number_entry = er.async_get(self.hass).async_get(entity_id)
+            if climate_device and number_entry and number_entry.device_id != climate_device:
+                continue
+            if climate_device and number_entry and number_entry.device_id == climate_device:
+                state = self.hass.states.get(entity_id)
+                value = finite(state.state) if valid(state) else None
+                if value is not None:
+                    unit = state.attributes.get("unit_of_measurement") or system_unit(self.hass)
+                    return delta_to_celsius(value, unit) or 0.0
+            elif not climate_device and len(self.climates) == len(calibration_ids) == 1:
+                state = self.hass.states.get(entity_id)
+                value = finite(state.state) if valid(state) else None
+                if value is not None:
+                    unit = state.attributes.get("unit_of_measurement") or system_unit(self.hass)
+                    return delta_to_celsius(value, unit) or 0.0
+        return 0.0
+
     def _update_temperature(self, now: datetime) -> None:
         """Room temperature from the sensors, else from the thermostats."""
         sensors = as_list(self.config.get(CONF_TEMP_SENSORS))
@@ -742,6 +775,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         for eid in self.climates:
             v = climate_temp(self.hass, self.hass.states.get(eid), "current_temperature")
             if v is not None:
+                v += self._internal_offset(eid)
                 device_values.append(v)
                 device_reporting.append(eid)
         if device_values:

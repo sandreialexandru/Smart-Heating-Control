@@ -799,6 +799,7 @@
         "invalid_level_name": "De niveaunaam '{name}' kan niet in het schema: gebruik letters, cijfers, spaties, '_' of '-' (geen ',' ':' '#').",
         "level_name_is_key": "De naam '{name}' is in het schema al de naam van een ander niveau (home, sleep, eco, away, comfort, activity, frost): kies een andere.",
         "calibration_sensor_required": "De kalibratie schrijft de kamertemperatuur in de radiatorkraan en heeft dus een temperatuursensor in de kamer nodig. Voeg er een toe, of zet de kalibratie op Uit.",
+        "internal_offset_sensor_conflict": "Interne offset gebruikt de temperatuur van de radiatorkraan en de ingestelde offset. Laat de kamertemperatuursensoren leeg.",
         "calibration_entities_required": "Kies de number-entiteiten van de radiatorkraan waarin de kalibratie schrijft (de offset of de externe temperatuur), of zet de kalibratie op de vorige pagina op Uit.",
         "entity_is_circuit": "{entity} is een circuitrelais van {owner}. Het kan niet ook een apparaat van een kamer of een ander circuit zijn."
       }
@@ -1083,7 +1084,8 @@
       "options": {
         "off": "Uit",
         "offset": "Offset",
-        "external": "Ingang voor externe temperatuur"
+        "external": "Ingang voor externe temperatuur",
+        "internal": "Interne offset"
       }
     },
     "window_action": {

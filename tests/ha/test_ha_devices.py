@@ -1164,6 +1164,58 @@ async def test_calibration_offset_from_the_trv_on_the_same_device(
     await _unload(hass, entry)
 
 
+async def test_internal_offset_reads_any_temperature_number_without_writing_it(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Internal offset corrects the room value and leaves the valve setting untouched."""
+    zigbee = MockConfigEntry(domain="zha")
+    zigbee.add_to_hass(hass)
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=zigbee.entry_id, identifiers={("zha", "trv-internal")}
+    )
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        "climate", "zha", "trv-internal", device_id=device.id, suggested_object_id="trv_internal"
+    )
+    registry.async_get_or_create(
+        "number",
+        "zha",
+        "trv-internal-delta",
+        device_id=device.id,
+        suggested_object_id="trv_internal_delta",
+        original_device_class="temperature",
+    )
+    hass.states.async_set(
+        "climate.trv_internal",
+        "heat",
+        {**TRV, "current_temperature": 17.0, "hvac_action": "idle"},
+    )
+    hass.states.async_set(
+        "number.trv_internal_delta", "-4.0", {"unit_of_measurement": "°C"}
+    )
+    numbers = async_mock_service(hass, "number", "set_value")
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {
+                    "source": "climate",
+                    "climates": ["climate.trv_internal"],
+                    "command_mode": "temperature",
+                    "calibration_mode": "internal",
+                    "calibration_entities": ["number.trv_internal_delta"],
+                },
+            )
+        ],
+    )
+
+    assert _room(entry, "Office").current_temp == 13.0
+    assert numbers == []
+    await _unload(hass, entry)
+
+
 async def test_whole_house_zone_named_like_the_house_is_renamed(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:

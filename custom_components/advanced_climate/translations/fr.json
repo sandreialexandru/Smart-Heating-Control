@@ -799,6 +799,7 @@
         "invalid_level_name": "Le nom de niveau « {name} » n'est pas utilisable dans le planning : utilisez des lettres, des chiffres, des espaces, « _ » ou « - » (pas de « , » « : » « # »).",
         "level_name_is_key": "Le nom « {name} » est déjà celui d'un autre niveau dans le planning (home, sleep, eco, away, comfort, activity, frost) : choisissez-en un autre.",
         "calibration_sensor_required": "Le calibrage écrit la température de la pièce dans la tête thermostatique : il lui faut donc un capteur de température dans la pièce. Ajoutez-en un, ou réglez le calibrage sur Désactivé.",
+        "internal_offset_sensor_conflict": "Le décalage interne utilise la température de la tête thermostatique et son décalage configuré. Laissez les capteurs de température de la pièce vides.",
         "calibration_entities_required": "Choisissez les entités number de la tête dans lesquelles le calibrage écrit (le décalage ou la température externe), ou réglez le calibrage sur Désactivé à la page précédente.",
         "entity_is_circuit": "{entity} est un relais de circuit de {owner}. Il ne peut pas aussi être un appareil d'une pièce ou un autre circuit."
       }
@@ -1083,7 +1084,8 @@
       "options": {
         "off": "Arrêt",
         "offset": "Décalage",
-        "external": "Entrée de température externe"
+        "external": "Entrée de température externe",
+        "internal": "Décalage interne"
       }
     },
     "window_action": {

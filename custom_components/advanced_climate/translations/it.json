@@ -621,7 +621,7 @@
           },
           "data_description": {
             "temperature_sensors": "Sensori nella stanza, usati al posto del sensore del termostato (più precisi se il termostato è vicino a una fonte di calore). Lascia vuoto per usare il sensore del termostato; obbligatori per i relè, che non hanno un sensore.",
-            "calibration_mode": "Serve un sensore di temperatura della stanza qui sopra. Offset: corregge il sensore della valvola. Temperatura esterna: scrive la temperatura della stanza nella valvola (se lo supporta). Altrimenti spento.",
+            "calibration_mode": "Offset: corregge il sensore della valvola usando un sensore della stanza. Temperatura esterna: scrive la temperatura della stanza nella valvola (se lo supporta). Offset interno: legge l'offset della valvola senza modificarlo. Altrimenti spento.",
             "occupancy_sensors": "Sensori di movimento / presenza della stanza: quando la stanza resta vuota per un po' passa a eco anche se qualcuno è a casa. Lascia vuoto per le stanze che devono seguire solo il programma.",
             "humidity_sensor": "Solo per l'avviso di rischio muffa: l'umidità della stanza, insieme alla temperatura esterna della casa, dà l'umidità sulla parete più fredda. Senza (o senza una temperatura esterna) non arriva nessun avviso di muffa."
           }
@@ -695,7 +695,7 @@
           },
           "data_description": {
             "temperature_aggregation": "Con più sensori: media, il più freddo o la mediana.",
-            "calibration_entities": "Le entità number della valvola termostatica (offset o temperatura esterna).",
+            "calibration_entities": "Le entità number della valvola termostatica (offset o temperatura esterna). In modalità Offset interno l'offset selezionato viene solo letto, mai modificato.",
             "occupancy_minutes": "Per quanto la stanza deve restare vuota prima di passare a eco.",
             "occupancy_return_minutes": "Per quanto qualcuno deve essere presente senza interruzioni prima che una stanza passata a eco per mancanza di occupazione torni al suo programma. 0 = subito (come prima). Una visita più breve (qualcuno prende qualcosa ed esce) lascia la stanza in eco, e il conteggio riparte alla presenza successiva. La presenza conta solo senza interruzioni: un sensore di movimento che si spegne tra un movimento e l'altro fa ripartire il conteggio. Un sensore di presenza (mmWave) o un sensore di movimento con un lungo tempo di ritorno va meglio.",
             "hysteresis": "Con un sensore della stanza decide l'antigelo: sotto questo valore le valvole termostatiche vengono forzate ad aprirsi, fino ad antigelo più questo valore. Con 'Approfittare della caldaia già accesa': mentre la caldaia è accesa per altre stanze, la stanza ne approfitta quando è sotto il suo obiettivo di meno di questo valore (non chiede ancora calore)."
@@ -799,7 +799,8 @@
         "invalid_level_name": "Il nome di livello \"{name}\" non si può usare nel programma: usa lettere, cifre, spazi, \"_\" o \"-\" (niente \",\" \":\" \"#\").",
         "level_name_is_key": "Il nome \"{name}\" è già il nome di un altro livello nel programma (home, sleep, eco, away, comfort, activity, frost): scegline un altro.",
         "calibration_sensor_required": "La calibrazione scrive la temperatura della stanza nella valvola termostatica, quindi serve un sensore di temperatura nella stanza. Aggiungine uno o imposta la calibrazione su Spento.",
-        "calibration_entities_required": "Scegli le entità number della valvola in cui scrive la calibrazione (l'offset o la temperatura esterna), oppure imposta la calibrazione su Spento nella pagina precedente.",
+        "internal_offset_sensor_conflict": "L'offset interno usa la temperatura della valvola e il suo offset configurato. Lascia vuoti i sensori di temperatura della stanza.",
+        "calibration_entities_required": "Scegli le entità number usate dalla calibrazione (l'offset o la temperatura esterna), oppure imposta la calibrazione su Spento nella pagina precedente.",
         "entity_is_circuit": "{entity} è un relè di circuito di {owner}. Non può essere anche un dispositivo di una stanza o un altro circuito."
       }
     },
@@ -1083,7 +1084,8 @@
       "options": {
         "off": "Spento",
         "offset": "Offset",
-        "external": "Ingresso della temperatura esterna"
+        "external": "Ingresso della temperatura esterna",
+        "internal": "Offset interno"
       }
     },
     "window_action": {

@@ -397,6 +397,7 @@ AGG_MEDIAN: Final = "median"
 CALIBRATION_OFF: Final = "off"
 CALIBRATION_OFFSET: Final = "offset"
 CALIBRATION_EXTERNAL: Final = "external"
+CALIBRATION_INTERNAL: Final = "internal"
 # The external temperature is sent again at least this often (minutes), also
 # unchanged: a Sonoff TRVZB goes back to its own sensor after about 120 minutes
 # without a value, so 30 leaves room for three lost writes.

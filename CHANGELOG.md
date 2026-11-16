@@ -5,7 +5,7 @@ release (and of each beta pre-release) are taken from here: a beta shows the
 *Unreleased* section, a release its own section. Older versions: see the
 GitHub releases.
 
-## Unreleased
+## 2.6.5 – 2026-11-16
 
 ### ⚠️ Before you update: the *Reference room* is removed
 

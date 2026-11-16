@@ -1,4 +1,4 @@
-"""Serve the Smart Heating Control Lovelace card and add it to the dashboards.
+"""Serve the Smart Heating Control card and panel; add the card to the dashboards.
 
 1. The file is served by the integration at CARD_URL (no cache headers). It
    only imports the card from its modules (www/shc), served at
@@ -24,7 +24,7 @@ from typing import Any
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, Event, HomeAssistant
 
-from .const import CARD_URL, DOMAIN, LEGACY_CARD_URL
+from .const import CARD_URL, DOMAIN, LEGACY_CARD_URL, PANEL_ELEMENT, PANEL_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +40,43 @@ MANIFEST = Path(__file__).parent / "manifest.json"
 def modules_url(version: str) -> str:
     """URL of the folder of the card modules of a version (what the card file imports)."""
     return f"/{DOMAIN}/{version}/shc"
+
+
+async def async_register_panel(hass: HomeAssistant) -> None:
+    """Add the SHC panel to the sidebar, for every user (once; a new house adds it back)."""
+    if PANEL_URL in hass.data.get("frontend_panels", {}):
+        return
+    manifest = json.loads(await hass.async_add_executor_job(MANIFEST.read_text, "utf-8"))
+    try:
+        from homeassistant.components import frontend
+
+        frontend.async_register_built_in_panel(
+            hass,
+            component_name="custom",
+            sidebar_title="SHC",
+            sidebar_icon="mdi:radiator",
+            frontend_url_path=PANEL_URL,
+            require_admin=False,
+            config={
+                "_panel_custom": {
+                    "name": PANEL_ELEMENT,
+                    "module_url": f"{modules_url(manifest.get('version', '0'))}/panel.js",
+                    "embed_iframe": False,
+                    "trust_external": False,
+                }
+            },
+        )
+    except (ImportError, KeyError, ValueError) as err:
+        _LOGGER.debug("The SHC panel is not added to the sidebar: %s", err)
+
+
+def async_remove_panel(hass: HomeAssistant) -> None:
+    """Take the SHC panel off the sidebar (when the last house is deleted)."""
+    if PANEL_URL not in hass.data.get("frontend_panels", {}):
+        return
+    from homeassistant.components import frontend
+
+    frontend.async_remove_panel(hass, PANEL_URL)
 
 
 async def async_register_card(hass: HomeAssistant) -> None:

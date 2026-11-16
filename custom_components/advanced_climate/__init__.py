@@ -31,7 +31,12 @@ from .const import (
     SCHEDULE_INTERNAL,
     SUBENTRY_ROOM,
 )
-from .frontend import async_register_card, async_remove_lovelace_resource
+from .frontend import (
+    async_register_card,
+    async_register_panel,
+    async_remove_lovelace_resource,
+    async_remove_panel,
+)
 from .house import House
 from .scenarios import check as check_scenarios
 from .scenarios import remove_issues as remove_scenario_issues
@@ -90,6 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdvancedClimateConfigEnt
     for subentry in list(entry.subentries.values()):
         if subentry.unique_id == "whole_house" and subentry.title == entry.title:
             hass.config_entries.async_update_subentry(entry, subentry, title="Whole house")
+    await async_register_panel(hass)
     house = House(hass, entry)
     await house.async_setup()
     entry.runtime_data = house
@@ -198,8 +204,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: AdvancedClimateConfigEn
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Remove the Repairs issues of the house; the dashboard resource with the last house."""
+    """Remove the Repairs issues of the house; the panel and the dashboard resource with the last house."""
     remove_scenario_issues(hass, entry.entry_id)
     if hass.config_entries.async_entries(DOMAIN):
         return
+    async_remove_panel(hass)
     await async_remove_lovelace_resource(hass)

@@ -403,6 +403,44 @@ async def test_card_modules_served_under_the_version(hass: HomeAssistant) -> Non
     hass.data.pop(f"{DOMAIN}_card_registered")
 
 
+async def test_panel_in_the_sidebar_until_the_last_house_is_deleted(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The SHC panel is in the sidebar for every user, from the folder of the version."""
+    import json
+    from unittest.mock import patch
+
+    from custom_components.advanced_climate import frontend as shc_frontend
+    from custom_components.advanced_climate.const import PANEL_URL
+
+    panels: dict = {}
+
+    def register(hass: HomeAssistant, **kwargs: object) -> None:
+        hass.data.setdefault("frontend_panels", {})[kwargs["frontend_url_path"]] = kwargs
+        panels.update(kwargs)
+
+    def remove(hass: HomeAssistant, path: str, **_kwargs: object) -> None:
+        hass.data["frontend_panels"].pop(path)
+
+    version = json.loads(shc_frontend.MANIFEST.read_text())["version"]
+    with (
+        patch("homeassistant.components.frontend.async_register_built_in_panel", register),
+        patch("homeassistant.components.frontend.async_remove_panel", remove),
+    ):
+        entry = await _setup(hass, freezer)
+        assert panels["frontend_url_path"] == PANEL_URL
+        assert panels["sidebar_title"] == "SHC"
+        assert panels["sidebar_icon"] == "mdi:radiator"
+        assert panels["require_admin"] is False
+        custom = panels["config"]["_panel_custom"]
+        assert custom["name"] == "shc-panel"
+        assert custom["module_url"] == f"/{DOMAIN}/{version}/shc/panel.js"
+        assert (shc_frontend.CARD_MODULES / "panel.js").is_file()
+        assert await hass.config_entries.async_remove(entry.entry_id)
+        await hass.async_block_till_done()
+        assert PANEL_URL not in hass.data["frontend_panels"]
+
+
 async def test_card_resource_moved_after_the_rename(hass: HomeAssistant) -> None:
     """The resource of the card before the rename is moved to the new URL."""
     from custom_components.advanced_climate.const import CARD_URL, LEGACY_CARD_URL

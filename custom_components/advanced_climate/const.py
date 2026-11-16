@@ -19,6 +19,9 @@ CARD_URL: Final = f"/{DOMAIN}/smart-heating-control-card.js"
 # The card URL before the rename: not served; a dashboard resource with it is
 # moved to CARD_URL.
 LEGACY_CARD_URL: Final = f"/{DOMAIN}/advanced-climate-card.js"
+# The panel in the sidebar: its address (/shc) and its element (www/shc/panel.js).
+PANEL_URL: Final = "shc"
+PANEL_ELEMENT: Final = "shc-panel"
 
 # ---------------------------------------------------------------------------
 # Presets (same names as Generic Thermostat)

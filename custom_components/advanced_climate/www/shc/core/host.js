@@ -125,6 +125,7 @@ export const HostMixin = (Base) =>
       for (const [k, v] of Object.entries(this._stats || {})) if (v.failed) delete this._stats[k];
       if (this._historyLog?.failed) this._historyLog = null;
       if (this._weekLog?.failed) this._weekLog = null;
+      if (this._heatmap?.failed) this._heatmap = null;
       this._lastKey = ""; // drawn again (and asked again) even if no entity changed
     }
 

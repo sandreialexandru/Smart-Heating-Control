@@ -102,6 +102,14 @@ cât timp le păstrează Home Assistant.
   vin din istoricul Home Assistant, păstrat implicit 10 zile: zilele mai vechi
   nu au bară.
 
+- **Încălzirea pe ore**: dedesubt, un rând de 24 de ore pentru fiecare cameră,
+  cu atât mai închis la culoare cu cât camera a fost încălzită mai multe
+  minute în ora aceea, în ultimele 7 zile: ca medie a celor 7 zile (când
+  încălzește de obicei o cameră) sau pentru una dintre ele. Vine din istoricul
+  Home Assistant (cererea de căldură a fiecărei camere cât timp sursa de
+  căldură a funcționat), deci are nevoie ca zilele acelea să fie în istoric
+  (implicit 10); orele sunt cele din fusul orar al casei.
+
 Cât timp tabul este deschis, statisticile se cer din nou la fiecare 5 minute.
 
 ## Istoric

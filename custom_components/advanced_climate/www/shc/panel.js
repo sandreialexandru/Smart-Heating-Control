@@ -200,6 +200,20 @@ const PANEL_STYLE = `
   :host([narrow]) .pd-val { grid-column: 2 / 3; grid-row: 2; font-size: 0.9em; }
   :host([narrow]) .pd-bat { grid-column: 3; grid-row: 1; }
   :host([narrow]) .pd-ago { grid-column: 3; grid-row: 2; }
+  /* The heating by hour: a row of 24 hours for each room, the darker the more minutes heated. */
+  .hm { margin-top: 16px; }
+  .hm-days { margin: 8px 0; }
+  .hm-grid { display: grid; gap: 3px; }
+  .hm-row { display: grid; grid-template-columns: minmax(70px, 140px) repeat(24, minmax(0, 1fr)); gap: 2px; align-items: center; }
+  .hm-name { font-size: 0.85em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 6px; }
+  .hm-hour { font-size: 0.68em; color: var(--ac-muted); }
+  .hm-cell { height: 22px; border-radius: 3px; background: color-mix(in srgb, var(--ac-hot) var(--p), var(--ac-surface-2)); }
+  .hm-cell.none { background: none; box-shadow: inset 0 0 0 1px var(--ac-line); }
+  .hm-legend { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.75em; color: var(--ac-muted); }
+  .hm-legend i { width: 120px; height: 10px; border-radius: 3px; background: linear-gradient(90deg, var(--ac-surface-2), var(--ac-hot)); }
+  :host([narrow]) .hm-row { grid-template-columns: 64px repeat(24, minmax(0, 1fr)); gap: 1px; }
+  :host([narrow]) .hm-cell { height: 18px; border-radius: 2px; }
+  :host([narrow]) .hm-days .seg { font-size: 0.8em; padding: 0 1px; }
   /* The alerts on now, on top of the history. */
   .pa-now { margin-bottom: 16px; }
   .pa-now .acount { display: inline-flex; min-width: 1.4em; justify-content: center; padding: 0 6px; border-radius: 999px; font-size: 0.8em;
@@ -457,7 +471,11 @@ class ShcPanel extends ShcBase {
     // (the alerts on now on top); fetched only while shown.
     const extra = [];
     if (tab === "week") extra.push({ k: "week", html: this._weekHtml(houses) });
-    if (tab === "stats") extra.push({ k: "stats", html: this._statsHtml(houses) });
+    if (tab === "stats") {
+      extra.push({ k: "stats", html: this._statsHtml(houses) });
+      const heat = this._heatmapHtml(houses);
+      if (heat) extra.push({ k: "heatmap", html: heat });
+    }
     if (tab === "devices") {
       const humidity = this._humidityTabHtml(houses);
       if (humidity) extra.push({ k: "humidity", html: humidity });
@@ -507,7 +525,7 @@ class ShcPanel extends ShcBase {
       return;
     }
     const own = ev.target.closest?.(
-      '[data-action="panel-tab"], [data-action="stats-period"], [data-action="stats-pick"], [data-action="history-kind"], [data-action="week-day"]'
+      '[data-action="panel-tab"], [data-action="stats-period"], [data-action="stats-pick"], [data-action="history-kind"], [data-action="week-day"], [data-action="heat-day"]'
     );
     if (own) {
       const option = own.dataset.option;
@@ -521,6 +539,7 @@ class ShcPanel extends ShcBase {
         const t = own.dataset.t ? Number(own.dataset.t) : null;
         this._statsPick = t === this._statsPick ? null : t;
       } else if (action === "week-day") this._weekDay = option;
+      else if (action === "heat-day") this._heatDay = option;
       else this._historyKind = option;
       this._render();
       return;

@@ -17,6 +17,7 @@ import { ReasonMixin } from "../room/reason.js";
 import { RoomMixin } from "../room/room.js";
 import { ScheduleMixin } from "../schedule/editor.js";
 import { ProfilesMixin } from "../schedule/profiles.js";
+import { HeatmapMixin } from "../stats/heatmap.js";
 import { StatsMixin } from "../stats/stats.js";
 import { WeekMixin } from "../week/week.js";
 import { EventsMixin } from "./events.js";
@@ -43,6 +44,7 @@ const MIXINS = [
   CompactMixin,
   HouseMixin,
   StatsMixin,
+  HeatmapMixin,
   GroupsMixin,
   WeekMixin,
   DevicesMixin,

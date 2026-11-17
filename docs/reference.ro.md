@@ -509,6 +509,10 @@ active). Taburi (ultimul se păstrează în browser):
   singură dată, cele indisponibile primele, apoi bateria descărcată; bateria
   este un senzor sau senzor binar cu clasa `battery` pe același dispozitiv
   (registrul de entități din frontend); ora este `last_updated`.
+- **Încălzirea pe ore** (Statistici): `history/history_during_period` al
+  senzorului *Cerere de căldură* al fiecărei camere (cu atribute) pentru
+  ultimele 7 zile; încălzită cât timp e `on` și `heating` nu e fals; minute pe
+  oră în fusul orar al casei, media zilelor sau o zi.
 - **Istoric**: alertele active (din `alerts` ale camerelor, o singură dată;
   camera și începutul din jurnal), apoi `advanced_climate/history`.
 

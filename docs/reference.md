@@ -481,6 +481,10 @@ kept in the browser):
   each, unavailable first, then a low battery; the battery is a `battery`
   device class sensor or binary sensor on the same device (entity registry of
   the frontend); the time is `last_updated`.
+- **Heating by hour** (Statistics): `history/history_during_period` of the
+  *Heat demand* of every room (with attributes) for the last 7 days; heated
+  while `on` and `heating` is not false; minutes per hour of the time zone of
+  the house, the mean of the days or one day.
 - **History**: the alerts on now (from the `alerts` of the rooms, once each;
   room and start from the journal), then `advanced_climate/history`.
 

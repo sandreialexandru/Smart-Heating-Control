@@ -26,6 +26,9 @@ GitHub releases.
   lowest and highest in the title and in the detail of a bar, and each room's
   mean temperature and target (its lowest and highest when hovered). The
   outdoor mean is also a line over the bars, on its own scale.
+- 🔥 **Heating by hour** (panel, *Statistics* tab): for each room a row of 24
+  hours, the darker the more minutes it was heated, over the last 7 days: the
+  mean of the 7 days (when each room usually heats) or one of them.
 - 🗓️ **The next days** (panel, *Schedule* tab): today and the next 6 days as
   the schedule will run them, every room on the day chosen with its levels on
   a shared time line and the time now on today. The holidays (Workday), the

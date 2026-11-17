@@ -733,3 +733,27 @@ test("statistics: the outdoor mean as a line over the bars of the house, on its 
   eq(await inPanel(p, (sr) => [!!sr.querySelector("svg.ps-line"), !!sr.querySelector(".ps-legend")]), [false, false], "no outdoor statistics: no line");
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });
+
+test("statistics: the heating by hour of every room, the mean of 7 days or one day", async (p) => {
+  await openPanel(p, { rooms: [{ id: "r1", name: "Bedroom" }, { id: "r2", name: "Kid" }] });
+  await clickIn(p, '[data-action="panel-tab"][data-option="stats"]'); await p.waitForTimeout(300);
+  const look = () => inPanel(p, (sr) => ({
+    chips: [...sr.querySelectorAll('[data-action="heat-day"]')].map((b) => b.innerText.trim()),
+    active: sr.querySelector('[data-action="heat-day"].active')?.dataset.option,
+    rows: [...sr.querySelectorAll(".hm-row:not(.hm-head)")].map((r) => r.querySelector(".hm-name").innerText),
+    cells: sr.querySelectorAll(".hm-row:not(.hm-head)")[0].querySelectorAll(".hm-cell").length,
+    full: [...sr.querySelectorAll(".hm-row:not(.hm-head)")[0].querySelectorAll(".hm-cell")].map((c) => c.style.getPropertyValue("--p")),
+    title: [...sr.querySelectorAll(".hm-row:not(.hm-head)")[0].querySelectorAll(".hm-cell")].map((c) => c.title).find((t) => / 60 min/.test(t)) || "",
+    asked: window.calls.ws.filter((c) => c.type === "history/history_during_period" && c.entity_ids.includes("binary_sensor.bedroom_heat_demand")).length,
+  }));
+  const mean = await look();
+  eq([mean.chips.length, mean.chips[0], mean.active], [8, "Mean", "mean"], "the mean and the 7 days");
+  eq([mean.rows, mean.cells], [["Bedroom", "Kid"], 24], "a row of 24 hours for each room");
+  ok(mean.full.filter((v) => v === "100%").length >= 6, "the hours heated every day: " + mean.full);
+  ok(/^Bedroom \d\d:00–\d\d:00: heated 60 min a day on average$/.test(mean.title), "the minutes: " + mean.title);
+  eq(mean.asked, 1, "one request for every room");
+  await clickIn(p, '[data-action="heat-day"]:nth-child(8)'); await p.waitForTimeout(100);
+  const today = await look();
+  ok(today.active !== "mean" && today.full.some((v) => v === ""), "today: the hours to come empty");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});

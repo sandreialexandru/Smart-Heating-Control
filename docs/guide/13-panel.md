@@ -98,6 +98,13 @@ are kept for as long as Home Assistant keeps those.
   history of Home Assistant, which is kept for 10 days by default: older days
   have no bar.
 
+- **Heating by hour**: below, a row of 24 hours for each room, the darker the
+  more minutes of that hour the room was heated, over the last 7 days: as the
+  mean of the 7 days (when a room usually heats), or for one of them. It comes
+  from the history of Home Assistant (the heat demand of each room while its
+  heat source ran), so it needs those days in the history (10 by default); the
+  hours are those of the time zone of the house.
+
 The statistics are asked for again every 5 minutes while the tab is open.
 
 ## History

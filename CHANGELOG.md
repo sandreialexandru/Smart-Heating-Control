@@ -43,6 +43,9 @@ GitHub releases.
 - 🏢 **Rooms in groups** (panel): by floor (the floor of the area of the
   room) or by heating circuit, in the list of rooms, the *Schedule* and the
   *Devices*; chosen next to the tabs and kept in the browser.
+- 🏘️ **Several houses** (panel): every tab shows the rooms of each house under
+  its name, so rooms with the same name are told apart; in the History a room
+  is written with its house (*Cabin · Bedroom*).
 - 💧 **Humidity of every room** (panel, *Devices* tab): the air and the
   coldest wall of each room with a humidity sensor, those at risk of mold
   first; a tap opens its Details.
@@ -63,6 +66,8 @@ GitHub releases.
 - 🛒 Installing from the **Marketplace** of Home Assistant (2026.11), where the
   integration is in the default list: README, guide, reference and
   configurator; HACS stays for older versions of Home Assistant.
+- 🧪 Tests of the panel and the card with a big house (24 rooms on 3 floors,
+  72 devices) and with several houses, on a desktop and on a phone.
 
 ### Changed
 

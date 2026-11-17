@@ -61,6 +61,9 @@ const PANEL_STYLE = `
   .gname { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.04em; }
   .pw-group, .pd-group { grid-column: 1 / -1; margin-top: 8px; font-size: 0.8em; font-weight: 600; color: var(--ac-muted);
     text-transform: uppercase; letter-spacing: 0.04em; }
+  /* The name of a house when there are several (two of their rooms can share a name). */
+  .pw-group.ps-house, .pd-group.pd-house { margin-top: 14px; font-size: 1em; text-transform: none; letter-spacing: 0; color: var(--primary-text-color); }
+  .pw-group.ps-house:first-child, .pd-group.pd-house:first-child { margin-top: 0; }
   :host([narrow]) .ptabs { padding: 8px 8px 0; }
   :host([narrow]) .pgroup { flex: 1 1 100%; }
   :host([narrow][room][tab="rooms"]) .ptabs { display: none; }

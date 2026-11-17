@@ -135,17 +135,28 @@ export const HeatmapMixin = (Base) =>
         )}" data-action="heat-cell" data-cell="${esc(id)}"></button>`;
       };
       const marks = hours.map((hr) => `<span class="hm-hour">${hr % 3 === 0 ? String(hr).padStart(2, "0") : ""}</span>`).join("");
-      const rows = this._roomGroups(rooms, this._gmodeNow || "none")
-        .map(
-          (g) =>
-            (g.name !== null ? `<div class="pw-group">${esc(g.name)}</div>` : "") +
-            g.rooms
-              .map((r) => {
-                const a = r.attributes;
-                return `<div class="hm-row"><span class="hm-name">${esc(a.room_name)}</span>${hours.map((hr) => cell(a, hr)).join("")}</div>`;
-              })
+      // Each house with its rooms (its name when there are several: two rooms can share a name).
+      const rows = houses
+        .map((house) => {
+          const own = house.rooms.filter((r) => r.attributes.entities?.heat_demand);
+          if (!own.length) return "";
+          const title = houses.length > 1 ? `<div class="pw-group ps-house hm-house">${esc(house.name || "")}</div>` : "";
+          return (
+            title +
+            this._roomGroups(own, this._gmodeNow || "none")
+              .map(
+                (g) =>
+                  (g.name !== null ? `<div class="pw-group">${esc(g.name)}</div>` : "") +
+                  g.rooms
+                    .map((r) => {
+                      const a = r.attributes;
+                      return `<div class="hm-row"><span class="hm-name">${esc(a.room_name)}</span>${hours.map((hr) => cell(a, hr)).join("")}</div>`;
+                    })
+                    .join("")
+              )
               .join("")
-        )
+          );
+        })
         .join("");
       const detail = picked
         ? `<div class="ps-detail hm-detail"><span>${esc(picked)}</span><button class="ps-unpick" data-action="heat-cell" data-cell="${esc(

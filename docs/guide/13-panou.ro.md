@@ -38,6 +38,13 @@ fără circuit sunt la sfârșit. Alegerea apare doar când o cameră are etaj s
 circuit și se păstrează în browser. Grupurile se folosesc în lista camerelor,
 în tabul Program și în tabul Dispozitive.
 
+### Mai multe case
+
+Cu mai multe case, fiecare tab arată camerele fiecărei case sub numele ei,
+așa că două camere cu același nume (un *Dormitor* în fiecare casă) se
+deosebesc. În Istoric o cameră este scrisă cu casa ei (*Cabana · Dormitor*),
+iar filtrul camerelor le arată sub casa lor.
+
 ## Program
 
 Azi și următoarele 6 zile, așa cum le va rula programul: toate camerele în

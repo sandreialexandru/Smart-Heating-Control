@@ -81,10 +81,6 @@ export const DevicesMixin = (Base) =>
         });
       if (!rows.length) return "";
       rows.sort((x, y) => Number(y.risk) - Number(x.risk) || (y.wall ?? y.air) - (x.wall ?? x.air));
-      const groupOf = this._groupOf(all, this._gmodeNow || "none");
-      const order = this._roomGroups(all, this._gmodeNow || "none");
-      const byGroup = new Map(order.map((g) => [g.key, []]));
-      for (const r of rows) byGroup.get(groupOf(r.a.room_id)?.key ?? "")?.push(r);
       const pct = (v) => (v === null ? "–" : `${Math.round(v)}%`);
       const item = ({ a, air, wall, risk }) =>
         `<li class="pd-row ph-hum ${risk ? "risk" : ""} link" data-action="humidity-room" data-room="${esc(a.room_id)}" role="button" tabindex="0">
@@ -94,9 +90,25 @@ export const DevicesMixin = (Base) =>
             <span class="pd-bat"><small class="pl-lab">${esc(this._t("hu_wall"))}</small> ${esc(pct(wall))}</span>
             <span></span>
           </li>`;
-      const items = order
-        .filter((g) => byGroup.get(g.key).length)
-        .map((g) => (g.name !== null ? `<li class="pd-group">${esc(g.name)}</li>` : "") + byGroup.get(g.key).map(item).join(""))
+      // Each house (its name when there are several), then the groups of its rooms.
+      const items = houses
+        .map((house) => {
+          const ids = new Set(house.rooms.map((r) => r.attributes.room_id));
+          const own = rows.filter((r) => ids.has(r.a.room_id));
+          if (!own.length) return "";
+          const groupOf = this._groupOf(house.rooms, this._gmodeNow || "none");
+          const order = this._roomGroups(house.rooms, this._gmodeNow || "none");
+          const byGroup = new Map(order.map((g) => [g.key, []]));
+          for (const r of own) byGroup.get(groupOf(r.a.room_id)?.key ?? "")?.push(r);
+          const title = houses.length > 1 ? `<li class="pd-group pd-house">${esc(house.name || "")}</li>` : "";
+          return (
+            title +
+            order
+              .filter((g) => byGroup.get(g.key).length)
+              .map((g) => (g.name !== null ? `<li class="pd-group">${esc(g.name)}</li>` : "") + byGroup.get(g.key).map(item).join(""))
+              .join("")
+          );
+        })
         .join("");
       const risky = rows.filter((r) => r.risk).length;
       return `<section class="block pd-humidity"><h3 class="ps-title">${esc(this._t("hu_title"))}${

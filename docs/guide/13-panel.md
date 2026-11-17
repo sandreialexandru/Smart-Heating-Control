@@ -37,6 +37,13 @@ circuit come last. The choice is there only when some room has a floor or a
 circuit, and is kept in the browser. The groups are used in the list of
 rooms, in the Schedule tab and in the Devices tab.
 
+### Several houses
+
+With several houses, every tab shows the rooms of each house under its name,
+so two rooms with the same name (a *Bedroom* in each house) are told apart.
+In the History a room is written with its house (*Cabin · Bedroom*), and the
+room filter lists the rooms under their house.
+
 ## Schedule
 
 Today and the next 6 days as the schedule will run them: every room on the

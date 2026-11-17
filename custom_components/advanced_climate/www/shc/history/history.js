@@ -35,8 +35,10 @@ export const HistoryMixin = (Base) =>
       const items = [];
       const attrs = {};
       for (const house of houses) for (const r of house.rooms) attrs[r.attributes.room_id] = r.attributes;
+      // With several houses a room is told with its house ("Cabin · Bedroom"): two can share a name.
+      const several = (data?.houses || []).length > 1;
       for (const h of data?.houses || []) {
-        const names = Object.fromEntries((h.rooms || []).map((r) => [r.room_id, r.name]));
+        const names = Object.fromEntries((h.rooms || []).map((r) => [r.room_id, several ? `${h.name || ""} · ${r.name}` : r.name]));
         for (const r of h.rooms || []) {
           const a = attrs[r.room_id] || {};
           for (const d of r.decisions || []) {
@@ -51,7 +53,7 @@ export const HistoryMixin = (Base) =>
               t: Date.parse(d.time),
               room: r.room_id,
               kind: "decision",
-              html: `<span class="ph-ico">${this._icon(this._ruleIcon(d.rule))}</span><span class="ph-text"><b>${esc(r.name)}</b> ${esc(text)}</span>`,
+              html: `<span class="ph-ico">${this._icon(this._ruleIcon(d.rule))}</span><span class="ph-text"><b>${esc(names[r.room_id])}</b> ${esc(text)}</span>`,
             });
           }
         }
@@ -64,7 +66,7 @@ export const HistoryMixin = (Base) =>
             ? this._t("hi_still")
             : `${this._t("hi_until")} ${this._fmtTime(al.end)} (${this._duration((end - start) / 60e3)})${al.restart ? ` · ${this._t("hi_restart")}` : ""}`;
           const kind = ALERT_ERRORS.includes(al.code) ? "error" : "warn";
-          const where = al.room ? names[al.room] || "" : this._t("hi_house");
+          const where = al.room ? names[al.room] || "" : several ? `${h.name || ""} · ${this._t("hi_house")}` : this._t("hi_house");
           // "Mold risk: the coldest wall …" after the title "Mold risk": the subject once (as in the room).
           let text = this._alertText(al);
           if (text.toLowerCase().startsWith(`${title.toLowerCase()}: `)) text = text.slice(title.length + 2).replace(/^./, (c) => c.toUpperCase());
@@ -121,7 +123,9 @@ export const HistoryMixin = (Base) =>
     /** The alerts on now, on top of the history: where, what, since when, and the room a tap opens. */
     _alertsNowHtml(houses) {
       const alerts = this._activeAlerts(houses);
-      const names = Object.fromEntries(houses.flatMap((h) => h.rooms.map((r) => [r.attributes.room_id, r.attributes.room_name])));
+      const names = Object.fromEntries(
+        houses.flatMap((h) => h.rooms.map((r) => [r.attributes.room_id, houses.length > 1 ? `${h.name || ""} · ${r.attributes.room_name}` : r.attributes.room_name]))
+      );
       const head = `<h3 class="ps-title">${esc(this._t("an_title"))}${alerts.length ? ` <span class="acount">${alerts.length}</span>` : ""}</h3>`;
       if (!alerts.length) return `<section class="block pa-now">${head}<p class="muted">${esc(this._t("an_none"))}</p></section>`;
       const items = alerts
@@ -161,9 +165,15 @@ export const HistoryMixin = (Base) =>
           }">${esc(this._t(`hi_${k}`))}</button>`
         )
         .join("");
-      const rooms = houses.flatMap((h) => h.rooms.map((r) => r.attributes));
+      // The rooms of each house under its name when there are several.
+      const opt = (a) => `<option value="${esc(a.room_id)}" ${a.room_id === room ? "selected" : ""}>${esc(a.room_name)}</option>`;
       const options = [`<option value="" ${room ? "" : "selected"}>${esc(this._t("hi_every_room"))}</option>`]
-        .concat(rooms.map((a) => `<option value="${esc(a.room_id)}" ${a.room_id === room ? "selected" : ""}>${esc(a.room_name)}</option>`))
+        .concat(
+          houses.map((h) => {
+            const own = h.rooms.map((r) => opt(r.attributes)).join("");
+            return houses.length > 1 ? `<optgroup label="${esc(h.name || "")}">${own}</optgroup>` : own;
+          })
+        )
         .join("");
       const head = `<div class="ph-filters"><div class="segmented" style="--n:3" role="group">${seg}</div>
         <select class="ph-room" data-action="history-room" aria-label="${esc(this._t("hi_every_room"))}">${options}</select></div>`;

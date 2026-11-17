@@ -512,6 +512,72 @@ async def test_history_of_the_decisions_and_alerts(
     assert "restart" not in notifier.journal[0]
 
 
+async def test_panel_commands_with_two_houses(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Two houses, each with a Bedroom: the week and the history give each house its own rooms."""
+    from custom_components.advanced_climate.websocket import HISTORY, WEEK, ws_history, ws_week
+
+    first = await _setup(hass, freezer)
+    hass.states.async_set(
+        "climate.cabin",
+        "heat",
+        {
+            "hvac_modes": ["heat", "off"],
+            "current_temperature": 17.0,
+            "temperature": 17.0,
+            "min_temp": 5.0,
+            "max_temp": 30.0,
+        },
+    )
+    async_mock_service(hass, "climate", "set_temperature")
+    async_mock_service(hass, "climate", "set_hvac_mode")
+    second = MockConfigEntry(
+        domain=DOMAIN,
+        title="Cabin",
+        options={"persons": ["person.andrei"], "nearby_zones": []},
+        subentries_data=[
+            {
+                "data": {"source": "climate", "climates": ["climate.cabin"]},
+                "subentry_type": SUBENTRY_ROOM,
+                "title": "Bedroom",
+                "unique_id": None,
+            }
+        ],
+    )
+    second.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(second.entry_id)
+    await hass.async_block_till_done()
+    sent: dict = {}
+
+    class Connection:
+        def send_result(self, msg_id: int, result: dict) -> None:
+            sent.update(id=msg_id, result=result)
+
+    def rooms_of(result: dict) -> dict[str, list[tuple[str, str]]]:
+        return {
+            h["entry_id"]: [(r["room_id"], r["name"]) for r in h["rooms"]] for h in result["houses"]
+        }
+
+    expected = {
+        entry.entry_id: [(room.id, "Bedroom") for room in entry.runtime_data.rooms.values()]
+        for entry in (first, second)
+    }
+    ws_week(hass, Connection(), {"id": 1, "type": WEEK})
+    week = sent["result"]
+    assert [h["name"] for h in week["houses"]] == ["Home", "Cabin"]
+    assert rooms_of(week) == expected
+    assert all(len(h["days"]) == 7 for h in week["houses"])
+    ws_history(hass, Connection(), {"id": 2, "type": HISTORY})
+    assert rooms_of(sent["result"]) == expected
+    # The two rooms are two rooms, even with the same name.
+    ids = [room_id for rooms in expected.values() for room_id, _ in rooms]
+    assert len(set(ids)) == 2
+    await hass.config_entries.async_unload(second.entry_id)
+    await hass.config_entries.async_unload(first.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_week_of_the_schedule_with_holidays_calendar_and_vacation(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:

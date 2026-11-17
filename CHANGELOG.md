@@ -9,6 +9,12 @@ GitHub releases.
 
 ### Fixed
 
+- 🔁 **Set for a while a temperature that is a preset of the thermostat**: a
+  Generic Thermostat given a temperature takes the preset that has it (23 °C:
+  comfort). The room took it off that preset, the thermostat went back to its
+  earlier temperature, then the temperature was sent again, over and over,
+  until the room stopped sending for 15 minutes (*got 40 commands in 10 min*).
+  A thermostat that already holds the temperature now stays on its preset.
 - 🎛️ **Card editor: the switches show what the card does** ([#19](https://github.com/sandreialexandru/Smart-Heating-Control/issues/19)):
   on a new card the switches of the parts shown by default were off while the
   card showed those parts, so turning a part off took a switch on and off

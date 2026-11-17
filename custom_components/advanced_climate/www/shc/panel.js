@@ -70,8 +70,24 @@ const PANEL_STYLE = `
   .ps-stats .segmented, .ph-filters .segmented { max-width: 420px; }
   .ps-title { margin: 8px 0 0; font-size: 0.95em; font-weight: 600; }
   .ps-house { margin: 12px 0 0; font-size: 1.1em; }
-  .ps-cols { display: flex; gap: 6px; height: 190px; overflow-x: auto; }
-  .ps-col { flex: 1 0 34px; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+  /* The columns touch (their room is padding), so the centre of column i is at (i + ½) / n of the width:
+     the line of the outdoor temperature is drawn over them in those units. */
+  .ps-cols { height: 190px; overflow-x: auto; }
+  .ps-inner { position: relative; display: flex; min-width: 100%; height: 100%; }
+  .ps-col { flex: 1 0 40px; box-sizing: border-box; padding: 0 3px; display: flex; flex-direction: column; align-items: center;
+    gap: 4px; min-width: 0; }
+  .ps-col .ps-val, .ps-col .ps-lab { height: 14px; line-height: 14px; }
+  .ps-col .ps-out { height: 13px; line-height: 13px; min-height: 0; }
+  svg.ps-line { position: absolute; left: 0; right: 0; top: 18px; bottom: 18px; width: 100%; height: calc(100% - 36px);
+    overflow: visible; pointer-events: none; }
+  svg.ps-line.under { bottom: 35px; height: calc(100% - 53px); }
+  svg.ps-line line { stroke: var(--ac-out); stroke-width: 2; stroke-linecap: round; }
+  svg.ps-line text { fill: var(--ac-out); font-size: 11px; font-weight: 600; paint-order: stroke;
+    stroke: var(--ha-card-background, var(--card-background-color, #fff)); stroke-width: 3px; }
+  svg.ps-line circle { fill: var(--ac-out); stroke: var(--ha-card-background, var(--card-background-color, #fff)); stroke-width: 1.5; }
+  .ps-legend { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; font-size: 0.85em; font-weight: 400;
+    color: var(--ac-muted); }
+  .ps-legend i { width: 16px; height: 2px; border-radius: 1px; background: var(--ac-out); }
   .ps-area { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
   .ps-bar { width: 100%; max-width: 40px; background: var(--c); border-radius: 6px 6px 2px 2px; }
   .ps-val, .ps-lab { font-size: 0.72em; color: var(--ac-muted); white-space: nowrap; }
@@ -96,8 +112,8 @@ const PANEL_STYLE = `
   .ps-h, .ps-pct { font-size: 0.9em; text-align: right; white-space: nowrap; }
   .ps-pct { color: var(--ac-muted); }
   /* On a phone: narrower bars without their values (the title of a bar has it), a room on two lines. */
-  :host([narrow]) .ps-cols { gap: 3px; }
-  :host([narrow]) .ps-col { flex-basis: 16px; }
+  :host([narrow]) .ps-col { flex-basis: 19px; padding: 0 1.5px; }
+  :host([narrow]) svg.ps-line, :host([narrow]) svg.ps-line.under { top: 0; bottom: 18px; height: calc(100% - 18px); }
   :host([narrow]) .ps-val { display: none; }
   :host([narrow]) .ps-rows { grid-template-columns: minmax(0, 1fr) auto 3em; column-gap: 8px; }
   :host([narrow]) .ps-temp { grid-column: 1 / -1; grid-row: 3; text-align: left; margin-top: -2px; }

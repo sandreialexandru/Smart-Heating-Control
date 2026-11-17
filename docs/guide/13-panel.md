@@ -82,8 +82,11 @@ come from the long-term statistics of Home Assistant (the recorder), so they
 are kept for as long as Home Assistant keeps those.
 
 - **The house**: a bar for each day, week or month with its heating time, and
-  under each bar the mean outdoor temperature of that period. The title gives
-  the total time and the outdoor mean with its lowest and highest value.
+  under each bar the mean outdoor temperature of that period. The outdoor mean
+  is also drawn as a line over the bars, on a scale of its own (its highest
+  and lowest value are written at the left), so colder periods and longer
+  heating can be seen together. The title gives the total time and the outdoor
+  mean with its lowest and highest value.
 - **A tap on a bar** chooses that period: under the bars the time of the
   house, the outdoor temperature (mean, lowest and highest) and the number of
   starts asked; the rooms below then show that period only. A tap on the same

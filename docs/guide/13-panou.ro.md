@@ -87,7 +87,9 @@ cât timp le păstrează Home Assistant.
 
 - **Casa**: o bară pentru fiecare zi, săptămână sau lună, cu timpul de
   încălzire, iar sub fiecare bară media temperaturii de afară în perioada
-  aceea. Titlul dă timpul total și media de afară, cu valoarea cea mai mică și
+  aceea. Media de afară este desenată și ca o linie peste bare, pe o scară
+  proprie (valoarea ei cea mai mare și cea mai mică sunt scrise în stânga),
+  ca perioadele mai reci și încălzirea mai lungă să se vadă împreună. Titlul dă timpul total și media de afară, cu valoarea cea mai mică și
   cea mai mare.
 - **O atingere pe o bară** alege perioada aceea: sub bare apar timpul casei,
   temperatura de afară (media, minimul și maximul) și numărul de porniri

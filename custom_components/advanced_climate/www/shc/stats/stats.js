@@ -224,7 +224,11 @@ export const StatsMixin = (Base) =>
     }
 
     /** Bars standing up, one per period, the value over each; a tap chooses the period. */
-    _statsColumns(values, label, fmt, color, short = fmt, under = null) {
+    /**
+     * The columns of the periods; ``line`` (a value per column, or null) is
+     * drawn over them as a line on a scale of its own (the outdoor temperature).
+     */
+    _statsColumns(values, label, fmt, color, short = fmt, under = null, line = null) {
       // null: not known (no bar, a dash in its title).
       const max = Math.max(0, ...values.map(([, v]) => v ?? 0));
       const picked = this._statsPicked(values);
@@ -239,7 +243,36 @@ export const StatsMixin = (Base) =>
             )}</span>${under ? `<span class="ps-out">${esc(under(t))}</span>` : ""}</button>`;
         })
         .join("");
-      return `<div class="ps-cols">${cols}</div>`;
+      return `<div class="ps-cols"><div class="ps-inner">${cols}${line ? this._statsLine(line, !!under) : ""}</div></div>`;
+    }
+
+    /**
+     * A line over the columns: its points at the centres of the columns, from
+     * its lowest value (bottom) to its highest (top), with a tenth of the
+     * height kept above and below; a gap where a value is missing.
+     */
+    _statsLine(values, under) {
+      const known = values.filter((v) => v !== null && v !== undefined);
+      if (known.length < 2) return "";
+      const lo = Math.min(...known);
+      const hi = Math.max(...known);
+      const n = values.length;
+      const x = (i) => `${(((i + 0.5) / n) * 100).toFixed(3)}%`;
+      const y = (v) => `${(hi === lo ? 50 : 90 - ((v - lo) / (hi - lo)) * 80).toFixed(2)}%`;
+      const parts = [];
+      values.forEach((v, i) => {
+        if (v === null || v === undefined) return;
+        const next = values[i + 1];
+        if (next !== null && next !== undefined) parts.push(`<line x1="${x(i)}" y1="${y(v)}" x2="${x(i + 1)}" y2="${y(next)}"/>`);
+      });
+      values.forEach((v, i) => {
+        if (v !== null && v !== undefined) parts.push(`<circle cx="${x(i)}" cy="${y(v)}" r="3"/>`);
+      });
+      // Its scale: the highest and the lowest value, at the left edge.
+      if (hi !== lo) {
+        parts.push(`<text x="2" y="10%" dy="-6">${esc(this._temp(hi))}</text>`, `<text x="2" y="90%" dy="14">${esc(this._temp(lo))}</text>`);
+      }
+      return `<svg class="ps-line ${under ? "under" : ""}" aria-hidden="true">${parts.join("")}</svg>`;
     }
 
     /** The statistics of every house. */
@@ -330,7 +363,8 @@ export const StatsMixin = (Base) =>
               )}">${this._icon("close")}</button></div>`;
         const wholeOutdoor = outdoor.size ? this._statsTempOver(outdoor, starts) : null;
         const outdoorTitle = wholeOutdoor ? ` · ${esc(this._t("st_outdoor").replace("{t}", this._statsTempText(wholeOutdoor)))}` : "";
-        return `${name}<h3 class="ps-title">${esc(this._t("st_house"))} · ${esc(range)} · ${esc(this._hours(sum(total)))}${outdoorTitle}</h3>
+        const legend = outdoor.size ? `<span class="ps-legend"><i></i>${esc(this._t("st_outdoor_line"))}</span>` : "";
+        return `${name}<h3 class="ps-title">${esc(this._t("st_house"))} · ${esc(range)} · ${esc(this._hours(sum(total)))}${outdoorTitle}${legend}</h3>
           ${
             total.length
               ? this._statsColumns(
@@ -339,7 +373,8 @@ export const StatsMixin = (Base) =>
                   (v) => this._hours(v),
                   "var(--ac-accent)",
                   (v) => this._shortHours(v),
-                  outdoor.size ? outdoorMean : null
+                  outdoor.size ? outdoorMean : null,
+                  outdoor.size ? starts.map((t) => outdoor.get(t)?.mean ?? null) : null
                 )
               : `<p class="muted">${esc(this._t("st_none"))}</p>`
           }

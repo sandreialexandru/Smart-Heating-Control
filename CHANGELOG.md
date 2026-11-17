@@ -24,7 +24,8 @@ GitHub releases.
   room and the starts asked; a tap again (or ✕) the whole span. With the
   temperatures: the mean outdoor temperature under each bar, the mean with the
   lowest and highest in the title and in the detail of a bar, and each room's
-  mean temperature and target (its lowest and highest when hovered).
+  mean temperature and target (its lowest and highest when hovered). The
+  outdoor mean is also a line over the bars, on its own scale.
 - 🗓️ **The next days** (panel, *Schedule* tab): today and the next 6 days as
   the schedule will run them, every room on the day chosen with its levels on
   a shared time line and the time now on today. The holidays (Workday), the

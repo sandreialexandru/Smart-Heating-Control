@@ -711,3 +711,25 @@ test("chart: a history that could not be read is said, and asked for again when 
   await p.keyboard.press("Escape");
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });
+
+test("statistics: the outdoor mean as a line over the bars of the house, on its own scale", async (p) => {
+  await openPanel(p, { rooms: ROOMS });
+  await clickIn(p, '[data-action="panel-tab"][data-option="stats"]'); await p.waitForTimeout(200);
+  const r = await inPanel(p, (sr) => {
+    const svg = sr.querySelectorAll(".ps-cols")[0].querySelector("svg.ps-line");
+    return {
+      legend: sr.querySelector(".ps-legend")?.innerText.trim(),
+      dots: [...svg.querySelectorAll("circle")].map((c) => c.getAttribute("cx")),
+      lines: svg.querySelectorAll("line").length,
+      scale: [...svg.querySelectorAll("text")].map((t) => t.textContent),
+      starts: !!sr.querySelectorAll(".ps-cols")[1]?.querySelector("svg.ps-line"),
+    };
+  });
+  eq(r.legend, "outdoor mean", "the legend");
+  eq([r.dots.length, r.lines, r.dots[0], r.dots[13]], [14, 13, "3.571%", "96.429%"], "a point at the centre of each column");
+  eq(r.scale, ["5.0°", "4.0°"], "its highest and lowest");
+  eq(r.starts, false, "not over the starts");
+  await openPanel(p, { rooms: ROOMS, noTempStats: true });
+  eq(await inPanel(p, (sr) => [!!sr.querySelector("svg.ps-line"), !!sr.querySelector(".ps-legend")]), [false, false], "no outdoor statistics: no line");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});

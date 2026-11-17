@@ -100,11 +100,38 @@ Orice parte se poate ascunde; opțiunile sunt în [ghid](docs/guide/10-card.ro.m
 ## Panoul
 
 O pagină proprie în bara laterală, **SHC**, pentru toți utilizatorii: toată
-casa pe un ecran, programul tuturor camerelor într-o zi (copiat în alte camere
-dintr-o atingere), statistici (timpul de încălzire și temperaturile pe zile,
-săptămâni sau luni), istoricul deciziilor și al alertelor cu alertele active
-sus și toate dispozitivele camerelor cu bateria lor. Nu cere nicio setare;
-detaliile sunt în [ghid](docs/guide/13-panou.ro.md).
+casa pe un ecran, programul tuturor camerelor pentru săptămâna care urmează
+(copiat în alte camere dintr-o atingere), statistici (timpul de încălzire și
+temperaturile pe zile, săptămâni sau luni, și când încălzește fiecare cameră,
+oră cu oră), istoricul deciziilor și al alertelor cu alertele active sus,
+umiditatea camerelor cu riscul de mucegai și toate dispozitivele camerelor cu
+bateria lor. Nu cere nicio setare; detaliile sunt în
+[ghid](docs/guide/13-panou.ro.md).
+
+<table>
+  <tr>
+    <td colspan="2" align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-rooms.png" alt="Toată casa pe un ecran, camerele grupate pe etaje · persoane și date inventate" width="720"><br><sub>Toată casa pe un ecran, camerele grupate pe etaje</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-schedule.png" alt="Săptămâna care urmează a fiecărei camere, cu calendarul · persoane și date inventate" width="360"><br><sub>Săptămâna care urmează a fiecărei camere, cu calendarul</sub></td>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-stats.png" alt="Timpul de încălzire față de temperatura de afară · persoane și date inventate" width="360"><br><sub>Timpul de încălzire față de temperatura de afară</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-heatmap.png" alt="Când încălzește fiecare cameră, oră cu oră · persoane și date inventate" width="360"><br><sub>Când încălzește fiecare cameră, oră cu oră</sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-devices.png" alt="Umiditatea și riscul de mucegai, fiecare dispozitiv cu bateria lui · persoane și date inventate" width="360"><br><sub>Umiditatea și riscul de mucegai, fiecare dispozitiv cu bateria lui</sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-rooms.png" alt="Pe telefon · persoane și date inventate" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-room.png" alt="Pe telefon · persoane și date inventate" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-schedule.png" alt="Pe telefon · persoane și date inventate" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-heatmap.png" alt="Pe telefon · persoane și date inventate" width="180"></td>
+  </tr>
+</table>
+
+<p align="center"><sub>Pe telefon · persoane și date inventate</sub></p>
 
 ## Primii pași
 

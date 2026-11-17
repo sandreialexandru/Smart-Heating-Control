@@ -106,12 +106,38 @@ Chaque partie peut être masquée ; les options sont dans le
 ## Le panneau
 
 Une page à part dans la barre latérale, **SHC**, pour tous les utilisateurs :
-toute la maison sur un écran, le planning de toutes les pièces sur un jour
-(copié vers d'autres pièces en une touche), des statistiques (temps de chauffe
-et températures par jour, semaine ou mois), l'historique des décisions et des
-alertes avec les alertes en cours en haut, et tous les appareils des pièces
-avec leur batterie. Rien à configurer ; les détails sont dans le
-[guide](docs/guide/13-panel.md) (en anglais).
+toute la maison sur un écran, le planning de toutes les pièces pour la semaine
+à venir (copié vers d'autres pièces en une touche), des statistiques (temps de
+chauffe et températures par jour, semaine ou mois, et quand chaque pièce
+chauffe, heure par heure), l'historique des décisions et des alertes avec les
+alertes en cours en haut, l'humidité des pièces avec le risque de moisissure,
+et tous les appareils des pièces avec leur batterie. Rien à configurer ; les
+détails sont dans le [guide](docs/guide/13-panel.md) (en anglais).
+
+<table>
+  <tr>
+    <td colspan="2" align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-rooms.png" alt="Toute la maison sur un écran, les pièces groupées par étage · personnes et données inventées" width="720"><br><sub>Toute la maison sur un écran, les pièces groupées par étage</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-schedule.png" alt="La semaine à venir de chaque pièce, avec le calendrier · personnes et données inventées" width="360"><br><sub>La semaine à venir de chaque pièce, avec le calendrier</sub></td>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-stats.png" alt="Le temps de chauffe face à la température extérieure · personnes et données inventées" width="360"><br><sub>Le temps de chauffe face à la température extérieure</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-heatmap.png" alt="Quand chaque pièce chauffe, heure par heure · personnes et données inventées" width="360"><br><sub>Quand chaque pièce chauffe, heure par heure</sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-devices.png" alt="L'humidité et le risque de moisissure, chaque appareil avec sa batterie · personnes et données inventées" width="360"><br><sub>L'humidité et le risque de moisissure, chaque appareil avec sa batterie</sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-rooms.png" alt="Sur un téléphone · personnes et données inventées" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-room.png" alt="Sur un téléphone · personnes et données inventées" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-schedule.png" alt="Sur un téléphone · personnes et données inventées" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-heatmap.png" alt="Sur un téléphone · personnes et données inventées" width="180"></td>
+  </tr>
+</table>
+
+<p align="center"><sub>Sur un téléphone · personnes et données inventées</sub></p>
 
 ## Démarrer
 

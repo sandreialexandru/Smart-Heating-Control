@@ -98,11 +98,37 @@ Every part can be hidden; the options are in the [guide](docs/guide/10-card.md).
 ## The panel
 
 A page of its own in the sidebar, **SHC**, for every user: the whole house on
-one screen, the schedule of every room on one day (copied to other rooms with
-one tap), statistics (heating time and temperatures by day, week or month),
-the history of the decisions and alerts with the alerts on now on top, and
-every device of the rooms with its battery. Nothing to set up; the
-[guide](docs/guide/13-panel.md) has the details.
+one screen, the schedule of every room for the week ahead (copied to other
+rooms with one tap), statistics (heating time and temperatures by day, week or
+month, and when each room heats hour by hour), the history of the decisions
+and alerts with the alerts on now on top, the humidity of the rooms with the
+risk of mold, and every device of the rooms with its battery. Nothing to set
+up; the [guide](docs/guide/13-panel.md) has the details.
+
+<table>
+  <tr>
+    <td colspan="2" align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-rooms.png" alt="The whole house on one screen, the rooms grouped by floor · invented people and data" width="720"><br><sub>The whole house on one screen, the rooms grouped by floor</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-schedule.png" alt="The week ahead of every room, with the calendar · invented people and data" width="360"><br><sub>The week ahead of every room, with the calendar</sub></td>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-stats.png" alt="Heating time against the outdoor temperature · invented people and data" width="360"><br><sub>Heating time against the outdoor temperature</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-heatmap.png" alt="When each room heats, hour by hour · invented people and data" width="360"><br><sub>When each room heats, hour by hour</sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-devices.png" alt="Humidity and mold risk, every device with its battery · invented people and data" width="360"><br><sub>Humidity and mold risk, every device with its battery</sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-rooms.png" alt="On a phone · invented people and data" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-room.png" alt="On a phone · invented people and data" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-schedule.png" alt="On a phone · invented people and data" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-heatmap.png" alt="On a phone · invented people and data" width="180"></td>
+  </tr>
+</table>
+
+<p align="center"><sub>On a phone · invented people and data</sub></p>
 
 ## Get started
 

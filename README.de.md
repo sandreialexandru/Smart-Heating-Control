@@ -105,12 +105,38 @@ Jeder Teil lässt sich ausblenden; die Optionen stehen in der
 ## Das Panel
 
 Eine eigene Seite in der Seitenleiste, **SHC**, für alle Benutzer: das ganze
-Haus auf einem Bildschirm, der Zeitplan aller Räume an einem Tag (mit einem
-Tippen in andere Räume kopiert), Statistiken (Heizzeit und Temperaturen nach
-Tag, Woche oder Monat), der Verlauf der Entscheidungen und Warnungen mit den
-aktuellen Warnungen oben und alle Geräte der Räume mit ihrer Batterie. Keine
-Einrichtung nötig; Details in der [Anleitung](docs/guide/13-panel.md)
-(Englisch).
+Haus auf einem Bildschirm, der Zeitplan aller Räume für die kommende Woche
+(mit einem Tippen in andere Räume kopiert), Statistiken (Heizzeit und
+Temperaturen nach Tag, Woche oder Monat, und wann jeder Raum heizt, Stunde für
+Stunde), der Verlauf der Entscheidungen und Warnungen mit den aktuellen
+Warnungen oben, die Feuchtigkeit der Räume mit dem Schimmelrisiko und alle
+Geräte der Räume mit ihrer Batterie. Keine Einrichtung nötig; Details in der
+[Anleitung](docs/guide/13-panel.md) (Englisch).
+
+<table>
+  <tr>
+    <td colspan="2" align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-rooms.png" alt="Das ganze Haus auf einem Bildschirm, die Räume nach Etage · erfundene Personen und Daten" width="720"><br><sub>Das ganze Haus auf einem Bildschirm, die Räume nach Etage</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-schedule.png" alt="Die kommende Woche jedes Raums, mit dem Kalender · erfundene Personen und Daten" width="360"><br><sub>Die kommende Woche jedes Raums, mit dem Kalender</sub></td>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-stats.png" alt="Heizzeit und Außentemperatur · erfundene Personen und Daten" width="360"><br><sub>Heizzeit und Außentemperatur</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-heatmap.png" alt="Wann jeder Raum heizt, Stunde für Stunde · erfundene Personen und Daten" width="360"><br><sub>Wann jeder Raum heizt, Stunde für Stunde</sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-devices.png" alt="Feuchtigkeit und Schimmelrisiko, jedes Gerät mit seiner Batterie · erfundene Personen und Daten" width="360"><br><sub>Feuchtigkeit und Schimmelrisiko, jedes Gerät mit seiner Batterie</sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-rooms.png" alt="Auf dem Handy · erfundene Personen und Daten" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-room.png" alt="Auf dem Handy · erfundene Personen und Daten" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-schedule.png" alt="Auf dem Handy · erfundene Personen und Daten" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-heatmap.png" alt="Auf dem Handy · erfundene Personen und Daten" width="180"></td>
+  </tr>
+</table>
+
+<p align="center"><sub>Auf dem Handy · erfundene Personen und Daten</sub></p>
 
 ## Loslegen
 

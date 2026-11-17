@@ -58,6 +58,8 @@ GitHub releases.
   now, of every house, once each, with their room and since when (their number
   on the tab too); a tap opens the room.
 - 📘 A new chapter of the guide on the panel.
+- 📸 New pictures in the README: the card and the panel, on a desktop and on a
+  phone (invented people and data).
 
 ### Changed
 

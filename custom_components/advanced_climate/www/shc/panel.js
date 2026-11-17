@@ -183,9 +183,7 @@ const PANEL_STYLE = `
     background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--c) 75%, transparent) 0 5px, color-mix(in srgb, var(--c) 35%, transparent) 5px 10px); }
   .pw-notes { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
   .pw-notes li { padding: 4px 10px; border-radius: 12px; font-size: 0.85em; background: var(--ac-active-bg); box-shadow: inset 0 0 0 1px var(--ac-active-line); }
-  :host([narrow]) .pw-rows { grid-template-columns: minmax(0, 1fr) auto; }
   :host([narrow]) .pw-ticks > span:first-child, :host([narrow]) .pw-ticks > span:last-child { display: none; }
-  :host([narrow]) .pw-ticks .bar-ticks { grid-column: 1 / -1; }
   :host([narrow]) .pw-bar, :host([narrow]) .pw-gap, :host([narrow]) .pw-ext { grid-column: 1 / -1; grid-row: 2; }
   :host([narrow]) .pw-row { row-gap: 6px; }
   /* Every device of the rooms. */
@@ -225,9 +223,15 @@ const PANEL_STYLE = `
   .hm-detail { margin-top: 8px; }
   .hm-legend { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.75em; color: var(--ac-muted); }
   .hm-legend i { width: 120px; height: 10px; border-radius: 3px; background: linear-gradient(90deg, var(--ac-surface-2), var(--ac-hot)); }
-  :host([narrow]) .hm-row { grid-template-columns: 64px repeat(24, minmax(0, 1fr)); gap: 1px; }
+  /* On a phone: the name of a room on a line of its own, above its 24 hours. */
+  :host([narrow]) .hm-row { grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 1px; }
+  :host([narrow]) .hm-name { grid-column: 1 / -1; padding: 4px 0 1px; }
+  :host([narrow]) .hm-head > span:first-child { display: none; }
   :host([narrow]) .hm-cell { height: 18px; border-radius: 2px; }
   :host([narrow]) .hm-days .seg { font-size: 0.8em; padding: 0 1px; }
+  /* The Mean chip as wide as its word, the 7 days share the rest. */
+  :host([narrow]) .hm-days { grid-template-columns: auto repeat(calc(var(--n) - 1), minmax(0, 1fr)); }
+  :host([narrow]) .hm-days .seg:first-child { padding: 0 6px; }
   /* The alerts on now, on top of the history. */
   .pa-now { margin-bottom: 16px; }
   .pa-now .acount { display: inline-flex; min-width: 1.4em; justify-content: center; padding: 0 6px; border-radius: 999px; font-size: 0.8em;

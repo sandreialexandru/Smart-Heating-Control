@@ -101,11 +101,38 @@ Elk onderdeel kan verborgen worden; de opties staan in de
 ## Het paneel
 
 Een eigen pagina in de zijbalk, **SHC**, voor alle gebruikers: het hele huis
-op één scherm, het schema van alle kamers op één dag (met één tik naar andere
-kamers gekopieerd), statistieken (verwarmingstijd en temperaturen per dag,
-week of maand), de geschiedenis van beslissingen en meldingen met de huidige
-meldingen bovenaan en alle apparaten van de kamers met hun batterij. Niets in
-te stellen; details in de [handleiding](docs/guide/13-panel.md) (Engels).
+op één scherm, het schema van alle kamers voor de komende week (met één tik
+naar andere kamers gekopieerd), statistieken (verwarmingstijd en temperaturen
+per dag, week of maand, en wanneer elke kamer verwarmt, uur per uur), de
+geschiedenis van beslissingen en meldingen met de huidige meldingen bovenaan,
+de luchtvochtigheid van de kamers met het schimmelrisico en alle apparaten van
+de kamers met hun batterij. Niets in te stellen; details in de
+[handleiding](docs/guide/13-panel.md) (Engels).
+
+<table>
+  <tr>
+    <td colspan="2" align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-rooms.png" alt="Het hele huis op één scherm, de kamers per verdieping · verzonnen personen en gegevens" width="720"><br><sub>Het hele huis op één scherm, de kamers per verdieping</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-schedule.png" alt="De komende week van elke kamer, met de agenda · verzonnen personen en gegevens" width="360"><br><sub>De komende week van elke kamer, met de agenda</sub></td>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-stats.png" alt="Verwarmingstijd tegenover de buitentemperatuur · verzonnen personen en gegevens" width="360"><br><sub>Verwarmingstijd tegenover de buitentemperatuur</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-heatmap.png" alt="Wanneer elke kamer verwarmt, uur per uur · verzonnen personen en gegevens" width="360"><br><sub>Wanneer elke kamer verwarmt, uur per uur</sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-devices.png" alt="Luchtvochtigheid en schimmelrisico, elk apparaat met zijn batterij · verzonnen personen en gegevens" width="360"><br><sub>Luchtvochtigheid en schimmelrisico, elk apparaat met zijn batterij</sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-rooms.png" alt="Op een telefoon · verzonnen personen en gegevens" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-room.png" alt="Op een telefoon · verzonnen personen en gegevens" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-schedule.png" alt="Op een telefoon · verzonnen personen en gegevens" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-heatmap.png" alt="Op een telefoon · verzonnen personen en gegevens" width="180"></td>
+  </tr>
+</table>
+
+<p align="center"><sub>Op een telefoon · verzonnen personen en gegevens</sub></p>
 
 ## Aan de slag
 

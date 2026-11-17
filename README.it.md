@@ -102,12 +102,38 @@ Ogni parte si può nascondere; le opzioni sono nella
 ## Il pannello
 
 Una pagina propria nella barra laterale, **SHC**, per tutti gli utenti: tutta
-la casa su una schermata, il programma di tutte le stanze in un giorno
-(copiato in altre stanze con un tocco), statistiche (tempo di riscaldamento e
-temperature per giorno, settimana o mese), la cronologia delle decisioni e
-degli avvisi con gli avvisi attuali in alto e tutti i dispositivi delle stanze
-con la loro batteria. Nulla da configurare; i dettagli sono nella
-[guida](docs/guide/13-panel.md) (in inglese).
+la casa su una schermata, il programma di tutte le stanze per la settimana in
+arrivo (copiato in altre stanze con un tocco), statistiche (tempo di
+riscaldamento e temperature per giorno, settimana o mese, e quando scalda ogni
+stanza, ora per ora), la cronologia delle decisioni e degli avvisi con gli
+avvisi attuali in alto, l'umidità delle stanze con il rischio di muffa e tutti
+i dispositivi delle stanze con la loro batteria. Nulla da configurare; i
+dettagli sono nella [guida](docs/guide/13-panel.md) (in inglese).
+
+<table>
+  <tr>
+    <td colspan="2" align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-rooms.png" alt="Tutta la casa su una schermata, le stanze per piano · persone e dati inventati" width="720"><br><sub>Tutta la casa su una schermata, le stanze per piano</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-schedule.png" alt="La settimana in arrivo di ogni stanza, con il calendario · persone e dati inventati" width="360"><br><sub>La settimana in arrivo di ogni stanza, con il calendario</sub></td>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-stats.png" alt="Il tempo di riscaldamento rispetto alla temperatura esterna · persone e dati inventati" width="360"><br><sub>Il tempo di riscaldamento rispetto alla temperatura esterna</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-heatmap.png" alt="Quando scalda ogni stanza, ora per ora · persone e dati inventati" width="360"><br><sub>Quando scalda ogni stanza, ora per ora</sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/panel-devices.png" alt="Umidità e rischio di muffa, ogni dispositivo con la sua batteria · persone e dati inventati" width="360"><br><sub>Umidità e rischio di muffa, ogni dispositivo con la sua batteria</sub></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-rooms.png" alt="Sul telefono · persone e dati inventati" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-room.png" alt="Sul telefono · persone e dati inventati" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-schedule.png" alt="Sul telefono · persone e dati inventati" width="180"></td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/sandreialexandru/Smart-Heating-Control/main/docs/images/phone-heatmap.png" alt="Sul telefono · persone e dati inventati" width="180"></td>
+  </tr>
+</table>
+
+<p align="center"><sub>Sul telefono · persone e dati inventati</sub></p>
 
 ## Per iniziare
 

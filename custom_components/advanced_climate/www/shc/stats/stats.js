@@ -4,6 +4,7 @@
 // maximum), and how many times a day the heat source was asked to start (the
 // history of the house demand).
 
+import { stale } from "../core/constants.js";
 import { esc, num } from "../core/format.js";
 
 // How many days, weeks or months are shown.
@@ -49,7 +50,7 @@ export const StatsMixin = (Base) =>
       const ids = this._statsIds(houses);
       const key = `${period}|${ids.join(",")}`;
       const cached = this._stats[key];
-      if (!cached || (!cached.loading && Date.now() - cached.at > STATS_REFRESH_MS)) this._fetchStats(key, period, ids, houses);
+      if (stale(cached, STATS_REFRESH_MS)) this._fetchStats(key, period, ids, houses);
       return cached && !cached.loading ? cached : cached?.data ? cached : null;
     }
 

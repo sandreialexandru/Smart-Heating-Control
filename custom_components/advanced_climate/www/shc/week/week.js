@@ -6,7 +6,7 @@
 // with the schedule editor; its copy button, with the rooms to copy its
 // schedule to.
 
-import { PRESET_COLORS } from "../core/constants.js";
+import { PRESET_COLORS, stale } from "../core/constants.js";
 import { esc } from "../core/format.js";
 
 // The days are asked for again after this long; at once when a schedule, the
@@ -38,7 +38,7 @@ export const WeekMixin = (Base) =>
     _weekData(houses) {
       const w = this._weekLog;
       const key = this._weekKey(houses);
-      if (!w || (!w.loading && (Date.now() - w.at > WEEK_REFRESH_MS || w.key !== key))) this._fetchWeek(key);
+      if (stale(w, WEEK_REFRESH_MS) || (!w.loading && w.key !== key)) this._fetchWeek(key);
       return w && (w.data || w.failed) ? w : null;
     }
 
@@ -250,7 +250,13 @@ export const WeekMixin = (Base) =>
         const notes = start !== null ? this._weekNotes(h, day, start, end) : [];
         if (notes.length) parts.push(`<ul class="pw-notes">${notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>`);
         const byRoom = Object.fromEntries((h.rooms || []).map((r) => [r.room_id, r]));
-        const rows = house.rooms.map((r) => this._weekRow(r, w ? byRoom[r.attributes.room_id] : null, day, start, end, nowPct)).join("");
+        const rows = this._roomGroups(house.rooms, this._gmodeNow || "none")
+          .map(
+            (g) =>
+              (g.name !== null ? `<div class="pw-group">${esc(g.name)}</div>` : "") +
+              g.rooms.map((r) => this._weekRow(r, w ? byRoom[r.attributes.room_id] : null, day, start, end, nowPct)).join("")
+          )
+          .join("");
         parts.push(`<div class="pw-rows">${ticks}${rows}</div>`);
       }
       this._weekVacation = null;

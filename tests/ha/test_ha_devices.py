@@ -1320,6 +1320,9 @@ async def test_every_attribute_of_the_decision_sensor(
         "rate_learned": False,
         "humidity": None,
         "surface_humidity": None,
+        # No area and no heating circuit set for the room.
+        "area": None,
+        "circuit": None,
         "device_levels": [],
         "heat_demand": True,
         "heating": True,

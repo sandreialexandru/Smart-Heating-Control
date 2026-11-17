@@ -635,3 +635,79 @@ test("schedule tab: a vacation held off by guest mode is told, not drawn; a room
   eq([r.failed, r.failedButton], ["The next days of this room could not be computed.", false], "the room that failed");
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });
+
+test("rooms grouped by floor or by circuit, in the list, the schedule and the devices; kept in the browser", async (p) => {
+  const rooms = [
+    { id: "r1", name: "Bedroom", area: "bed", circuit: "switch.radiators", devices: [["climate.bed", "thermostat"]] },
+    { id: "r2", name: "Kid", area: "kid", circuit: "switch.floor", devices: [["climate.kid", "thermostat"]] },
+    { id: "r3", name: "Living", area: "living", circuit: "switch.floor", devices: [["climate.living", "thermostat"]] },
+    { id: "r4", name: "Office", devices: [["climate.office", "thermostat"]] },
+  ];
+  const areas = { bed: { area_id: "bed", floor_id: "up" }, kid: { area_id: "kid", floor_id: "up" }, living: { area_id: "living", floor_id: "ground" } };
+  const floors = { up: { floor_id: "up", name: "First floor", level: 1 }, ground: { floor_id: "ground", name: "Ground floor", level: 0 } };
+  const extra = [["switch.radiators", "on", { friendly_name: "Radiators" }], ["switch.floor", "off", { friendly_name: "Floor heating" }]];
+  await p.evaluate(() => localStorage.removeItem("shc-panel-group"));
+  await openPanel(p, { rooms, areas, floors, extra });
+  const list = () => inPanel(p, (sr) => [...sr.querySelectorAll(".pside > *")].map((n) => n.classList.contains("gname") ? `# ${n.innerText.trim()}` : n.__k.replace("row-", "")));
+  const opts = await inPanel(p, (sr) => [...sr.querySelectorAll(".pgroup option")].map((o) => o.value));
+  eq(opts, ["none", "floor", "circuit"], "the groupings there are");
+  eq(await list(), ["r1", "r2", "r3", "r4"], "no groups at first");
+  const pick = (v) => p.evaluate((v) => { const s = panel.shadowRoot.querySelector(".pgroup"); s.value = v; s.dispatchEvent(new Event("change", { bubbles: true, composed: true })); }, v);
+  await pick("floor"); await p.waitForTimeout(100);
+  eq((await list()).map((x) => x.toUpperCase()), ["# GROUND FLOOR", "R3", "# FIRST FLOOR", "R1", "R2", "# NO FLOOR", "R4"], "by the level of the floors; the rooms on none last");
+  await pick("circuit"); await p.waitForTimeout(100);
+  eq((await list()).map((x) => x.toUpperCase()), ["# FLOOR HEATING", "R2", "R3", "# RADIATORS", "R1", "# NO CIRCUIT", "R4"], "by circuit");
+  eq(await p.evaluate(() => localStorage.getItem("shc-panel-group")), "circuit", "kept");
+  await clickIn(p, '[data-action="panel-tab"][data-option="week"]'); await p.waitForTimeout(200);
+  eq(await inPanel(p, (sr) => [...sr.querySelectorAll(".pw-group")].map((g) => g.innerText.toUpperCase())), ["FLOOR HEATING", "RADIATORS", "NO CIRCUIT"], "in the schedule");
+  await clickIn(p, '[data-action="panel-tab"][data-option="devices"]'); await p.waitForTimeout(150);
+  eq(await inPanel(p, (sr) => [...sr.querySelectorAll(".pd-devices .pd-list > li")].map((li) => li.classList.contains("pd-group") ? `# ${li.innerText.toUpperCase()}` : li.dataset.entity)),
+    ["# FLOOR HEATING", "climate.kid", "climate.living", "# RADIATORS", "climate.bed", "# NO CIRCUIT", "climate.office"], "in the devices");
+  // Rooms without floors or circuits: no choice.
+  await openPanel(p, { rooms: [{ id: "r1", name: "Bedroom" }] });
+  eq(await inPanel(p, (sr) => !!sr.querySelector(".pgroup")), false, "nothing to group by");
+  await p.evaluate(() => { localStorage.removeItem("shc-panel-group"); localStorage.removeItem("shc-panel-tab"); });
+});
+
+test("humidity of every room: those at risk of mold first; a tap opens the Details", async (p) => {
+  const rooms = [
+    { id: "r1", name: "Bedroom", humidity: 48, wall: 62 },
+    { id: "r2", name: "Bath", humidity: 70, wall: 86 },
+    { id: "r3", name: "Kid", humidity: 55, wall: 70, alerts: [{ key: "mold", code: "mold_risk", params: { surface: 79, humidity: 55 }, message: "m" }] },
+    { id: "r4", name: "Office" },
+  ];
+  await openPanel(p, { rooms });
+  await clickIn(p, '[data-action="panel-tab"][data-option="devices"]'); await p.waitForTimeout(150);
+  const r = await inPanel(p, (sr) => ({
+    title: sr.querySelector(".pd-humidity .ps-title").innerText,
+    rows: [...sr.querySelectorAll(".pd-humidity .ph-hum")].map((li) => [li.dataset.room, li.classList.contains("risk"), li.querySelector(".pd-val").innerText.replace(/\s+/g, " ").trim(), li.querySelector(".pd-bat").innerText.replace(/\s+/g, " ").trim()]),
+  }));
+  eq(r.title, "Humidity · 2 at risk of mold", "the count");
+  eq(r.rows, [["r2", true, "air 70%", "coldest wall 86%"], ["r3", true, "air 55%", "coldest wall 70%"], ["r1", false, "air 48%", "coldest wall 62%"]], "the risk first (a mold alert, or 80% at the wall); a room without a sensor not shown");
+  await clickIn(p, '.ph-hum[data-room="r2"]'); await p.waitForTimeout(150);
+  eq(await inPanel(p, (sr) => ({ tab: panel.getAttribute("tab"), details: !!sr.querySelector('.pmain [data-section="details-r2"]') })), { tab: "rooms", details: true }, "its Details");
+  // No humidity sensor anywhere: no section.
+  await openPanel(p, { rooms: [{ id: "r1", name: "Bedroom" }] });
+  await clickIn(p, '[data-action="panel-tab"][data-option="devices"]'); await p.waitForTimeout(150);
+  eq(await inPanel(p, (sr) => !!sr.querySelector(".pd-humidity")), false, "no section");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("chart: a history that could not be read is said, and asked for again when the chart opens again or the connection comes back", async (p) => {
+  await openPanel(p, { rooms: [{ id: "r1", name: "Bedroom" }], historyFails: true });
+  const btn = '.pmain [data-action="fold"][data-key="chart-r1"]';
+  const asked = () => p.evaluate(() => window.calls.ws.filter((c) => c.type === "history/history_during_period").length);
+  await clickIn(p, btn); await p.waitForTimeout(300);
+  ok(/could not be read/.test(await inPanel(p, (sr) => sr.querySelector("dialog.chartpop .popbody").innerText)), "said");
+  const first = await asked();
+  await p.keyboard.press("Escape"); await p.waitForTimeout(150);
+  await clickIn(p, btn); await p.waitForTimeout(300);
+  eq(await asked(), first + 1, "asked again when opened again");
+  // The connection drops and comes back: asked again (the window still open).
+  await p.evaluate(() => { panel.hass = { ...panel._hass, connected: false }; });
+  await p.evaluate(() => { panel.hass = { ...panel._hass, connected: true }; });
+  await p.waitForTimeout(300);
+  eq(await asked(), first + 2, "asked again when the connection is back");
+  await p.keyboard.press("Escape");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});

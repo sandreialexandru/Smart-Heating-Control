@@ -500,7 +500,12 @@ active). Taburi (ultimul se păstrează în browser):
   săptămâni sau 12 luni; pornirile cerute pe zi din
   `history/history_during_period` al senzorului *Cerere de căldură* al casei.
   Se reîmprospătează la fiecare 5 minute cât timp tabul este afișat.
-- **Dispozitive**: entitățile din atributul `devices` al fiecărei camere, o
+- **Grupuri**: pe etaje (`area` a camerei → `floor_id` al ei → etajul, după
+  `level`) sau pe circuite (`circuit` al camerei, după numele releului),
+  păstrate în browser; în listă, în Program și în Dispozitive.
+- **Dispozitive**: sus, când o cameră are `humidity`, fiecare astfel de cameră
+  cu `humidity` și `surface_humidity`, cele cu risc primele (o alertă
+  `mold_risk` sau `surface_humidity` 80 ori mai mult). Apoi entitățile din atributul `devices` al fiecărei camere, o
   singură dată, cele indisponibile primele, apoi bateria descărcată; bateria
   este un senzor sau senzor binar cu clasa `battery` pe același dispozitiv
   (registrul de entități din frontend); ora este `last_updated`.

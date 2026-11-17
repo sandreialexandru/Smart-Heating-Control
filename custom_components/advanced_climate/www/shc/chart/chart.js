@@ -558,7 +558,8 @@ export const ChartMixin = (Base) =>
       const stateObj = this._rooms().find((st) => st.attributes.room_id === room);
       if (!stateObj) return null;
       const a = stateObj.attributes;
-      const body = this._timelineHtml(a) || `<p class="empty">${esc(this._t("loading"))}</p>`;
+      const failed = this._hist?.[room]?.failed ? `<p class="hint warn">${esc(this._t("chart_failed"))}</p>` : "";
+      const body = failed + (this._timelineHtml(a) || `<p class="empty">${esc(this._t("loading"))}</p>`);
       const head = `<div class="pophead"><span class="name">${esc(a.room_name)}</span>
             <button class="popclose" data-action="closechart" title="${esc(this._t("close"))}" aria-label="${esc(
               this._t("close")

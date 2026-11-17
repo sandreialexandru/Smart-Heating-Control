@@ -28,6 +28,16 @@ mijloc, cu tot ce arată și face cardul.
 - Pe telefon camerele sunt o listă; o cameră se deschide pe tot ecranul, cu
   **Înapoi** în bara de sus.
 
+### Grupuri de camere
+
+Lângă taburi, camerele se pot grupa **pe etaje** (etajul zonei din Home
+Assistant în care este camera, în ordinea nivelurilor etajelor) sau **pe
+circuite** (circuitul de încălzire al camerei, vezi
+[capitolul 8](08-sursa-si-energie.ro.md)); camerele fără etaj sau
+fără circuit sunt la sfârșit. Alegerea apare doar când o cameră are etaj sau
+circuit și se păstrează în browser. Grupurile se folosesc în lista camerelor,
+în tabul Program și în tabul Dispozitive.
+
 ## Program
 
 Azi și următoarele 6 zile, așa cum le va rula programul: toate camerele în
@@ -110,6 +120,17 @@ Home Assistant se oprește se încheie la repornire și este anunțată din nou
 după aceea, dacă încă este valabilă.
 
 ## Dispozitive
+
+### Umiditate
+
+Sus, când o cameră are senzor de umiditate: umiditatea aerului fiecărei
+astfel de camere și cea estimată la peretele ei cel mai rece (din temperatura
+de afară), cele cu risc de mucegai primele. O cameră are risc cu o alertă de
+mucegai activă sau cu 80% ori mai mult la peretele cel mai rece, ca în
+Detaliile ei. Numărul camerelor cu risc apare în titlu; o atingere pe o cameră
+îi deschide Detaliile.
+
+### Dispozitivele
 
 Toate entitățile folosite de camere, din toate casele, într-o singură listă:
 termostate, TRV-uri, relee, senzori de temperatură și umiditate, ferestre,

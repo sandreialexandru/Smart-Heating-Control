@@ -1,6 +1,6 @@
 // The chart data: history, plan segments and the prediction (the same model as the integration).
 
-import { FLAT_RULES, TEMPORARY_RULES } from "../core/constants.js";
+import { ANSWER_WAIT_MS, FLAT_RULES, TEMPORARY_RULES, stale } from "../core/constants.js";
 import { num } from "../core/format.js";
 
 export const MIN_ZOOM_SPAN = 20 * 60 * 1000; // closest zoom: 20 minutes
@@ -57,9 +57,7 @@ export const ChartDataMixin = (Base) =>
       const key = a.room_id;
       this._hist = this._hist || {};
       const cached = this._hist[key];
-      if (!cached || (!cached.loading && Date.now() - cached.at > 5 * 60 * 1000)) {
-        this._fetchHistory(a);
-      }
+      if (stale(cached, ANSWER_WAIT_MS)) this._fetchHistory(a);
       return cached && cached.temp ? cached : null;
     }
 

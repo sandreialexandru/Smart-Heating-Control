@@ -35,6 +35,12 @@ GitHub releases.
 - 📋 **Copy a schedule to other rooms** (card and panel, *Schedule* of a room):
   *Copy to other rooms* gives the rooms chosen of the house the same schedule,
   every profile with its days, in place of their own.
+- 🏢 **Rooms in groups** (panel): by floor (the floor of the area of the
+  room) or by heating circuit, in the list of rooms, the *Schedule* and the
+  *Devices*; chosen next to the tabs and kept in the browser.
+- 💧 **Humidity of every room** (panel, *Devices* tab): the air and the
+  coldest wall of each room with a humidity sensor, those at risk of mold
+  first; a tap opens its Details.
 - 🔋 **Devices** (panel, *Devices* tab): every thermostat, TRV, switch and
   sensor of the rooms in one list, the unavailable ones first, with the
   battery of its device (when Home Assistant has one) and how long ago it last
@@ -55,6 +61,13 @@ GitHub releases.
   every browser and the companion app load the new files after an update.
 
 ### Fixed
+
+- 📈 **The chart after a lost connection**: when the history of a room could
+  not be read (the connection to Home Assistant dropped for a moment), the
+  chart showed only the plan, also when opened again, until the panel or the
+  dashboard was left. Now it says so, and the history is asked for again when
+  the chart opens again or the connection comes back; the same for the
+  statistics, the history and the next days of the panel.
 
 - 🎛️ **Card editor: the switches show what the card does** ([#19](https://github.com/sandreialexandru/Smart-Heating-Control/issues/19)):
   on a new card the switches of the parts shown by default were off while the

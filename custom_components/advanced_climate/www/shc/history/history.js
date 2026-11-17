@@ -2,7 +2,7 @@
 // with their start and end, newest first, as the integration keeps them
 // (the websocket command advanced_climate/history).
 
-import { ALERT_ERRORS } from "../core/constants.js";
+import { ALERT_ERRORS, stale } from "../core/constants.js";
 import { esc } from "../core/format.js";
 
 // The history is asked for again after this long (and after each change of a room).
@@ -13,7 +13,7 @@ export const HistoryMixin = (Base) =>
     /** The history of every house, fetched when missing or old (drawn again when it comes). */
     _historyData() {
       const h = this._historyLog;
-      if (!h || (!h.loading && Date.now() - h.at > HISTORY_REFRESH_MS)) this._fetchHistoryLog();
+      if (stale(h, HISTORY_REFRESH_MS)) this._fetchHistoryLog();
       return h && (h.data || h.failed) ? h : null;
     }
 

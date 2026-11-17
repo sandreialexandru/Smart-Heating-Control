@@ -231,6 +231,8 @@ class DecisionSensor(RoomEntity, SensorEntity):
             "current_temperature",
             "humidity",
             "surface_humidity",
+            "area",
+            "circuit",
             "day_boundary",
             "schedule_editable",
             "entry_id",
@@ -316,6 +318,10 @@ class DecisionSensor(RoomEntity, SensorEntity):
             # Humidity of the room and at the coldest wall (mold risk), with a humidity sensor.
             "humidity": room.humidity,
             "surface_humidity": room.surface_humidity,
+            # The area of Home Assistant and the heating circuit (its relay) of the
+            # room: the panel groups the rooms by floor or by circuit.
+            "area": room.config.get("area") or None,
+            "circuit": room.circuit,
             # The entities of the room with their role, for the Details of the card.
             "devices": room.devices(),
             "device_levels": room.device_levels,

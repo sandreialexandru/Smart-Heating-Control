@@ -44,8 +44,9 @@ export const DevicesMixin = (Base) =>
         for (const r of house.rooms) {
           const a = r.attributes;
           for (const [id, role] of Array.isArray(a.devices) ? a.devices : []) {
-            if (!byId.has(id)) byId.set(id, { id, role, rooms: [], house });
+            if (!byId.has(id)) byId.set(id, { id, role, rooms: [], roomIds: [], house });
             byId.get(id).rooms.push(a.room_name);
+            byId.get(id).roomIds.push(a.room_id);
           }
         }
       }
@@ -61,6 +62,46 @@ export const DevicesMixin = (Base) =>
         if (device) ids.push(...(this._batteries()[device] || []));
       }
       return ids;
+    }
+
+    /**
+     * Humidity of every room with a humidity sensor: the air and the coldest
+     * wall, those at risk of mold first (an active mold alert, or 80 % or more
+     * at the wall, as in the Details of the room). A tap opens its Details.
+     */
+    _humidityTabHtml(houses) {
+      const all = houses.flatMap((h) => h.rooms);
+      const rows = all
+        .map((r) => r.attributes)
+        .filter((a) => num(a.humidity) !== null)
+        .map((a) => {
+          const wall = num(a.surface_humidity);
+          const alert = (a.alerts || []).some((x) => x.code === "mold_risk");
+          return { a, air: num(a.humidity), wall, risk: alert || (wall !== null && wall >= 80) };
+        });
+      if (!rows.length) return "";
+      rows.sort((x, y) => Number(y.risk) - Number(x.risk) || (y.wall ?? y.air) - (x.wall ?? x.air));
+      const groupOf = this._groupOf(all, this._gmodeNow || "none");
+      const order = this._roomGroups(all, this._gmodeNow || "none");
+      const byGroup = new Map(order.map((g) => [g.key, []]));
+      for (const r of rows) byGroup.get(groupOf(r.a.room_id)?.key ?? "")?.push(r);
+      const pct = (v) => (v === null ? "–" : `${Math.round(v)}%`);
+      const item = ({ a, air, wall, risk }) =>
+        `<li class="pd-row ph-hum ${risk ? "risk" : ""} link" data-action="humidity-room" data-room="${esc(a.room_id)}" role="button" tabindex="0">
+            <span class="pd-ico">${this._icon(risk ? "water-alert-outline" : "water-percent")}</span>
+            <span class="pd-name"><span>${esc(a.room_name)}</span>${risk ? `<small class="warn">${esc(this._t("humidity_risk"))}</small>` : ""}</span>
+            <span class="pd-val"><small class="pl-lab">${esc(this._t("hu_air"))}</small> ${esc(pct(air))}</span>
+            <span class="pd-bat"><small class="pl-lab">${esc(this._t("hu_wall"))}</small> ${esc(pct(wall))}</span>
+            <span></span>
+          </li>`;
+      const items = order
+        .filter((g) => byGroup.get(g.key).length)
+        .map((g) => (g.name !== null ? `<li class="pd-group">${esc(g.name)}</li>` : "") + byGroup.get(g.key).map(item).join(""))
+        .join("");
+      const risky = rows.filter((r) => r.risk).length;
+      return `<section class="block pd-humidity"><h3 class="ps-title">${esc(this._t("hu_title"))}${
+        risky ? ` · <span class="pd-badcount">${esc(this._t("hu_risky").replace("{n}", risky))}</span>` : ""
+      }</h3><ul class="pd-list">${items}</ul><p class="muted pw-note">${esc(this._t("hu_note"))}</p></section>`;
     }
 
     /** How long ago, in words ("5 minutes ago"). */
@@ -93,8 +134,13 @@ export const DevicesMixin = (Base) =>
       const head = `<h3 class="ps-title">${esc(this._t("dv_title").replace("{n}", rows.length))}${
         bad ? ` · <span class="pd-badcount">${esc(this._t("dv_bad").replace("{n}", bad))}</span>` : ""
       }</h3>`;
-      const items = rows
-        .map((r) => {
+      // In the groups of the rooms (an entity of several rooms: in the group of its first room).
+      const all = houses.flatMap((h) => h.rooms);
+      const groupOf = this._groupOf(all, this._gmodeNow || "none");
+      const order = this._roomGroups(all, this._gmodeNow || "none");
+      const byGroup = new Map(order.map((g) => [g.key, []]));
+      for (const r of rows) byGroup.get(groupOf(r.roomIds[0])?.key ?? "")?.push(r);
+      const item = (r) => {
           const changed = [r.st?.last_updated, r.st?.last_changed].find((v) => v && !Number.isNaN(Date.parse(v)));
           const where = houses.length > 1 ? `${r.house.name || ""} · ${r.rooms.join(", ")}` : r.rooms.join(", ");
           return `<li class="pd-row ${r.bad ? "bad" : ""} link" ${this._more(r.id)}>
@@ -106,7 +152,10 @@ export const DevicesMixin = (Base) =>
               }</span>
               <span class="pd-ago muted" title="${esc(changed ? this._fmtTime(changed) : "")}">${esc(changed ? this._ago(changed) : "")}</span>
             </li>`;
-        })
+      };
+      const items = order
+        .filter((g) => byGroup.get(g.key).length)
+        .map((g) => (g.name !== null ? `<li class="pd-group">${esc(g.name)}</li>` : "") + byGroup.get(g.key).map(item).join(""))
         .join("");
       return `<section class="block pd-devices">${head}<ul class="pd-list">${items}</ul><p class="muted pw-note">${esc(
         this._t("dv_note")

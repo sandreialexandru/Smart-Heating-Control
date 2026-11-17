@@ -220,8 +220,9 @@ export const EventsMixin = (Base) =>
           if (key === `sched-${this._copyDone?.room}` || key === `sched-${this._copyFrom}`) {
             if (!this._open[key]) this._copyDone = this._copyFrom = this._copyTo = null;
           }
-          // One chart window at a time.
+          // One chart window at a time; a history that could not be read is asked for again.
           if (key.startsWith("chart-") && this._open[key]) {
+            if (this._hist?.[key.slice(6)]?.failed) delete this._hist[key.slice(6)];
             for (const k of Object.keys(this._open)) if (k !== key && k.startsWith("chart-")) this._open[k] = false;
           }
           break;

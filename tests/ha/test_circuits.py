@@ -84,6 +84,9 @@ async def test_circuit_opens_before_and_closes_after_the_boiler(
     assert not _on(hass, "input_boolean.floor")
     assert order[:2] == [("input_boolean.radiators", "on"), ("input_boolean.boiler", "on")]
     assert _room(entry, "Bedroom").heating
+    # The panel groups the rooms by their circuit.
+    decision = hass.states.get("sensor.bedroom_decision")
+    assert decision.attributes["circuit"] == RELAYS[2]
 
     order.clear()
     _report(hass, "climate.bedroom", "idle")

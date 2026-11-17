@@ -472,7 +472,12 @@ kept in the browser):
   *Room temperature* and *Target temperature*) for the last 14 days, 12
   weeks or 12 months; starts asked per day from `history/history_during_period`
   of the house *Heat demand*. Refreshed every 5 minutes while shown.
-- **Devices**: the entities of the `devices` attribute of every room, once
+- **Groups**: by floor (`area` of the room → its `floor_id` → the floor, by
+  `level`) or by circuit (`circuit` of the room, by the name of its relay),
+  kept in the browser; in the list, the Schedule and the Devices.
+- **Devices**: on top, when a room has `humidity`, every such room with
+  `humidity` and `surface_humidity`, at risk first (a `mold_risk` alert, or
+  `surface_humidity` 80 or more). Then the entities of the `devices` attribute of every room, once
   each, unavailable first, then a low battery; the battery is a `battery`
   device class sensor or binary sensor on the same device (entity registry of
   the frontend); the time is `last_updated`.

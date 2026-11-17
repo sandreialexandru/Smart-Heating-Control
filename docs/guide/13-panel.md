@@ -27,6 +27,16 @@ room is open in the middle, with everything the card shows and does.
 - On a phone the rooms are a list; a room opens on the whole screen, with
   **Back** in the top bar.
 
+### Groups of rooms
+
+Next to the tabs, the rooms can be grouped **by floor** (the floor of the area
+of Home Assistant the room is in, in the order of the levels of the floors) or
+**by circuit** (the heating circuit of the room, see
+[chapter 8](08-heat-source-and-energy.md)); the rooms of no floor or no
+circuit come last. The choice is there only when some room has a floor or a
+circuit, and is kept in the browser. The groups are used in the list of
+rooms, in the Schedule tab and in the Devices tab.
+
 ## Schedule
 
 Today and the next 6 days as the schedule will run them: every room on the
@@ -105,6 +115,17 @@ Assistant stops ends at the restart and is told again after it if it still
 applies.
 
 ## Devices
+
+### Humidity
+
+On top, when some room has a humidity sensor: the humidity of the air of each
+such room and the one estimated at its coldest wall (from the outdoor
+temperature), those at risk of mold first. A room is at risk with an active
+mold alert, or with 80% or more at the coldest wall, as its Details show it.
+The number of rooms at risk is in the title; a tap on a room opens its
+Details.
+
+### The devices
 
 Every entity the rooms use, of every house, in one list: thermostats, TRVs,
 switches, temperature and humidity sensors, windows, occupancy sensors and

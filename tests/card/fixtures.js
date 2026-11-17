@@ -65,7 +65,7 @@
         min_temperature: T(7), max_temperature: T(25), climate_entities: r.climates || [], device_preset: null, trv_boost: null,
         device_level: null, time_to_target: learned ? 35 : null, stop_forecast: null, next_estimate: r.estimate || null,
         no_heat_reason: null, hold_until: r.holdUntil || null, alerts: r.alerts || [], optimal_stop_cancelled: false,
-        rate_learned: learned, humidity: r.humidity ?? null, surface_humidity: r.wall ?? null, device_levels: [],
+        rate_learned: learned, humidity: r.humidity ?? null, surface_humidity: r.wall ?? null, area: r.area ?? null, circuit: r.circuit ?? null, device_levels: [],
         heat_demand: r.demand ?? true, heating: r.heating ?? true, temperature_trend: r.trend ?? 0, day_boundary: 0, source: r.source || "switch",
         custom_levels: true, house_name: house, entities: e, house_entities: he, devices: r.devices || [], held_at: r.heldAt ?? null,
       };
@@ -90,7 +90,7 @@
     for (const [id, state, attributes] of o.extra || []) st(id, state, attributes || {});
     window.calls = window.calls || { ws: [], service: [] };
     return {
-      states, user: { name: "Andrei", is_admin: true }, themes: { darkMode: !!o.dark }, language: o.lang || "en", dockedSidebar: o.sidebar || "docked", entities: o.registry || {},
+      states, user: { name: "Andrei", is_admin: true }, themes: { darkMode: !!o.dark }, language: o.lang || "en", dockedSidebar: o.sidebar || "docked", entities: o.registry || {}, areas: o.areas || {}, floors: o.floors || {},
       locale: { language: o.lang || "en", time_format: o.timeFormat || "24", time_zone: "local" },
       config: { time_zone: o.tz || "Europe/Bucharest", unit_system: { temperature: unit } },
       callService: async (domain, service, data) => { window.calls.service.push({ domain, service, data }); if (o.serviceFails || (o.serviceFailsFor && data?.room === o.serviceFailsFor)) throw new Error("boom"); },

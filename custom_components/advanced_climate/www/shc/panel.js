@@ -19,6 +19,8 @@ import { STYLE } from "./core/style.js";
 
 const STORE = "shc-panel-room";
 const TAB_STORE = "shc-panel-tab";
+// How the rooms are grouped (none, by floor, by circuit), kept in the browser.
+const GROUP_STORE = "shc-panel-group";
 const TABS = ["rooms", "week", "stats", "history", "devices"];
 
 const PANEL_STYLE = `
@@ -49,9 +51,18 @@ const PANEL_STYLE = `
   .pbody > [hidden], :host([narrow][room]) .phouse, :host([narrow][room]) .pside { display: none !important; }
   :host([narrow]:not([room])) .pmain { display: none !important; }
   /* The tabs: rooms, statistics, history. */
-  .ptabs { box-sizing: border-box; max-width: 1400px; margin: 0 auto; padding: 16px 16px 0; display: flex; justify-content: center; }
+  .ptabs { box-sizing: border-box; max-width: 1400px; margin: 0 auto; padding: 16px 16px 0; display: flex; justify-content: center;
+    flex-wrap: wrap; gap: 8px; }
   .ptabs .segmented { flex: 0 1 600px; }
+  /* The tabs and the grouping, laid out by the bar of the tabs. */
+  .ptabrow { display: contents; }
+  .pgroup { height: 40px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--ac-line); background: var(--ac-surface-2);
+    color: var(--primary-text-color); font: inherit; font-size: 0.9em; }
+  .gname { font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.04em; }
+  .pw-group, .pd-group { grid-column: 1 / -1; margin-top: 8px; font-size: 0.8em; font-weight: 600; color: var(--ac-muted);
+    text-transform: uppercase; letter-spacing: 0.04em; }
   :host([narrow]) .ptabs { padding: 8px 8px 0; }
+  :host([narrow]) .pgroup { flex: 1 1 100%; }
   :host([narrow][room][tab="rooms"]) .ptabs { display: none; }
   .pextra { grid-column: 1 / -1; }
   :host(:not([tab="rooms"])) .phouse, :host(:not([tab="rooms"])) .pside, :host(:not([tab="rooms"])) .pmain,
@@ -153,6 +164,9 @@ const PANEL_STYLE = `
   :host([narrow]) .pw-row { row-gap: 6px; }
   /* Every device of the rooms. */
   .pd-badcount { color: var(--ac-err); }
+  .pd-humidity { margin-bottom: 16px; }
+  .ph-hum.risk .pd-ico, .ph-hum.risk .pd-name small { color: var(--ac-warn); }
+  .ph-hum .pl-lab { font-size: 0.75em; color: var(--ac-muted); }
   .pd-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; }
   .pd-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) minmax(0, 14em) 6em 9em; gap: 4px 12px; align-items: center;
     padding: 8px 6px; margin: 0 -6px; border-radius: 10px; border-bottom: 1px solid var(--ac-line); cursor: pointer; }
@@ -215,6 +229,13 @@ const readTab = () => {
     return "rooms";
   }
 };
+const readGroup = () => {
+  try {
+    return localStorage.getItem(GROUP_STORE) || "none";
+  } catch (_err) {
+    return "none";
+  }
+};
 const hashRoom = () => decodeURIComponent((location.hash || "").slice(1)) || null;
 
 class ShcPanel extends ShcBase {
@@ -224,6 +245,7 @@ class ShcPanel extends ShcBase {
     this._config = { ...DEFAULTS };
     this._room = hashRoom();
     this._tab = readTab();
+    this._group = readGroup();
     this._onHash = () => {
       this._room = hashRoom();
       this._render();
@@ -350,15 +372,25 @@ class ShcPanel extends ShcBase {
     this.setAttribute("tab", tab);
     // The alerts on now, counted on the History tab.
     const alerts = this._activeAlerts(houses).length;
+    // The grouping of the rooms (when the rooms have floors or circuits).
+    const modes = this._groupModes(rooms);
+    const gmode = this._groupMode(rooms);
+    this._gmodeNow = gmode;
+    const groupPick =
+      modes.length > 1
+        ? `<select class="pgroup" data-action="panel-group" aria-label="${esc(this._t("gr_label"))}" title="${esc(this._t("gr_label"))}">${modes
+            .map((m) => `<option value="${m}" ${m === gmode ? "selected" : ""}>${esc(this._t(`gr_${m}`))}</option>`)
+            .join("")}</select>`
+        : "";
     this._patch(this._tabs, [
       {
         k: "tabs",
-        html: `<div class="segmented" style="--n:${TABS.length}" role="tablist">${TABS.map(
+        html: `<div class="ptabrow"><div class="segmented" style="--n:${TABS.length}" role="tablist">${TABS.map(
           (t) => `<button class="seg ${t === tab ? "active" : ""}" role="tab" aria-selected="${t === tab}" data-action="panel-tab"
             data-option="${t}">${esc(this._t(`tab_${t}`))}${
               t === "history" && alerts ? `<span class="tabcount" aria-label="${esc(`${this._t("an_title")}: ${alerts}`)}">${alerts}</span>` : ""
             }</button>`
-        ).join("")}</div>`,
+        ).join("")}</div>${groupPick}</div>`,
       },
     ]);
 
@@ -388,9 +420,12 @@ class ShcPanel extends ShcBase {
     const list = [];
     for (const house of houses) {
       if (houses.length > 1) list.push({ k: `hname-${house.id}`, html: `<p class="hname">${esc(house.name || "")}</p>` });
-      for (const r of house.rooms) {
-        const a = r.attributes;
-        list.push({ k: `row-${a.room_id}`, html: this._foldedRow(r, this._roomColor(a)) });
+      for (const g of this._roomGroups(house.rooms, gmode)) {
+        if (g.name !== null) list.push({ k: `gname-${house.id}-${g.key}`, html: `<p class="hname gname">${esc(g.name)}</p>` });
+        for (const r of g.rooms) {
+          const a = r.attributes;
+          list.push({ k: `row-${a.room_id}`, html: this._foldedRow(r, this._roomColor(a)) });
+        }
       }
     }
     this._side.hidden = !rooms.length;
@@ -407,7 +442,11 @@ class ShcPanel extends ShcBase {
     const extra = [];
     if (tab === "week") extra.push({ k: "week", html: this._weekHtml(houses) });
     if (tab === "stats") extra.push({ k: "stats", html: this._statsHtml(houses) });
-    if (tab === "devices") extra.push({ k: "devices", html: this._devicesTabHtml(houses) });
+    if (tab === "devices") {
+      const humidity = this._humidityTabHtml(houses);
+      if (humidity) extra.push({ k: "humidity", html: humidity });
+      extra.push({ k: "devices", html: this._devicesTabHtml(houses) });
+    }
     if (tab === "history") {
       const history = this._historyHtml(houses);
       extra.push({ k: "alerts-now", html: this._alertsNowHtml(houses) }, { k: "history", html: history });
@@ -433,7 +472,9 @@ class ShcPanel extends ShcBase {
     if (fold && this._card?.contains(fold)) return;
     // The tabs and the choices of the statistics and the history.
     // A room opened from the week (its schedule editor, or the rooms to copy its schedule to) or from an alert.
-    const go = ev.target.closest?.('[data-action="week-edit"], [data-action="week-copy"], [data-action="alert-room"]');
+    const go = ev.target.closest?.(
+      '[data-action="week-edit"], [data-action="week-copy"], [data-action="alert-room"], [data-action="humidity-room"]'
+    );
     if (go) {
       const room = go.dataset.room;
       const action = go.dataset.action;
@@ -443,7 +484,8 @@ class ShcPanel extends ShcBase {
         this._copyTo = new Set();
         this._copyDone = null;
       }
-      const key = action === "week-edit" || action === "week-copy" ? `sched-${room}` : null;
+      const key =
+        action === "week-edit" || action === "week-copy" ? `sched-${room}` : action === "humidity-room" ? `details-${room}` : null;
       if (key) this._open[key] = true;
       this._openRoom(room, key);
       return;
@@ -472,6 +514,17 @@ class ShcPanel extends ShcBase {
 
   /** The room chosen for the history. */
   async _onChange(ev) {
+    if (ev.target?.dataset?.action === "panel-group") {
+      this._group = ev.target.value;
+      try {
+        localStorage.setItem(GROUP_STORE, this._group);
+      } catch (_err) {
+        // No storage: the grouping is not kept.
+      }
+      ev.target.blur();
+      this._render();
+      return;
+    }
     if (ev.target?.dataset?.action === "history-room") {
       this._historyRoom = ev.target.value;
       ev.target.blur();

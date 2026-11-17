@@ -48,3 +48,14 @@ export const DEFAULTS = {
 };
 
 export const RUNTIME_PERIODS = ["day", "week", "month"];
+
+// A request of the card or the panel that has not answered after this long (the
+// time its data is kept) is asked again: a connection that died without a word
+// would otherwise keep it waiting for good.
+export const ANSWER_WAIT_MS = 5 * 60e3;
+
+/** A cached answer to ask for again: none yet, older than ``ms``, or still waiting after ANSWER_WAIT_MS. */
+export function stale(entry, ms) {
+  if (!entry) return true;
+  return Date.now() - entry.at > (entry.loading ? ANSWER_WAIT_MS : ms);
+}

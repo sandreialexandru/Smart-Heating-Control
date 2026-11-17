@@ -68,6 +68,8 @@ export const HostMixin = (Base) =>
 
     /** Called on every state change; redraws only when a watched entity changed. */
     set hass(hass) {
+      // Back from a lost connection: what could not be read is asked for again.
+      if (hass?.connected && this._hass?.connected === false) this._retryFailed();
       this._hass = hass;
       this._housesMemo = null; // computed once per update
       // The scheme of the card background when known (a dark theme may not set darkMode).
@@ -115,6 +117,15 @@ export const HostMixin = (Base) =>
         style.textContent = css;
         root.appendChild(style);
       }
+    }
+
+    /** Forget every answer that failed (the chart history, the statistics, the history, the next days). */
+    _retryFailed() {
+      for (const [k, v] of Object.entries(this._hist || {})) if (v.failed) delete this._hist[k];
+      for (const [k, v] of Object.entries(this._stats || {})) if (v.failed) delete this._stats[k];
+      if (this._historyLog?.failed) this._historyLog = null;
+      if (this._weekLog?.failed) this._weekLog = null;
+      this._lastKey = ""; // drawn again (and asked again) even if no entity changed
     }
 
     /** The chart window, once drawn, shown as a modal (Esc closes it). */

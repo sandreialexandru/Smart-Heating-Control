@@ -243,36 +243,56 @@ export const StatsMixin = (Base) =>
             )}</span>${under ? `<span class="ps-out">${esc(under(t))}</span>` : ""}</button>`;
         })
         .join("");
-      return `<div class="ps-cols"><div class="ps-inner">${cols}${line ? this._statsLine(line, !!under) : ""}</div></div>`;
+      return `<div class="ps-cols"><div class="ps-inner">${cols}${line ? this._statsLine(line, label, !!under) : ""}</div></div>`;
     }
 
     /**
      * A line over the columns: its points at the centres of the columns, from
-     * its lowest value (bottom) to its highest (top), with a tenth of the
-     * height kept above and below; a gap where a value is missing.
+     * its lowest mean (bottom) to its highest (top), with a tenth of the height
+     * kept above and below; a gap where a value is missing. A tap on a point
+     * shows its mean with the lowest and highest of that period (again: hides it).
      */
-    _statsLine(values, under) {
-      const known = values.filter((v) => v !== null && v !== undefined);
+    _statsLine(points, label, under) {
+      const values = points.map((p) => (p?.mean === null || p?.mean === undefined ? null : p.mean));
+      const known = values.filter((v) => v !== null);
       if (known.length < 2) return "";
       const lo = Math.min(...known);
       const hi = Math.max(...known);
       const n = values.length;
-      const x = (i) => `${(((i + 0.5) / n) * 100).toFixed(3)}%`;
-      const y = (v) => `${(hi === lo ? 50 : 90 - ((v - lo) / (hi - lo)) * 80).toFixed(2)}%`;
+      const xp = (i) => ((i + 0.5) / n) * 100;
+      const yp = (v) => (hi === lo ? 50 : 90 - ((v - lo) / (hi - lo)) * 80);
+      const x = (i) => `${xp(i).toFixed(3)}%`;
+      const y = (v) => `${yp(v).toFixed(2)}%`;
       const parts = [];
       values.forEach((v, i) => {
-        if (v === null || v === undefined) return;
+        if (v === null) return;
         const next = values[i + 1];
         if (next !== null && next !== undefined) parts.push(`<line x1="${x(i)}" y1="${y(v)}" x2="${x(i + 1)}" y2="${y(next)}"/>`);
       });
+      let tip = "";
       values.forEach((v, i) => {
-        if (v !== null && v !== undefined) parts.push(`<circle cx="${x(i)}" cy="${y(v)}" r="3"/>`);
+        if (v === null) return;
+        const p = points[i];
+        const on = this._statsDot === p.t;
+        const text = `${label(p.t)}: ${this._statsTempText(p)}`;
+        // A wider transparent circle to tap, then the point.
+        parts.push(
+          `<circle class="ps-hit" cx="${x(i)}" cy="${y(v)}" r="12" data-action="stats-dot" data-t="${p.t}" role="button" aria-label="${esc(text)}"><title>${esc(
+            text
+          )}</title></circle><circle class="${on ? "on" : ""}" cx="${x(i)}" cy="${y(v)}" r="${on ? 5 : 3}"/>`
+        );
+        if (on) {
+          const side = xp(i) > 60 ? "right" : "left";
+          tip = `<span class="ps-tip ${side}" style="left:${x(i)};--y:${(yp(v) / 100).toFixed(4)}">${esc(this._statsTempText(p))}<small>${esc(
+            this._statsLong(p.t, this._statsPeriod())
+          )}</small></span>`;
+        }
       });
-      // Its scale: the highest and the lowest value, at the left edge.
+      // Its scale: the highest and the lowest mean, at the left edge.
       if (hi !== lo) {
         parts.push(`<text x="2" y="10%" dy="-6">${esc(this._temp(hi))}</text>`, `<text x="2" y="90%" dy="14">${esc(this._temp(lo))}</text>`);
       }
-      return `<svg class="ps-line ${under ? "under" : ""}" aria-hidden="true">${parts.join("")}</svg>`;
+      return `<svg class="ps-line ${under ? "under" : ""}">${parts.join("")}</svg>${tip}`;
     }
 
     /** The statistics of every house. */
@@ -296,10 +316,6 @@ export const StatsMixin = (Base) =>
         const total = own ? this._statsValues(stats.data, own.id, period) : [];
         const starts = total.map(([t]) => t);
         const outdoor = own?.outdoor ? this._statsTemps(stats.data, own.outdoor) : new Map();
-        const outdoorMean = (t) => {
-          const v = outdoor.get(t)?.mean;
-          return v === null || v === undefined ? "" : this._temp(v);
-        };
         const range = this._t(`st_last_${period}`).replace("{n}", STATS_RANGE[period]);
         const sum = (vals) => vals.reduce((a, [, v]) => a + v, 0);
         // A chosen period: the rooms in that period; else over the whole range.
@@ -373,8 +389,8 @@ export const StatsMixin = (Base) =>
                   (v) => this._hours(v),
                   "var(--ac-accent)",
                   (v) => this._shortHours(v),
-                  outdoor.size ? outdoorMean : null,
-                  outdoor.size ? starts.map((t) => outdoor.get(t)?.mean ?? null) : null
+                  null,
+                  outdoor.size ? starts.map((t) => ({ t, ...(outdoor.get(t) || { mean: null, min: null, max: null }) })) : null
                 )
               : `<p class="muted">${esc(this._t("st_none"))}</p>`
           }

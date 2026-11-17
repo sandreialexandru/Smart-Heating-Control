@@ -22,13 +22,14 @@ GitHub releases.
   the starts from its history, so only the days it still keeps (10 by default).
   A tap on a bar shows that day, week or month: the time of the house, of each
   room and the starts asked; a tap again (or ✕) the whole span. With the
-  temperatures: the mean outdoor temperature under each bar, the mean with the
+  temperatures: the mean outdoor temperature as a line over the bars, on its
+  own scale (a tap on a point: its lowest and highest), the mean with the
   lowest and highest in the title and in the detail of a bar, and each room's
-  mean temperature and target (its lowest and highest when hovered). The
-  outdoor mean is also a line over the bars, on its own scale.
+  mean temperature and target (its lowest and highest when hovered).
 - 🔥 **Heating by hour** (panel, *Statistics* tab): for each room a row of 24
   hours, the darker the more minutes it was heated, over the last 7 days: the
-  mean of the 7 days (when each room usually heats) or one of them.
+  mean of the 7 days (when each room usually heats) or one of them; a tap on
+  an hour shows its minutes.
 - 🗓️ **The next days** (panel, *Schedule* tab): today and the next 6 days as
   the schedule will run them, every room on the day chosen with its levels on
   a shared time line and the time now on today. The holidays (Workday), the

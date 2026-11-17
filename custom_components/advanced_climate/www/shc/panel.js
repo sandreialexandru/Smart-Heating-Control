@@ -80,6 +80,16 @@ const PANEL_STYLE = `
   .ps-col .ps-out { height: 13px; line-height: 13px; min-height: 0; }
   svg.ps-line { position: absolute; left: 0; right: 0; top: 18px; bottom: 18px; width: 100%; height: calc(100% - 36px);
     overflow: visible; pointer-events: none; }
+  svg.ps-line .ps-hit { fill: transparent; stroke: none; pointer-events: all; cursor: pointer; }
+  svg.ps-line circle.on { fill: var(--primary-text-color); }
+  /* The mean, lowest and highest of a point tapped, next to it. */
+  .ps-tip { position: absolute; top: calc(18px + (100% - 36px) * var(--y)); transform: translate(10px, -50%); z-index: 1;
+    display: flex; flex-direction: column; padding: 4px 8px; border-radius: 8px; font-size: 0.8em; white-space: nowrap;
+    background: var(--ha-card-background, var(--card-background-color, #fff)); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    pointer-events: none; }
+  .ps-tip.right { transform: translate(calc(-100% - 10px), -50%); }
+  .ps-tip small { color: var(--ac-muted); }
+  :host([narrow]) .ps-tip { top: calc((100% - 18px) * var(--y)); }
   svg.ps-line.under { bottom: 35px; height: calc(100% - 53px); }
   svg.ps-line line { stroke: var(--ac-out); stroke-width: 2; stroke-linecap: round; }
   svg.ps-line text { fill: var(--ac-out); font-size: 11px; font-weight: 600; paint-order: stroke;
@@ -209,6 +219,10 @@ const PANEL_STYLE = `
   .hm-hour { font-size: 0.68em; color: var(--ac-muted); }
   .hm-cell { height: 22px; border-radius: 3px; background: color-mix(in srgb, var(--ac-hot) var(--p), var(--ac-surface-2)); }
   .hm-cell.none { background: none; box-shadow: inset 0 0 0 1px var(--ac-line); }
+  button.hm-cell { border: 0; padding: 0; margin: 0; cursor: pointer; font: inherit; min-width: 0; }
+  button.hm-cell:hover { filter: brightness(1.1); }
+  .hm-cell.picked { box-shadow: 0 0 0 2px var(--primary-text-color); }
+  .hm-detail { margin-top: 8px; }
   .hm-legend { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.75em; color: var(--ac-muted); }
   .hm-legend i { width: 120px; height: 10px; border-radius: 3px; background: linear-gradient(90deg, var(--ac-surface-2), var(--ac-hot)); }
   :host([narrow]) .hm-row { grid-template-columns: 64px repeat(24, minmax(0, 1fr)); gap: 1px; }
@@ -525,7 +539,7 @@ class ShcPanel extends ShcBase {
       return;
     }
     const own = ev.target.closest?.(
-      '[data-action="panel-tab"], [data-action="stats-period"], [data-action="stats-pick"], [data-action="history-kind"], [data-action="week-day"], [data-action="heat-day"]'
+      '[data-action="panel-tab"], [data-action="stats-period"], [data-action="stats-pick"], [data-action="history-kind"], [data-action="week-day"], [data-action="heat-day"], [data-action="stats-dot"], [data-action="heat-cell"]'
     );
     if (own) {
       const option = own.dataset.option;
@@ -539,7 +553,18 @@ class ShcPanel extends ShcBase {
         const t = own.dataset.t ? Number(own.dataset.t) : null;
         this._statsPick = t === this._statsPick ? null : t;
       } else if (action === "week-day") this._weekDay = option;
-      else if (action === "heat-day") this._heatDay = option;
+      else if (action === "heat-day") {
+        this._heatDay = option;
+        this._heatCell = null;
+      } else if (action === "stats-dot") {
+        // A tap on a point of the outdoor line: its mean, lowest and highest (again: hidden).
+        const t = Number(own.dataset.t);
+        this._statsDot = t === this._statsDot ? null : t;
+      } else if (action === "heat-cell") {
+        // A tap on an hour of the heating by hour: its minutes (again, or ✕: hidden).
+        const cell = own.dataset.cell || null;
+        this._heatCell = cell === this._heatCell ? null : cell;
+      }
       else this._historyKind = option;
       this._render();
       return;

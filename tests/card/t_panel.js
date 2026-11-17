@@ -353,20 +353,21 @@ test("statistics: a tap on a bar shows its period (the house, the rooms, the sta
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });
 
-test("statistics: the outdoor temperature under each period and in its detail; the temperature and target of each room", async (p) => {
+test("statistics: the outdoor temperature on the line over the periods and in their detail; the temperature and target of each room", async (p) => {
   await openPanel(p, { rooms: R4 });
   await tab(p, "stats");
   const look = () => inPanel(p, (sr) => ({
     title: sr.querySelector(".ps-title").innerText,
-    outs: [...sr.querySelectorAll(".ps-cols")[0].querySelectorAll(".ps-out")].map((o) => o.innerText),
+    outs: [...sr.querySelectorAll(".ps-cols")[0].querySelectorAll("circle.ps-hit")].map((o) => o.getAttribute("aria-label")),
+    under: sr.querySelectorAll(".ps-cols .ps-out").length,
     startsOut: sr.querySelectorAll(".ps-cols")[1].querySelectorAll(".ps-out").length,
     temps: [...sr.querySelectorAll(".ps-row .ps-temp")].map((t) => t.innerText),
     tip: sr.querySelector(".ps-row").title,
     detail: sr.querySelector(".ps-detail")?.innerText.replace(/\s+/g, " ") || null,
   }));
   const whole = await look();
-  eq(whole.outs.length, 14, "one outdoor mean a day");
-  ok(whole.outs.every((o) => /^\d+\.\d°$/.test(o)), "outdoor means: " + whole.outs);
+  eq([whole.outs.length, whole.under], [14, 0], "one point a day; no more numbers under the bars");
+  ok(whole.outs.every((o) => /^\d+ \w{3}: \d+\.\d° \(\d\.0° … \d\.0°\)$/.test(o)), "each point: its day, mean, lowest and highest: " + whole.outs);
   eq(whole.startsOut, 0, "none under the starts");
   ok(/outdoor 4\.\d° \(1\.0° … 8\.0°\)/.test(whole.title), "the range of the whole interval in the title: " + whole.title);
   eq(whole.temps.length, 3, "every room");
@@ -719,7 +720,7 @@ test("statistics: the outdoor mean as a line over the bars of the house, on its 
     const svg = sr.querySelectorAll(".ps-cols")[0].querySelector("svg.ps-line");
     return {
       legend: sr.querySelector(".ps-legend")?.innerText.trim(),
-      dots: [...svg.querySelectorAll("circle")].map((c) => c.getAttribute("cx")),
+      dots: [...svg.querySelectorAll("circle:not(.ps-hit)")].map((c) => c.getAttribute("cx")),
       lines: svg.querySelectorAll("line").length,
       scale: [...svg.querySelectorAll("text")].map((t) => t.textContent),
       starts: !!sr.querySelectorAll(".ps-cols")[1]?.querySelector("svg.ps-line"),
@@ -755,5 +756,34 @@ test("statistics: the heating by hour of every room, the mean of 7 days or one d
   await clickIn(p, '[data-action="heat-day"]:nth-child(8)'); await p.waitForTimeout(100);
   const today = await look();
   ok(today.active !== "mean" && today.full.some((v) => v === ""), "today: the hours to come empty");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("statistics: a tap on a point of the outdoor line shows its mean, lowest and highest; again hides it", async (p) => {
+  await openPanel(p, { rooms: ROOMS });
+  await clickIn(p, '[data-action="panel-tab"][data-option="stats"]'); await p.waitForTimeout(200);
+  const tip = () => inPanel(p, (sr) => sr.querySelector(".ps-tip")?.innerText.replace(/\s+/g, " ") || null);
+  eq(await tip(), null, "none at first");
+  await inPanel(p, (sr) => sr.querySelectorAll("circle.ps-hit")[2].dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true })));
+  await p.waitForTimeout(100);
+  ok(/^\d\.\d° \(\d\.0° … \d\.0°\) \w+, \w+ \d+$/.test(await tip()), "shown, with its whole date: " + (await tip()));
+  eq(await inPanel(p, (sr) => sr.querySelector(".ps-col.picked")), null, "the period is not chosen by it");
+  await inPanel(p, (sr) => sr.querySelectorAll("circle.ps-hit")[2].dispatchEvent(new MouseEvent("click", { bubbles: true, composed: true })));
+  await p.waitForTimeout(100);
+  eq(await tip(), null, "hidden again");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+test("statistics: a tap on an hour of the heating by hour shows its minutes; ✕ hides them", async (p) => {
+  await openPanel(p, { rooms: [{ id: "r1", name: "Bedroom" }] });
+  await clickIn(p, '[data-action="panel-tab"][data-option="stats"]'); await p.waitForTimeout(300);
+  const detail = () => inPanel(p, (sr) => sr.querySelector(".hm-detail")?.innerText.trim() || null);
+  eq(await detail(), null, "none at first");
+  const cell = await inPanel(p, (sr) => { const c = [...sr.querySelectorAll("button.hm-cell")].find((b) => b.style.getPropertyValue("--p") === "100%"); c.click(); return c.dataset.cell; });
+  await p.waitForTimeout(100);
+  ok(/^Bedroom \d\d:00–\d\d:00: heated 60 min a day on average$/.test(await detail()), "its minutes: " + (await detail()));
+  eq(await inPanel(p, (sr, c) => sr.querySelector(`button.hm-cell[data-cell="${c}"]`).classList.contains("picked"), cell), true, "marked");
+  await clickIn(p, ".hm-detail .ps-unpick"); await p.waitForTimeout(100);
+  eq(await detail(), null, "hidden");
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });

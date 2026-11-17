@@ -86,11 +86,12 @@ statisticile pe termen lung ale Home Assistant (recorderul), deci se păstrează
 cât timp le păstrează Home Assistant.
 
 - **Casa**: o bară pentru fiecare zi, săptămână sau lună, cu timpul de
-  încălzire, iar sub fiecare bară media temperaturii de afară în perioada
-  aceea. Media de afară este desenată și ca o linie peste bare, pe o scară
-  proprie (valoarea ei cea mai mare și cea mai mică sunt scrise în stânga),
-  ca perioadele mai reci și încălzirea mai lungă să se vadă împreună. Titlul dă timpul total și media de afară, cu valoarea cea mai mică și
-  cea mai mare.
+  încălzire, iar peste bare o linie cu media temperaturii de afară în fiecare
+  perioadă, pe o scară proprie (valoarea ei cea mai mare și cea mai mică sunt
+  scrise în stânga), ca perioadele mai reci și încălzirea mai lungă să se vadă
+  împreună. O atingere pe un punct al liniei arată media perioadei, cu
+  valoarea cea mai mică și cea mai mare; o nouă atingere le ascunde. Titlul dă
+  timpul total și media de afară, cu valoarea cea mai mică și cea mai mare.
 - **O atingere pe o bară** alege perioada aceea: sub bare apar timpul casei,
   temperatura de afară (media, minimul și maximul) și numărul de porniri
   cerute; camerele de dedesubt arată atunci doar perioada aceea. O nouă
@@ -108,7 +109,8 @@ cât timp le păstrează Home Assistant.
   încălzește de obicei o cameră) sau pentru una dintre ele. Vine din istoricul
   Home Assistant (cererea de căldură a fiecărei camere cât timp sursa de
   căldură a funcționat), deci are nevoie ca zilele acelea să fie în istoric
-  (implicit 10); orele sunt cele din fusul orar al casei.
+  (implicit 10); orele sunt cele din fusul orar al casei. O atingere pe o oră
+  îi arată minutele sub grilă; ✕ le ascunde.
 
 Cât timp tabul este deschis, statisticile se cer din nou la fiecare 5 minute.
 

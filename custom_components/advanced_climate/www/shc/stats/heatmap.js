@@ -112,6 +112,8 @@ export const HeatmapMixin = (Base) =>
       const now = Date.now();
       const days = pick === "mean" ? dates : [pick];
       const hours = [...Array(24).keys()];
+      // The hour tapped: its minutes under the grid.
+      let picked = null;
       const cell = (a, hour) => {
         const values = days
           .map((d) => this._heatmapMinutes(h.data?.[a.room_id], this._localMidnight(d, hour), this._localMidnight(d, hour + 1), now))
@@ -126,7 +128,11 @@ export const HeatmapMixin = (Base) =>
           .replace("{from}", `${hh}:00`)
           .replace("{to}", `${next}:00`)
           .replace("{min}", String(Math.round(min)));
-        return `<span class="hm-cell" style="--p:${share}%" title="${esc(title)}"></span>`;
+        const id = `${a.room_id}|${hour}`;
+        if (this._heatCell === id) picked = title;
+        return `<button class="hm-cell ${this._heatCell === id ? "picked" : ""}" style="--p:${share}%" title="${esc(title)}" aria-label="${esc(
+          title
+        )}" data-action="heat-cell" data-cell="${esc(id)}"></button>`;
       };
       const marks = hours.map((hr) => `<span class="hm-hour">${hr % 3 === 0 ? String(hr).padStart(2, "0") : ""}</span>`).join("");
       const rows = this._roomGroups(rooms, this._gmodeNow || "none")
@@ -141,7 +147,12 @@ export const HeatmapMixin = (Base) =>
               .join("")
         )
         .join("");
-      return `<section class="block hm">${head}<div class="hm-grid"><div class="hm-row hm-head"><span></span>${marks}</div>${rows}</div>
+      const detail = picked
+        ? `<div class="ps-detail hm-detail"><span>${esc(picked)}</span><button class="ps-unpick" data-action="heat-cell" data-cell="${esc(
+            this._heatCell
+          )}" title="${esc(this._t("close"))}" aria-label="${esc(this._t("close"))}">${this._icon("close")}</button></div>`
+        : "";
+      return `<section class="block hm">${head}<div class="hm-grid"><div class="hm-row hm-head"><span></span>${marks}</div>${rows}</div>${detail}
         <div class="hm-legend"><span>0 min</span><i></i><span>60 min</span></div>
         <p class="muted pw-note">${esc(this._t("hm_note"))}</p></section>`;
     }

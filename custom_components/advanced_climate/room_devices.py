@@ -445,6 +445,12 @@ class RoomDevices:
         current = state.attributes.get("preset_mode")
         if PRESET_NONE not in available or current in (None, PRESET_NONE):
             return False
+        # It already holds the temperature: a Generic Thermostat given a
+        # temperature takes the preset that has it (22 °C: comfort). Taken off
+        # it, it would go back to its earlier temperature, then take the preset
+        # again with the temperature, over and over.
+        if self._holds(state, target):
+            return False
         # A level with a preset of its own never gets here: that preset is sent.
         used = {self._device_preset(level, available) for level in PRESETS}
         return current in used

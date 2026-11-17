@@ -159,6 +159,76 @@ async def test_generic_thermostat_room_picks_its_presets(
     await _unload(hass, entry)
 
 
+async def test_generic_thermostat_takes_the_preset_of_the_temperature_set(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A temperature set for a while that is the one of a preset of the thermostat.
+
+    A Generic Thermostat given a temperature takes the preset with that
+    temperature (22 °C: comfort); taken off it (none), it goes back to the
+    temperature it had before the preset. It holds the temperature asked, so
+    nothing more is sent (before: none, the temperature, comfort again, over and
+    over, until the room stopped sending).
+    """
+    gt = _gt(hass, GT_OPTIONS)
+    temps = {p: GT_OPTIONS[f"{p}_temp"] for p in ("home", "eco", "away", "sleep", "comfort")}
+    calls: list[tuple[str, object]] = []
+    saved = {"temperature": GT_STATE["temperature"]}
+
+    async def set_temperature(call: ServiceCall) -> None:
+        value = float(call.data["temperature"])
+        calls.append(("temperature", value))
+        preset = next((p for p, t in temps.items() if t == value), "none")
+        if preset == "none":
+            saved["temperature"] = value
+        state = hass.states.get(gt)
+        hass.states.async_set(
+            gt,
+            state.state,
+            {**state.attributes, "temperature": value, "preset_mode": preset},
+            context=call.context,
+        )
+
+    async def set_preset_mode(call: ServiceCall) -> None:
+        preset = call.data["preset_mode"]
+        calls.append(("preset", preset))
+        state = hass.states.get(gt)
+        if state.attributes.get("preset_mode") in (None, "none"):
+            saved["temperature"] = state.attributes["temperature"]
+        value = saved["temperature"] if preset == "none" else temps[preset]
+        hass.states.async_set(
+            gt,
+            state.state,
+            {**state.attributes, "temperature": value, "preset_mode": preset},
+            context=call.context,
+        )
+
+    hass.services.async_register("climate", "set_temperature", set_temperature)
+    hass.services.async_register("climate", "set_preset_mode", set_preset_mode)
+    entry = await _house(
+        hass, freezer, [("Living", {"source": "generic_thermostat", "climates": [gt]})]
+    )
+    assert hass.states.get(gt).attributes["preset_mode"] == "home"
+    calls.clear()
+    await hass.services.async_call(
+        DOMAIN,
+        "set_override",
+        {"room": "Living", "temperature": 22.0, "duration_hours": 1.5},
+        blocking=True,
+    )
+    for _ in range(20):
+        await _tick(hass, freezer, 30)
+    state = hass.states.get(gt)
+    assert state.attributes["temperature"] == 22.0
+    assert state.attributes["preset_mode"] == "comfort"
+    assert len(calls) <= 2, calls
+    decision = hass.states.get("sensor.living_decision")
+    assert decision.state == "manual_override"
+    assert decision.attributes["override"]["temperature"] == 22.0
+    assert not [a for a in entry.runtime_data.active_alerts if a.startswith("commands_")]
+    await _unload(hass, entry)
+
+
 async def test_generic_thermostat_from_yaml_has_no_known_band(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:

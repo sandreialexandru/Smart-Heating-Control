@@ -60,6 +60,9 @@ GitHub releases.
 - 📘 A new chapter of the guide on the panel.
 - 📸 New pictures in the README: the card and the panel, on a desktop and on a
   phone (invented people and data).
+- 🛒 Installing from the **Marketplace** of Home Assistant (2026.11), where the
+  integration is in the default list: README, guide, reference and
+  configurator; HACS stays for older versions of Home Assistant.
 
 ### Changed
 

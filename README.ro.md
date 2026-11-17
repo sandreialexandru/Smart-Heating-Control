@@ -137,13 +137,12 @@ bateria lor. Nu cere nicio setare; detaliile sunt în
 
 [![Deschide Home Assistant și adaugă acest repository](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sandreialexandru&repository=Smart-Heating-Control&category=integration)
 
-1. **Instalare** din HACS (**Marketplace** din Home Assistant 2026.11): se
-   caută **Smart Heating Control**, se instalează și se repornește Home
-   Assistant. Nu apare la căutare? Se deschide cu butonul de mai sus sau se
-   adaugă de mână: ⋮ → **Custom repositories** →
-   `https://github.com/sandreialexandru/Smart-Heating-Control` ca
-   **Integration**. Fără HACS, se copiază `custom_components/advanced_climate`
-   în `config/custom_components`.
+1. **Instalează** din **Marketplace** (**Setări → Marketplace**, Home
+   Assistant 2026.11 sau mai nou): caută **Smart Heating Control** și
+   instalează-l, sau deschide-l cu butonul de mai sus; repornește Home
+   Assistant dacă ți se cere. Înainte de 2026.11 se face la fel în HACS, urmat
+   de o repornire. Fără ele, copiază `custom_components/advanced_climate` în
+   `config/custom_components` și repornește.
 2. **Casa**: **Settings → Devices & services → Add integration → Smart Heating
    Control**, sau acest buton:
 

@@ -138,13 +138,13 @@ de kamers met hun batterij. Niets in te stellen; details in de
 
 [![Open je Home Assistant en voeg deze repository toe](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sandreialexandru&repository=Smart-Heating-Control&category=integration)
 
-1. **Installeer** via HACS (vanaf Home Assistant 2026.11 de **Marketplace**):
-   zoek op **Smart Heating Control**, installeer het en herstart Home
-   Assistant. Niet gevonden? Open het met de knop hierboven, of voeg het met
-   de hand toe: ⋮ → **Aangepaste repositories** →
-   `https://github.com/sandreialexandru/Smart-Heating-Control` als
-   **Integratie**. Zonder HACS kopieer je `custom_components/advanced_climate`
-   naar `config/custom_components`.
+1. **Installeer** uit de **Marketplace** (**Instellingen → Marketplace**, Home
+   Assistant 2026.11 of nieuwer): zoek **Smart Heating Control** en installeer
+   het, of open het met de knop hierboven; herstart Home Assistant als daarom
+   wordt gevraagd. Vóór 2026.11 gaat dit op dezelfde manier in HACS, gevolgd
+   door een herstart. Zonder beide: kopieer
+   `custom_components/advanced_climate` naar `config/custom_components` en
+   herstart.
 2. **Maak het huis aan**: **Instellingen → Apparaten en diensten → Integratie
    toevoegen → Smart Heating Control**, of met deze knop:
 

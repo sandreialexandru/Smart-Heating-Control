@@ -77,13 +77,12 @@ The full specification is in [docs/SPEC.md](SPEC.md) ([Română](SPEC.ro.md)).
 
 ## Installation
 
-### HACS
+### Marketplace
 
-1. Search **Smart Heating Control** in HACS (the Marketplace from Home Assistant
-   2026.11), install it and restart Home Assistant.
-2. Not found? ⋮ → **Custom repositories** → add
-   `https://github.com/sandreialexandru/Smart-Heating-Control` as **Integration** first.
-3. **Settings → Devices & services → Add integration → Smart Heating Control**.
+1. **Settings → Marketplace** (Home Assistant 2026.11 or newer): search
+   **Smart Heating Control** and install it; restart Home Assistant if it asks.
+   Before 2026.11: the same in HACS, then restart Home Assistant.
+2. **Settings → Devices & services → Add integration → Smart Heating Control**.
 
 ### Manual
 

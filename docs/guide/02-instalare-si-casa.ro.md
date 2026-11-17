@@ -13,15 +13,17 @@
 
 ## Instalarea
 
-**Cu HACS (recomandat):**
+**Din Marketplace (recomandat, Home Assistant 2026.11 sau mai nou):**
 
-1. În HACS (**Marketplace** din Home Assistant 2026.11) se caută **Smart
-   Heating Control**, se instalează și se repornește Home Assistant.
-2. Nu apare la căutare? Se adaugă ca repository custom: meniul ⋮ →
-   **Custom repositories** → `https://github.com/sandreialexandru/Smart-Heating-Control`,
-   tipul **Integration**, apoi se instalează ca mai sus.
-3. **Setări → Dispozitive și servicii → Adaugă integrare → Smart Heating
+1. **Setări → Marketplace**, se caută **Smart Heating Control** și se
+   instalează. Prima dată, Marketplace cere confirmarea avertismentului
+   despre extensiile comunității. Home Assistant se repornește dacă cere.
+2. **Setări → Dispozitive și servicii → Adaugă integrare → Smart Heating
    Control**.
+
+**Înainte de Home Assistant 2026.11, cu HACS:** se caută **Smart Heating
+Control** în HACS, se instalează și se repornește Home Assistant, apoi pasul
+2 de mai sus.
 
 **Manual:** folderul `custom_components/advanced_climate` se copiază în
 `config/custom_components`, apoi se repornește Home Assistant.

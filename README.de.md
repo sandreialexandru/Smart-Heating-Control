@@ -142,13 +142,13 @@ Geräte der Räume mit ihrer Batterie. Keine Einrichtung nötig; Details in der
 
 [![Öffne dein Home Assistant und füge dieses Repository hinzu](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=sandreialexandru&repository=Smart-Heating-Control&category=integration)
 
-1. **Installieren** über HACS (ab Home Assistant 2026.11 der **Marketplace**):
-   Suche nach **Smart Heating Control**, installiere es und starte Home
-   Assistant neu. Nicht in der Suche? Öffne es mit der Schaltfläche oben oder
-   füge es von Hand hinzu: ⋮ → **Benutzerdefinierte Repositories** →
-   `https://github.com/sandreialexandru/Smart-Heating-Control` als
-   **Integration**. Ohne HACS kopierst du `custom_components/advanced_climate`
-   nach `config/custom_components`.
+1. **Installieren** aus dem **Marketplace** (**Einstellungen → Marketplace**,
+   Home Assistant 2026.11 oder neuer): nach **Smart Heating Control** suchen
+   und installieren, oder mit dem Button oben öffnen; Home Assistant neu
+   starten, wenn danach gefragt wird. Vor 2026.11 geht das genauso in HACS,
+   danach Home Assistant neu starten. Ohne beides
+   `custom_components/advanced_climate` nach `config/custom_components`
+   kopieren und neu starten.
 2. **Das Haus anlegen**: **Einstellungen → Geräte & Dienste → Integration
    hinzufügen → Smart Heating Control**, oder diese Schaltfläche:
 

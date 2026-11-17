@@ -33,7 +33,7 @@ export const StatsMixin = (Base) =>
         const a = r.attributes;
         const e = a.entities || {};
         if (e.heating_runtime) {
-          out.push({ id: e.heating_runtime, room: a.room_id, name: a.room_name, color: this._roomColor(a), temp: e.room_temperature, target: e.target_temperature });
+          out.push({ id: e.heating_runtime, room: a.room_id, name: a.room_name, temp: e.room_temperature, target: e.target_temperature });
         }
       }
       return out;
@@ -338,7 +338,7 @@ export const StatsMixin = (Base) =>
               r.name
             )}</span><span class="ps-track"><span class="ps-fill" style="width:${
               roomMax > 0 ? ((r.hours / roomMax) * 100).toFixed(1) : 0
-            }%;--c:${r.color}"></span></span><span class="ps-temp">${
+            }%;--c:var(--ac-accent)"></span></span><span class="ps-temp">${
               r.tempOver
                 ? esc(
                     this._t("st_room_temp")

@@ -4486,7 +4486,7 @@ class SmartHeatingControlCard extends HTMLElement {
       )}</button>`;
     const inner = `
         ${zoombar}
-        <div class="hchart ${view.zoomed ? "zoomed" : ""} ${hasOut ? "with-out" : ""}" data-chart="${esc(a.room_id)}">
+        <div class="hchart ${view.zoomed ? "zoomed" : ""} ${hasOut ? "with-out" : ""}" data-chart="${esc(a.room_id)}" data-v0="${view.v0}" data-v1="${view.v1}">
           <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(this._t("chart_label"))}">
             <defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1">
               <stop offset="0" stop-color="var(--ac-accent)" stop-opacity="0.14"></stop>
@@ -4559,9 +4559,19 @@ class SmartHeatingControlCard extends HTMLElement {
     }
     const stateObj = this._rooms().find((s) => s.attributes.room_id === room);
     const a = stateObj?.attributes || {};
+    // The window as this chart was drawn: after a pinch and a move on the bar
+    // the data of the room can hold another one, and the moment under the
+    // finger came out as no time at all ("Invalid Date").
+    const v0 = Number(chart.dataset.v0);
+    const v1 = Number(chart.dataset.v1);
     const rect = chart.getBoundingClientRect();
     const f = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width));
-    const t = d.v0 + f * (d.v1 - d.v0);
+    const t = v0 + f * (v1 - v0);
+    if (!Number.isFinite(t) || !rect.width) {
+      cross.hidden = true;
+      tip.hidden = true;
+      return;
+    }
     let temp = null;
     for (const [pt, v] of d.temp) {
       if (pt <= t) temp = v;
@@ -4584,7 +4594,9 @@ class SmartHeatingControlCard extends HTMLElement {
           outForecast = true;
         } else break;
       }
-      if (out === null && d.outdoor?.length) out = d.outdoor[d.outdoor.length - 1][1];
+      // No forecast for that moment: the one measured now is shown only for
+      // the next hour, not as the outdoor temperature of later hours.
+      if (out === null && d.outdoor?.length && t - d.now <= 3600000) out = d.outdoor[d.outdoor.length - 1][1];
     }
     const time = this._fmt(t, { weekday: "short", hour: "2-digit", minute: "2-digit" });
     const rows = [`<b>${esc(time)}</b>`];

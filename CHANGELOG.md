@@ -94,6 +94,11 @@ GitHub releases.
   dashboard was left. Now it says so, and the history is asked for again when
   the chart opens again or the connection comes back; the same for the
   statistics, the history and the next days of the panel.
+
+## 2.6.6 – 2026-11-18
+
+### Fixed
+
 - 🔁 **Set for a while a temperature that is a preset of the thermostat**: a
   Generic Thermostat given a temperature takes the preset that has it (23 °C:
   comfort). The room took it off that preset, the thermostat went back to its

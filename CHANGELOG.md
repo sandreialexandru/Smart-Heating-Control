@@ -5,7 +5,7 @@ release (and of each beta pre-release) are taken from here: a beta shows the
 *Unreleased* section, a release its own section. Older versions: see the
 GitHub releases.
 
-## Unreleased
+## 2.6.6 – 2026-11-18
 
 ### Fixed
 

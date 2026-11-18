@@ -764,6 +764,10 @@ test("statistics: the outdoor mean as a line over the bars of the house, on its 
   eq([r.dots.length, r.lines, r.dots[0], r.dots[13]], [14, 13, "3.571%", "96.429%"], "a point at the centre of each column");
   eq(r.scale, ["5.0°", "4.5°", "4.0°"], "its highest, middle and lowest, on a scale of its own");
   eq(r.inside, 0, "no value drawn over the bars");
+  // The chart of the starts leaves the room of that scale empty: its columns under those of the house.
+  const cols = await inPanel(p, (sr) => [...sr.querySelectorAll(".ps-chart")].map((c) => [...c.querySelectorAll(".ps-col")].map((b) => Math.round(b.getBoundingClientRect().left))));
+  eq(cols.length, 2, "two charts");
+  eq(cols[1], cols[0], "the columns of both charts aligned");
   eq(r.starts, false, "not over the starts");
   await openPanel(p, { rooms: ROOMS, noTempStats: true });
   eq(await inPanel(p, (sr) => [!!sr.querySelector("svg.ps-line"), !!sr.querySelector(".ps-legend")]), [false, false], "no outdoor statistics: no line");
@@ -860,4 +864,20 @@ test("keyboard: the arrows go from room to room and from tab to tab, the focus k
 test("title: the name of the house; with several houses the name of the integration", async (p) => {
   await openPanel(p, { rooms: ROOMS, houseName: "Cabana" });
   eq(await inPanel(p, (sr) => sr.querySelector(".ptop h1").innerText), "Cabana", "one house");
+});
+
+test("the address names the tab: a link opens it, a tab chosen is written in it, a room keeps its own", async (p) => {
+  await p.evaluate(() => history.replaceState(null, "", "#stats"));
+  await openPanel(p, { rooms: ROOMS });
+  eq(await inPanel(p, (sr) => sr.host.getAttribute("tab")), "stats", "opened on the tab of the link");
+  await clickIn(p, '[data-action="panel-tab"][data-option="week"]'); await p.waitForTimeout(150);
+  eq(await p.evaluate(() => location.hash), "#week", "the tab chosen, in the address");
+  await p.evaluate(() => { location.hash = "#history"; }); await p.waitForTimeout(150);
+  eq(await inPanel(p, (sr) => sr.host.getAttribute("tab")), "history", "the address changed: its tab");
+  await p.evaluate(() => { location.hash = "#r2"; }); await p.waitForTimeout(150);
+  eq(await inPanel(p, (sr) => [sr.host.getAttribute("tab"), sr.querySelector(".pmain .block.room .name").innerText]), ["rooms", "Office"], "a room: the Rooms tab with it");
+  await clickIn(p, '[data-action="panel-tab"][data-option="devices"]'); await p.waitForTimeout(150);
+  await clickIn(p, '[data-action="panel-tab"][data-option="rooms"]'); await p.waitForTimeout(150);
+  eq(await p.evaluate(() => location.hash), "#r2", "back on Rooms: the room again");
+  await p.evaluate(() => { localStorage.removeItem("shc-panel-tab"); localStorage.removeItem("shc-panel-room"); history.replaceState(null, "", location.pathname); });
 });

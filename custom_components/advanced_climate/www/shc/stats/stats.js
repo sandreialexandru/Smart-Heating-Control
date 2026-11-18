@@ -223,12 +223,13 @@ export const StatsMixin = (Base) =>
       return this._fmt(t, { weekday: "long", day: "numeric", month: "long" });
     }
 
-    /** Bars standing up, one per period, the value over each; a tap chooses the period. */
     /**
-     * The columns of the periods; ``line`` (a value per column, or null) is
-     * drawn over them as a line on a scale of its own (the outdoor temperature).
+     * Bars standing up, one per period, the value over each; a tap chooses the
+     * period. ``line`` (a value per column, or null) is drawn over them as a line
+     * on a scale of its own (the outdoor temperature); ``gutter``: the room of
+     * that scale left empty, so the columns stand under those of a chart with one.
      */
-    _statsColumns(values, label, fmt, color, short = fmt, under = null, line = null) {
+    _statsColumns(values, label, fmt, color, short = fmt, under = null, line = null, gutter = false) {
       // null: not known (no bar, a dash in its title).
       const max = Math.max(0, ...values.map(([, v]) => v ?? 0));
       const picked = this._statsPicked(values);
@@ -246,7 +247,8 @@ export const StatsMixin = (Base) =>
       const drawn = line ? this._statsLine(line, label, !!under) : null;
       const scroller = `<div class="ps-cols"><div class="ps-inner">${cols}${drawn ? drawn.html : ""}</div></div>`;
       // The scale of the line on its own on the right, so it covers no bar.
-      return drawn?.axis ? `<div class="ps-chart">${scroller}${drawn.axis}</div>` : scroller;
+      if (drawn?.axis) return `<div class="ps-chart">${scroller}${drawn.axis}</div>`;
+      return gutter ? `<div class="ps-chart">${scroller}<div class="ps-axis empty" aria-hidden="true"></div></div>` : scroller;
     }
 
     /**
@@ -355,6 +357,18 @@ export const StatsMixin = (Base) =>
             }%</span></div>`
           )
           .join("");
+        // The time of the house, the outdoor temperature over it (its scale on the right).
+        const houseChart = total.length
+          ? this._statsColumns(
+              total,
+              (t) => this._statsLabel(t, period),
+              (v) => this._hours(v),
+              "var(--ac-accent)",
+              (v) => this._shortHours(v),
+              null,
+              outdoor.size ? starts.map((t) => ({ t, ...(outdoor.get(t) || { mean: null, min: null, max: null }) })) : null
+            )
+          : "";
         let requests = "";
         let asked = null;
         const demand = house.entities?.heat_demand;
@@ -366,7 +380,16 @@ export const StatsMixin = (Base) =>
           });
           if (picked !== null) asked = values.find(([t]) => t === picked)?.[1] ?? null;
           requests = `<h3 class="ps-title">${esc(this._t("st_requests"))}</h3>
-            ${this._statsColumns(values, (t) => this._statsLabel(t, period), (v) => (v === null ? "–" : String(v)), "var(--ac-hot)")}
+            ${this._statsColumns(
+              values,
+              (t) => this._statsLabel(t, period),
+              (v) => (v === null ? "–" : String(v)),
+              "var(--ac-hot)",
+              undefined,
+              null,
+              null,
+              houseChart.includes('class="ps-axis')
+            )}
             <p class="muted">${esc(this._t("st_requests_note"))}</p>`;
         }
         const name = houses.length > 1 ? `<h2 class="ps-house">${esc(house.name || "")}</h2>` : "";
@@ -387,15 +410,7 @@ export const StatsMixin = (Base) =>
         return `${name}<h3 class="ps-title">${esc(this._t("st_house"))} · ${esc(range)} · ${esc(this._hours(sum(total)))}${outdoorTitle}${legend}</h3>
           ${
             total.length
-              ? this._statsColumns(
-                  total,
-                  (t) => this._statsLabel(t, period),
-                  (v) => this._hours(v),
-                  "var(--ac-accent)",
-                  (v) => this._shortHours(v),
-                  null,
-                  outdoor.size ? starts.map((t) => ({ t, ...(outdoor.get(t) || { mean: null, min: null, max: null }) })) : null
-                )
+              ? houseChart
               : `<p class="muted">${esc(this._t("st_none"))}</p>`
           }
           ${detail}

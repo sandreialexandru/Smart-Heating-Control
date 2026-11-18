@@ -297,6 +297,7 @@ const PANEL_STYLE = `
   .ps-axis { --t: 18px; --b: 18px; position: relative; flex: none; width: 3.2em; height: 190px; margin-left: 4px;
     border-left: 1px solid color-mix(in srgb, var(--ac-out) 45%, transparent); }
   .ps-axis.under { --b: 35px; }
+  .ps-axis.empty { border-left-color: transparent; }
   .ps-axis span { position: absolute; left: 6px; top: calc(var(--t) + (100% - var(--t) - var(--b)) * var(--y)); transform: translateY(-50%);
     font-size: 11px; font-weight: 600; color: var(--ac-out); white-space: nowrap; }
   :host([narrow]) .ps-axis, :host([narrow]) .ps-axis.under { --t: 0px; --b: 18px; width: 30px; margin-left: 2px; }
@@ -347,18 +348,26 @@ const readGroup = () => {
     return "none";
   }
 };
-const hashRoom = () => decodeURIComponent((location.hash || "").slice(1)) || null;
+// The address: "#<room>" a room on the Rooms tab, "#week", "#stats", ... another tab (a room id is never a tab name).
+const readHash = () => {
+  const h = decodeURIComponent((location.hash || "").slice(1)) || null;
+  return TABS.includes(h) ? { tab: h, room: null } : { tab: h ? "rooms" : null, room: h };
+};
 
 class ShcPanel extends ShcBase {
   constructor() {
     super();
     // The parts are drawn as in a card with every option on, each room open.
     this._config = { ...DEFAULTS };
-    this._room = hashRoom();
-    this._tab = readTab();
+    const { tab, room } = readHash();
+    this._room = room;
+    this._tab = tab || readTab();
     this._group = readGroup();
+    // A changed address: its tab (kept as the last one) and its room.
     this._onHash = () => {
-      this._room = hashRoom();
+      const { tab, room } = readHash();
+      if (tab) this._keepTab(tab);
+      if (tab === "rooms" || !tab) this._room = room;
       this._render();
     };
   }
@@ -402,20 +411,31 @@ class ShcPanel extends ShcBase {
   _choose(room) {
     this._room = room;
     writeStore(room);
-    const url = `${location.pathname}${location.search}${room ? `#${encodeURIComponent(room)}` : ""}`;
-    history.replaceState(history.state, "", url);
+    this._writeHash();
     this._render();
     if (this._narrow) window.scrollTo(0, 0);
   }
 
-  /** Show a tab (rooms, statistics, history), kept in the browser. */
-  _showTab(tab) {
+  /** The address of what is shown: the room on the Rooms tab, else the tab (a link to it). */
+  _writeHash() {
+    const at = this._tab === "rooms" ? this._room : this._tab;
+    history.replaceState(history.state, "", `${location.pathname}${location.search}${at ? `#${encodeURIComponent(at)}` : ""}`);
+  }
+
+  /** The tab shown, kept in the browser as the last one. */
+  _keepTab(tab) {
     this._tab = TABS.includes(tab) ? tab : "rooms";
     try {
       localStorage.setItem(TAB_STORE, this._tab);
     } catch (_err) {
       // No storage: the tab is not kept.
     }
+  }
+
+  /** Show a tab (rooms, schedule, statistics, history, devices), in the address too. */
+  _showTab(tab) {
+    this._keepTab(tab);
+    this._writeHash();
     this._render();
   }
 
@@ -598,12 +618,7 @@ class ShcPanel extends ShcBase {
 
   /** Open a room on the Rooms tab; with a part of it (its schedule, its Details) shown. */
   _openRoom(room, key = null) {
-    this._tab = "rooms";
-    try {
-      localStorage.setItem(TAB_STORE, this._tab);
-    } catch (_err) {
-      // No storage: the tab is not kept.
-    }
+    this._keepTab("rooms");
     this._choose(room);
     if (!key) return;
     const part = this._card?.querySelector(`[data-section="${CSS.escape(key)}"], [data-key="${CSS.escape(key)}"]`);

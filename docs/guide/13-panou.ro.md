@@ -15,7 +15,9 @@ despre o cameră este valabil și aici.
 
 Panoul are cinci taburi: **Camere**, **Program**, **Statistici**,
 **Istoric** și **Dispozitive**. Ultimul tab folosit se
-păstrează în browser. Bara de sus arată numele casei (cu mai multe case,
+păstrează în browser, iar tabul arătat este în adresă (`#week`, `#stats`,
+`#history`, `#devices`), așa că un link (într-un dashboard, pe o tabletă)
+deschide panoul direct pe el. Bara de sus arată numele casei (cu mai multe case,
 numele integrării).
 
 De la tastatură, săgețile trec de la o cameră la alta în listă (Home și End:

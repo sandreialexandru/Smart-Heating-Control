@@ -15,7 +15,8 @@ holds here too.
 
 The panel has five tabs: **Rooms**, **Schedule**, **Statistics**,
 **History** and **Devices**. The tab last used is kept in the
-browser. The top bar shows the name of the house (with several houses, the
+browser, and the tab shown is in the address (`#week`, `#stats`, `#history`,
+`#devices`), so a link (on a dashboard, a tablet) opens the panel on it. The top bar shows the name of the house (with several houses, the
 name of the integration).
 
 On a keyboard, the arrow keys go from room to room in the list (Home and End:

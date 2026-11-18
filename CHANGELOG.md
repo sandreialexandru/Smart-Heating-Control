@@ -23,7 +23,8 @@ GitHub releases.
   A tap on a bar shows that day, week or month: the time of the house, of each
   room and the starts asked; a tap again (or ✕) the whole span. With the
   temperatures: the mean outdoor temperature as a line over the bars, with its
-  own scale on the right of the bars (a tap on a point: its lowest and highest), the mean with the
+  own scale on the right of the bars, the chart under it aligned with it (a
+  tap on a point: its lowest and highest), the mean with the
   lowest and highest in the title and in the detail of a bar, and each room's
   mean temperature and target (its lowest and highest when hovered).
 - 🔥 **Heating by hour** (panel, *Statistics* tab): for each room a row of 24
@@ -48,7 +49,8 @@ GitHub releases.
   phone everything stays as in the card. The title is the name of the house
   (the name of the integration with several houses); the list of rooms is
   wider; the arrow keys go from room to room and from tab to tab, and where
-  the keyboard is can be seen.
+  the keyboard is can be seen. The tab shown is in the address (`#week`,
+  `#stats`, ...), so a link opens the panel on it.
 - 🏢 **Rooms in groups** (panel): by floor (the floor of the area of the
   room) or by heating circuit, in the list of rooms, the *Schedule* and the
   *Devices*; chosen next to the tabs and kept in the browser.

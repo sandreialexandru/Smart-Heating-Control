@@ -5,7 +5,8 @@ export const EDITOR_SCHEMA = [
   { name: "title", selector: { text: {} } },
   {
     name: "rooms",
-    selector: { entity: { multiple: true, filter: { integration: "advanced_climate", domain: "sensor" } } },
+    // The order of the list is the order of the card: dragged by the handles.
+    selector: { entity: { multiple: true, reorder: true, filter: { integration: "advanced_climate", domain: "sensor" } } },
   },
   {
     type: "grid",

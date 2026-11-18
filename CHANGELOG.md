@@ -82,6 +82,9 @@ GitHub releases.
 
 ### Changed
 
+- ↕️ **The order of the rooms in the card** ([#20](https://github.com/sandreialexandru/Smart-Heating-Control/issues/20)):
+  in the visual editor the rooms chosen are dragged by their handles into the
+  order of the card (the order of the `rooms` list, as in YAML).
 - The card is made of modules that the card and the panel share; it looks and
   works as before. It loads from a folder with the version in its path, so
   every browser and the companion app load the new files after an update.

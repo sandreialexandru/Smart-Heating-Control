@@ -105,3 +105,13 @@ test("editor: a switch not set shows what the card does (issue #19)", async (p) 
   });
   eq(shown, { house: true, quick: true, compact: false }, "the card with the defaults");
 });
+
+test("editor: the rooms chosen are dragged into the order of the card (issue #20)", async (p) => {
+  const rooms = await p.evaluate(() => customElements.get("smart-heating-control-card").getConfigForm().schema.find((f) => f.name === "rooms").selector.entity);
+  eq(rooms.multiple && rooms.reorder, true, "the list can be reordered");
+  // The card keeps the order of the list (not by name).
+  await p.evaluate(() => mount({ rooms: ["sensor.office_decision", "sensor.bedroom_decision"] }, { rooms: [{ id: "r1", name: "Bedroom", prefix: "bedroom" }, { id: "r2", name: "Office", prefix: "office" }] }));
+  await p.waitForTimeout(200);
+  const names = await p.evaluate(() => [...card.shadowRoot.querySelectorAll(".block.room .name")].map((n) => n.innerText.trim()));
+  eq(names, ["Office", "Bedroom"], "in the order of the list");
+});

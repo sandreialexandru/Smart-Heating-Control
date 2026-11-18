@@ -28,7 +28,7 @@ type: custom:smart-heating-control-card
 | Option | Default | What it does |
 | --- | --- | --- |
 | `title` | Heating | The card title (an empty text hides it). |
-| `rooms` | all | The list of the room *Decision* sensors to show. |
+| `rooms` | all | The list of the room *Decision* sensors to show, in the order of the card (in the visual editor they are dragged by their handles). Without it every room is shown, by name. |
 | `show_house` | `true` | The house part (see below). |
 | `show_rooms` | `true` | The rooms. |
 | `show_timeline` | `true` | The **Chart** button of every room (the chart opens with it). |

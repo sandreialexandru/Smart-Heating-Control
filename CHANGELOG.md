@@ -94,6 +94,13 @@ GitHub releases.
 
 ### Fixed
 
+- 📈 **The chart after a pinch and the bar on a phone**: the time under the
+  finger could come out as no time at all, so the values showed *Invalid Date*
+  and the outdoor temperature of now; the card could then fail with
+  *Configuration error* until the page was loaded again. A window that is not
+  a time is now never kept, the values are read from the window drawn, and far
+  ahead without a forecast no outdoor value is shown (the one of now only for
+  the hour ahead).
 - 📈 **The chart after a lost connection**: when the history of a room could
   not be read (the connection to Home Assistant dropped for a moment), the
   chart showed only the plan, also when opened again, until the panel or the

@@ -283,3 +283,40 @@ test("time format of the user profile: 24 h, 12 h, and the one of the language",
   ok(/5:30\s?PM/i.test(await next("language", "en")), "English language: 12 h");
   eq(await next("language", "ro"), "17:30", "Romanian language: 24 h");
 });
+
+test("a window that is not a time never breaks the chart or the tooltip", async (p) => {
+  await mount(p, {}, { rooms: R1 }); await openChart(p);
+  const at = (f) => p.evaluate((frac) => { const b = card.shadowRoot.querySelector(".hchart").getBoundingClientRect(); return [b.left + b.width * frac, b.top + 30]; }, f);
+  const errors = [];
+  p.on("pageerror", (e) => errors.push(e.message));
+  // A gesture from values that are not times: the window stays as it was.
+  const before = await view(p);
+  await p.evaluate(() => { card._setView("r1", NaN, NaN); card._setView("r1", undefined, card._charts.r1.v1, true); });
+  await p.waitForTimeout(100);
+  eq(await view(p), before, "the window kept");
+  // The copy of the window spoilt (as on a phone after a pinch and the bar): the tooltip
+  // takes the window drawn, a real time, not "Invalid Date" and the outdoor now.
+  await p.evaluate(() => { card._charts.r1.v0 = NaN; card._charts.r1.v1 = undefined; });
+  let r = await at(0.3); await p.mouse.move(r[0], r[1]); await p.waitForTimeout(120);
+  const tip = await p.evaluate(() => { const t = card.shadowRoot.querySelector(".tip"); return { hidden: t.hidden, text: t.innerText }; });
+  ok(!tip.hidden && !/invalid/i.test(tip.text) && /\d\d:\d\d/.test(tip.text) && /\d+\.\d°/.test(tip.text), "a real time: " + tip.text);
+  // A saved window that is not a time: the chart opens on the default one again and draws.
+  await p.evaluate(() => { card._view = { r1: { v0: NaN, v1: NaN } }; card._closeChart(); });
+  await openChart(p);
+  const v = await view(p);
+  ok(Math.abs(v.past - 24) < 0.01 && Math.abs(v.span - 36) < 0.01, "the default window: " + JSON.stringify(v));
+  ok(await p.evaluate(() => !!card.shadowRoot.querySelector("dialog.chartpop[open] .hchart svg")), "drawn");
+  eq(errors, [], "no error");
+});
+
+test("tooltip far ahead without a forecast: no outdoor value (not the one of now)", async (p) => {
+  await mount(p, {}, { rooms: R1 }); await openChart(p);
+  const r = await p.evaluate(() => {
+    card._charts.r1.forecast = [];
+    const b = card.shadowRoot.querySelector(".hchart").getBoundingClientRect();
+    return [b.right - 2, b.top + 30];
+  });
+  await p.mouse.move(r[0], r[1]); await p.waitForTimeout(120);
+  const text = await p.evaluate(() => card.shadowRoot.querySelector(".tip").innerText);
+  ok(!/outdoor/i.test(text), "no outdoor 11 h ahead: " + text);
+});

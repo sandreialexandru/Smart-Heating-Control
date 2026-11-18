@@ -18,13 +18,14 @@ export const ChartInteractMixin = (Base) =>
         /* ignore */
       }
       const xs = [...this._ptrs.values()];
+      const w = this._win(room, d);
       this._pan = {
         room,
         card,
         startX: xs.length > 1 ? (xs[0] + xs[1]) / 2 : ev.clientX,
         dist: xs.length > 1 ? Math.abs(xs[0] - xs[1]) : 0,
-        v0: d.v0,
-        v1: d.v1,
+        v0: w.v0,
+        v1: w.v1,
         moved: false,
       };
       return true;
@@ -71,9 +72,10 @@ export const ChartInteractMixin = (Base) =>
       }
       const rect = nav.getBoundingClientRect();
       const at = d.t0 + ((ev.clientX - rect.left) / rect.width) * (d.t1 - d.t0);
-      const span = d.v1 - d.v0;
+      const w = this._win(room, d);
+      const span = w.v1 - w.v0;
       // On the window: keep where it was grabbed; elsewhere: centre the window there.
-      const grab = at >= d.v0 && at <= d.v1 ? at - d.v0 : span / 2;
+      const grab = at >= w.v0 && at <= w.v1 ? at - w.v0 : span / 2;
       this._nav = { room, card, grab, span, pointer: ev.pointerId };
       this._navAt = Date.now();
       this._setView(room, at - grab, at - grab + span);
@@ -102,7 +104,8 @@ export const ChartInteractMixin = (Base) =>
         // One finger left after a pinch: start a new pan from here.
         const d = this._charts?.[p.room];
         const [x] = [...this._ptrs.values()];
-        this._pan = { ...p, startX: x, dist: 0, v0: d?.v0 ?? p.v0, v1: d?.v1 ?? p.v1 };
+        const w = d ? this._win(p.room, d) : p;
+        this._pan = { ...p, startX: x, dist: 0, v0: w.v0, v1: w.v1 };
       }
       const chart = p?.card?.querySelector(".hchart");
       if (p && !p.moved && chart) this._chartHover({ type: "pointermove", clientX: ev.clientX, target: chart });
@@ -142,8 +145,9 @@ export const ChartInteractMixin = (Base) =>
         ev.preventDefault();
         const d = this._charts?.[chart.dataset.chart];
         if (!d) return;
-        const shift = (sideways / chart.getBoundingClientRect().width) * (d.v1 - d.v0);
-        this._setView(chart.dataset.chart, d.v0 + shift, d.v1 + shift, true);
+        const w = this._win(chart.dataset.chart, d);
+        const shift = (sideways / chart.getBoundingClientRect().width) * (w.v1 - w.v0);
+        this._setView(chart.dataset.chart, w.v0 + shift, w.v1 + shift, true);
         return;
       }
       // Only pinch on a touchpad or Ctrl + wheel zoom, so the page still scrolls normally.
@@ -151,7 +155,8 @@ export const ChartInteractMixin = (Base) =>
       const d = this._charts?.[chart.dataset.chart];
       if (!d) return;
       const rect = chart.getBoundingClientRect();
-      const center = d.v0 + ((ev.clientX - rect.left) / rect.width) * (d.v1 - d.v0);
+      const w = this._win(chart.dataset.chart, d);
+      const center = w.v0 + ((ev.clientX - rect.left) / rect.width) * (w.v1 - w.v0);
       this._zoom(chart.dataset.chart, ev.deltaY > 0 ? 1.25 : 0.8, center, true);
     }
 
@@ -166,7 +171,8 @@ export const ChartInteractMixin = (Base) =>
       const d = this._charts?.[chart.dataset.chart];
       if (!d) return;
       const rect = chart.getBoundingClientRect();
-      const center = d.v0 + ((ev.clientX - rect.left) / rect.width) * (d.v1 - d.v0);
+      const w = this._win(chart.dataset.chart, d);
+      const center = w.v0 + ((ev.clientX - rect.left) / rect.width) * (w.v1 - w.v0);
       this._zoom(chart.dataset.chart, 0.4, center);
     }
   };

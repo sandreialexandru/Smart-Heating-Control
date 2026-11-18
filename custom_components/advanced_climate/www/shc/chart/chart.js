@@ -16,6 +16,8 @@ export const ChartMixin = (Base) =>
      * default one and follows the time; ``zoomed`` is true otherwise.
      */
     _viewOf(room, d) {
+      // A window that is not a time (a gesture gone wrong) is dropped: the default one again.
+      if (this._view?.[room] && !(Number.isFinite(this._view[room].v0) && Number.isFinite(this._view[room].v1))) delete this._view[room];
       const v = this._view?.[room] || this._defaultView(d);
       const span = Math.min(d.t1 - d.t0, Math.max(MIN_ZOOM_SPAN, v.v1 - v.v0));
       const v0 = Math.min(d.t1 - span, Math.max(d.t0, v.v0));
@@ -30,6 +32,8 @@ export const ChartMixin = (Base) =>
       this._view = this._view || {};
       const span = Math.min(d.t1 - d.t0, Math.max(MIN_ZOOM_SPAN, v1 - v0));
       const start = Math.min(d.t1 - span, Math.max(d.t0, v0));
+      // Not a time (a gesture from values that were not): the window stays as it was.
+      if (!Number.isFinite(start) || !Number.isFinite(span)) return;
       const def = this._defaultView(d);
       if (Math.abs(start - def.v0) < 60000 && Math.abs(start + span - def.v1) < 60000) {
         delete this._view[room];
@@ -56,11 +60,19 @@ export const ChartMixin = (Base) =>
       this._redrawRooms.add(room);
     }
 
+    /**
+     * The window shown now: the one of the last move (``d.v0`` … ``d.v1``, ahead
+     * of the drawing while a finger moves) when it is a time, else the one drawn.
+     */
+    _win(room, d) {
+      return Number.isFinite(d.v0) && Number.isFinite(d.v1) && d.v1 > d.v0 ? { v0: d.v0, v1: d.v1 } : this._viewOf(room, d);
+    }
+
     /** Zoom by ``factor`` (< 1 = closer) keeping ``center`` in place. */
     _zoom(room, factor, center, perFrame = false) {
       const d = this._charts?.[room];
       if (!d) return;
-      const { v0, v1 } = this._viewOf(room, d);
+      const { v0, v1 } = this._win(room, d);
       const c = center ?? (Math.min(Math.max(d.now, v0), v1) === d.now ? d.now : (v0 + v1) / 2);
       this._setView(room, c - (c - v0) * factor, c + (v1 - c) * factor, perFrame);
     }
@@ -464,7 +476,14 @@ export const ChartMixin = (Base) =>
       const a = stateObj?.attributes || {};
       const rect = chart.getBoundingClientRect();
       const f = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width));
-      const t = d.v0 + f * (d.v1 - d.v0);
+      const w = this._win(room, d);
+      const t = w.v0 + f * (w.v1 - w.v0);
+      // Not a time: nothing rather than wrong values ("Invalid Date", the outdoor now).
+      if (!Number.isFinite(t)) {
+        cross.hidden = true;
+        tip.hidden = true;
+        return;
+      }
       let temp = null;
       for (const [pt, v] of d.temp) {
         if (pt <= t) temp = v;
@@ -487,7 +506,8 @@ export const ChartMixin = (Base) =>
             outForecast = true;
           } else break;
         }
-        if (out === null && d.outdoor?.length) out = d.outdoor[d.outdoor.length - 1][1];
+        // No forecast: the outdoor now only for the hour ahead, not further.
+        if (out === null && d.outdoor?.length && t - d.now <= 3600000) out = d.outdoor[d.outdoor.length - 1][1];
       }
       const time = this._fmt(t, { weekday: "short", hour: "2-digit", minute: "2-digit" });
       const rows = [`<b>${esc(time)}</b>`];

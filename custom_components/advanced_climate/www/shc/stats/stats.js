@@ -243,7 +243,10 @@ export const StatsMixin = (Base) =>
             )}</span>${under ? `<span class="ps-out">${esc(under(t))}</span>` : ""}</button>`;
         })
         .join("");
-      return `<div class="ps-cols"><div class="ps-inner">${cols}${line ? this._statsLine(line, label, !!under) : ""}</div></div>`;
+      const drawn = line ? this._statsLine(line, label, !!under) : null;
+      const scroller = `<div class="ps-cols"><div class="ps-inner">${cols}${drawn ? drawn.html : ""}</div></div>`;
+      // The scale of the line on its own on the right, so it covers no bar.
+      return drawn?.axis ? `<div class="ps-chart">${scroller}${drawn.axis}</div>` : scroller;
     }
 
     /**
@@ -255,7 +258,7 @@ export const StatsMixin = (Base) =>
     _statsLine(points, label, under) {
       const values = points.map((p) => (p?.mean === null || p?.mean === undefined ? null : p.mean));
       const known = values.filter((v) => v !== null);
-      if (known.length < 2) return "";
+      if (known.length < 2) return null;
       const lo = Math.min(...known);
       const hi = Math.max(...known);
       const n = values.length;
@@ -288,11 +291,12 @@ export const StatsMixin = (Base) =>
           )}</small></span>`;
         }
       });
-      // Its scale: the highest and the lowest mean, at the left edge.
-      if (hi !== lo) {
-        parts.push(`<text x="2" y="10%" dy="-6">${esc(this._temp(hi))}</text>`, `<text x="2" y="90%" dy="14">${esc(this._temp(lo))}</text>`);
-      }
-      return `<svg class="ps-line ${under ? "under" : ""}">${parts.join("")}</svg>${tip}`;
+      // Its scale, beside the columns: the highest, the middle and the lowest mean.
+      const marks = hi === lo ? [[lo, 50]] : [[hi, 10], [(hi + lo) / 2, 50], [lo, 90]];
+      const axis = `<div class="ps-axis ${under ? "under" : ""}" aria-hidden="true">${marks
+        .map(([v, at]) => `<span style="--y:${at / 100}">${esc(this._temp(Math.round(v * 10) / 10))}</span>`)
+        .join("")}</div>`;
+      return { html: `<svg class="ps-line ${under ? "under" : ""}">${parts.join("")}</svg>${tip}`, axis };
     }
 
     /** The statistics of every house. */

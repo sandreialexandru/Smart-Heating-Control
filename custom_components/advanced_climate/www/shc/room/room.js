@@ -97,19 +97,28 @@ export const RoomMixin = (Base) =>
 
     /** Buttons that open the room sections (independently), then the open sections in a fixed order. */
     _sectionsHtml(a, e, stateObj) {
+      const parts = this._sectionParts(a, e, stateObj);
+      return parts ? `${parts.buttons}${parts.bodies}` : "";
+    }
+
+    /**
+     * The buttons of the room sections and the open sections, apart.
+     * ``inlineChart``: the chart is drawn beside the room (the panel), so it has no button.
+     */
+    _sectionParts(a, e, stateObj, inlineChart = false) {
       const cfg = this._config;
       const id = a.room_id;
       const defs = [];
       if (cfg.show_quick_override) defs.push([`quick-${id}`, "btn_quick", "timer-edit-outline", () => this._quickHtml(a, e)]);
       if (cfg.show_schedule_editor) defs.push([`sched-${id}`, "schedule", "calendar-edit", () => this._scheduleHtml(a, stateObj)]);
       // The chart opens on its own button (its history is loaded only then).
-      if (cfg.show_timeline) defs.push([`chart-${id}`, "chart", "chart-line", () => this._timelineHtml(a)]);
+      if (cfg.show_timeline && !inlineChart) defs.push([`chart-${id}`, "chart", "chart-line", () => this._timelineHtml(a)]);
       if (cfg.show_levels && Object.entries(e).some(([k, id]) => k.startsWith("level_") && this._state(id))) {
         defs.push([`levels-${id}`, "btn_levels", "tune-variant", () => this._levelsHtml(a, e)]);
       }
       if (cfg.show_details) defs.push([`details-${id}`, "details", "information-outline", () => this._detailsHtml(a, e)]);
       const lock = e.child_lock ? this._state(e.child_lock) : null;
-      if (!defs.length && !lock && !a.override) return "";
+      if (!defs.length && !lock && !a.override) return null;
       const open = (k) => !!this._open[k] || (k === `sched-${id}` && this._editing === id);
       const locked = lock?.state === "on";
       // While there is a manual change: back to automatic, first in the row.
@@ -140,7 +149,7 @@ export const RoomMixin = (Base) =>
         .join("");
       // Up to 3 per row; 4 as two rows of 2 (no button left alone on a row).
       const cols = count <= 3 ? count : count === 4 ? 2 : 3;
-      return `<div class="sbtns" style="--cols:${cols}">${buttons}</div>${bodies}`;
+      return { buttons: `<div class="sbtns" style="--cols:${cols}">${buttons}</div>`, bodies };
     }
 
     /** The colour of the level of a room (its name, arc and marks). */
@@ -159,7 +168,25 @@ export const RoomMixin = (Base) =>
       const color = this._roomColor(a);
       if (cfg.compact && folded) return this._compactRow(stateObj, color);
       if (folded) return this._foldedRow(stateObj, color);
+      const { head, hero, overrideMsg } = this._roomTop(stateObj);
+      // The buttons (and the sections they open) right under the arc, before the day bar and the chart.
+      const parts = [
+        head,
+        hero,
+        overrideMsg,
+        this._noHeatHtml(a),
+        this._alertsHtml(a),
+        this._sectionsHtml(a, e, stateObj),
+        this._todayHtml(a),
+      ];
+      return `<section class="block room open ${this._alertLevel(a)}" style="--c:${color}">${parts.join("")}</section>`;
+    }
 
+    /** The title row of an open room (name, reason, badges), its arc with the chips, and its manual change. */
+    _roomTop(stateObj) {
+      const a = stateObj.attributes;
+      const e = a.entities || {};
+      const key = a.room_id;
       const badges = [];
       let overrideMsg = "";
       // "Heating" (pulsing) while the heat source runs for the room; "Asks for heat" while it waits.
@@ -217,17 +244,7 @@ export const RoomMixin = (Base) =>
         this._eta(a)
       )}</div></div>`;
 
-      // The buttons (and the sections they open) right under the arc, before the day bar and the chart.
-      const parts = [
-        head,
-        hero,
-        overrideMsg,
-        this._noHeatHtml(a),
-        this._alertsHtml(a),
-        this._sectionsHtml(a, e, stateObj),
-        this._todayHtml(a),
-      ];
-      return `<section class="block room open ${this._alertLevel(a)}" style="--c:${color}">${parts.join("")}</section>`;
+      return { head, hero, overrideMsg };
     }
 
     /** The level the room is at (its colour and name); a temperature without a level shows only the value. */

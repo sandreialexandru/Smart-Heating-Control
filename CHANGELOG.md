@@ -22,8 +22,8 @@ GitHub releases.
   the starts from its history, so only the days it still keeps (10 by default).
   A tap on a bar shows that day, week or month: the time of the house, of each
   room and the starts asked; a tap again (or ✕) the whole span. With the
-  temperatures: the mean outdoor temperature as a line over the bars, on its
-  own scale (a tap on a point: its lowest and highest), the mean with the
+  temperatures: the mean outdoor temperature as a line over the bars, with its
+  own scale on the right of the bars (a tap on a point: its lowest and highest), the mean with the
   lowest and highest in the title and in the detail of a bar, and each room's
   mean temperature and target (its lowest and highest when hovered).
 - 🔥 **Heating by hour** (panel, *Statistics* tab): for each room a row of 24
@@ -31,15 +31,27 @@ GitHub releases.
   mean of the 7 days (when each room usually heats) or one of them; a tap on
   an hour shows its minutes.
 - 🗓️ **The next days** (panel, *Schedule* tab): today and the next 6 days as
-  the schedule will run them, every room on the day chosen with its levels on
-  a shared time line and the time now on today. The holidays (Workday), the
+  the schedule will run them, every room on the day chosen with its levels
+  (and their temperatures, *Eco 18°*) on a shared time line and the time now
+  on today. The holidays (Workday), the
   profiles and the levels set by calendar events and the planned vacation are
   in: said above the bars, the levels and the vacation drawn over them. A tap
-  on a room opens it with its schedule editor; its copy button, with the
-  rooms to copy its schedule to.
+  on a room opens it with its schedule editor; its copy button (shown on hover,
+  always on a touch screen), with the rooms to copy its schedule to.
 - 📋 **Copy a schedule to other rooms** (card and panel, *Schedule* of a room):
   *Copy to other rooms* gives the rooms chosen of the house the same schedule,
   every profile with its days, in place of their own.
+- 🖥️ **The panel on a wide screen**: the house in one bar (its values and its
+  buttons as icons, their names on hover; the mode, the heat source and the
+  scenarios under it); the chosen room with its chart beside it from the
+  start, and under them its day and the temperatures of its levels. On a
+  phone everything stays as in the card. The title is the name of the house
+  (the name of the integration with several houses); the list of rooms is
+  wider; the arrow keys go from room to room and from tab to tab, and where
+  the keyboard is can be seen.
+- 🧱 **Overview** (panel, *Overview* tab): a tile per room with its
+  temperature, its target, its icons and its last 24 hours (temperature,
+  target, when it heated), for a tablet on the wall; a tap opens the room.
 - 🏢 **Rooms in groups** (panel): by floor (the floor of the area of the
   room) or by heating circuit, in the list of rooms, the *Schedule* and the
   *Devices*; chosen next to the tabs and kept in the browser.

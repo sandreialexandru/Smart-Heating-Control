@@ -26,12 +26,14 @@ const contents = (root) => {
     }
   };
   walk(root);
+  // What a wide panel says on hover (its compact house bar).
+  const titles = [...root.querySelectorAll("[title]")].map((el) => el.getAttribute("title"));
   const controls = new Set(
     [...root.querySelectorAll("[data-action]")].map((el) =>
       ["action", "entity", "option", "room", "key", "preset", "profile", "series", "zoom", "house"].map((k) => el.dataset[k] || "").join("|")
     )
   );
-  return { texts: [...texts], controls: [...controls] };
+  return { texts: [...texts], controls: [...controls], titles };
 };
 
 test("the house on top, every room on the side, the first room open", async (p) => {
@@ -47,7 +49,7 @@ test("the house on top, every room on the side, the first room open", async (p) 
   eq(r.rows, ["Bedroom", "Kid", "Living", "Office"], "rooms by name");
   ok(r.open.includes("Bedroom"), "first room open: " + r.open);
   eq(r.chosen, ["Bedroom"], "the open room marked");
-  eq(r.title, "SHC", "title");
+  eq(r.title, "Home", "title: the name of the house");
 });
 
 test("a room row opens that room; the address and the browser keep it", async (p) => {
@@ -74,8 +76,14 @@ test("nothing of the card is missing: every text and control of the house and of
     const card = await p.evaluate(`(${contents.toString()})(card.shadowRoot.querySelector("ha-card"))`);
     await openPanel(p, hass);
     const panel = await p.evaluate(`(${contents.toString()})(panel.shadowRoot)`);
-    const missingTexts = card.texts.filter((t) => t !== "Heating" && !panel.texts.includes(t));
-    const missingControls = card.controls.filter((c) => !panel.controls.includes(c));
+    // Wide, the house is one bar: its values and names are said on hover; the
+    // heating time names only the period shown; the chart is drawn beside the
+    // room, so it has no button.
+    const chart = await inPanel(p, (sr, id) => !!sr.querySelector(`.pmain .prw-chart [data-chartcard="${id}"]`), room.id);
+    const said = (t) => panel.texts.includes(t) || panel.titles.some((x) => x.includes(t));
+    const otherPeriod = (t) => /^Heating time · this (week|month)$/.test(t);
+    const missingTexts = card.texts.filter((t) => t !== "Heating" && !said(t) && !otherPeriod(t) && !(t === "Chart" && chart));
+    const missingControls = card.controls.filter((c) => !panel.controls.includes(c) && !(chart && c === `fold||||chart-${room.id}|||||`));
     eq(missingTexts, [], `${room.name}: texts`);
     eq(missingControls, [], `${room.name}: controls`);
   }
@@ -85,10 +93,23 @@ test("the sections of the open room work as in the card (details, chart window)"
   await openPanel(p, { rooms: ROOMS });
   await clickIn(p, '.pmain [data-key="details-r1"]'); await p.waitForTimeout(150);
   ok(await inPanel(p, (sr) => sr.querySelector(".pmain").innerText.includes("Humidity")), "details open");
+  // Wide: the chart beside the room, the day and the levels under them, no chart button.
+  const wide = await inPanel(p, (sr) => ({
+    chart: !!sr.querySelector('.pmain .prw-chart [data-chartcard="r1"]'),
+    button: !!sr.querySelector('.pmain [data-key="chart-r1"]'),
+    today: !!sr.querySelector(".pmain .prw-below .today"),
+    levels: [...sr.querySelectorAll(".pmain .prw-level")].map((l) => l.innerText.replace(/\s+/g, " ").trim()),
+  }));
+  eq([wide.chart, wide.button, wide.today], [true, false, true], "chart beside, no button, the day under");
+  eq(wide.levels.slice(0, 2), ["Home 21°", "Eco 18°"], "the levels with their temperatures");
+  // On a phone the chart opens in its window, as in the card.
+  await p.evaluate(() => history.replaceState(null, "", "#r1"));
+  await openPanel(p, { rooms: ROOMS }, { narrow: true });
   await clickIn(p, '.pmain [data-key="chart-r1"]'); await p.waitForTimeout(400);
   eq(await inPanel(p, (sr) => { const d = sr.querySelector("dialog.chartpop"); return d && d.matches(":modal"); }), true, "modal chart window");
   await clickIn(p, '[data-action="closechart"]'); await p.waitForTimeout(150);
   eq(await inPanel(p, (sr) => !!sr.querySelector("dialog.chartpop")), false, "closed");
+  await p.evaluate(() => { localStorage.removeItem("shc-panel-room"); history.replaceState(null, "", location.pathname); });
 });
 
 test("the title of the open room does not fold it", async (p) => {
@@ -156,6 +177,7 @@ test("two houses: both on top, the rooms under the name of their house", async (
   }));
   eq(r.houses, 2, "two houses");
   eq(r.list, ["Home", "Bedroom", "Cabin", "Loft"], "rooms under their house, the houses as in the card");
+  eq(await inPanel(p, (sr) => sr.querySelector(".ptop h1").innerText), "Smart Heating Control", "the title: the integration");
 });
 
 test("a room that is gone (kept in the browser): the first room opens", async (p) => {
@@ -184,7 +206,8 @@ test("from wide to narrow (a window made smaller): the open room stays, with Bac
 });
 
 test("updates while the chart window is open: the same window, still modal; the open room kept", async (p) => {
-  await openPanel(p, { rooms: ROOMS });
+  // The chart window: a phone (wide, the chart is beside the room).
+  await openPanel(p, { rooms: ROOMS }, { narrow: true });
   await clickIn(p, '.pside [data-key="room-r2"]'); await p.waitForTimeout(150);
   await clickIn(p, '.pmain [data-key="chart-r2"]'); await p.waitForTimeout(400);
   const same = await p.evaluate(async (rooms) => {
@@ -307,7 +330,7 @@ test("history that fails says so; Romanian texts", async (p) => {
   await p.waitForTimeout(300);
   const t = await extraText(p);
   ok(t.includes("Decizii") && t.includes("Toate camerele") && t.includes("Toată casa") && t.includes("Home Assistant a repornit"), t.slice(0, 300));
-  eq(await inPanel(p, (sr) => [...sr.querySelectorAll('[data-action="panel-tab"]')].map((b) => b.innerText)), ["Camere", "Program", "Statistici", "Istoric", "Dispozitive"], "tabs");
+  eq(await inPanel(p, (sr) => [...sr.querySelectorAll('[data-action="panel-tab"]')].map((b) => b.innerText)), ["Camere", "Ansamblu", "Program", "Statistici", "Istoric", "Dispozitive"], "tabs");
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });
 
@@ -424,7 +447,7 @@ test("schedule tab: today and the next 6 days as the integration runs them; no a
   eq([first.days.length, first.day, first.rows, first.now], [7, 0, ["Bedroom", "Living", "Office"], true], "7 days from today, every room, now on today");
   ok(/^\w{3} \d{1,2}$/.test(first.days[0]), "a day with its date: " + first.days[0]);
   eq(first.profile, weekday < 5 ? "workday" : "weekend", "the profile of today");
-  ok(first.segs.length >= 2 && /^Sleep 00:00–/.test(first.segs[0]), "the levels of the day from midnight: " + first.segs);
+  ok(first.segs.length >= 2 && /^Sleep 18\.5° 00:00–/.test(first.segs[0]), "the levels of the day from midnight: " + first.segs);
   eq(first.gap, "No active profile: frost protection", "a room without an active profile");
   ok(/Schedule helper/.test(first.outside) && !first.outsideButton, "a room on a Schedule helper is not opened from here: " + first.outside);
   eq(first.asked, 1, "asked once");
@@ -699,7 +722,13 @@ test("humidity of every room: those at risk of mold first; a tap opens the Detai
 });
 
 test("chart: a history that could not be read is said, and asked for again when the chart opens again or the connection comes back", async (p) => {
+  // Wide: said beside the room.
   await openPanel(p, { rooms: [{ id: "r1", name: "Bedroom" }], historyFails: true });
+  await p.waitForTimeout(300);
+  ok(/could not be read/.test(await inPanel(p, (sr) => sr.querySelector(".pmain .prw-chart").innerText)), "said beside the room");
+  // On a phone, in the chart window.
+  await p.evaluate(() => history.replaceState(null, "", "#r1"));
+  await openPanel(p, { rooms: [{ id: "r1", name: "Bedroom" }], historyFails: true }, { narrow: true });
   const btn = '.pmain [data-action="fold"][data-key="chart-r1"]';
   const asked = () => p.evaluate(() => window.calls.ws.filter((c) => c.type === "history/history_during_period").length);
   await clickIn(p, btn); await p.waitForTimeout(300);
@@ -714,7 +743,7 @@ test("chart: a history that could not be read is said, and asked for again when 
   await p.waitForTimeout(300);
   eq(await asked(), first + 2, "asked again when the connection is back");
   await p.keyboard.press("Escape");
-  await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+  await p.evaluate(() => { localStorage.removeItem("shc-panel-tab"); localStorage.removeItem("shc-panel-room"); history.replaceState(null, "", location.pathname); });
 });
 
 test("statistics: the outdoor mean as a line over the bars of the house, on its own scale", async (p) => {
@@ -726,13 +755,15 @@ test("statistics: the outdoor mean as a line over the bars of the house, on its 
       legend: sr.querySelector(".ps-legend")?.innerText.trim(),
       dots: [...svg.querySelectorAll("circle:not(.ps-hit)")].map((c) => c.getAttribute("cx")),
       lines: svg.querySelectorAll("line").length,
-      scale: [...svg.querySelectorAll("text")].map((t) => t.textContent),
+      scale: [...sr.querySelectorAll(".ps-chart")[0].querySelectorAll(".ps-axis span")].map((t) => t.textContent),
+      inside: svg.querySelectorAll("text").length,
       starts: !!sr.querySelectorAll(".ps-cols")[1]?.querySelector("svg.ps-line"),
     };
   });
   eq(r.legend, "outdoor mean", "the legend");
   eq([r.dots.length, r.lines, r.dots[0], r.dots[13]], [14, 13, "3.571%", "96.429%"], "a point at the centre of each column");
-  eq(r.scale, ["5.0°", "4.0°"], "its highest and lowest");
+  eq(r.scale, ["5.0°", "4.5°", "4.0°"], "its highest, middle and lowest, on a scale of its own");
+  eq(r.inside, 0, "no value drawn over the bars");
   eq(r.starts, false, "not over the starts");
   await openPanel(p, { rooms: ROOMS, noTempStats: true });
   eq(await inPanel(p, (sr) => [!!sr.querySelector("svg.ps-line"), !!sr.querySelector(".ps-legend")]), [false, false], "no outdoor statistics: no line");
@@ -749,7 +780,8 @@ test("statistics: the heating by hour of every room, the mean of 7 days or one d
     cells: sr.querySelectorAll(".hm-row:not(.hm-head)")[0].querySelectorAll(".hm-cell").length,
     full: [...sr.querySelectorAll(".hm-row:not(.hm-head)")[0].querySelectorAll(".hm-cell")].map((c) => c.style.getPropertyValue("--p")),
     title: [...sr.querySelectorAll(".hm-row:not(.hm-head)")[0].querySelectorAll(".hm-cell")].map((c) => c.title).find((t) => / 60 min/.test(t)) || "",
-    asked: window.calls.ws.filter((c) => c.type === "history/history_during_period" && c.entity_ids.includes("binary_sensor.bedroom_heat_demand")).length,
+    // The heating by hour asks for every room at once (the chart of the room asks for its own).
+    asked: window.calls.ws.filter((c) => c.type === "history/history_during_period" && c.entity_ids.includes("binary_sensor.bedroom_heat_demand") && c.entity_ids.includes("binary_sensor.kid_heat_demand")).length,
   }));
   const mean = await look();
   eq([mean.chips.length, mean.chips[0], mean.active], [8, "Mean", "mean"], "the mean and the 7 days");
@@ -790,4 +822,58 @@ test("statistics: a tap on an hour of the heating by hour shows its minutes; ✕
   await clickIn(p, ".hm-detail .ps-unpick"); await p.waitForTimeout(100);
   eq(await detail(), null, "hidden");
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
+});
+
+// ---------------------------------------------------------------- the wide layout, the overview, the keyboard
+test("wide: the house in one bar (its buttons as icons, named on hover); a phone keeps the card's house", async (p) => {
+  await openPanel(p, { rooms: ROOMS });
+  const wide = await inPanel(p, (sr) => ({
+    bar: !!sr.querySelector(".phouse .pbar"),
+    buttons: [...sr.querySelectorAll(".pbar .pb-actions .abtn")].map((b) => b.getAttribute("aria-label")),
+    stats: sr.querySelectorAll(".pbar .pb-stat").length,
+    height: sr.querySelector(".phouse").getBoundingClientRect().height,
+  }));
+  eq([wide.bar, wide.buttons.every(Boolean), wide.buttons.length, wide.stats], [true, true, 5, 4], "one bar, every button named");
+  ok(wide.height < 170, "a short bar: " + wide.height);
+  await openPanel(p, { rooms: ROOMS }, { narrow: true });
+  eq(await inPanel(p, (sr) => [!!sr.querySelector(".phouse .pbar"), !!sr.querySelector(".phouse .hactions")]), [false, true], "the phone: as the card");
+  await p.evaluate(() => localStorage.removeItem("shc-panel-room"));
+});
+
+test("overview: a tile per room with its temperature, target and last 24 hours; a tap opens the room", async (p) => {
+  await openPanel(p, { rooms: ROOMS });
+  await clickIn(p, '[data-action="panel-tab"][data-option="overview"]'); await p.waitForTimeout(400);
+  const r = await inPanel(p, (sr) => [...sr.querySelectorAll(".ov-tile")].map((t) => ({
+    name: t.querySelector(".ov-name").innerText,
+    now: t.querySelector(".ov-now").innerText,
+    spark: !!t.querySelector("svg.ov-spark polyline.t"),
+  })));
+  eq(r.map((t) => t.name).sort(), ["Bedroom", "Kid", "Living", "Office"], "a tile for every room");
+  ok(r.find((t) => t.name === "Bedroom").spark, "the last 24 hours drawn");
+  eq(r.find((t) => t.name === "Kid").now, "–", "no temperature: a dash");
+  await clickIn(p, '.ov-tile[data-room="r2"]'); await p.waitForTimeout(200);
+  eq(await inPanel(p, (sr) => [sr.host.getAttribute("tab"), sr.querySelector(".pmain .block.room .name").innerText]), ["rooms", "Office"], "opened");
+  await p.evaluate(() => { localStorage.removeItem("shc-panel-tab"); localStorage.removeItem("shc-panel-room"); history.replaceState(null, "", location.pathname); });
+});
+
+test("keyboard: the arrows go from room to room and from tab to tab, the focus kept", async (p) => {
+  await openPanel(p, { rooms: ROOMS });
+  await inPanel(p, (sr) => sr.querySelector('.pside .frow[data-key="room-r1"]').focus());
+  await p.keyboard.press("ArrowDown"); await p.waitForTimeout(150);
+  const down = await inPanel(p, (sr) => [location.hash, sr.activeElement?.dataset.key]);
+  const order = await inPanel(p, (sr) => [...sr.querySelectorAll(".pside .frow")].map((b) => b.dataset.key));
+  eq(down, [`#${order[1].slice(5)}`, order[1]], "the next room chosen and focused");
+  await p.keyboard.press("End"); await p.waitForTimeout(150);
+  eq(await inPanel(p, (sr) => sr.activeElement?.dataset.key), order.at(-1), "End: the last");
+  await inPanel(p, (sr) => sr.querySelector('[data-action="panel-tab"][data-option="rooms"]').focus());
+  await p.keyboard.press("ArrowRight"); await p.waitForTimeout(150);
+  eq(await inPanel(p, (sr) => [sr.host.getAttribute("tab"), sr.activeElement?.dataset.option]), ["overview", "overview"], "the next tab");
+  await p.keyboard.press("ArrowLeft"); await p.keyboard.press("ArrowLeft"); await p.waitForTimeout(150);
+  eq(await inPanel(p, (sr) => sr.host.getAttribute("tab")), "devices", "around to the last");
+  await p.evaluate(() => { localStorage.removeItem("shc-panel-tab"); localStorage.removeItem("shc-panel-room"); history.replaceState(null, "", location.pathname); });
+});
+
+test("title: the name of the house; with several houses the name of the integration", async (p) => {
+  await openPanel(p, { rooms: ROOMS, houseName: "Cabana" });
+  eq(await inPanel(p, (sr) => sr.querySelector(".ptop h1").innerText), "Cabana", "one house");
 });

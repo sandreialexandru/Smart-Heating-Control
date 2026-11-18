@@ -10,40 +10,15 @@ export const HouseMixin = (Base) =>
       const e = house.entities;
       const presence = this._state(e.presence);
       const mode = this._state(e.mode);
-      const scenario = this._state(e.scenario);
       const source = this._state(e.heat_source);
       const outdoor = this._state(e.outdoor_average);
       const season = this._state(e.heating_season);
       const cutoff = this._state(e.outdoor_cutoff);
       const demand = this._state(e.heat_demand);
       const runtime = this._state(e.heating_runtime);
-      const guest = this._state(e.guest_mode);
       const pause = this._state(e.pause);
-      const vStart = this._state(e.vacation_start);
-      const vEnd = this._state(e.vacation_end);
 
-      const persons = Object.entries(presence?.attributes?.persons || {}).map(([id, cls]) => {
-        const p = this._hass.states[id];
-        return { id, cls: cls || "unknown", name: p?.attributes?.friendly_name || id.split(".")[1], picture: p?.attributes?.entity_picture };
-      });
-      // A ring in the colour of where the person is (home, nearby, far); the photo when there is one.
-      // Several people overlap a little; the compact row shows a few and "+N" for the rest.
-      const avatarList = (links, max = persons.length) =>
-        persons
-          .slice(0, persons.length > max ? max - 1 : max)
-          .map((p) => {
-            const title = `${p.name}: ${this._label(presence, p.cls)}`;
-            return `<span class="avatar ${esc(p.cls)} ${links ? "link" : ""}" ${links ? this._more(p.id, title) : `title="${esc(title)}"`}>${
-              p.picture ? `<img src="${esc(p.picture)}" alt="">` : esc((String(p.name).trim()[0] || "?").toUpperCase())
-            }</span>`;
-          })
-          .join("") +
-        (persons.length > max
-          ? `<span class="avatar more" title="${esc(persons.slice(max - 1).map((p) => p.name).join(", "))}">+${persons.length - max + 1}</span>`
-          : "");
-      const avatars = avatarList(true);
-      const overlap = persons.length > 3 ? "overlap" : "";
-      const who = persons.map((p) => `${p.name} ${String(this._label(presence, p.cls)).toLowerCase()}`).join(" · ");
+      const { avatars, overlap, who } = this._people(house);
 
       const modeOptions = mode?.attributes?.options || ["auto", "away", "vacation", "off", "summer"];
       const modeCount = modeOptions.length;
@@ -53,35 +28,13 @@ export const HouseMixin = (Base) =>
             data-entity="${esc(e.mode)}" data-option="${esc(opt)}">${esc(this._label(mode, opt))}</button>`
         )
         .join("");
-      // The scenarios of the house: one button each, the active one marked.
-      const scenarioOptions = scenario?.attributes?.options || [];
-      // Three per row, the same shape as the mode buttons (two when there are only two or four).
-      const scenCols = [2, 4].includes(scenarioOptions.length) ? 2 : 3;
-      const scenarios = scenarioOptions.length
-        ? `<div class="scenarios">
-            <span class="sclabel">${this._icon("playlist-check")}<span>${esc(this._t("scenario"))}</span></span>
-            <div class="segmented scen-grid" style="--n:${scenCols}" role="group" aria-label="${esc(this._t("scenario"))}">${scenarioOptions
-              .map(
-                (opt) => `<button class="seg scen ${scenario.state === opt ? "active" : ""}" data-action="mode" title="${esc(opt)}"
-                  aria-pressed="${scenario.state === opt}" data-entity="${esc(e.scenario)}" data-option="${esc(opt)}">${esc(opt)}</button>`
-              )
-              .join("")}</div>
-          </div>`
-        : "";
+      const scenarios = this._scenariosHtml(house);
 
       const stat = (icon, label, value, extra = "", entityId = null) =>
         `<div class="stat ${extra} ${entityId ? "link" : ""}" ${this._more(entityId)}><span class="k">${this._icon(icon)}<span>${esc(
           label
         )}</span></span><span class="v">${esc(value)}</span></div>`;
       const onOff = (s) => (s ? (s.state === "on" ? this._t("on") : this._t("off")) : "–");
-      const guestOn = guest?.state === "on";
-      const isDate = (s) => s && !Number.isNaN(Date.parse(s.state));
-      const vacationSet = isDate(vStart) || isDate(vEnd);
-      const vacationSummary = vacationSet
-        ? `${isDate(vStart) ? esc(this._fmtTime(vStart.state)) : this._t("now_tag")} – ${
-            isDate(vEnd) ? esc(this._fmtTime(vEnd.state)) : "…"
-          }`
-        : this._t("vacation_none");
 
       // The same title in every view: house icon and name, presence, flame.
       const presenceIcon0 =
@@ -111,58 +64,11 @@ export const HouseMixin = (Base) =>
           )}"><span class="chev open"></span></button>`
         : "";
 
-      // Action buttons: an icon and a short name; Guests and Vacation open their own panel.
-      const vacKey = `vac-${house.id}`;
-      const abtn = (icon, label, attrs, cls = "", title = "") =>
-        `<button class="abtn ${cls}" ${attrs} ${title ? `title="${esc(title)}" aria-label="${esc(title)}"` : ""}>${this._icon(
-          icon
-        )}<span>${esc(label)}</span></button>`;
-      const fold = (key) => `data-action="fold" data-key="${esc(key)}" aria-expanded="${!!this._open[key]}"`;
-      const actions = [
-        pause
-          ? abtn("pause", this._t("pause"), `data-action="toggle" data-entity="${esc(e.pause)}" role="switch" aria-checked="${pause.state === "on"}"`, pause.state === "on" ? "warn on" : "warn")
-          : "",
-        guest
-          ? abtn("account-group-outline", this._t("guests"), `data-action="toggle" data-entity="${esc(e.guest_mode)}" role="switch" aria-checked="${guestOn}"`, `teal ${guestOn ? "on" : ""}`)
-          : "",
-        abtn("airplane", this._t("vacation"), fold(vacKey), `blue ${vacationSet ? "on" : ""} ${this._open[vacKey] ? "open" : ""}`),
-        e.reevaluate ? abtn("refresh", this._t("reevaluate"), `data-action="press" data-entity="${esc(e.reevaluate)}"`) : "",
-        e.clear_overrides
-          ? abtn("restore", this._t("auto_short"), `data-action="press" data-entity="${esc(e.clear_overrides)}"`, "", this._t("clear_all"))
-          : "",
-      ].filter(Boolean);
+      const actions = this._houseActions(house);
       // On 6 columns: 5 buttons as 3 + 2, 4 as 2 + 2, else one row.
       const spans = { 1: [6], 2: [3, 3], 3: [2, 2, 2], 4: [3, 3, 3, 3], 5: [2, 2, 2, 3, 3] }[actions.length] || actions.map(() => 2);
       const actionsHtml = actions.map((html, i) => html.replace("<button ", `<button style="--span:${spans[i]}" `)).join("");
-
-      const vacPanel = this._open[vacKey]
-        ? `<div class="panel blue">
-            <div class="panel-head"><b>${esc(this._t("vacation"))}</b><span class="muted">${vacationSummary}</span></div>
-            <div class="dates">
-              <label class="datefield"><span>${this._t("from")}</span>
-                <input type="datetime-local" data-vac="start" data-house="${esc(house.id)}"
-                  value="${esc(this._toInput(vStart?.state))}"></label>
-              <label class="datefield"><span>${this._t("to")}</span>
-                <input type="datetime-local" data-vac="end" data-house="${esc(house.id)}"
-                  value="${esc(this._toInput(vEnd?.state))}"></label>
-            </div>
-            <p class="hint">${this._t("vacation_hint")}</p>
-            <div class="row wrap">
-              ${this._btn(this._t("set_vacation"), `data-action="vacation" data-house="${esc(house.id)}"`, {
-                icon: "content-save",
-                kind: "primary",
-              })}
-              ${
-                e.clear_vacation && vacationSet
-                  ? this._btn(this._t("clear_vacation"), `data-action="press" data-entity="${esc(e.clear_vacation)}"`, {
-                      icon: "close",
-                    })
-                  : ""
-              }
-            </div>
-            ${this._error[vacKey] ? `<p class="error">${esc(this._error[vacKey])}</p>` : ""}
-          </div>`
-        : "";
+      const vacPanel = this._vacPanelHtml(house);
 
       return `
         <section class="block house">
@@ -194,6 +100,138 @@ export const HouseMixin = (Base) =>
           <div class="hactions">${actionsHtml}</div>
           ${vacPanel}
         </section>`;
+    }
+
+    /**
+     * The people of the house: their avatars (a ring in the colour of where the
+     * person is: home, nearby, far; the photo when there is one), linked to their
+     * entity, and the words "Mark home · Anna nearby".
+     */
+    _people(house) {
+      const presence = this._state(house.entities.presence);
+      const persons = Object.entries(presence?.attributes?.persons || {}).map(([id, cls]) => {
+        const p = this._hass.states[id];
+        return { id, cls: cls || "unknown", name: p?.attributes?.friendly_name || id.split(".")[1], picture: p?.attributes?.entity_picture };
+      });
+      // Several people overlap a little; the compact row shows a few and "+N" for the rest.
+      const avatarList = (links, max = persons.length) =>
+        persons
+          .slice(0, persons.length > max ? max - 1 : max)
+          .map((p) => {
+            const title = `${p.name}: ${this._label(presence, p.cls)}`;
+            return `<span class="avatar ${esc(p.cls)} ${links ? "link" : ""}" ${links ? this._more(p.id, title) : `title="${esc(title)}"`}>${
+              p.picture ? `<img src="${esc(p.picture)}" alt="">` : esc((String(p.name).trim()[0] || "?").toUpperCase())
+            }</span>`;
+          })
+          .join("") +
+        (persons.length > max
+          ? `<span class="avatar more" title="${esc(persons.slice(max - 1).map((p) => p.name).join(", "))}">+${persons.length - max + 1}</span>`
+          : "");
+      return {
+        avatars: avatarList(true),
+        list: avatarList,
+        count: persons.length,
+        overlap: persons.length > 3 ? "overlap" : "",
+        who: persons.map((p) => `${p.name} ${String(this._label(presence, p.cls)).toLowerCase()}`).join(" · "),
+      };
+    }
+
+    /** The scenarios of the house: one button each, the active one marked. */
+    _scenariosHtml(house) {
+      const e = house.entities;
+      const scenario = this._state(e.scenario);
+      const scenarioOptions = scenario?.attributes?.options || [];
+      // Three per row, the same shape as the mode buttons (two when there are only two or four).
+      const scenCols = [2, 4].includes(scenarioOptions.length) ? 2 : 3;
+      return scenarioOptions.length
+        ? `<div class="scenarios">
+            <span class="sclabel">${this._icon("playlist-check")}<span>${esc(this._t("scenario"))}</span></span>
+            <div class="segmented scen-grid" style="--n:${scenCols}" role="group" aria-label="${esc(this._t("scenario"))}">${scenarioOptions
+              .map(
+                (opt) => `<button class="seg scen ${scenario.state === opt ? "active" : ""}" data-action="mode" title="${esc(opt)}"
+                  aria-pressed="${scenario.state === opt}" data-entity="${esc(e.scenario)}" data-option="${esc(opt)}">${esc(opt)}</button>`
+              )
+              .join("")}</div>
+          </div>`
+        : "";
+    }
+
+    /** The buttons of the house: Pause, Guests, Vacation (opens its panel), Reevaluate, Automatic. */
+    _houseActions(house, titled = false) {
+      const e = house.entities;
+      const guest = this._state(e.guest_mode);
+      const pause = this._state(e.pause);
+      const guestOn = guest?.state === "on";
+      const vacationSet = this._vacationSet(house);
+      // Action buttons: an icon and a short name; Guests and Vacation open their own panel.
+      const vacKey = `vac-${house.id}`;
+      // ``titled``: every button says its name on hover (only its icon is shown).
+      const abtn = (icon, label, attrs, cls = "", title = titled ? label : "") =>
+        `<button class="abtn ${cls}" ${attrs} ${title ? `title="${esc(title)}" aria-label="${esc(title)}"` : ""}>${this._icon(
+          icon
+        )}<span>${esc(label)}</span></button>`;
+      const fold = (key) => `data-action="fold" data-key="${esc(key)}" aria-expanded="${!!this._open[key]}"`;
+      return [
+        pause
+          ? abtn("pause", this._t("pause"), `data-action="toggle" data-entity="${esc(e.pause)}" role="switch" aria-checked="${pause.state === "on"}"`, pause.state === "on" ? "warn on" : "warn")
+          : "",
+        guest
+          ? abtn("account-group-outline", this._t("guests"), `data-action="toggle" data-entity="${esc(e.guest_mode)}" role="switch" aria-checked="${guestOn}"`, `teal ${guestOn ? "on" : ""}`)
+          : "",
+        abtn("airplane", this._t("vacation"), fold(vacKey), `blue ${vacationSet ? "on" : ""} ${this._open[vacKey] ? "open" : ""}`),
+        e.reevaluate ? abtn("refresh", this._t("reevaluate"), `data-action="press" data-entity="${esc(e.reevaluate)}"`) : "",
+        e.clear_overrides
+          ? abtn("restore", this._t("auto_short"), `data-action="press" data-entity="${esc(e.clear_overrides)}"`, "", this._t("clear_all"))
+          : "",
+      ].filter(Boolean);
+    }
+
+    /** True while a vacation is set (a start or an end). */
+    _vacationSet(house) {
+      const isDate = (s) => s && !Number.isNaN(Date.parse(s.state));
+      return isDate(this._state(house.entities.vacation_start)) || isDate(this._state(house.entities.vacation_end));
+    }
+
+    /** The vacation panel of the house, while it is open. */
+    _vacPanelHtml(house) {
+      const e = house.entities;
+      const vacKey = `vac-${house.id}`;
+      if (!this._open[vacKey]) return "";
+      const vStart = this._state(e.vacation_start);
+      const vEnd = this._state(e.vacation_end);
+      const isDate = (s) => s && !Number.isNaN(Date.parse(s.state));
+      const vacationSet = isDate(vStart) || isDate(vEnd);
+      const vacationSummary = vacationSet
+        ? `${isDate(vStart) ? esc(this._fmtTime(vStart.state)) : this._t("now_tag")} – ${
+            isDate(vEnd) ? esc(this._fmtTime(vEnd.state)) : "…"
+          }`
+        : this._t("vacation_none");
+      return `<div class="panel blue">
+            <div class="panel-head"><b>${esc(this._t("vacation"))}</b><span class="muted">${vacationSummary}</span></div>
+            <div class="dates">
+              <label class="datefield"><span>${this._t("from")}</span>
+                <input type="datetime-local" data-vac="start" data-house="${esc(house.id)}"
+                  value="${esc(this._toInput(vStart?.state))}"></label>
+              <label class="datefield"><span>${this._t("to")}</span>
+                <input type="datetime-local" data-vac="end" data-house="${esc(house.id)}"
+                  value="${esc(this._toInput(vEnd?.state))}"></label>
+            </div>
+            <p class="hint">${this._t("vacation_hint")}</p>
+            <div class="row wrap">
+              ${this._btn(this._t("set_vacation"), `data-action="vacation" data-house="${esc(house.id)}"`, {
+                icon: "content-save",
+                kind: "primary",
+              })}
+              ${
+                e.clear_vacation && vacationSet
+                  ? this._btn(this._t("clear_vacation"), `data-action="press" data-entity="${esc(e.clear_vacation)}"`, {
+                      icon: "close",
+                    })
+                  : ""
+              }
+            </div>
+            ${this._error[vacKey] ? `<p class="error">${esc(this._error[vacKey])}</p>` : ""}
+          </div>`;
     }
 
     /** The heat source of the house: Automatic (with a criterion), the primary and the secondary one, by their names. */

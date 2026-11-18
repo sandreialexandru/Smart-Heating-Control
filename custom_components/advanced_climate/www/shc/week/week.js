@@ -7,7 +7,7 @@
 // schedule to.
 
 import { PRESET_COLORS, stale } from "../core/constants.js";
-import { esc } from "../core/format.js";
+import { esc, num } from "../core/format.js";
 
 // The days are asked for again after this long; at once when a schedule, the
 // vacation or guest mode changes, and when the day changes.
@@ -94,9 +94,13 @@ export const WeekMixin = (Base) =>
       const hm = (t) => this._fmt(t, { hour: "2-digit", minute: "2-digit" });
       const segs = this._weekSegments(w?.changes, start, end)
         .map((s) => {
-          const label = (s.to - s.from) / len >= 0.14 ? esc(this._presetName(a, s.preset)) : "";
+          // The level with its temperature ("Eco 18°"), the temperature dropped when it does not fit.
+          const name = this._presetName(a, s.preset);
+          const temp = this._levelTemp(a, s.preset);
+          const share = (s.to - s.from) / len;
+          const label = share >= 0.14 ? esc(temp && share >= 0.2 ? `${name} ${temp}` : name) : "";
           return `<div class="sseg" style="${this._weekPlace(s.from, s.to, start, len)};--c:${PRESET_COLORS[s.preset] || "var(--ac-accent)"}" title="${esc(
-            `${this._presetName(a, s.preset)} ${hm(s.from)}–${hm(s.to)}`
+            `${name}${temp ? ` ${temp}` : ""} ${hm(s.from)}–${hm(s.to)}`
           )}"><span>${label}</span></div>`;
         })
         .join("");
@@ -146,6 +150,13 @@ export const WeekMixin = (Base) =>
             )}</button>`
           : "<span></span>"
       }</div>`;
+    }
+
+    /** The temperature of a level of a room, short ("18°", "20.5°"); "" when not known. */
+    _levelTemp(a, preset) {
+      const v = num(preset === "frost" ? (a.levels?.frost ?? a.min_temperature) : a.levels?.[preset]);
+      if (v === null) return "";
+      return `${Number.isInteger(v) ? v : v.toFixed(1)}°`;
     }
 
     /** What is special about a day in a house: a holiday, a profile or a level of the calendar, the vacation. */

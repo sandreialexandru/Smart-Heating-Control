@@ -13,8 +13,14 @@ administratorii. Este desenat de același cod ca și cardul, așa că o cameră
 arată și funcționează la fel în amândouă: ce spune [capitolul 10](10-card.ro.md)
 despre o cameră este valabil și aici.
 
-Panoul are cinci taburi: **Camere**, **Program**, **Statistici**,
-**Istoric** și **Dispozitive**. Ultimul tab folosit se păstrează în browser.
+Panoul are șase taburi: **Camere**, **Ansamblu**, **Program**,
+**Statistici**, **Istoric** și **Dispozitive**. Ultimul tab folosit se
+păstrează în browser. Bara de sus arată numele casei (cu mai multe case,
+numele integrării).
+
+De la tastatură, săgețile trec de la o cameră la alta în listă (Home și End:
+prima și ultima) și de la un tab la altul; locul pe care este tastatura este
+conturat.
 
 ## Camere
 
@@ -27,6 +33,22 @@ mijloc, cu tot ce arată și face cardul.
   și în browser.
 - Pe telefon camerele sunt o listă; o cameră se deschide pe tot ecranul, cu
   **Înapoi** în bara de sus.
+
+Pe un ecran lat:
+
+- **Casa este o singură bară**: numele, prezența și persoanele, apoi
+  temperatura de afară, sezonul de încălzire, cererea de căldură și timpul de
+  încălzire (o atingere îi schimbă perioada), iar butoanele Pauză, Oaspeți,
+  Vacanță, Reevaluează și Automat ca iconițe (numele lor apar la trecerea
+  mouse-ului). Modul, sursa de căldură și scenariile sunt dedesubt.
+- **Camera aleasă** are în stânga arcul, motivul, ce urmează și butoanele, iar
+  în dreapta graficul, deschis de la început (când panoul nu este destul de
+  lat pentru amândouă, graficul trece sub cameră). Dedesubt: bara programului
+  de azi și temperaturile nivelurilor (*Eco 18°*), cu nivelul curent conturat;
+  secțiunile deschise de butoane (program, niveluri, detalii) vin după ele.
+
+Pe telefon casa și camera sunt ca în card; graficul se deschide în fereastra
+lui.
 
 ### Grupuri de camere
 
@@ -45,10 +67,19 @@ așa că două camere cu același nume (un *Dormitor* în fiecare casă) se
 deosebesc. În Istoric o cameră este scrisă cu casa ei (*Cabana · Dormitor*),
 iar filtrul camerelor le arată sub casa lor.
 
+## Ansamblu
+
+Câte o casetă pentru fiecare cameră, pentru o tabletă pe perete: temperatura,
+nivelul și ținta, iconițele (încălzire, alerte, fereastră, schimbare manuală,
+oaspeți), ultimele 24 de ore (temperatura, ținta punctată și, umbrit, când a
+încălzit) și ce urmează. O atingere pe o casetă deschide camera în tabul
+Camere.
+
 ## Program
 
 Azi și următoarele 6 zile, așa cum le va rula programul: toate camerele în
-ziua aleasă, cu nivelurile lor pe o axă comună de la 00:00 la 24:00.
+ziua aleasă, cu nivelurile lor și temperaturile lor (*Eco 18°*, temperatura
+lăsată deoparte când nu încape) pe o axă comună de la 00:00 la 24:00.
 
 - Zilele se aleg deasupra barelor, fiecare cu data ei; ziua de azi este prima
   și este marcată. Azi, o linie arată ora curentă.
@@ -73,8 +104,8 @@ ziua aleasă, cu nivelurile lor pe o axă comună de la 00:00 la 24:00.
   în helper.
 - O atingere pe o cameră o deschide în tabul Camere, cu editorul programului
   deschis.
-- Butonul de copiere de la capătul unui rând deschide camera cu *Copiază în
-  alte camere*: tot programul ei se copiază în camerele alese (vezi
+- Butonul de copiere de la capătul unui rând (arătat când mouse-ul este pe
+  rând, mereu pe un ecran tactil) deschide camera cu *Copiază în alte camere*: tot programul ei se copiază în camerele alese (vezi
   [capitolul 10](10-card.ro.md)).
 
 Zilele sunt calculate de integrare la fel cum le calculează camerele, cu
@@ -94,8 +125,8 @@ cât timp le păstrează Home Assistant.
 
 - **Casa**: o bară pentru fiecare zi, săptămână sau lună, cu timpul de
   încălzire, iar peste bare o linie cu media temperaturii de afară în fiecare
-  perioadă, pe o scară proprie (valoarea ei cea mai mare și cea mai mică sunt
-  scrise în stânga), ca perioadele mai reci și încălzirea mai lungă să se vadă
+  perioadă, pe o scară proprie (valoarea ei cea mai mare, cea din mijloc și
+  cea mai mică, în dreapta barelor), ca perioadele mai reci și încălzirea mai lungă să se vadă
   împreună. O atingere pe un punct al liniei arată media perioadei, cu
   valoarea cea mai mică și cea mai mare; o nouă atingere le ascunde. Titlul dă
   timpul total și media de afară, cu valoarea cea mai mică și cea mai mare.

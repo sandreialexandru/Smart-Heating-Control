@@ -161,7 +161,11 @@ const PANEL = [
   ["panel-source-scenarios", P, { rooms: R1, source: { state: "auto", options: ["auto", "primary", "secondary"], active: "primary" }, scenarios: ["Home office"], scenario: "Home office" }],
   ["panel-details", { ...P, hash: "r1" }, { rooms: ROOMS }, click('.pmain [data-key="details-r1"]')],
   ["panel-schedule-edit", { ...P, hash: "r1" }, { rooms: R1 }, steps(click('.pmain [data-key="sched-r1"]'), click('.pmain [data-action="edit"][data-room="r1"]'))],
-  ["panel-chart", { ...P, hash: "r1" }, { rooms: R1 }, openChart()],
+  // The chart: in its window on a phone; wide, beside the room (no button).
+  ["panel-chart", { ...P, hash: "r1" }, { rooms: R1 }, async (p) => {
+    if (await p.evaluate(() => !!window.panel.shadowRoot.querySelector('[data-key="chart-r1"]'))) await openChart()(p);
+    else await p.waitForTimeout(300);
+  }],
   ["panel-room-living", { ...P, hash: "r3" }, { rooms: ROOMS }],
   ["panel-stats", P, { rooms: ROOMS }, click('[data-action="panel-tab"][data-option="stats"]')],
   ["panel-stats-weeks", P, { rooms: ROOMS }, steps(click('[data-action="panel-tab"][data-option="stats"]'), click('[data-action="stats-period"][data-option="week"]'))],
@@ -170,6 +174,7 @@ const PANEL = [
   ["panel-devices", P, { rooms: [{ id: "r1", name: "Bedroom", devices: [["climate.bed_trv", "thermostat"], ["binary_sensor.bed_window", "window"]] }, { id: "r2", name: "Kid", devices: [["climate.kid_trv", "thermostat"]] }],
     extra: [["climate.bed_trv", "heat", { friendly_name: "Bedroom TRV", current_temperature: 20.1, temperature: 21, hvac_action: "heating" }], ["binary_sensor.bed_window", "off", { friendly_name: "Bedroom window" }], ["climate.kid_trv", "unavailable", { friendly_name: "Kid TRV" }], ["sensor.bed_trv_battery", "64", { device_class: "battery", unit_of_measurement: "%" }]],
     registry: { "climate.bed_trv": { device_id: "d1" }, "sensor.bed_trv_battery": { device_id: "d1" } } }, click('[data-action="panel-tab"][data-option="devices"]')],
+  ["panel-overview", P, { rooms: ROOMS }, click('[data-action="panel-tab"][data-option="overview"]')],
   ["panel-week-copy", P, { rooms: ROOMS }, steps(click('[data-action="panel-tab"][data-option="week"]'), click('[data-action="week-copy"]'))],
   ["panel-week", P, { rooms: ROOMS }, click('[data-action="panel-tab"][data-option="week"]')],
   ["panel-week-saturday", P, { rooms: ROOMS }, steps(click('[data-action="panel-tab"][data-option="week"]'), click('.pw-days .seg:nth-child(6)'))],

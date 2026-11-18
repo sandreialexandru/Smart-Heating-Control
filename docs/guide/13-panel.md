@@ -13,8 +13,14 @@ administrators. It is drawn by the same code as the card, so a room looks and
 works the same in both: what is said about a room in [chapter 10](10-card.md)
 holds here too.
 
-The panel has five tabs: **Rooms**, **Schedule**, **Statistics**,
-**History** and **Devices**. The tab last used is kept in the browser.
+The panel has six tabs: **Rooms**, **Overview**, **Schedule**,
+**Statistics**, **History** and **Devices**. The tab last used is kept in the
+browser. The top bar shows the name of the house (with several houses, the
+name of the integration).
+
+On a keyboard, the arrow keys go from room to room in the list (Home and End:
+the first and the last) and from tab to tab; the place the keyboard is on is
+outlined.
 
 ## Rooms
 
@@ -26,6 +32,23 @@ room is open in the middle, with everything the card shows and does.
   (`/shc#<room>`), so a link or a bookmark opens that room, and in the browser.
 - On a phone the rooms are a list; a room opens on the whole screen, with
   **Back** in the top bar.
+
+On a wide screen:
+
+- **The house is one bar**: its name, presence and people, then the outdoor
+  temperature, the heating season, the heat demand and the heating time (a tap
+  changes its period), and the buttons Pause, Guests, Vacation, Reevaluate and
+  Automatic as icons (their names on hover). The mode, the heat source and the
+  scenarios are under it.
+- **The chosen room** has its arc, its reason, what comes next and its buttons
+  on the left and its chart on the right, open from the start (when the panel
+  is not wide enough for both, the chart goes under the room). Under them: the
+  bar of today's schedule and the temperatures of its levels (*Eco 18°*), the
+  level it is on outlined; the sections opened by the buttons (schedule,
+  levels, details) come after them.
+
+On a phone the house and the room are as in the card; the chart opens in its
+window.
 
 ### Groups of rooms
 
@@ -44,10 +67,19 @@ so two rooms with the same name (a *Bedroom* in each house) are told apart.
 In the History a room is written with its house (*Cabin · Bedroom*), and the
 room filter lists the rooms under their house.
 
+## Overview
+
+A tile for every room, for a tablet on the wall: its temperature, its level
+and target, its icons (heating, alerts, window, manual change, guests), its
+last 24 hours (the temperature, the target dashed and, shaded, when it heated)
+and what comes next. A tap on a tile opens the room on the Rooms tab.
+
 ## Schedule
 
 Today and the next 6 days as the schedule will run them: every room on the
-day chosen, with its levels on a shared time line from 00:00 to 24:00.
+day chosen, with its levels and their temperatures (*Eco 18°*, the
+temperature left out when it does not fit) on a shared time line from 00:00 to
+24:00.
 
 - The days are chosen above the bars, each with its date; today is first and
   marked. On today a line shows the time now.
@@ -69,8 +101,8 @@ day chosen, with its levels on a shared time line from 00:00 to 24:00.
 - A room that follows a Schedule helper shows that its schedule is edited in
   the helper.
 - A tap on a room opens it on the Rooms tab with its schedule editor open.
-- The copy button at the end of a row opens the room with *Copy to other
-  rooms*: its whole schedule is copied to the rooms chosen (see
+- The copy button at the end of a row (shown when the mouse is over the row,
+  always on a touch screen) opens the room with *Copy to other rooms*: its whole schedule is copied to the rooms chosen (see
   [chapter 10](10-card.md)).
 
 The days are computed by the integration as the rooms compute them, with the
@@ -90,7 +122,8 @@ are kept for as long as Home Assistant keeps those.
 
 - **The house**: a bar for each day, week or month with its heating time, and
   over the bars a line of the mean outdoor temperature of each period, on a
-  scale of its own (its highest and lowest value are written at the left), so
+  scale of its own (its highest, middle and lowest value, on the right of the
+  bars), so
   colder periods and longer heating can be seen together. A tap on a point of
   the line shows the mean of that period with its lowest and highest value; a
   tap on it again hides them. The title gives the total time and the outdoor

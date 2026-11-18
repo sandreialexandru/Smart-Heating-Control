@@ -77,8 +77,11 @@ jobs:
       - name: Build the zip
         if: steps.version.outputs.exists == 'false'
         run: |
+          # HACS and the Marketplace install this zip (hacs.json: zip_release), so
+          # GitHub counts every install and update. hacs.json goes in it too.
           cd custom_components/advanced_climate
           zip -r "$GITHUB_WORKSPACE/advanced_climate.zip" . -x "*/__pycache__/*"
+          zip -j "$GITHUB_WORKSPACE/advanced_climate.zip" "$GITHUB_WORKSPACE/hacs.json"
 
       - name: Release notes from the changelog
         if: steps.version.outputs.exists == 'false'

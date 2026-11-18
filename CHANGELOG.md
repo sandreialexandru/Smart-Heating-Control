@@ -41,17 +41,14 @@ GitHub releases.
 - 📋 **Copy a schedule to other rooms** (card and panel, *Schedule* of a room):
   *Copy to other rooms* gives the rooms chosen of the house the same schedule,
   every profile with its days, in place of their own.
-- 🖥️ **The panel on a wide screen**: the house in one bar (its values and its
-  buttons as icons, their names on hover; the mode, the heat source and the
-  scenarios under it); the chosen room with its chart beside it from the
-  start, and under them its day and the temperatures of its levels. On a
+- 🖥️ **The panel on a wide screen**: the house in a bar (its name, people and
+  values on a row; the mode, the heat source, the scenarios and its buttons
+  under it); the chosen room with its chart beside it from the start (wider
+  than the room), and under them its day and the temperatures of its levels. On a
   phone everything stays as in the card. The title is the name of the house
   (the name of the integration with several houses); the list of rooms is
   wider; the arrow keys go from room to room and from tab to tab, and where
   the keyboard is can be seen.
-- 🧱 **Overview** (panel, *Overview* tab): a tile per room with its
-  temperature, its target, its icons and its last 24 hours (temperature,
-  target, when it heated), for a tablet on the wall; a tap opens the room.
 - 🏢 **Rooms in groups** (panel): by floor (the floor of the area of the
   room) or by heating circuit, in the list of rooms, the *Schedule* and the
   *Devices*; chosen next to the tabs and kept in the browser.

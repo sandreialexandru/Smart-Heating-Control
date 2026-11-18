@@ -174,7 +174,6 @@ const PANEL = [
   ["panel-devices", P, { rooms: [{ id: "r1", name: "Bedroom", devices: [["climate.bed_trv", "thermostat"], ["binary_sensor.bed_window", "window"]] }, { id: "r2", name: "Kid", devices: [["climate.kid_trv", "thermostat"]] }],
     extra: [["climate.bed_trv", "heat", { friendly_name: "Bedroom TRV", current_temperature: 20.1, temperature: 21, hvac_action: "heating" }], ["binary_sensor.bed_window", "off", { friendly_name: "Bedroom window" }], ["climate.kid_trv", "unavailable", { friendly_name: "Kid TRV" }], ["sensor.bed_trv_battery", "64", { device_class: "battery", unit_of_measurement: "%" }]],
     registry: { "climate.bed_trv": { device_id: "d1" }, "sensor.bed_trv_battery": { device_id: "d1" } } }, click('[data-action="panel-tab"][data-option="devices"]')],
-  ["panel-overview", P, { rooms: ROOMS }, click('[data-action="panel-tab"][data-option="overview"]')],
   ["panel-week-copy", P, { rooms: ROOMS }, steps(click('[data-action="panel-tab"][data-option="week"]'), click('[data-action="week-copy"]'))],
   ["panel-week", P, { rooms: ROOMS }, click('[data-action="panel-tab"][data-option="week"]')],
   ["panel-week-saturday", P, { rooms: ROOMS }, steps(click('[data-action="panel-tab"][data-option="week"]'), click('.pw-days .seg:nth-child(6)'))],

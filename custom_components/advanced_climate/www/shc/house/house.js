@@ -157,7 +157,7 @@ export const HouseMixin = (Base) =>
     }
 
     /** The buttons of the house: Pause, Guests, Vacation (opens its panel), Reevaluate, Automatic. */
-    _houseActions(house, titled = false) {
+    _houseActions(house) {
       const e = house.entities;
       const guest = this._state(e.guest_mode);
       const pause = this._state(e.pause);
@@ -165,8 +165,7 @@ export const HouseMixin = (Base) =>
       const vacationSet = this._vacationSet(house);
       // Action buttons: an icon and a short name; Guests and Vacation open their own panel.
       const vacKey = `vac-${house.id}`;
-      // ``titled``: every button says its name on hover (only its icon is shown).
-      const abtn = (icon, label, attrs, cls = "", title = titled ? label : "") =>
+      const abtn = (icon, label, attrs, cls = "", title = "") =>
         `<button class="abtn ${cls}" ${attrs} ${title ? `title="${esc(title)}" aria-label="${esc(title)}"` : ""}>${this._icon(
           icon
         )}<span>${esc(label)}</span></button>`;

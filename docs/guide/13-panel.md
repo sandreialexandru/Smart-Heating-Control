@@ -13,8 +13,8 @@ administrators. It is drawn by the same code as the card, so a room looks and
 works the same in both: what is said about a room in [chapter 10](10-card.md)
 holds here too.
 
-The panel has six tabs: **Rooms**, **Overview**, **Schedule**,
-**Statistics**, **History** and **Devices**. The tab last used is kept in the
+The panel has five tabs: **Rooms**, **Schedule**, **Statistics**,
+**History** and **Devices**. The tab last used is kept in the
 browser. The top bar shows the name of the house (with several houses, the
 name of the integration).
 
@@ -35,14 +35,13 @@ room is open in the middle, with everything the card shows and does.
 
 On a wide screen:
 
-- **The house is one bar**: its name, presence and people, then the outdoor
+- **The house is a bar**: its name, presence and people, then the outdoor
   temperature, the heating season, the heat demand and the heating time (a tap
-  changes its period), and the buttons Pause, Guests, Vacation, Reevaluate and
-  Automatic as icons (their names on hover). The mode, the heat source and the
-  scenarios are under it.
+  changes its period). Under them the mode, the heat source, the scenarios and
+  the buttons Pause, Guests, Vacation, Reevaluate and Automatic.
 - **The chosen room** has its arc, its reason, what comes next and its buttons
-  on the left and its chart on the right, open from the start (when the panel
-  is not wide enough for both, the chart goes under the room). Under them: the
+  on the left and its chart, wider, on the right, open from the start (when
+  the panel is not wide enough for both, the chart goes under the room). Under them: the
   bar of today's schedule and the temperatures of its levels (*Eco 18°*), the
   level it is on outlined; the sections opened by the buttons (schedule,
   levels, details) come after them.
@@ -66,13 +65,6 @@ With several houses, every tab shows the rooms of each house under its name,
 so two rooms with the same name (a *Bedroom* in each house) are told apart.
 In the History a room is written with its house (*Cabin · Bedroom*), and the
 room filter lists the rooms under their house.
-
-## Overview
-
-A tile for every room, for a tablet on the wall: its temperature, its level
-and target, its icons (heating, alerts, window, manual change, guests), its
-last 24 hours (the temperature, the target dashed and, shaded, when it heated)
-and what comes next. A tap on a tile opens the room on the Rooms tab.
 
 ## Schedule
 

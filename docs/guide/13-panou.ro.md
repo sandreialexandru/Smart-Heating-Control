@@ -13,8 +13,8 @@ administratorii. Este desenat de același cod ca și cardul, așa că o cameră
 arată și funcționează la fel în amândouă: ce spune [capitolul 10](10-card.ro.md)
 despre o cameră este valabil și aici.
 
-Panoul are șase taburi: **Camere**, **Ansamblu**, **Program**,
-**Statistici**, **Istoric** și **Dispozitive**. Ultimul tab folosit se
+Panoul are cinci taburi: **Camere**, **Program**, **Statistici**,
+**Istoric** și **Dispozitive**. Ultimul tab folosit se
 păstrează în browser. Bara de sus arată numele casei (cu mai multe case,
 numele integrării).
 
@@ -36,13 +36,12 @@ mijloc, cu tot ce arată și face cardul.
 
 Pe un ecran lat:
 
-- **Casa este o singură bară**: numele, prezența și persoanele, apoi
-  temperatura de afară, sezonul de încălzire, cererea de căldură și timpul de
-  încălzire (o atingere îi schimbă perioada), iar butoanele Pauză, Oaspeți,
-  Vacanță, Reevaluează și Automat ca iconițe (numele lor apar la trecerea
-  mouse-ului). Modul, sursa de căldură și scenariile sunt dedesubt.
+- **Casa este o bară**: numele, prezența și persoanele, apoi temperatura de
+  afară, sezonul de încălzire, cererea de căldură și timpul de încălzire (o
+  atingere îi schimbă perioada). Dedesubt: modul, sursa de căldură,
+  scenariile și butoanele Pauză, Oaspeți, Vacanță, Reevaluează și Automat.
 - **Camera aleasă** are în stânga arcul, motivul, ce urmează și butoanele, iar
-  în dreapta graficul, deschis de la început (când panoul nu este destul de
+  în dreapta graficul, mai lat, deschis de la început (când panoul nu este destul de
   lat pentru amândouă, graficul trece sub cameră). Dedesubt: bara programului
   de azi și temperaturile nivelurilor (*Eco 18°*), cu nivelul curent conturat;
   secțiunile deschise de butoane (program, niveluri, detalii) vin după ele.
@@ -66,14 +65,6 @@ Cu mai multe case, fiecare tab arată camerele fiecărei case sub numele ei,
 așa că două camere cu același nume (un *Dormitor* în fiecare casă) se
 deosebesc. În Istoric o cameră este scrisă cu casa ei (*Cabana · Dormitor*),
 iar filtrul camerelor le arată sub casa lor.
-
-## Ansamblu
-
-Câte o casetă pentru fiecare cameră, pentru o tabletă pe perete: temperatura,
-nivelul și ținta, iconițele (încălzire, alerte, fereastră, schimbare manuală,
-oaspeți), ultimele 24 de ore (temperatura, ținta punctată și, umbrit, când a
-încălzit) și ce urmează. O atingere pe o casetă deschide camera în tabul
-Camere.
 
 ## Program
 

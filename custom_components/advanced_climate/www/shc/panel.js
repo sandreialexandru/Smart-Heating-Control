@@ -21,7 +21,7 @@ const STORE = "shc-panel-room";
 const TAB_STORE = "shc-panel-tab";
 // How the rooms are grouped (none, by floor, by circuit), kept in the browser.
 const GROUP_STORE = "shc-panel-group";
-const TABS = ["rooms", "overview", "week", "stats", "history", "devices"];
+const TABS = ["rooms", "week", "stats", "history", "devices"];
 // The name of the integration, the title when there are several houses.
 const NAME = "Smart Heating Control";
 
@@ -252,21 +252,21 @@ const PANEL_STYLE = `
   :host([narrow]) .ptabs .segmented { padding: 3px; gap: 2px; }
   :host([narrow]) .ptabs .seg { font-size: 0.78em; padding: 0 2px; }
   :host([narrow]) .tabcount { position: absolute; top: 1px; right: 1px; margin: 0; min-width: 1.1em; padding: 0 3px; font-size: 0.68em; }
-  /* The house on a wide screen: one bar (the name, the people, the values, the buttons as icons), the mode under it. */
+  /* The house on a wide screen: the name, the people and the values on a row; the mode, the source, the scenarios and the buttons under it. */
   .pbar { gap: 10px; padding: 12px 16px; }
   .pb-row { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; min-width: 0; }
   .pb-row .avatars { padding: 2px; }
   .pb-stats { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-left: auto; }
-  .pb-stat { display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 8px; border-radius: 8px; border: 0;
-    background: none; font: inherit; font-size: 0.9em; color: inherit; font-variant-numeric: tabular-nums; white-space: nowrap; cursor: default; }
+  .pb-stat { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 4px 12px; border-radius: 8px; border: 0;
+    border-left: 1px solid var(--ac-line); background: none; font: inherit; color: inherit; text-align: left; white-space: nowrap; cursor: default; }
+  .pb-stat .k { display: inline-flex; align-items: center; gap: 4px; font-size: 0.75em; color: var(--ac-muted); }
+  .pb-stat .v { font-size: 1.1em; font-weight: 600; font-variant-numeric: tabular-nums; }
   .pb-stat.link, button.pb-stat { cursor: pointer; }
   .pb-stat.link:hover, button.pb-stat:hover { background: var(--ac-surface-2); }
-  .pb-stat ha-icon { --mdc-icon-size: 18px; color: var(--ac-muted); }
-  .pb-stat.hot, .pb-stat.hot ha-icon { color: var(--ac-hot); }
-  .pb-stat.off { color: var(--ac-muted); }
-  .pb-actions { display: flex; gap: 4px; }
-  .pb-actions .abtn { width: 40px; min-height: 40px; height: 40px; padding: 0; border-radius: 10px; }
-  .pb-actions .abtn span { display: none; }
+  .pb-stat ha-icon { --mdc-icon-size: 14px; }
+  .pb-stat.hot .v { color: var(--ac-hot); }
+  .pb-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+  .pb-actions .abtn { min-height: 40px; padding: 0 12px; border-radius: 10px; }
   .pb-row2 { display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; }
   .pb-row2 > .segmented { flex: 1 1 420px; max-width: 640px; }
   .pb-row2 .scenarios { flex-direction: row; align-items: center; flex: 1 1 320px; }
@@ -276,7 +276,12 @@ const PANEL_STYLE = `
   .pb-row2 .scenarios .sclabel { white-space: nowrap; }
   /* The chosen room on a wide screen: the room and its chart side by side, the day and the levels under them. */
   /* Side by side while both have room, else one under the other. !important: a card element may set its own display. */
-  .pmain.wide { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)); align-items: start; }
+  .pmain.wide { display: grid !important; grid-template-columns: minmax(0, 1fr); align-items: start; }
+  .pbody { container-type: inline-size; }
+  /* The room keeps room for its buttons with their names (else it goes over the chart). */
+  @container (min-width: 1350px) {
+    .pmain.wide { grid-template-columns: minmax(440px, 2fr) minmax(0, 3fr); }
+  }
   .pmain.wide > .prw-below { grid-column: 1 / -1; }
   .pmain.wide > .prw-chart { padding: 0; min-width: 0; border: 0; background: none; }
   .prw-chart .chart-card { margin: 0; }
@@ -286,31 +291,6 @@ const PANEL_STYLE = `
   .prw-level .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
   .prw-level b { font-variant-numeric: tabular-nums; }
   .prw-level.on { box-shadow: inset 0 0 0 1.5px var(--c); font-weight: 600; }
-  /* The overview: a tile per room (for a tablet on the wall). */
-  .ov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-  .ov-house { grid-column: 1 / -1; margin: 8px 0 0; font-size: 1em; font-weight: 600; }
-  .ov-house:first-child { margin-top: 0; }
-  .ov-tile { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 14px; text-align: left; font: inherit;
-    color: inherit; cursor: pointer; background: var(--ac-surface); border: 1px solid var(--ac-line); border-top: 3px solid var(--c); min-width: 0; }
-  .ov-tile:hover { background: var(--ac-surface-2); }
-  .ov-tile.al-error { border-color: color-mix(in srgb, var(--ac-err) 50%, transparent); border-top-color: var(--c); }
-  .ov-tile.al-warn { border-color: color-mix(in srgb, var(--warning-color, #f0ad4e) 55%, transparent); border-top-color: var(--c); }
-  .ov-head { display: flex; align-items: center; gap: 6px; min-width: 0; }
-  .ov-name { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ov-icons { display: inline-flex; gap: 2px; }
-  .ov-temps { display: flex; align-items: baseline; gap: 8px; }
-  .ov-now { font-size: 2em; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
-  .ov-target { font-size: 0.9em; color: var(--ac-muted); white-space: nowrap; }
-  .ov-target .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--c); margin-right: 4px; }
-  .ov-line { font-size: 0.8em; color: var(--ac-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-height: 1.2em; }
-  svg.ov-spark { display: block; width: 100%; height: 40px; overflow: visible; }
-  svg.ov-spark polyline { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-  svg.ov-spark .t { stroke: var(--primary-text-color); }
-  svg.ov-spark .g { stroke: var(--c); stroke-dasharray: 4 3; opacity: 0.8; }
-  svg.ov-spark rect { fill: color-mix(in srgb, var(--ac-hot) 22%, transparent); }
-  .ov-spark-empty { height: 40px; }
-  :host([narrow]) .ov-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
-  :host([narrow]) .ov-now { font-size: 1.6em; }
   /* The scale of the outdoor temperature of the statistics, on its own right of the columns. */
   .ps-chart { display: flex; align-items: stretch; }
   .ps-chart > .ps-cols { flex: 1; min-width: 0; }
@@ -327,7 +307,7 @@ const PANEL_STYLE = `
     :host(:not([narrow])) .pw-row:hover .pw-copy, :host(:not([narrow])) .pw-copy:focus-visible { opacity: 1; }
   }
   /* The keyboard: every place it is on is seen. */
-  .pside .frow:focus-visible, .ov-tile:focus-visible, .ptabs .seg:focus-visible, .pb-stat:focus-visible {
+  .pside .frow:focus-visible, .ptabs .seg:focus-visible, .pb-stat:focus-visible {
     outline: 2px solid var(--ac-accent); outline-offset: 2px; }
   .pside .frow:focus-visible { outline-offset: -2px; border-radius: 12px; }
   /* The open room is not folded from its title in the panel. */
@@ -498,9 +478,9 @@ class ShcPanel extends ShcBase {
   }
 
   /**
-   * The house on a wide screen, in one bar: name, presence, people, the values
-   * (outdoor, season, demand, heating time) and the buttons as icons (their
-   * name on hover); the mode, the heat source and the scenarios under it.
+   * The house on a wide screen: name, presence, people and the values (outdoor,
+   * season, demand, heating time) on a row; the mode, the heat source, the
+   * scenarios and the buttons under it.
    */
   _houseBarHtml(house) {
     const e = house.entities;
@@ -518,15 +498,14 @@ class ShcPanel extends ShcBase {
       { home: "home-outline", nearby: "map-marker-radius-outline", far: "map-marker-distance" }[presence?.state] || "home-search-outline";
     const onOff = (st) => (st ? (st.state === "on" ? this._t("on") : this._t("off")) : "–");
     const stat = (icon, label, value, entityId, cls = "") =>
-      `<span class="pb-stat ${cls} ${entityId ? "link" : ""}" ${this._more(entityId, `${label}: ${value}`)}>${this._icon(icon)}<span>${esc(
-        value
-      )}</span></span>`;
+      `<span class="pb-stat ${cls} ${entityId ? "link" : ""}" ${this._more(entityId)}><span class="k">${this._icon(icon)}<span>${esc(
+        label
+      )}</span></span><span class="v">${esc(value)}</span></span>`;
     // The heating time; a tap changes its period (as in the card).
     const period = this._period();
     const runtimeChip = runtime
-      ? `<button class="pb-stat" data-action="period" title="${esc(
-          `${this._t("runtime")} · ${this._t(`period_${period}`)} · ${this._t("period_hint")}`
-        )}">${this._icon("timer-outline")}<span>${esc(this._runtimeText(e.heating_runtime))}</span></button>`
+      ? `<button class="pb-stat" data-action="period" title="${esc(this._t("period_hint"))}"><span class="k">${this._icon("timer-outline")}<span>${esc(`${this._t("runtime")} · ${this._t(`period_${period}`)}`)}</span></span><span
+          class="v">${esc(this._runtimeText(e.heating_runtime))}</span></button>`
       : "";
     const modeOptions = mode?.attributes?.options || ["auto", "away", "vacation", "off", "summer"];
     const modes = modeOptions
@@ -550,7 +529,6 @@ class ShcPanel extends ShcBase {
             ${stat("fire", this._t("demand"), onOff(demand), e.heat_demand, demand?.state === "on" ? "hot" : "off")}
             ${runtimeChip}
           </div>
-          <div class="pb-actions">${this._houseActions(house, true).join("")}</div>
         </div>
         <div class="pb-row2">
           <div class="segmented ${modeOptions.length > 5 ? "many" : ""}" style="--n:${modeOptions.length}" role="group" aria-label="${esc(
@@ -558,6 +536,7 @@ class ShcPanel extends ShcBase {
           )}">${modes}</div>
           ${source ? this._sourceHtml(source, e.heat_source) : ""}
           ${this._scenariosHtml(house)}
+          <div class="pb-actions">${this._houseActions(house).join("")}</div>
         </div>
         ${this._cutoffHtml(outdoor, cutoff, e.outdoor_cutoff, mode, season, pause)}
         ${this._vacPanelHtml(house)}
@@ -609,70 +588,6 @@ class ShcPanel extends ShcBase {
     return blocks;
   }
 
-  /** The overview: a tile per room (temperature, target, icons, the last 24 hours); a tap opens the room. */
-  _overviewHtml(houses) {
-    const parts = [];
-    for (const house of houses) {
-      if (houses.length > 1) parts.push(`<h2 class="ov-house">${esc(house.name || "")}</h2>`);
-      for (const r of house.rooms) parts.push(this._overviewTile(r));
-    }
-    if (!parts.length) return `<section class="block"><p class="empty">${esc(this._t("no_rooms"))}</p></section>`;
-    return `<section class="block"><div class="ov-grid">${parts.join("")}</div></section>`;
-  }
-
-  /** One tile of the overview. */
-  _overviewTile(stateObj) {
-    const a = stateObj.attributes;
-    const color = this._roomColor(a);
-    const icons = this._statusIcons(a);
-    const target = a.preset
-      ? `<span class="dot"></span>${esc(this._presetName(a, a.preset))} ${esc(this._temp(a.target_temperature))}`
-      : esc(this._temp(a.target_temperature));
-    const label = `${a.room_name}, ${this._temp(a.current_temperature)}, ${this._label(stateObj)}`;
-    return `<button class="ov-tile ${this._alertLevel(a)}" data-action="overview-room" data-room="${esc(a.room_id)}" style="--c:${color}"
-        aria-label="${esc(label)}" title="${esc(label)}">
-        <span class="ov-head"><span class="ov-name">${esc(a.room_name)}</span>${icons ? `<span class="ov-icons">${icons}</span>` : ""}</span>
-        <span class="ov-temps"><span class="ov-now">${esc(this._temp(a.current_temperature))}</span><span class="ov-target">${target}</span></span>
-        ${this._spark(a)}
-        <span class="ov-line">${esc(this._roomNext(a) || this._label(stateObj))}</span>
-      </button>`;
-  }
-
-  /** The last 24 hours of a room, small: its temperature, its target (dashed) and when it heated. */
-  _spark(a) {
-    const hist = this._history(a);
-    const now = Date.now();
-    const t0 = now - 24 * 3600 * 1000;
-    const temp = (hist?.temp || []).filter(([t]) => t >= t0);
-    if (temp.length < 2) return `<span class="ov-spark-empty"></span>`;
-    // The target as steps: the value before the window, then its changes.
-    const before = (hist.target || []).filter((p) => p.t < t0 && p.v !== null).pop();
-    const target = [...(before ? [{ t: t0, v: before.v }] : []), ...(hist.target || []).filter((p) => p.t >= t0 && p.v !== null)];
-    const values = [...temp.map((p) => p[1]), ...target.map((p) => p.v)];
-    const lo = Math.min(...values) - 0.3;
-    const hi = Math.max(...values) + 0.3;
-    const x = (t) => (((t - t0) / (now - t0)) * 100).toFixed(2);
-    const y = (v) => (40 - ((v - lo) / (hi - lo)) * 36 - 2).toFixed(2);
-    const line = temp.map(([t, v]) => `${x(t)},${y(v)}`).join(" ");
-    const steps = [];
-    target.forEach((p, i) => {
-      const end = i + 1 < target.length ? target[i + 1].t : now;
-      steps.push(`${x(p.t)},${y(p.v)}`, `${x(end)},${y(p.v)}`);
-    });
-    // When it heated, as bands under the lines.
-    const heat = [];
-    const changes = hist.heat || [];
-    changes.forEach(([t, on], i) => {
-      if (!on) return;
-      const end = i + 1 < changes.length ? changes[i + 1][0] : now;
-      if (end <= t0) return;
-      const s0 = Math.max(t, t0);
-      heat.push(`<rect x="${x(s0)}" y="0" width="${(Number(x(end)) - Number(x(s0))).toFixed(2)}" height="40"/>`);
-    });
-    return `<svg class="ov-spark" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">${heat.join("")}${
-      steps.length ? `<polyline class="g" points="${steps.join(" ")}"/>` : ""
-    }<polyline class="t" points="${line}"/></svg>`;
-  }
 
   /** What redraws the panel: on the Devices tab also every device, its battery, and each minute (how long ago). */
   _watched() {
@@ -784,7 +699,6 @@ class ShcPanel extends ShcBase {
     // The week, the statistics or the history
     // (the alerts on now on top); fetched only while shown.
     const extra = [];
-    if (tab === "overview") extra.push({ k: "overview", html: this._overviewHtml(houses) });
     if (tab === "week") extra.push({ k: "week", html: this._weekHtml(houses) });
     if (tab === "stats") {
       extra.push({ k: "stats", html: this._statsHtml(houses) });
@@ -822,7 +736,7 @@ class ShcPanel extends ShcBase {
     // The tabs and the choices of the statistics and the history.
     // A room opened from the week (its schedule editor, or the rooms to copy its schedule to) or from an alert.
     const go = ev.target.closest?.(
-      '[data-action="week-edit"], [data-action="week-copy"], [data-action="alert-room"], [data-action="humidity-room"], [data-action="overview-room"]'
+      '[data-action="week-edit"], [data-action="week-copy"], [data-action="alert-room"], [data-action="humidity-room"]'
     );
     if (go) {
       const room = go.dataset.room;

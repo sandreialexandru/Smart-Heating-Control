@@ -330,7 +330,7 @@ test("history that fails says so; Romanian texts", async (p) => {
   await p.waitForTimeout(300);
   const t = await extraText(p);
   ok(t.includes("Decizii") && t.includes("Toate camerele") && t.includes("Toată casa") && t.includes("Home Assistant a repornit"), t.slice(0, 300));
-  eq(await inPanel(p, (sr) => [...sr.querySelectorAll('[data-action="panel-tab"]')].map((b) => b.innerText)), ["Camere", "Ansamblu", "Program", "Statistici", "Istoric", "Dispozitive"], "tabs");
+  eq(await inPanel(p, (sr) => [...sr.querySelectorAll('[data-action="panel-tab"]')].map((b) => b.innerText)), ["Camere", "Program", "Statistici", "Istoric", "Dispozitive"], "tabs");
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });
 
@@ -824,36 +824,20 @@ test("statistics: a tap on an hour of the heating by hour shows its minutes; ✕
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });
 
-// ---------------------------------------------------------------- the wide layout, the overview, the keyboard
-test("wide: the house in one bar (its buttons as icons, named on hover); a phone keeps the card's house", async (p) => {
+// ---------------------------------------------------------------- the wide layout, the keyboard
+test("wide: the house in a bar (its values and buttons with their names); a phone keeps the card's house", async (p) => {
   await openPanel(p, { rooms: ROOMS });
   const wide = await inPanel(p, (sr) => ({
     bar: !!sr.querySelector(".phouse .pbar"),
-    buttons: [...sr.querySelectorAll(".pbar .pb-actions .abtn")].map((b) => b.getAttribute("aria-label")),
-    stats: sr.querySelectorAll(".pbar .pb-stat").length,
-    height: sr.querySelector(".phouse").getBoundingClientRect().height,
+    buttons: [...sr.querySelectorAll(".pbar .pb-actions .abtn")].map((b) => b.innerText.trim()),
+    stats: [...sr.querySelectorAll(".pbar .pb-stat .k")].map((k) => k.innerText.trim()),
   }));
-  eq([wide.bar, wide.buttons.every(Boolean), wide.buttons.length, wide.stats], [true, true, 5, 4], "one bar, every button named");
-  ok(wide.height < 170, "a short bar: " + wide.height);
+  eq(wide.bar, true, "a bar");
+  eq(wide.buttons, ["Pause", "Guests", "Vacation", "Reevaluate", "Automatic"], "the buttons with their names");
+  eq(wide.stats, ["Outdoor average", "Heating season", "Heat demand", "Heating time · today"], "the values with their names");
   await openPanel(p, { rooms: ROOMS }, { narrow: true });
   eq(await inPanel(p, (sr) => [!!sr.querySelector(".phouse .pbar"), !!sr.querySelector(".phouse .hactions")]), [false, true], "the phone: as the card");
   await p.evaluate(() => localStorage.removeItem("shc-panel-room"));
-});
-
-test("overview: a tile per room with its temperature, target and last 24 hours; a tap opens the room", async (p) => {
-  await openPanel(p, { rooms: ROOMS });
-  await clickIn(p, '[data-action="panel-tab"][data-option="overview"]'); await p.waitForTimeout(400);
-  const r = await inPanel(p, (sr) => [...sr.querySelectorAll(".ov-tile")].map((t) => ({
-    name: t.querySelector(".ov-name").innerText,
-    now: t.querySelector(".ov-now").innerText,
-    spark: !!t.querySelector("svg.ov-spark polyline.t"),
-  })));
-  eq(r.map((t) => t.name).sort(), ["Bedroom", "Kid", "Living", "Office"], "a tile for every room");
-  ok(r.find((t) => t.name === "Bedroom").spark, "the last 24 hours drawn");
-  eq(r.find((t) => t.name === "Kid").now, "–", "no temperature: a dash");
-  await clickIn(p, '.ov-tile[data-room="r2"]'); await p.waitForTimeout(200);
-  eq(await inPanel(p, (sr) => [sr.host.getAttribute("tab"), sr.querySelector(".pmain .block.room .name").innerText]), ["rooms", "Office"], "opened");
-  await p.evaluate(() => { localStorage.removeItem("shc-panel-tab"); localStorage.removeItem("shc-panel-room"); history.replaceState(null, "", location.pathname); });
 });
 
 test("keyboard: the arrows go from room to room and from tab to tab, the focus kept", async (p) => {
@@ -867,7 +851,7 @@ test("keyboard: the arrows go from room to room and from tab to tab, the focus k
   eq(await inPanel(p, (sr) => sr.activeElement?.dataset.key), order.at(-1), "End: the last");
   await inPanel(p, (sr) => sr.querySelector('[data-action="panel-tab"][data-option="rooms"]').focus());
   await p.keyboard.press("ArrowRight"); await p.waitForTimeout(150);
-  eq(await inPanel(p, (sr) => [sr.host.getAttribute("tab"), sr.activeElement?.dataset.option]), ["overview", "overview"], "the next tab");
+  eq(await inPanel(p, (sr) => [sr.host.getAttribute("tab"), sr.activeElement?.dataset.option]), ["week", "week"], "the next tab");
   await p.keyboard.press("ArrowLeft"); await p.keyboard.press("ArrowLeft"); await p.waitForTimeout(150);
   eq(await inPanel(p, (sr) => sr.host.getAttribute("tab")), "devices", "around to the last");
   await p.evaluate(() => { localStorage.removeItem("shc-panel-tab"); localStorage.removeItem("shc-panel-room"); history.replaceState(null, "", location.pathname); });

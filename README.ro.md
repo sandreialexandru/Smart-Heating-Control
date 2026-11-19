@@ -70,7 +70,7 @@ cu ultimele 100 de decizii.
 **Se potrivește casei.** Generic Thermostat (se alege doar presetul;
 termostatul funcționează la fel ca înainte), TRV-uri cu calibrare după un
 senzor din cameră, alte termostate, relee. °C sau °F pe casă. În română,
-engleză, germană, olandeză, franceză și italiană.
+engleză, germană, olandeză, franceză, italiană și spaniolă.
 
 ## Cardul
 
@@ -179,7 +179,7 @@ Fișierul se descarcă și se deschide într-un browser.
 
 ## Traduceri
 
-Integrarea și cardul: română, engleză, germană, olandeză, franceză și italiană. Documentația: română și engleză.
+Integrarea și cardul: română, engleză, germană, olandeză, franceză, italiană și spaniolă. Documentația: română și engleză.
 
 Textele în germană, olandeză, franceză și italiană sunt noi: dacă vorbești una dintre ele, ajută la verificarea lor în [acest issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues/12).
 

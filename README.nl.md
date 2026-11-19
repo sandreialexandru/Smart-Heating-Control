@@ -70,7 +70,7 @@ laatste 100 beslissingen.
 **Past bij je huis.** Generic Thermostat (alleen de preset wordt gekozen; je
 thermostaat werkt zoals altijd), radiatorkranen met kalibratie via een
 kamersensor, andere thermostaten, relais. °C of °F per huis. In het
-Nederlands, Engels, Roemeens, Duits, Frans en Italiaans.
+Nederlands, Engels, Roemeens, Duits, Frans, Italiaans en Spaans.
 
 ## De kaart
 
@@ -180,8 +180,8 @@ De documentatie is in het Engels en Roemeens.
 
 ## Vertalingen
 
-Integratie en kaart: Engels, Roemeens, Duits, Nederlands, Frans en
-Italiaans. Documentatie: Engels en Roemeens.
+Integratie en kaart: Engels, Roemeens, Duits, Nederlands, Frans,
+Italiaans en Spaans. Documentatie: Engels en Roemeens.
 
 De Nederlandse teksten zijn nieuw. Klinkt iets vreemd of zou jij het anders
 zeggen? Help mee in [dit issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues/12).

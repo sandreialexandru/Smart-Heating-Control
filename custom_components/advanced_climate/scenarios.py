@@ -67,6 +67,12 @@ _TEXTS: dict[str, dict[str, str]] = {
         "overlap": "{room}: {profiles} hanno giorni in comune",
         "helper": "{room}: la stanza non ha un programma proprio",
     },
+    "es": {
+        "empty": "no tiene habitaciones",
+        "missing": "{room}: no existe el perfil {profile}",
+        "overlap": "{room}: {profiles} comparten días",
+        "helper": "{room}: la habitación no tiene programación propia",
+    },
 }
 
 

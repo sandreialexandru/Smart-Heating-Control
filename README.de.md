@@ -73,8 +73,8 @@ Diagnosedaten mit den letzten 100 Entscheidungen.
 **Passt zu deinem Haus.** Generic Thermostat (es wird nur das Preset gewählt;
 dein Thermostat arbeitet weiter wie bisher), Heizkörperthermostate mit
 Kalibrierung über einen Raumsensor, andere Thermostate, Relais. °C oder °F
-pro Haus. Auf Deutsch, Englisch, Rumänisch, Niederländisch, Französisch und
-Italienisch.
+pro Haus. Auf Deutsch, Englisch, Rumänisch, Niederländisch, Französisch,
+Italienisch und Spanisch.
 
 ## Die Karte
 
@@ -185,7 +185,7 @@ Die Dokumentation gibt es auf Englisch und Rumänisch.
 ## Übersetzungen
 
 Integration und Karte: Englisch, Rumänisch, Deutsch, Niederländisch,
-Französisch und Italienisch. Dokumentation: Englisch und Rumänisch.
+Französisch, Italienisch und Spanisch. Dokumentation: Englisch und Rumänisch.
 
 Die deutschen Texte sind neu. Klingt etwas seltsam oder nicht so, wie du es
 sagen würdest? Hilf mit in [diesem Issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues/12).

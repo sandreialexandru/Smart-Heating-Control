@@ -54,7 +54,7 @@ class NotificationTextsTest(unittest.TestCase):
             return module
 
         alerts = load("alerts")
-        self.assertEqual(set(alerts.TEXTS), {"en", "ro", "de", "nl", "fr", "it"})
+        self.assertEqual(set(alerts.TEXTS), {"en", "ro", "de", "nl", "fr", "it", "es"})
         self.assertEqual(set(alerts.WEEKDAYS), set(alerts.TEXTS))
         for lang, texts in alerts.TEXTS.items():
             with self.subTest(language=lang):
@@ -64,7 +64,8 @@ class NotificationTextsTest(unittest.TestCase):
                         sorted(PLACEHOLDER.findall(texts[key])), sorted(PLACEHOLDER.findall(text))
                     )
         self.assertEqual(alerts.language("de-CH"), "de")
-        self.assertEqual(alerts.language("es"), "en")
+        self.assertEqual(alerts.language("es-ES"), "es")
+        self.assertEqual(alerts.language("pt"), "en")
         text = alerts.alert_text("fr", "battery_low", {"device": "TRV", "level": 9}, "x")
         self.assertEqual(text, "Batterie faible sur TRV (9 %).")
         text = alerts.alert_text(
@@ -89,7 +90,7 @@ class ScenarioTextsTest(unittest.TestCase):
             )
         )
         found = ast.literal_eval(texts)
-        self.assertEqual(set(found), {"en", "ro", "de", "nl", "fr", "it"})
+        self.assertEqual(set(found), {"en", "ro", "de", "nl", "fr", "it", "es"})
         for lang, keys in found.items():
             with self.subTest(language=lang):
                 self.assertEqual(set(keys), set(found["en"]))

@@ -22,6 +22,8 @@ const TAB_STORE = "shc-panel-tab";
 // How the rooms are grouped (none, by floor, by circuit), kept in the browser.
 const GROUP_STORE = "shc-panel-group";
 const TABS = ["rooms", "week", "stats", "history", "devices"];
+// On a phone each tab has its icon above its name (on up to two lines).
+const TAB_ICONS = { rooms: "home-thermometer-outline", week: "calendar-week", stats: "chart-bar", history: "history", devices: "devices" };
 // The name of the integration, the title when there are several houses.
 const NAME = "Smart Heating Control";
 
@@ -250,7 +252,14 @@ const PANEL_STYLE = `
   /* On a phone the count sits on the corner of the tab, so its name keeps its room. */
   .ptabs .seg { position: relative; }
   :host([narrow]) .ptabs .segmented { padding: 3px; gap: 2px; }
-  :host([narrow]) .ptabs .seg { font-size: 0.78em; padding: 0 2px; }
+  :host([narrow]) .ptabs .seg { font-size: 0.78em; padding: 4px 2px; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 2px; line-height: 1.15; }
+  .tabico { display: none; }
+  :host([narrow]) .tabico { display: flex; --mdc-icon-size: 20px; }
+  /* The name under the icon: words on up to two lines, never broken inside; a long
+     word (Habitaciones, Estadísticas) smaller on a narrow screen, so it is not cut. */
+  :host([narrow]) .tabname { white-space: normal; overflow-wrap: normal; text-align: center; max-width: 100%;
+    font-size: min(1em, 2.5vw); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   :host([narrow]) .tabcount { position: absolute; top: 1px; right: 1px; margin: 0; min-width: 1.1em; padding: 0 3px; font-size: 0.68em; }
   /* The house on a wide screen: the name, the people and the values on a row; the mode, the source, the scenarios and the buttons under it. */
   .pbar { gap: 10px; padding: 12px 16px; }
@@ -653,7 +662,7 @@ class ShcPanel extends ShcBase {
         k: "tabs",
         html: `<div class="ptabrow"><div class="segmented" style="--n:${TABS.length}" role="tablist">${TABS.map(
           (t) => `<button class="seg ${t === tab ? "active" : ""}" role="tab" aria-selected="${t === tab}" data-action="panel-tab"
-            data-option="${t}">${esc(this._t(`tab_${t}`))}${
+            data-option="${t}"><span class="tabico">${this._icon(TAB_ICONS[t])}</span><span class="tabname">${esc(this._t(`tab_${t}`))}</span>${
               t === "history" && alerts ? `<span class="tabcount" aria-label="${esc(`${this._t("an_title")}: ${alerts}`)}">${alerts}</span>` : ""
             }</button>`
         ).join("")}</div>${groupPick}</div>`,

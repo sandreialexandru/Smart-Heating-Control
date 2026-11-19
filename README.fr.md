@@ -75,7 +75,8 @@ diagnostics avec les 100 dernières décisions.
 **S'adapte à votre maison.** Generic Thermostat (seul le préréglage est
 choisi ; votre thermostat fonctionne comme avant), têtes thermostatiques
 calibrées par un capteur de pièce, autres thermostats, relais. °C ou °F par
-maison. En français, anglais, roumain, allemand, néerlandais et italien.
+maison. En français, anglais, roumain, allemand, néerlandais, italien et
+espagnol.
 
 ## La carte
 
@@ -186,8 +187,8 @@ La documentation est en anglais et en roumain.
 
 ## Traductions
 
-Intégration et carte : anglais, roumain, allemand, néerlandais, français et
-italien. Documentation : anglais et roumain.
+Intégration et carte : anglais, roumain, allemand, néerlandais, français,
+italien et espagnol. Documentation : anglais et roumain.
 
 Les textes en français sont nouveaux. Quelque chose sonne bizarre ou vous le
 diriez autrement ? Aidez-nous dans [ce ticket](https://github.com/sandreialexandru/Smart-Heating-Control/issues/12).

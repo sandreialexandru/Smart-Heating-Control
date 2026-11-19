@@ -46,6 +46,7 @@ export const EDITOR_PERIODS = {
   nl: {"day": "Dag", "week": "Week", "month": "Maand"},
   fr: {"day": "Jour", "week": "Semaine", "month": "Mois"},
   it: {"day": "Giorno", "week": "Settimana", "month": "Mese"},
+  es: {"day": "Día", "week": "Semana", "month": "Mes"},
 };
 
 export const EDITOR_LABELS = {
@@ -132,5 +133,19 @@ export const EDITOR_LABELS = {
     collapsed: "Stanze chiuse all'avvio",
     compact: "Compatta: un riquadro per stanza, tocca per aprire",
     runtime_period: "Tempo di riscaldamento mostrato per (tocca il valore nella scheda per cambiarlo)",
+  },
+  es: {
+    title: "Título",
+    rooms: "Habitaciones (sensores Decisión; vacío = todas)",
+    show_house: "Casa: presencia, modo, pausa, invitados, vacaciones",
+    show_rooms: "Habitaciones",
+    show_timeline: "Gráfico: últimas 24 horas y las próximas 12",
+    show_quick_override: "Fijar temporalmente",
+    show_levels: "Temperaturas de los niveles",
+    show_details: "Detalles",
+    show_schedule_editor: "Editor de programación",
+    collapsed: "Habitaciones plegadas al inicio",
+    compact: "Compacta: un mosaico por habitación, toca para abrir",
+    runtime_period: "Tiempo de calefacción mostrado para (toca el valor en la tarjeta para cambiarlo)",
   },
 };

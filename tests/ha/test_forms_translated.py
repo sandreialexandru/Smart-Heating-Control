@@ -95,7 +95,7 @@ NUMBER_LIMITS: dict[tuple[str, str], tuple[Any, ...]] = {
     ("windows_details", "window_open_delay"): (0.0, 3600.0, 5.0, "s"),
 }
 
-LANGS = ("en", "ro", "de", "nl", "fr", "it")
+LANGS = ("en", "ro", "de", "nl", "fr", "it", "es")
 TRANSLATIONS = {
     lang: json.loads(
         (

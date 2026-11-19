@@ -71,7 +71,7 @@ ultime 100 decisioni.
 **Si adatta alla tua casa.** Generic Thermostat (si sceglie solo il preset;
 il tuo termostato funziona come prima), valvole termostatiche calibrate da un
 sensore della stanza, altri termostati, relè. °C o °F per casa. In italiano,
-inglese, rumeno, tedesco, olandese e francese.
+inglese, rumeno, tedesco, olandese, francese e spagnolo.
 
 ## La scheda
 
@@ -180,8 +180,8 @@ La documentazione è in inglese e in rumeno.
 
 ## Traduzioni
 
-Integrazione e scheda: inglese, rumeno, tedesco, olandese, francese e
-italiano. Documentazione: inglese e rumeno.
+Integrazione e scheda: inglese, rumeno, tedesco, olandese, francese,
+italiano e spagnolo. Documentazione: inglese e rumeno.
 
 I testi in italiano sono nuovi. Qualcosa suona strano o lo diresti in un
 altro modo? Aiutaci in [questa issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues/12).

@@ -68,7 +68,7 @@ decisions.
 
 **Fits your house.** Generic Thermostat (only the preset is chosen; your
 thermostat keeps working as before), TRVs with calibration from a room sensor,
-other thermostats, relays. °C or °F per house. In English, Romanian, German, Dutch, French and Italian.
+other thermostats, relays. °C or °F per house. In English, Romanian, German, Dutch, French, Italian and Spanish.
 
 ## The card
 
@@ -176,7 +176,7 @@ Download the file and open it in a browser.
 
 ## Translations
 
-The integration and the card: English, Romanian, German, Dutch, French and Italian. The documentation: English and Romanian.
+The integration and the card: English, Romanian, German, Dutch, French, Italian and Spanish. The documentation: English and Romanian.
 
 The German, Dutch, French and Italian texts are new: if you speak one of them, help make them sound right in [this issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues/12).
 

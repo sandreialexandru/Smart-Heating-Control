@@ -310,8 +310,8 @@ test("every language has every text of English, with the same placeholders", asy
   eq(problems.join("; "), "", "texts");
 });
 
-test("the card speaks German, Dutch, French and Italian", async (p) => {
-  const titles = { de: "Heizung", nl: "Verwarming", fr: "Chauffage", it: "Riscaldamento" };
+test("the card speaks German, Dutch, French, Italian and Spanish", async (p) => {
+  const titles = { de: "Heizung", nl: "Verwarming", fr: "Chauffage", it: "Riscaldamento", es: "Calefacción" };
   for (const [lang, title] of Object.entries(titles)) {
     await mount(p, {}, { rooms: R, lang });
     const text = await p.evaluate(() => card.shadowRoot.textContent);

@@ -1,0 +1,1275 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Smart Heating Control",
+        "description": "Crea la casa. Las habitaciones se añaden después con \"Añadir habitación\"; todas las demás opciones están en las opciones de la integración.",
+        "data": {
+          "temperature_unit": "Unidad de temperatura",
+          "name": "Nombre",
+          "persons": "Personas",
+          "nearby_zones": "Zonas cercanas",
+          "home_rule": "El estado de la casa es \"En casa\" cuando"
+        },
+        "data_description": {
+          "temperature_unit": "Todas las temperaturas de esta casa se introducen y se muestran en esta unidad. Se puede cambiar más tarde con Reconfigurar; los valores se convierten.",
+          "name": "Se muestra en los dispositivos y en la tarjeta.",
+          "persons": "Personas cuya ubicación decide en casa / cerca / lejos. Déjalo vacío solo si la presencia no debe importar: el estado de la casa es entonces siempre 'en casa' y solo decide la programación.",
+          "nearby_zones": "Zonas en las que el estado de la casa es 'cerca' (eco), p. ej., tu ciudad. Fuera de casa y de cualquier zona = 'lejos' (away). Déjalo vacío si solo quieres en casa / lejos.",
+          "home_rule": "'Al menos una' va bien para la mayoría de los hogares. 'Todos' baja la calefacción en cuanto una persona se va."
+        }
+      },
+      "reconfigure": {
+        "title": "Unidad de temperatura",
+        "description": "Todas las temperaturas de esta casa (ajustes, niveles, tarjeta) se muestran en esta unidad. Los valores se convierten, no hay que volver a introducir nada.",
+        "data": {
+          "temperature_unit": "Unidad de temperatura"
+        },
+        "data_description": {
+          "temperature_unit": "Todas las temperaturas de esta casa se introducen y se muestran en esta unidad. Se puede cambiar más tarde con Reconfigurar; los valores se convierten."
+        }
+      },
+      "heating": {
+        "title": "Calefacción de toda la casa",
+        "data": {
+          "source": "Calentada por"
+        },
+        "description": "El único termostato (o relé) que calienta toda la casa. Se convierte en la zona {zone} y funciona con todas las opciones de la casa. Si las habitaciones se calientan por separado (válvulas termostáticas en los radiadores, calefactores, aires acondicionados), elige \"Cada habitación se calienta por separado\" y añade cada habitación con \"Añadir habitación\".",
+        "data_description": {
+          "source": "Lo que calienta toda la casa: un Generic Thermostat, otro termostato (Nest, Tado, Hive…) o un relé que enciende la caldera. 'Cada habitación se calienta por separado' cuando ningún dispositivo calienta por sí solo toda la casa: válvulas termostáticas o válvulas en los radiadores, calefactores eléctricos, aires acondicionados, zonas de suelo radiante; cada habitación se añade entonces con su propio dispositivo y, con válvulas termostáticas, el relé de la caldera (o el termostato que enciende la caldera) se elige como fuente de calor."
+        }
+      },
+      "heating_devices": {
+        "title": "Dispositivos",
+        "data": {
+          "climates": "Termostatos",
+          "switches": "Interruptores (relés)",
+          "command_mode": "Comando",
+          "trv_boost": "Calentar según los sensores de las habitaciones"
+        },
+        "data_description": {
+          "climates": "El termostato que controla la caldera, p. ej., la entidad del Generic Thermostat (climate.climate).",
+          "switches": "Solo cuando un relé calienta la casa directamente, sin termostato.",
+          "command_mode": "Solo para termostatos distintos del Generic Thermostat. La diferencia se explica en los ajustes de la habitación.",
+          "trv_boost": "Mientras la casa pide calor (según sus sensores de temperatura, con la histéresis), el termostato o las válvulas termostáticas reciben la Temperatura durante la calefacción (por defecto, la temperatura máxima de la casa), así que siguen calentando hasta que la casa está caliente; el resto del tiempo reciben el objetivo. Útil cuando el dispositivo mide en un lugar inadecuado (un termostato en el pasillo, una válvula termostática junto al radiador). Necesita un sensor de temperatura. Solo con el comando Temperatura. No es lo mismo que 'Encender y apagar la fuente por su temperatura': esa opción es para un termostato que solo enciende la caldera para habitaciones con sus propias válvulas termostáticas (en ese caso elige 'Cada habitación se calienta por separado' y selecciona el termostato como fuente de calor)."
+        }
+      },
+      "heating_on_off": {
+        "title": "Control de encendido / apagado",
+        "data": {
+          "temperature_sensors": "Sensores de temperatura",
+          "hysteresis": "Histéresis",
+          "min_on_minutes": "Tiempo mínimo encendido",
+          "min_off_minutes": "Tiempo mínimo apagado",
+          "inertia_control": "Usar la inercia aprendida"
+        },
+        "description": "La integración enciende y apaga la calefacción en torno al objetivo.",
+        "data_description": {
+          "temperature_sensors": "Sensores en la habitación, usados en lugar del sensor del termostato (más precisos cuando el termostato está junto a una fuente de calor). Déjalo vacío para usar el sensor del termostato; son necesarios para los relés, que no tienen sensor.",
+          "hysteresis": "La calefacción se enciende por debajo del objetivo menos este valor y se apaga por encima del objetivo más este valor.",
+          "min_on_minutes": "Tiempo mínimo encendido. 0 para calefactores a los que no les afectan los ciclos cortos.",
+          "min_off_minutes": "Tiempo mínimo apagado entre dos encendidos.",
+          "inertia_control": "Una vez que la habitación ha aprendido lo despacio que reacciona su calefacción, esta se apaga un poco antes cuando el calor ya aportado llevaría la habitación al límite superior de la banda de histéresis, y se enciende un poco antes cuando la habitación bajaría a su límite inferior antes de que llegue el calor. La propia banda sigue siendo el límite. Es más útil con calefacción lenta (radiadores de hierro fundido, suelo radiante). Desactivado: solo decide la histéresis."
+        }
+      },
+      "heating_thermostat": {
+        "title": "Termostato",
+        "data": {
+          "hysteresis": "Histéresis"
+        },
+        "description": "El termostato mantiene la temperatura; la integración solo envía el nivel o la temperatura.",
+        "data_description": {
+          "hysteresis": "Este termostato no informa de cuándo calienta (no tiene hvac_action): se considera que calienta desde este valor por debajo de su temperatura fijada hasta este valor por encima, como un relé. Se usa para la demanda de calor, la caldera, el tiempo de calefacción, el aprendizaje y como confort de la parada óptima."
+        }
+      },
+      "heating_boost": {
+        "title": "Calefacción según los sensores de las habitaciones",
+        "description": "Mientras la casa pide calor, el termostato (o las válvulas termostáticas) recibe la temperatura de abajo; el resto del tiempo, el objetivo. La casa pide calor desde el objetivo menos la histéresis hasta el objetivo más la histéresis, medido por sus sensores.",
+        "data": {
+          "temperature_sensors": "Sensores de temperatura",
+          "trv_boost_temperature": "Temperatura durante la calefacción",
+          "hysteresis": "Histéresis",
+          "inertia_control": "Usar la inercia aprendida"
+        },
+        "data_description": {
+          "temperature_sensors": "Sensores en las habitaciones de la casa: la demanda de calor se decide a partir de ellos, no del sensor del termostato ni de las válvulas termostáticas.",
+          "trv_boost_temperature": "Se envía al termostato (o a las válvulas termostáticas) mientras la casa pide calor, nunca por debajo del objetivo ni por encima de la temperatura máxima de la casa o del dispositivo. Vacío = la temperatura máxima de la casa.",
+          "hysteresis": "La casa pide calor por debajo del objetivo menos este valor y deja de pedirlo por encima del objetivo más este valor, medido por sus sensores.",
+          "inertia_control": "Una vez que la casa ha aprendido lo despacio que reacciona su calefacción, la temperatura más alta termina un poco antes cuando el calor ya aportado llevaría la casa por sí solo al límite superior de la banda de histéresis, y empieza un poco antes cuando la casa bajaría a su límite inferior antes de que llegue el calor. La banda sigue siendo el límite. Desactivado: solo decide la histéresis."
+        }
+      }
+    },
+    "error": {
+      "no_devices": "Selecciona al menos un dispositivo.",
+      "sensor_required": "Los relés necesitan un sensor de temperatura de la habitación.",
+      "entity_in_room": "{entity} ya está controlado por {owner}. Un dispositivo solo puede estar controlado por una habitación.",
+      "entity_is_source": "{entity} es la fuente de calor de {owner}. No puede ser también un dispositivo de una habitación.",
+      "entity_is_gt_heater": "{entity} es el relé de un Generic Thermostat usado por {owner}. No puede controlarse también aquí.",
+      "room_sensor_is_outdoor": "{entity} es el sensor exterior de {owner}. Elige un sensor de la habitación.",
+      "boost_sensor_required": "La calefacción según los sensores de la habitación necesita un sensor de temperatura.",
+      "boost_temperature_only": "La calefacción según los sensores de la habitación solo funciona con el comando Temperatura.",
+      "entity_is_circuit": "{entity} es un relé de circuito de {owner}. No puede ser también un dispositivo de una habitación ni de otro circuito."
+    },
+    "abort": {
+      "reconfigure_successful": "Guardado."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opciones de Smart Heating Control",
+        "menu_options": {
+          "heating": "Calefacción de toda la casa",
+          "presence": "Presencia",
+          "calendar": "Días laborables y calendario",
+          "weather": "Meteorología y temporada",
+          "energy": "Energía",
+          "boiler": "Fuente de calor y demanda de calor",
+          "behavior": "Cambios manuales, vacaciones y límites",
+          "alerts": "Alertas"
+        }
+      },
+      "presence": {
+        "title": "Presencia",
+        "data": {
+          "persons": "Personas",
+          "home_rule": "El estado de la casa es \"En casa\" cuando",
+          "nearby_zones": "Zonas cercanas",
+          "nearby_geometric": "Usar coordenadas para las zonas cercanas",
+          "departure_delay": "Retardo de salida",
+          "arrival_delay": "Retardo de llegada",
+          "presence_sensors": "Sensores de presencia",
+          "guest_expire_hours": "El modo invitados se desactiva tras",
+          "proximity_distance": "Sensor de distancia de Proximidad",
+          "proximity_direction": "Sensor de dirección de Proximidad",
+          "travel_time": "Sensores de tiempo de trayecto"
+        },
+        "data_description": {
+          "persons": "Personas cuya ubicación decide en casa / cerca / lejos. Déjalo vacío solo si la presencia no debe importar: el estado de la casa es entonces siempre 'en casa' y solo decide la programación.",
+          "home_rule": "'Al menos una' va bien para la mayoría de los hogares. 'Todos' baja la calefacción en cuanto una persona se va.",
+          "nearby_zones": "Zonas en las que el estado de la casa es 'cerca' (eco), p. ej., tu ciudad. Fuera de casa y de cualquier zona = 'lejos' (away). Déjalo vacío si solo quieres en casa / lejos.",
+          "nearby_geometric": "Usa las coordenadas GPS: alguien en una zona que está dentro de una zona cercana (p. ej., Oficina en la ciudad) cuenta como cerca. Desactívalo si las personas no tienen ubicación GPS.",
+          "departure_delay": "Cuánto tiempo deben estar todos fuera antes de bajar la calefacción. Evita reaccionar a salidas cortas (ir a la tienda, pasear al perro).",
+          "arrival_delay": "Normalmente 0: la calefacción vuelve en cuanto alguien está en casa. Súbelo solo si el GPS a veces indica 'en casa' por error.",
+          "presence_sensors": "Mantienen el estado de la casa en 'en casa' mientras están activados (mmWave, movimiento, un interruptor para personas sin teléfono). Déjalo vacío si todos tienen la aplicación complementaria.",
+          "guest_expire_hours": "El modo invitados mantiene el estado de la casa en 'en casa'; se desactiva solo tras este número de horas. 0 = solo manualmente.",
+          "proximity_distance": "Sensor de distancia de la integración Proximidad, para precalentar de camino a casa (recomendado, junto con el sensor de dirección). Con varias personas, su sensor de la distancia más cercana. Déjalo vacío si no usas Proximidad.",
+          "proximity_direction": "Sensor de dirección de Proximidad (con varias personas, su dirección de desplazamiento más cercana). Solo la dirección indica que alguien vuelve a casa: también se aplica al tiempo de trayecto.",
+          "travel_time": "Tiempo de trayecto hasta casa (Waze, Google Travel Time), un sensor por persona: cuenta el trayecto más corto (no el de una persona que está en casa, de unos 0 minutos). Solo indica lo cerca que está alguien, no si vuelve a casa: alguien que se queda cerca mantiene la casa caliente. Se recomienda Proximidad en su lugar, porque puede saber la dirección."
+        }
+      },
+      "calendar": {
+        "title": "Días laborables y calendario",
+        "data": {
+          "workday_sensor": "Sensor de día laborable",
+          "calendar": "Calendario",
+          "day_boundary": "El día de la programación empieza a las"
+        },
+        "data_description": {
+          "workday_sensor": "Sensor de la integración Día laborable, para que los festivos usen el perfil de los días de fin de semana. Sin él, de lunes a viernes son laborables.",
+          "calendar": "Opcional. Un evento titulado con un nombre de perfil (p. ej., home_office) o de nivel (p. ej., away) lo aplica mientras dura el evento. Déjalo vacío si no planificas días en un calendario.",
+          "day_boundary": "Déjalo en 00:00. Cámbialo solo para turnos de noche, para que una noche pertenezca al día anterior."
+        }
+      },
+      "weather": {
+        "title": "Meteorología y temporada",
+        "data": {
+          "outdoor_sensor": "Sensor de temperatura exterior",
+          "weather": "Entidad meteorológica",
+          "cutoff_enabled": "Apagar la calefacción cuando hace calor fuera",
+          "forecast_enabled": "Usar la previsión",
+          "season_mode": "Temporada de calefacción",
+          "compensation_enabled": "Compensación exterior",
+          "window_ignore_above": "Ignorar las ventanas por encima de"
+        },
+        "data_description": {
+          "outdoor_sensor": "Temperatura exterior para el corte, la temporada y la compensación. Si está vacío, se usa la temperatura de la entidad meteorológica.",
+          "weather": "Se usa para la previsión, para la ganancia solar y como temperatura exterior cuando no hay sensor.",
+          "cutoff_enabled": "Detiene la calefacción cuando la media exterior alcanza la temperatura de corte. Necesita un sensor exterior o una entidad meteorológica.",
+          "forecast_enabled": "Usa la media de la previsión de las próximas Horas de previsión, nunca una sola hora. Calefacción apagada por la media exterior: puede volver a funcionar cuando esa media es igual o inferior al corte menos la histéresis. Calefacción en marcha: se apaga antes cuando esa media alcanza el corte y sigue apagada hasta que la media baja al corte menos la histéresis. Necesita una entidad meteorológica con previsión por horas y el corte activado.",
+          "season_mode": "'Siempre' si cambias la temporada con el modo Verano. 'Entre fechas' o 'Automática' para que la calefacción se detenga sola fuera de temporada. 'Automática' necesita un sensor exterior o una entidad meteorológica.",
+          "compensation_enabled": "Sube un poco el objetivo cuando hace mucho frío fuera (las paredes están más frías). Necesita un sensor exterior o una entidad meteorológica. Déjalo desactivado si las habitaciones mantienen bien la temperatura.",
+          "window_ignore_above": "Las ventanas abiertas no bajan la calefacción cuando fuera hace al menos esta temperatura. Necesita un sensor exterior o una entidad meteorológica. Déjalo vacío para reaccionar siempre."
+        }
+      },
+      "energy": {
+        "title": "Energía",
+        "data": {
+          "price_sensor": "Sensor del precio de la energía",
+          "pv_sensor": "Sensor de excedente fotovoltaico"
+        },
+        "data_description": {
+          "price_sensor": "Sensor del precio de la energía (tarifa dinámica). Déjalo vacío si tienes un precio fijo.",
+          "pv_sensor": "Potencia vertida a la red (W). Solo es útil con calefacción eléctrica o bomba de calor."
+        }
+      },
+      "boiler": {
+        "title": "Fuente de calor y demanda de calor",
+        "data": {
+          "boiler_entity": "Fuente de calor",
+          "secondary_source": "Fuente de calor secundaria"
+        },
+        "data_description": {
+          "boiler_entity": "La caldera (o el relé que enciende la fuente de calor) cuando las habitaciones no pueden encenderla por sí mismas (válvulas termostáticas, válvulas de zona). La integración la enciende cuando las habitaciones piden calor, y el aprendizaje y el tiempo de calefacción solo cuentan mientras funciona. Nunca el relé que ya usa un Generic Thermostat. Con válvulas termostáticas y una caldera encendida por un termostato que no está en Home Assistant, el aprendizaje no es fiable: no se recomiendan el arranque ni la parada óptimos. Vacío: sin fuente de calor; el paso siguiente aún permite añadir relés de circuito (válvulas de zona conectadas a la caldera).",
+          "secondary_source": "Opcional, solo con una fuente de calor arriba: una segunda (p. ej., una bomba de calor junto a la caldera) que calienta las mismas habitaciones y circuitos. Solo funciona una de ellas: mientras se usa la secundaria, la primera sigue apagada. Eliges cuál en la tarjeta o con el selector Fuente de calor de la casa (a mano, con una automatización o en Automático según un criterio, en el paso siguiente). Si la elegida no está disponible, calienta la otra. Vacío (por defecto): una sola fuente de calor."
+        },
+        "description": "Solo para casas en las que las habitaciones no pueden encender la fuente de calor por sí mismas (válvulas termostáticas o válvulas de zona): la integración la enciende entonces cuando las habitaciones piden calor, y una habitación calienta (para el aprendizaje y el tiempo de calefacción) solo mientras funciona.\n\n⚠️ Con válvulas termostáticas en todos los radiadores, la instalación debe dejar pasar el agua (un bypass automático, una caldera con bypass interno o un radiador sin válvula termostática): las válvulas termostáticas se cierran al alcanzar su objetivo, y la fuente de calor puede seguir funcionando hasta que acabe su tiempo mínimo encendida."
+      },
+      "behavior": {
+        "title": "Cambios manuales, vacaciones y límites",
+        "data": {
+          "override_mode": "Los cambios manuales se mantienen",
+          "override_scope": "El cambio manual se aplica a",
+          "vacation_preheat_hours": "Precalentar antes del final de las vacaciones",
+          "auto_vacation_hours": "Vacaciones automáticas cuando todos están lejos durante",
+          "frost_temp": "Protección antiheladas",
+          "max_temp": "Temperatura máxima",
+          "reevaluation_minutes": "Comprobación periódica cada"
+        },
+        "data_description": {
+          "override_mode": "Una sola regla para todos los cambios manuales. 'Duración fija' lo mantiene durante las horas de abajo. 'Hasta la próxima reevaluación' termina cuando cambia la programación, la presencia, una ventana o el modo; la comprobación periódica no lo termina.",
+          "override_scope": "'Solo esa habitación' va bien para la mayoría de los hogares. 'Toda la casa' copia un cambio manual a todas las habitaciones; úsalo solo si cada habitación tiene sus propias válvulas.",
+          "vacation_preheat_hours": "La programación vuelve este número de horas antes de que terminen las vacaciones, para que la casa esté caliente cuando llegues.",
+          "auto_vacation_hours": "Activa las vacaciones por sí solo cuando todos llevan este tiempo lejos. 0 = solo manualmente.",
+          "frost_temp": "Se usa con una ventana abierta o con el modo Apagado. Las habitaciones con Generic Thermostat usan en su lugar la temperatura mínima de este.",
+          "max_temp": "Ningún nivel, ajuste o cambio manual de la integración supera este valor.",
+          "reevaluation_minutes": "Comprobación de seguridad que reenvía la decisión si un dispositivo la ha perdido. Los cambios se aplican de inmediato de todos modos; 5–15 minutos está bien."
+        }
+      },
+      "alerts": {
+        "title": "Alertas",
+        "data": {
+          "notify_critical": "Alertas importantes a",
+          "notify_warning": "Avisos a",
+          "notify_info": "Información a",
+          "notify_resolved": "Avisar cuando termina una alerta",
+          "quiet_start": "Horas de silencio desde",
+          "quiet_end": "Horas de silencio hasta",
+          "pause_remind_hours": "Recordar cuando la pausa dura más de",
+          "alert_window_minutes": "Alertar cuando una ventana está abierta más de",
+          "alert_unavailable_minutes": "Alertar cuando un dispositivo no está disponible más de",
+          "alert_silent_hours": "Alertar cuando un sensor de temperatura no envía nada durante",
+          "alert_no_effect_hours": "Alertar cuando la calefacción no tiene efecto durante",
+          "battery_threshold": "Batería baja por debajo de",
+          "verify_commands": "Verificar los comandos",
+          "room_diff_alert": "Alertar cuando una habitación se queda más fría en"
+        },
+        "data_description": {
+          "notify_critical": "Sin calefacción: la fuente de calor o un termostato no disponible. Se envían al momento, también en las horas de silencio. Elige teléfonos (notify.mobile_app_...) u otros servicios de notificación. Para el correo electrónico, escribe las direcciones después del servicio, p. ej., notify.me_gmail_com: ana@example.com, ion@example.com (Google Mail las necesita). Déjalo vacío para recibir notificaciones en Home Assistant.",
+          "notify_warning": "Algo que revisar: una ventana abierta, una batería baja, un sensor averiado, protección antiheladas en una habitación, una pausa olvidada, una habitación más fría que las demás, un ajuste que no funciona. Correo electrónico: las direcciones después del servicio, como arriba. Déjalo vacío para recibir notificaciones en Home Assistant.",
+          "notify_info": "Lo que la casa ha hecho por sí sola: ha empezado o terminado la temporada de calefacción, han empezado unas vacaciones planificadas, la casa se calienta para tu vuelta, han empezado o terminado las vacaciones automáticas, el modo invitados ha terminado solo. Déjalo vacío para no recibir avisos.",
+          "notify_resolved": "Un mensaje cuando un dispositivo vuelve a funcionar, se cierra una ventana o se cambia una batería (solo para las alertas enviadas a los destinatarios de arriba). En un teléfono sustituye a la alerta.",
+          "quiet_start": "Desde esta hora solo se envían las alertas importantes; las demás esperan hasta que terminan las horas de silencio y solo se envían si siguen siendo válidas. Deja ambos vacíos para no tener horas de silencio.",
+          "quiet_end": "Fin de las horas de silencio (puede ser a la mañana siguiente).",
+          "pause_remind_hours": "Un aviso cuando la calefacción sigue en pausa este tiempo y, después, una vez al día (una pausa olvidada significa una casa fría). 0 = nunca.",
+          "alert_window_minutes": "Alertar cuando una ventana sigue abierta este tiempo mientras hace falta calefacción.",
+          "alert_unavailable_minutes": "Alertar cuando un termostato o un sensor no está disponible durante este tiempo.",
+          "alert_silent_hours": "Alertar cuando un sensor de temperatura de una habitación sigue disponible pero no ha enviado ningún valor (ni siquiera el mismo) durante este tiempo: una batería agotada o una señal perdida a menudo conservan el último valor. Un sensor de la habitación que no informa queda excluido hasta que vuelva a informar, como uno no disponible (se usan los demás sensores; si no, el termostato; si no, eco). 0 = desactivado. Súbelo para sensores que solo informan cuando cambia la temperatura y para un sensor de plantilla o de grupo (una media), que solo escribe un valor cuando cambia uno de sus sensores.",
+          "alert_no_effect_hours": "Alertar cuando una habitación calienta durante este tiempo, claramente por debajo de su objetivo, y su temperatura sube mucho menos de lo que espera su modelo aprendido: una válvula atascada, una fuente de calor que no arranca, una ventana abierta sin sensor. Solo cuando la habitación ya ha aprendido su modelo (antes no se podría distinguir un suelo radiante lento de uno atascado). 0 = desactivado.",
+          "battery_threshold": "Alertar cuando la batería de un dispositivo de la habitación (válvula termostática, sensor) baja de este valor.",
+          "verify_commands": "Tras 2 minutos comprueba que el dispositivo ha aceptado el comando, lo reintenta una vez y después alerta. Desactívalo solo si un dispositivo informa de su estado con lentitud.",
+          "room_diff_alert": "Alertar cuando una habitación se queda este valor por debajo de su objetivo mientras las demás están calientes (válvula atascada, ventana abierta). 0 = desactivado; solo es útil con varias habitaciones."
+        }
+      },
+      "heating": {
+        "title": "Calefacción de toda la casa",
+        "data": {
+          "source": "Calentada por"
+        },
+        "description": "El único termostato (o relé) que calienta toda la casa. Se convierte en la zona {zone} y funciona con todas las opciones de la casa. Si las habitaciones se calientan por separado (válvulas termostáticas en los radiadores, calefactores, aires acondicionados), elige \"Cada habitación se calienta por separado\" y añade cada habitación con \"Añadir habitación\".",
+        "data_description": {
+          "source": "Lo que calienta toda la casa: un Generic Thermostat, otro termostato (Nest, Tado, Hive…) o un relé que enciende la caldera. 'Cada habitación se calienta por separado' cuando ningún dispositivo calienta por sí solo toda la casa: válvulas termostáticas o válvulas en los radiadores, calefactores eléctricos, aires acondicionados, zonas de suelo radiante; cada habitación se añade entonces con su propio dispositivo y, con válvulas termostáticas, el relé de la caldera (o el termostato que enciende la caldera) se elige como fuente de calor."
+        }
+      },
+      "heating_devices": {
+        "title": "Dispositivos",
+        "data": {
+          "climates": "Termostatos",
+          "switches": "Interruptores (relés)",
+          "command_mode": "Comando",
+          "trv_boost": "Calentar según los sensores de las habitaciones"
+        },
+        "data_description": {
+          "climates": "El termostato que controla la caldera, p. ej., la entidad del Generic Thermostat (climate.climate).",
+          "switches": "Solo cuando un relé calienta la casa directamente, sin termostato.",
+          "command_mode": "Solo para termostatos distintos del Generic Thermostat. La diferencia se explica en los ajustes de la habitación.",
+          "trv_boost": "Mientras la casa pide calor (según sus sensores de temperatura, con la histéresis), el termostato o las válvulas termostáticas reciben la Temperatura durante la calefacción (por defecto, la temperatura máxima de la casa), así que siguen calentando hasta que la casa está caliente; el resto del tiempo reciben el objetivo. Útil cuando el dispositivo mide en un lugar inadecuado (un termostato en el pasillo, una válvula termostática junto al radiador). Necesita un sensor de temperatura. Solo con el comando Temperatura. No es lo mismo que 'Encender y apagar la fuente por su temperatura': esa opción es para un termostato que solo enciende la caldera para habitaciones con sus propias válvulas termostáticas (en ese caso elige 'Cada habitación se calienta por separado' y selecciona el termostato como fuente de calor)."
+        }
+      },
+      "heating_on_off": {
+        "title": "Control de encendido / apagado",
+        "data": {
+          "temperature_sensors": "Sensores de temperatura",
+          "hysteresis": "Histéresis",
+          "min_on_minutes": "Tiempo mínimo encendido",
+          "min_off_minutes": "Tiempo mínimo apagado",
+          "inertia_control": "Usar la inercia aprendida"
+        },
+        "description": "La integración enciende y apaga la calefacción en torno al objetivo.",
+        "data_description": {
+          "temperature_sensors": "Sensores en la habitación, usados en lugar del sensor del termostato (más precisos cuando el termostato está junto a una fuente de calor). Déjalo vacío para usar el sensor del termostato; son necesarios para los relés, que no tienen sensor.",
+          "hysteresis": "La calefacción se enciende por debajo del objetivo menos este valor y se apaga por encima del objetivo más este valor.",
+          "min_on_minutes": "Tiempo mínimo encendido. 0 para calefactores a los que no les afectan los ciclos cortos.",
+          "min_off_minutes": "Tiempo mínimo apagado entre dos encendidos.",
+          "inertia_control": "Una vez que la habitación ha aprendido lo despacio que reacciona su calefacción, esta se apaga un poco antes cuando el calor ya aportado llevaría la habitación al límite superior de la banda de histéresis, y se enciende un poco antes cuando la habitación bajaría a su límite inferior antes de que llegue el calor. La propia banda sigue siendo el límite. Es más útil con calefacción lenta (radiadores de hierro fundido, suelo radiante). Desactivado: solo decide la histéresis."
+        }
+      },
+      "heating_thermostat": {
+        "title": "Termostato",
+        "data": {
+          "hysteresis": "Histéresis"
+        },
+        "description": "El termostato mantiene la temperatura; la integración solo envía el nivel o la temperatura.",
+        "data_description": {
+          "hysteresis": "Este termostato no informa de cuándo calienta (no tiene hvac_action): se considera que calienta desde este valor por debajo de su temperatura fijada hasta este valor por encima, como un relé. Se usa para la demanda de calor, la caldera, el tiempo de calefacción, el aprendizaje y como confort de la parada óptima."
+        }
+      },
+      "presence_details": {
+        "title": "Precalentamiento de camino a casa",
+        "data": {
+          "arrival_distance": "Precalentar por debajo de la distancia",
+          "arrival_minutes": "Precalentar por debajo del tiempo de trayecto"
+        },
+        "data_description": {
+          "arrival_distance": "El precalentamiento empieza cuando alguien está más cerca que esto (con el sensor de distancia).",
+          "arrival_minutes": "El precalentamiento empieza cuando alguien está a menos de estos minutos (con el sensor de tiempo de trayecto)."
+        }
+      },
+      "weather_details": {
+        "title": "Valores de meteorología y temporada",
+        "data": {
+          "cutoff_temp": "Temperatura exterior de corte",
+          "cutoff_hysteresis": "Histéresis del corte",
+          "cutoff_avg_hours": "Media durante",
+          "forecast_hours": "Horas de previsión",
+          "season_start": "Inicio de la temporada (MM-DD)",
+          "season_end": "Fin de la temporada (MM-DD)",
+          "season_days": "Temporada automática: días consecutivos",
+          "season_temp": "Umbral de la temporada automática",
+          "compensation_below": "Compensar por debajo de",
+          "compensation_offset": "Compensación"
+        },
+        "data_description": {
+          "cutoff_temp": "La calefacción se detiene cuando la temperatura exterior media es igual o superior a este valor.",
+          "cutoff_hysteresis": "La calefacción solo vuelve a encenderse con el corte menos este valor o por debajo, para que no oscile en torno al corte. La media de la previsión usa el mismo límite.",
+          "cutoff_avg_hours": "El corte usa la media de las últimas horas, para que una tarde soleada no detenga la calefacción.",
+          "forecast_hours": "Horas de previsión en la media (cada valor para su hora; el valor medido hasta la siguiente hora de previsión). Con más horas, la calefacción se apaga antes de un periodo cálido.",
+          "season_start": "Primer día de la temporada: mes y día, p. ej., 10-15.",
+          "season_end": "Último día de la temporada: mes y día, p. ej., 04-15.",
+          "season_days": "Días seguidos por debajo (o por encima) del umbral antes de que empiece (o termine) la temporada.",
+          "season_temp": "Temperatura exterior media diaria que inicia o termina la temporada.",
+          "compensation_below": "Temperatura exterior por debajo de la cual se añade la compensación.",
+          "compensation_offset": "Grados añadidos al objetivo (p. ej., 0,5)."
+        }
+      },
+      "energy_details": {
+        "title": "Umbrales de energía",
+        "data": {
+          "price_high": "Precio alto desde",
+          "price_high_offset": "Ajuste con precio alto",
+          "price_low": "Precio bajo hasta",
+          "price_low_offset": "Ajuste con precio bajo",
+          "pv_threshold": "Excedente desde",
+          "pv_offset": "Ajuste con excedente"
+        },
+        "data_description": {
+          "price_high": "Con este precio o uno superior se aplica el ajuste de precio alto.",
+          "price_high_offset": "Normalmente negativo, p. ej., -1° mientras la energía está cara.",
+          "price_low": "Con este precio o uno inferior se aplica el ajuste de precio bajo.",
+          "price_low_offset": "Normalmente positivo, p. ej., +1° mientras la energía está barata (calefacción eléctrica, bomba de calor).",
+          "pv_threshold": "Excedente a partir del cual se aplica el ajuste.",
+          "pv_offset": "Grados añadidos mientras hay excedente (p. ej., +1)."
+        }
+      },
+      "boiler_details": {
+        "title": "Fuente de calor",
+        "data": {
+          "boiler_min_rooms": "Habitaciones necesarias para encender la fuente de calor",
+          "boiler_min_on": "Tiempo mínimo encendida de la fuente de calor",
+          "boiler_min_off": "Tiempo mínimo apagada de la fuente de calor",
+          "keep_last_open": "Mantener abierta la última válvula termostática",
+          "circuits": "Relés de circuito",
+          "boiler_boost": "Encender y apagar la fuente por su temperatura",
+          "boiler_idle_temp": "Temperatura de reposo de la fuente de calor",
+          "source_criterion": "Elección automática de la fuente"
+        },
+        "data_description": {
+          "boiler_min_rooms": "Cuántas habitaciones deben pedir calor para encenderla. 1 = cualquier habitación. Las habitaciones secundarias (con Puede encender la fuente de calor de la casa desactivado) no cuentan.",
+          "boiler_min_on": "Tiempo mínimo de funcionamiento, contra los ciclos cortos. 0 (por defecto) = la fuente de calor se apaga en cuanto ninguna habitación pide calor. Un tiempo mayor necesita un bypass o un radiador sin válvula termostática.",
+          "boiler_min_off": "Pausa mínima entre encendidos.",
+          "keep_last_open": "Cuando ninguna habitación pide ya calor, las válvulas termostáticas de la última habitación que lo pidió siguen abiertas (reciben la temperatura máxima de la habitación o se dejan encendidas), para que el calor que queda en la fuente de calor y en las tuberías tenga por dónde pasar, como con un bypass, y la válvula no vuelva a moverse durante la noche. Hasta que otra habitación pida calor, una regla más fuerte se haga cargo de la habitación (ventana, cambio manual, pausa, modo, calor exterior) o la propia habitación necesite calor. Mientras tanto la habitación no pide calor, pero puede calentarse por encima de su objetivo, y su aprendizaje omite ese tiempo. Desactivado por defecto.",
+          "circuits": "Solo con varios circuitos de calefacción en la caldera (p. ej., suelo radiante y radiadores), cada uno con su propia bomba o relé de válvula de zona. Una habitación conectada a la fuente de calor elige entonces su circuito (en sus ajustes): cuando pide calor, primero se enciende el relé de su circuito y después la caldera; cuando ninguna habitación lo necesita, primero se apaga la caldera y después el relé del circuito. La caldera no se enciende para una habitación cuyo circuito está apagado. Vacío (por defecto): sin circuitos, no cambia nada.",
+          "boiler_boost": "Un termostato como fuente de calor (p. ej., Hive, Nest, Tado, un Generic Thermostat) enciende la caldera solo según su propio objetivo y su propio sensor. Activado (por defecto): se queda en su modo calor; para encender recibe la temperatura máxima de la casa y, para apagar, la temperatura de reposo (por defecto, la temperatura antiheladas de la casa) (así sigue protegiendo contra las heladas si Home Assistant se detiene). Su propio objetivo fijado a mano se revierte. Desactivado: solo se cambia su modo (calor / apagado). Un termostato sin temperatura objetivo siempre se controla por su modo. No es lo mismo que 'Calentar según los sensores de las habitaciones' de la zona de toda la casa: esa opción es para un termostato que calienta él mismo toda la casa.",
+          "boiler_idle_temp": "Solo con 'Encender y apagar la fuente por su temperatura': lo que recibe el termostato mientras ninguna habitación pide calor. Vacío (por defecto): la temperatura antiheladas de la casa, así que la caldera sigue apagada. Un valor más alto (p. ej., 17,5 °C) permite que el termostato mantenga su propia zona, con su propio sensor, a esa temperatura: útil cuando también calienta radiadores sin válvulas termostáticas. Debe ser inferior a la temperatura máxima de la casa.",
+          "source_criterion": "Lo que elige la fuente secundaria en Automático: Excedente fotovoltaico (el sensor fotovoltaico supera su umbral, en Energía), Frío exterior (por debajo de una temperatura, en el paso siguiente), Electricidad barata (el precio es igual o inferior a su límite bajo, en Energía), Tu propia entidad (una entidad de encendido / apagado que eliges: encendida = la fuente secundaria). Solo aparece lo que la casa tiene configurado. Ninguno (por defecto): sin Automático, la fuente se elige a mano o con una automatización. Con Excedente fotovoltaico, usa la producción de los paneles o un excedente que incluya la bomba de calor: un sensor de vertido baja en cuanto arranca la bomba de calor, y las fuentes cambiarían una y otra vez."
+        }
+      },
+      "boiler_circuits": {
+        "title": "Circuitos de calefacción",
+        "data": {
+          "circuits": "Relés de circuito"
+        },
+        "data_description": {
+          "circuits": "Los relés de las válvulas de zona (o de las bombas) de los circuitos de calefacción, p. ej., uno por planta. Una habitación elige entonces su circuito (en sus ajustes): su relé se enciende mientras una de sus habitaciones pide calor y se apaga en cuanto ninguna lo pide. Vacío (por defecto): sin circuitos."
+        },
+        "description": "Sin fuente de calor: para válvulas de zona conectadas a la caldera, que la encienden ellas mismas al abrirse (p. ej., una válvula por planta). La integración abre la válvula de un circuito mientras una de sus habitaciones pide calor y la cierra cuando ninguna lo pide; la caldera sigue a las válvulas."
+      },
+      "behavior_details": {
+        "title": "Cambios manuales",
+        "data": {
+          "override_hours": "Duración fija"
+        },
+        "data_description": {
+          "override_hours": "Cuánto tiempo se mantiene un cambio manual."
+        }
+      },
+      "heating_boost": {
+        "title": "Calefacción según los sensores de las habitaciones",
+        "description": "Mientras la casa pide calor, el termostato (o las válvulas termostáticas) recibe la temperatura de abajo; el resto del tiempo, el objetivo. La casa pide calor desde el objetivo menos la histéresis hasta el objetivo más la histéresis, medido por sus sensores.",
+        "data": {
+          "temperature_sensors": "Sensores de temperatura",
+          "trv_boost_temperature": "Temperatura durante la calefacción",
+          "hysteresis": "Histéresis",
+          "inertia_control": "Usar la inercia aprendida"
+        },
+        "data_description": {
+          "temperature_sensors": "Sensores en las habitaciones de la casa: la demanda de calor se decide a partir de ellos, no del sensor del termostato ni de las válvulas termostáticas.",
+          "trv_boost_temperature": "Se envía al termostato (o a las válvulas termostáticas) mientras la casa pide calor, nunca por debajo del objetivo ni por encima de la temperatura máxima de la casa o del dispositivo. Vacío = la temperatura máxima de la casa.",
+          "hysteresis": "La casa pide calor por debajo del objetivo menos este valor y deja de pedirlo por encima del objetivo más este valor, medido por sus sensores.",
+          "inertia_control": "Una vez que la casa ha aprendido lo despacio que reacciona su calefacción, la temperatura más alta termina un poco antes cuando el calor ya aportado llevaría la casa por sí solo al límite superior de la banda de histéresis, y empieza un poco antes cuando la casa bajaría a su límite inferior antes de que llegue el calor. La banda sigue siendo el límite. Desactivado: solo decide la histéresis."
+        }
+      },
+      "boiler_source": {
+        "title": "Elección automática de la fuente",
+        "description": "La fuente solo cambia cuando el criterio se ha mantenido cambiado durante el tiempo de cambio.",
+        "data": {
+          "source_criterion_entity": "Entidad del criterio",
+          "source_cold_below": "Fuente secundaria por debajo de",
+          "source_switch_minutes": "Tiempo de cambio"
+        },
+        "data_description": {
+          "source_criterion_entity": "Activada: calienta la fuente secundaria; desactivada: la principal. Por ejemplo, un sensor binario de plantilla o un ayudante interruptor (input_boolean).",
+          "source_cold_below": "Temperatura exterior por debajo de la cual calienta la fuente secundaria (p. ej., la caldera, cuando la bomba de calor es la fuente principal y ya no da abasto).",
+          "source_switch_minutes": "Cuánto tiempo debe mantenerse cambiado el criterio antes de que cambie la fuente (por defecto, 15 min), para que una nube o un cambio breve de precio no hagan cambiar las fuentes una y otra vez. 0 = al momento. Una fuente elegida a mano cambia al momento."
+        }
+      }
+    },
+    "error": {
+      "invalid_month_day": "Usa el formato MM-DD, p. ej., 10-15.",
+      "no_devices": "Selecciona al menos un dispositivo.",
+      "sensor_required": "Los relés necesitan un sensor de temperatura de la habitación.",
+      "outdoor_required": "Necesita un sensor de temperatura exterior o una entidad meteorológica (arriba).",
+      "weather_required": "La previsión necesita una entidad meteorológica (arriba).",
+      "cutoff_required": "La previsión funciona con el corte: activa Apagar la calefacción cuando hace calor fuera.",
+      "entity_in_room": "{entity} ya está controlado por {owner}. Un dispositivo solo puede estar controlado por una habitación.",
+      "entity_is_source": "{entity} es la fuente de calor de {owner}. No puede ser también un dispositivo de una habitación.",
+      "entity_is_gt_heater": "{entity} es el relé de un Generic Thermostat usado por {owner}. No puede controlarse también aquí.",
+      "outdoor_is_room_sensor": "{entity} es un sensor de temperatura de {owner}. El sensor exterior debe ser otro sensor.",
+      "room_sensor_is_outdoor": "{entity} es el sensor exterior de {owner}. Elige un sensor de la habitación.",
+      "boost_sensor_required": "La calefacción según los sensores de la habitación necesita un sensor de temperatura.",
+      "boost_temperature_only": "La calefacción según los sensores de la habitación solo funciona con el comando Temperatura.",
+      "invalid_recipient": "“{recipient}” no se puede usar: escribe un servicio de notificación (notify.nombre), seguido opcionalmente de direcciones de correo electrónico, p. ej., notify.me_gmail_com: ana@example.com, ion@example.com.",
+      "idle_not_below_max": "La temperatura de reposo debe ser inferior a la temperatura máxima de la casa.",
+      "entity_is_circuit": "{entity} es un relé de circuito de {owner}. No puede ser también un dispositivo de una habitación ni de otro circuito.",
+      "circuit_is_source": "La fuente de calor no puede ser también un relé de circuito.",
+      "secondary_without_primary": "La fuente secundaria necesita una fuente de calor.",
+      "secondary_is_primary": "La fuente secundaria debe ser un dispositivo distinto de la fuente de calor.",
+      "criterion_is_source": "El criterio no puede ser una de las fuentes de calor."
+    }
+  },
+  "config_subentries": {
+    "room": {
+      "entry_type": "Habitación",
+      "initiate_flow": {
+        "user": "Añadir habitación",
+        "reconfigure": "Reconfigurar habitación"
+      },
+      "step": {
+        "basics": {
+          "title": "Habitación",
+          "data": {
+            "name": "Nombre",
+            "area": "Área",
+            "source": "Calentada por"
+          },
+          "data_description": {
+            "name": "Se muestra en los dispositivos y en la tarjeta.",
+            "area": "Opcional; vincula la habitación a un área de Home Assistant.",
+            "source": "Generic Thermostat: mantiene sus propios preajustes y temperaturas, la integración solo los elige. Otros termostatos / válvulas termostáticas: configura el comando en el paso siguiente. Relé: la integración lo enciende y lo apaga ella misma."
+          }
+        },
+        "devices": {
+          "title": "Dispositivos",
+          "data": {
+            "climates": "Termostatos",
+            "switches": "Interruptores (relés)",
+            "command_mode": "Comando",
+            "trv_boost": "Calentar según el sensor de la habitación",
+            "use_house_source": "Se calienta con la fuente de calor de la casa"
+          },
+          "data_description": {
+            "climates": "Los termostatos de esta habitación. Si hay varios termostatos en una habitación, todos reciben el mismo comando.",
+            "switches": "Los relés que calientan esta habitación.",
+            "command_mode": "Temperatura: la integración envía la temperatura de cada nivel (la mayoría de las válvulas termostáticas); una válvula termostática en auto (su propia programación) se pone en modo calor. Preajuste: cada nivel usa un preajuste del termostato, con la temperatura del termostato. Encendido / apagado: el termostato solo se enciende y se apaga, y la integración mantiene la temperatura.",
+            "trv_boost": "Mientras la habitación pide calor, las válvulas termostáticas reciben la Temperatura durante la calefacción (por defecto, la temperatura máxima de la casa), así que siguen abiertas hasta que la habitación está caliente; el resto del tiempo reciben el objetivo. La demanda de calor viene entonces del sensor de la habitación, con la histéresis. Necesita un sensor de temperatura en la habitación. Solo con el comando Temperatura.",
+            "use_house_source": "Activado: el calor de la habitación viene de la fuente de calor de la casa (radiadores conectados a la caldera): enciende la caldera cuando pide calor (salvo que se convierta en habitación secundaria en el paso siguiente) y solo calienta mientras funciona la caldera. Desactivado: la habitación tiene su propio calor (calefactor eléctrico, bomba de calor, aire acondicionado): no enciende la caldera y calienta mientras funciona su propio dispositivo."
+          }
+        },
+        "house_source": {
+          "title": "Fuente de calor de la casa",
+          "data": {
+            "starts_house_source": "Puede encender la fuente de calor de la casa",
+            "circuit": "Circuito",
+            "top_up": "Aprovechar la caldera en marcha"
+          },
+          "data_description": {
+            "starts_house_source": "Activado (por defecto): cuando esta habitación pide calor, enciende la fuente de calor de la casa (la caldera), como todas las habitaciones. Desactivado: una habitación secundaria. Nunca enciende la caldera para sí misma; sus válvulas termostáticas, válvulas o relés se siguen abriendo cuando está por debajo de su objetivo, así que solo recibe calor mientras la caldera funciona para otra habitación. Adecuado para habitaciones que no deben estar frías pero no necesitan estar calientes a una hora concreta: balcones cerrados, un cuarto de invitados, un recibidor, un trastero. En un día templado la caldera puede funcionar poco, así que la habitación puede quedarse por debajo de su objetivo durante horas. La protección antiheladas sigue encendiendo la caldera para ella, por seguridad. No cuenta para Habitaciones necesarias para encender la fuente de calor.",
+            "circuit": "El circuito de calefacción de esta habitación (su bomba o relé de válvula de zona), entre los de la casa. Su relé se enciende antes que la caldera cuando la habitación pide calor, y se apaga después de que se detenga la caldera cuando ninguna de sus habitaciones lo necesita. Vacío: la habitación no tiene circuito.",
+            "top_up": "Desactivado (por defecto). Activado: mientras la caldera funciona para otras habitaciones y esta habitación está un poco por debajo de su objetivo (dentro de su histéresis, 0,3 °C por defecto, así que aún no pide calor), sus válvulas termostáticas o su relé se abren y calienta hasta su objetivo. Pronto pediría calor y volvería a encender la caldera: así la caldera arranca menos veces. Nunca enciende la caldera ni la mantiene en marcha, no cuenta para Habitaciones necesarias y, con un circuito, solo calienta mientras ese circuito ya está abierto. No durante un cambio manual, con una ventana abierta, en pausa ni durante la parada óptima. Para una habitación secundaria, que no enciende la caldera, aprovecha el calor mientras la caldera funciona para otras habitaciones, así no se queda por debajo de su objetivo hasta el siguiente encendido."
+          }
+        },
+        "room_circuit": {
+          "title": "Circuito de calefacción",
+          "data": {
+            "circuit": "Circuito"
+          },
+          "data_description": {
+            "circuit": "El circuito de calefacción de esta habitación (su relé de válvula de zona o de bomba), entre los de la casa. Su relé se enciende mientras la habitación pide calor y se apaga cuando ninguna de sus habitaciones lo pide. Vacío: la habitación no tiene circuito."
+          }
+        },
+        "control_on_off": {
+          "title": "Control de encendido / apagado",
+          "description": "La integración enciende y apaga la calefacción en torno al objetivo.",
+          "data": {
+            "hysteresis": "Histéresis",
+            "min_on_minutes": "Tiempo mínimo encendido",
+            "min_off_minutes": "Tiempo mínimo apagado",
+            "inertia_control": "Usar la inercia aprendida"
+          },
+          "data_description": {
+            "hysteresis": "La calefacción se enciende por debajo del objetivo menos este valor y se apaga por encima del objetivo más este valor.",
+            "min_on_minutes": "Tiempo mínimo encendido. 0 para calefactores a los que no les afectan los ciclos cortos.",
+            "min_off_minutes": "Tiempo mínimo apagado entre dos encendidos.",
+            "inertia_control": "Una vez que la habitación ha aprendido lo despacio que reacciona su calefacción, esta se apaga un poco antes cuando el calor ya aportado llevaría la habitación al límite superior de la banda de histéresis, y se enciende un poco antes cuando la habitación bajaría a su límite inferior antes de que llegue el calor. La propia banda sigue siendo el límite. Es más útil con calefacción lenta (radiadores de hierro fundido, suelo radiante). Desactivado: solo decide la histéresis."
+          }
+        },
+        "control_thermostat": {
+          "title": "Termostato",
+          "description": "El termostato mantiene la temperatura; la integración solo envía el nivel o la temperatura.",
+          "data": {
+            "hysteresis": "Histéresis"
+          },
+          "data_description": {
+            "hysteresis": "Este termostato no informa de cuándo calienta (no tiene hvac_action): se considera que calienta desde este valor por debajo de su temperatura fijada hasta este valor por encima, como un relé. Se usa para la demanda de calor, la caldera, el tiempo de calefacción, el aprendizaje y como confort de la parada óptima."
+          }
+        },
+        "levels": {
+          "title": "Niveles",
+          "data": {
+            "nearby_mode": "Cuando no hay nadie en casa pero alguien está cerca",
+            "nearby_not_above_schedule": "No por encima de la programación",
+            "name_home": "Nombre del nivel 'home'",
+            "name_sleep": "Nombre del nivel 'sleep'",
+            "name_eco": "Nombre del nivel 'eco'",
+            "name_away": "Nombre del nivel 'away'",
+            "name_comfort": "Nombre del nivel 'comfort'",
+            "name_activity": "Nombre del nivel 'activity'",
+            "device_home": "Preajuste del termostato para 'home'",
+            "device_sleep": "Preajuste del termostato para 'sleep'",
+            "device_eco": "Preajuste del termostato para 'eco'",
+            "device_away": "Preajuste del termostato para 'away'",
+            "device_comfort": "Preajuste del termostato para 'comfort'",
+            "device_activity": "Preajuste del termostato para 'activity'",
+            "temp_home": "Temperatura de 'home'",
+            "temp_sleep": "Temperatura de 'sleep'",
+            "temp_eco": "Temperatura de 'eco'",
+            "temp_away": "Temperatura de 'away'",
+            "temp_comfort": "Temperatura de 'comfort'",
+            "temp_activity": "Temperatura de 'activity'"
+          },
+          "description": "Los niveles tienen funciones fijas: home, sleep, eco (cerca), away (lejos / vacaciones), comfort y activity.",
+          "data_description": {
+            "nearby_mode": "Preajuste Eco: usa el nivel eco. Temperatura fija: la temperatura se elige en la página siguiente (con Generic Thermostat el preajuste pasa a ser none).",
+            "nearby_not_above_schedule": "Marcado: cuando la programación es más baja que el nivel o la temperatura de cerca, se aplica la más baja (estar en la ciudad por la noche no calienta más que estar en casa). Sin marcar: se aplica el nivel o la temperatura de cerca.",
+            "name_home": "Cómo se llama este nivel en la programación y en la tarjeta. Deja el nombre predeterminado si no necesitas otro.",
+            "name_sleep": "Cómo se llama este nivel en la programación y en la tarjeta. Deja el nombre predeterminado si no necesitas otro.",
+            "name_eco": "Cómo se llama este nivel en la programación y en la tarjeta. Deja el nombre predeterminado si no necesitas otro.",
+            "name_away": "Cómo se llama este nivel en la programación y en la tarjeta. Deja el nombre predeterminado si no necesitas otro.",
+            "name_comfort": "Cómo se llama este nivel en la programación y en la tarjeta. Deja el nombre predeterminado si no necesitas otro.",
+            "name_activity": "Cómo se llama este nivel en la programación y en la tarjeta. Deja el nombre predeterminado si no necesitas otro.",
+            "device_home": "Preajuste del termostato usado para este nivel (preajustes encontrados: {presets}); el termostato mantiene su temperatura. Déjalo vacío si el termostato no tiene ese preajuste: en su lugar se envía la temperatura del nivel de abajo (también se muestra cuando el termostato no informa de la temperatura del preajuste).",
+            "device_sleep": "Preajuste del termostato usado para este nivel (preajustes encontrados: {presets}); el termostato mantiene su temperatura. Déjalo vacío si el termostato no tiene ese preajuste: en su lugar se envía la temperatura del nivel de abajo (también se muestra cuando el termostato no informa de la temperatura del preajuste).",
+            "device_eco": "Preajuste del termostato usado para este nivel (preajustes encontrados: {presets}); el termostato mantiene su temperatura. Déjalo vacío si el termostato no tiene ese preajuste: en su lugar se envía la temperatura del nivel de abajo (también se muestra cuando el termostato no informa de la temperatura del preajuste).",
+            "device_away": "Preajuste del termostato usado para este nivel (preajustes encontrados: {presets}); el termostato mantiene su temperatura. Déjalo vacío si el termostato no tiene ese preajuste: en su lugar se envía la temperatura del nivel de abajo (también se muestra cuando el termostato no informa de la temperatura del preajuste).",
+            "device_comfort": "Preajuste del termostato usado para este nivel (preajustes encontrados: {presets}); el termostato mantiene su temperatura. Déjalo vacío si el termostato no tiene ese preajuste: en su lugar se envía la temperatura del nivel de abajo (también se muestra cuando el termostato no informa de la temperatura del preajuste).",
+            "device_activity": "Preajuste del termostato usado para este nivel (preajustes encontrados: {presets}); el termostato mantiene su temperatura. Déjalo vacío si el termostato no tiene ese preajuste: en su lugar se envía la temperatura del nivel de abajo (también se muestra cuando el termostato no informa de la temperatura del preajuste).",
+            "temp_home": "Temperatura de este nivel. Se puede cambiar más tarde desde la tarjeta.",
+            "temp_sleep": "Temperatura de este nivel. Se puede cambiar más tarde desde la tarjeta.",
+            "temp_eco": "Temperatura de este nivel. Se puede cambiar más tarde desde la tarjeta.",
+            "temp_away": "Temperatura de este nivel. Se puede cambiar más tarde desde la tarjeta.",
+            "temp_comfort": "Temperatura de este nivel. Se puede cambiar más tarde desde la tarjeta.",
+            "temp_activity": "Temperatura de este nivel. Se puede cambiar más tarde desde la tarjeta."
+          }
+        },
+        "sensors": {
+          "title": "Sensores",
+          "data": {
+            "temperature_sensors": "Sensores de temperatura",
+            "calibration_mode": "Calibración de la válvula termostática",
+            "occupancy_sensors": "Sensores de ocupación",
+            "humidity_sensor": "Sensor de humedad"
+          },
+          "data_description": {
+            "temperature_sensors": "Sensores en la habitación, usados en lugar del sensor del termostato (más precisos cuando el termostato está junto a una fuente de calor). Déjalo vacío para usar el sensor del termostato; son necesarios para los relés, que no tienen sensor.",
+            "calibration_mode": "Necesita un sensor de temperatura de la habitación arriba. Desfase: corrige el sensor de la válvula termostática. Temperatura externa: escribe la temperatura de la habitación en la válvula termostática (si lo admite). Desactivada en otro caso.",
+            "occupancy_sensors": "Sensores de movimiento / presencia de la habitación: cuando la habitación está vacía durante un rato, pasa a eco aunque haya alguien en casa. Déjalo vacío para habitaciones que solo deben seguir la programación.",
+            "humidity_sensor": "Solo para la alerta de riesgo de moho: la humedad de la habitación, junto con la temperatura exterior de la casa, da la humedad en la pared más fría. Sin él (o sin temperatura exterior) no se envía ninguna alerta de moho."
+          }
+        },
+        "sensors_gt": {
+          "title": "Sensores",
+          "description": "Un Generic Thermostat mantiene la temperatura con el sensor de su propia configuración, así que la integración también usa ese. Para usar otro sensor, cámbialo en los ajustes del Generic Thermostat.",
+          "data": {
+            "occupancy_sensors": "Sensores de ocupación",
+            "humidity_sensor": "Sensor de humedad"
+          },
+          "data_description": {
+            "occupancy_sensors": "Sensores de movimiento / presencia de la habitación: cuando la habitación está vacía durante un rato, pasa a eco aunque haya alguien en casa. Déjalo vacío para habitaciones que solo deben seguir la programación.",
+            "humidity_sensor": "Solo para la alerta de riesgo de moho: la humedad de la habitación, junto con la temperatura exterior de la casa, da la humedad en la pared más fría. Sin él (o sin temperatura exterior) no se envía ninguna alerta de moho."
+          }
+        },
+        "windows": {
+          "title": "Ventanas y puertas",
+          "data": {
+            "window_sensors": "Sensores de ventana",
+            "linked_window_sensors": "Ventanas de otras habitaciones",
+            "window_drop_detect": "Detectar ventanas abiertas por la temperatura"
+          },
+          "data_description": {
+            "window_sensors": "Ventanas y puertas de esta habitación. Déjalo vacío si no hay ninguna (la detección por bajada de temperatura de abajo puede ayudar).",
+            "linked_window_sensors": "Ventanas de otras habitaciones que también enfrían esta, p. ej., la puerta del balcón del salón para el recibidor.",
+            "window_drop_detect": "Trata una bajada rápida de temperatura como una ventana abierta durante 15 minutos. Útil para habitaciones sin sensores de ventana."
+          }
+        },
+        "schedule": {
+          "title": "Programación",
+          "data": {
+            "schedule_source": "Origen de la programación",
+            "optimal_start": "Arranque óptimo",
+            "optimal_stop": "Parada óptima"
+          },
+          "data_description": {
+            "schedule_source": "Programación interna: escrita aquí o editada desde la tarjeta. Ayudante de horario: un ayudante Horario de Home Assistant decide entre dos niveles.",
+            "optimal_start": "Empieza a calentar antes para que el siguiente nivel se alcance a tiempo. La velocidad de calentamiento se aprende en pocos días.",
+            "optimal_stop": "Baja el nivel antes del siguiente más frío, tan pronto como la habitación pueda enfriarse sin salir del confort del nivel actual. El enfriamiento se aprende de los periodos sin demanda de calor. Necesita una temperatura exterior (sensor o meteorología) en los ajustes de la casa; solo se muestra entonces."
+          }
+        },
+        "extras": {
+          "title": "Extras",
+          "data": {
+            "solar_offset": "Ganancia solar",
+            "valve_exercise": "Antibloqueo de válvulas"
+          },
+          "data_description": {
+            "solar_offset": "Un valor negativo (p. ej., -1) baja el objetivo mientras brilla el sol, para habitaciones que se calientan con el sol. Usa la entidad meteorológica de la casa (solo se muestra si hay una configurada). 0 = desactivado. Independientemente de esto, cuánto calienta el sol la habitación se aprende solo para el arranque y la parada óptimos.",
+            "valve_exercise": "Abre por completo las válvulas termostáticas 5 minutos una vez a la semana, contra la cal, en todos los modos (también en verano). Una pausa, un cambio manual o una ventana abierta lo aplazan a más tarde ese mismo día; no pide calor."
+          }
+        },
+        "levels_nearby": {
+          "title": "Cerca",
+          "data": {
+            "nearby_temp": "Temperatura fija cuando hay alguien cerca"
+          },
+          "data_description": {
+            "nearby_temp": "Temperatura enviada mientras no hay nadie en casa y alguien está cerca. Se puede cambiar más tarde desde la tarjeta."
+          }
+        },
+        "sensors_details": {
+          "title": "Sensores: detalles",
+          "data": {
+            "temperature_aggregation": "Varios sensores",
+            "calibration_entities": "Entidades de calibración",
+            "occupancy_minutes": "Eco tras no detectar ocupación durante",
+            "occupancy_return_minutes": "Salir de eco tras una presencia de",
+            "hysteresis": "Histéresis"
+          },
+          "data_description": {
+            "temperature_aggregation": "Con varios sensores: la media, el más frío o la mediana.",
+            "calibration_entities": "Las entidades numéricas de la válvula termostática (desfase o temperatura externa).",
+            "occupancy_minutes": "Cuánto tiempo debe estar vacía la habitación antes de pasar a eco.",
+            "occupancy_return_minutes": "Cuánto tiempo debe haber alguien presente sin interrupción antes de que una habitación en eco por falta de ocupación vuelva a seguir su programación. 0 = al momento (como antes). Una visita más corta (alguien coge algo y se va) mantiene la habitación en eco, y la cuenta vuelve a empezar con la siguiente presencia. La presencia cuenta sin interrupción: un sensor de movimiento que se apaga entre movimientos reinicia la cuenta, así que es mejor un sensor de presencia (mmWave) o un sensor de movimiento con un tiempo de despeje largo.",
+            "hysteresis": "Con un sensor de habitación, decide la protección antiheladas: por debajo, las válvulas termostáticas se fuerzan a abrirse hasta la protección antiheladas más este valor. Con Aprovechar la caldera en marcha: mientras la caldera funciona para otras habitaciones, la habitación aprovecha para calentarse cuando está por debajo de su objetivo en menos de este valor (aún no pide calor)."
+          }
+        },
+        "windows_details": {
+          "title": "Ventanas: retardos y acción",
+          "data": {
+            "window_open_delay": "Retardo de apertura",
+            "window_close_delay": "Retardo de cierre",
+            "window_action": "Cuando una ventana está abierta",
+            "window_drop_degrees": "Bajada de temperatura",
+            "window_drop_minutes": "En un plazo de"
+          },
+          "data_description": {
+            "window_open_delay": "Cuánto tiempo debe estar abierta una ventana antes de que reaccione la calefacción. Se ignoran las ventilaciones más breves.",
+            "window_close_delay": "Cuánto esperar después de cerrar antes de volver a calentar.",
+            "window_action": "Protección antiheladas mantiene una temperatura mínima. Apagar detiene la calefacción.",
+            "window_drop_degrees": "Bajada que cuenta como ventana abierta.",
+            "window_drop_minutes": "Tiempo en el que debe producirse la bajada."
+          }
+        },
+        "schedule_internal": {
+          "title": "Programación",
+          "data": {
+            "schedule": "Programación"
+          },
+          "description": "Un perfil por línea: `perfil: HH:MM preset, HH:MM preset`. Los días de cada perfil, y si está activado, se configuran en la tarjeta (Programación). Los perfiles anteriores llamados workday, weekend o mon…sun conservan sus días. {error}",
+          "data_description": {
+            "schedule": "p. ej., `workday: 00:00 sleep, 06:00 home, 22:00 sleep`. Es más fácil editarlo desde la tarjeta."
+          }
+        },
+        "schedule_helper": {
+          "title": "Ayudante de horario",
+          "data": {
+            "schedule_helper": "Ayudante de horario",
+            "helper_on_preset": "Nivel mientras el ayudante está activado",
+            "helper_off_preset": "Nivel mientras el ayudante está desactivado"
+          },
+          "data_description": {
+            "schedule_helper": "Un ayudante Horario de Home Assistant (Ajustes → Ayudantes).",
+            "helper_on_preset": "Nivel mientras el ayudante está activado.",
+            "helper_off_preset": "Nivel mientras el ayudante está desactivado."
+          }
+        },
+        "schedule_optimal": {
+          "title": "Arranque / parada óptimos",
+          "data": {
+            "optimal_start_max_minutes": "Adelanto máximo del arranque",
+            "optimal_stop_minutes": "Adelanto máximo de la parada",
+            "stop_tolerance": "Tolerancia de la parada óptima"
+          },
+          "data_description": {
+            "optimal_start_max_minutes": "Nunca arranca antes de este tiempo.",
+            "optimal_stop_minutes": "Nunca se detiene antes de este tiempo. Hasta que se aprende el enfriamiento, el nivel más bajo empieza con este adelanto.",
+            "stop_tolerance": "Para termostatos que informan de hvac_action: cuánto puede bajar la habitación por debajo del nivel actual antes del cambio programado (su confort). 0 = la habitación no debe bajar del nivel, así que solo se detiene antes cuando está por encima del nivel."
+          }
+        },
+        "extras_valves": {
+          "title": "Antibloqueo de válvulas",
+          "data": {
+            "valve_exercise_day": "Día",
+            "valve_exercise_time": "Hora"
+          },
+          "data_description": {
+            "valve_exercise_day": "Día del antibloqueo de válvulas.",
+            "valve_exercise_time": "Hora del antibloqueo de válvulas (mejor cuando nadie necesita calor)."
+          }
+        },
+        "control_boost": {
+          "title": "Calefacción según el sensor de la habitación",
+          "description": "Mientras la habitación pide calor, las válvulas termostáticas reciben la temperatura durante la calefacción; el resto del tiempo, el objetivo. La habitación pide calor desde el objetivo menos la histéresis hasta el objetivo más la histéresis, medido por el sensor de la habitación.",
+          "data": {
+            "trv_boost_temperature": "Temperatura durante la calefacción",
+            "hysteresis": "Histéresis",
+            "inertia_control": "Usar la inercia aprendida"
+          },
+          "data_description": {
+            "trv_boost_temperature": "Se envía a las válvulas termostáticas mientras la habitación pide calor, nunca por debajo del objetivo ni por encima de la temperatura máxima de la casa o de las válvulas termostáticas. Vacío = la temperatura máxima de la casa.",
+            "hysteresis": "La habitación pide calor por debajo del objetivo menos este valor y deja de pedirlo por encima del objetivo más este valor, medido por el sensor de la habitación.",
+            "inertia_control": "Una vez que la habitación ha aprendido lo despacio que reacciona su calefacción, la calefacción termina un poco antes cuando el calor ya aportado llevaría la habitación por sí solo al límite superior de la banda de histéresis, y empieza un poco antes cuando la habitación bajaría a su límite inferior antes de que llegue el calor. La banda sigue siendo el límite. Desactivado: solo decide la histéresis."
+          }
+        }
+      },
+      "abort": {
+        "reconfigure_successful": "Guardado."
+      },
+      "error": {
+        "no_devices": "Selecciona al menos un dispositivo.",
+        "duplicate_names": "Dos niveles tienen el mismo nombre.",
+        "invalid_schedule": "Programación no válida.",
+        "helper_required": "Selecciona el ayudante de horario.",
+        "sensor_required": "Los relés necesitan un sensor de temperatura de la habitación.",
+        "entity_in_room": "{entity} ya está controlado por {owner}. Un dispositivo solo puede estar controlado por una habitación.",
+        "entity_is_source": "{entity} es la fuente de calor de {owner}. No puede ser también un dispositivo de una habitación.",
+        "entity_is_gt_heater": "{entity} es el relé de un Generic Thermostat usado por {owner}. No puede controlarse también aquí.",
+        "room_sensor_is_outdoor": "{entity} es el sensor exterior de {owner}. Elige un sensor de la habitación.",
+        "humidity_sensor_is_outdoor": "{entity} está en el dispositivo del sensor exterior o de la entidad meteorológica de {owner}: mide en el exterior. Elige un sensor de humedad de la habitación.",
+        "boost_sensor_required": "La calefacción según el sensor de la habitación necesita un sensor de temperatura de la habitación.",
+        "boost_temperature_only": "La calefacción según el sensor de la habitación solo funciona con el comando Temperatura.",
+        "invalid_level_name": "El nombre de nivel “{name}” no se puede usar en la programación: usa letras, cifras, espacios, “_” o “-” (sin “,” “:” “#”).",
+        "level_name_is_key": "El nombre “{name}” es el nombre de otro nivel dentro de la programación (home, sleep, eco, away, comfort, activity, frost): elige otro.",
+        "calibration_sensor_required": "La calibración de la válvula termostática escribe la temperatura de la habitación en la válvula, así que necesita un sensor de temperatura de la habitación. Añade uno o pon la calibración en Desactivada.",
+        "calibration_entities_required": "Elige las entidades numéricas de la válvula termostática en las que escribe la calibración (el desfase o la entrada de temperatura externa), o pon la calibración en Desactivada en la página anterior.",
+        "entity_is_circuit": "{entity} es un relé de circuito de {owner}. No puede ser también un dispositivo de una habitación ni de otro circuito."
+      }
+    },
+    "scenario": {
+      "entry_type": "Escenario",
+      "initiate_flow": {
+        "user": "Añadir escenario",
+        "reconfigure": "Reconfigurar escenario"
+      },
+      "step": {
+        "rooms": {
+          "title": "Escenario",
+          "description": "Un escenario activa perfiles elegidos en varias habitaciones a la vez, desde el selector *Escenario* de la casa (o una automatización). No añade nada propio: elegirlo hace en cada habitación lo mismo que su selector de perfil.",
+          "data": {
+            "name": "Nombre",
+            "rooms": "Habitaciones"
+          },
+          "data_description": {
+            "name": "Se muestra en el selector Escenario de la casa, p. ej., Teletrabajo.",
+            "rooms": "Solo habitaciones con su propia programación. Las habitaciones que no se incluyen conservan sus perfiles."
+          }
+        },
+        "profiles": {
+          "title": "Perfiles de {scenario}",
+          "description": "Para cada habitación, los perfiles que se activan. Los perfiles activos de los mismos días se desactivan, como cuando activas uno en la tarjeta. Los perfiles de una habitación no deben compartir días."
+        }
+      },
+      "error": {
+        "name_required": "Introduce un nombre.",
+        "name_taken": "Otro escenario de esta casa tiene este nombre.",
+        "rooms_required": "Elige al menos una habitación.",
+        "profiles_required": "Elige al menos un perfil.",
+        "profiles_overlap": "Estos perfiles comparten días: {overlap}. Elige perfiles para días distintos."
+      },
+      "abort": {
+        "reconfigure_successful": "El escenario se ha guardado.",
+        "house_not_loaded": "La casa no está en marcha; los escenarios se pueden editar cuando haya arrancado.",
+        "no_rooms": "No hay ninguna habitación con su propia programación en esta casa."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "presence": {
+        "name": "Presencia",
+        "state": {
+          "home": "En casa",
+          "nearby": "Cerca",
+          "far": "Lejos"
+        }
+      },
+      "outdoor_average": {
+        "name": "Media exterior"
+      },
+      "heating_runtime": {
+        "name": "Tiempo de calefacción"
+      },
+      "decision": {
+        "name": "Decisión",
+        "state": {
+          "starting": "Iniciando",
+          "frost_protection": "Protección antiheladas",
+          "maximum_temperature": "Temperatura máxima",
+          "pause": "Pausa",
+          "mode_off": "Modo apagado",
+          "summer": "Modo verano",
+          "out_of_season": "Fuera de temporada",
+          "valve_exercise": "Antibloqueo de válvulas",
+          "window_open": "Ventana abierta",
+          "manual_override": "Cambio manual",
+          "vacation": "Vacaciones",
+          "house_away": "Modo ausente",
+          "presence_far": "Lejos",
+          "presence_nearby": "Cerca",
+          "room_unoccupied": "Habitación desocupada",
+          "sensor_fallback": "Sensor no disponible",
+          "schedule": "Programación",
+          "optimal_start": "Arranque óptimo",
+          "optimal_stop": "Parada óptima",
+          "outdoor_cutoff": "Calor exterior"
+        }
+      },
+      "target_temperature": {
+        "name": "Temperatura objetivo"
+      },
+      "room_temperature": {
+        "name": "Temperatura de la habitación"
+      },
+      "next_change": {
+        "name": "Próximo cambio"
+      },
+      "heating_rate": {
+        "name": "Velocidad de calentamiento"
+      },
+      "cooling_rate": {
+        "name": "Velocidad de enfriamiento"
+      }
+    },
+    "binary_sensor": {
+      "heating_season": {
+        "name": "Temporada de calefacción"
+      },
+      "outdoor_cutoff": {
+        "name": "Calor exterior"
+      },
+      "heat_demand": {
+        "name": "Demanda de calor"
+      },
+      "window_open": {
+        "name": "Ventana abierta"
+      },
+      "manual_override": {
+        "name": "Cambio manual"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Modo",
+        "state": {
+          "auto": "Automático",
+          "away": "Ausente",
+          "vacation": "Vacaciones",
+          "off": "Apagado",
+          "summer": "Verano"
+        }
+      },
+      "scenario": {
+        "name": "Escenario"
+      },
+      "schedule_profile": {
+        "name": "Perfil de programación",
+        "state_attributes": {
+          "today": {
+            "name": "Usado hoy"
+          }
+        }
+      },
+      "heat_source": {
+        "name": "Fuente de calor",
+        "state": {
+          "auto": "Automático",
+          "primary": "Principal",
+          "secondary": "Secundaria"
+        },
+        "state_attributes": {
+          "active": {
+            "name": "En uso",
+            "state": {
+              "primary": "Principal",
+              "secondary": "Secundaria"
+            }
+          }
+        }
+      }
+    },
+    "switch": {
+      "pause": {
+        "name": "Pausa"
+      },
+      "guest_mode": {
+        "name": "Modo invitados"
+      },
+      "child_lock": {
+        "name": "Bloqueo infantil"
+      }
+    },
+    "number": {
+      "level_home": {
+        "name": "Nivel Home"
+      },
+      "level_sleep": {
+        "name": "Nivel Sleep"
+      },
+      "level_eco": {
+        "name": "Nivel Eco"
+      },
+      "level_away": {
+        "name": "Nivel Away"
+      },
+      "level_comfort": {
+        "name": "Nivel Comfort"
+      },
+      "level_activity": {
+        "name": "Nivel Activity"
+      },
+      "level_nearby": {
+        "name": "Temperatura cuando hay alguien cerca"
+      },
+      "level_custom": {
+        "name": "Nivel {name}"
+      }
+    },
+    "datetime": {
+      "vacation_start": {
+        "name": "Inicio de las vacaciones"
+      },
+      "vacation_end": {
+        "name": "Fin de las vacaciones"
+      }
+    },
+    "button": {
+      "clear_overrides": {
+        "name": "Borrar los cambios manuales"
+      },
+      "reevaluate": {
+        "name": "Reevaluar"
+      },
+      "clear_vacation": {
+        "name": "Borrar las vacaciones"
+      },
+      "clear_override": {
+        "name": "Borrar el cambio manual"
+      },
+      "reset_learning": {
+        "name": "Restablecer el aprendizaje"
+      }
+    }
+  },
+  "selector": {
+    "home_rule": {
+      "options": {
+        "any": "Al menos una persona está en casa",
+        "all": "Todos están en casa"
+      }
+    },
+    "season_mode": {
+      "options": {
+        "always": "Siempre",
+        "dates": "Entre fechas",
+        "auto": "Automática (temperatura exterior)"
+      }
+    },
+    "override_mode": {
+      "options": {
+        "fixed": "Duración fija",
+        "until_next_reevaluation": "Hasta la próxima reevaluación"
+      }
+    },
+    "override_scope": {
+      "options": {
+        "room": "Solo esa habitación",
+        "house": "Toda la casa"
+      }
+    },
+    "source": {
+      "options": {
+        "generic_thermostat": "Generic Thermostat",
+        "climate": "Otros termostatos / válvulas termostáticas",
+        "switch": "Interruptor (relé)"
+      }
+    },
+    "house_source": {
+      "options": {
+        "generic_thermostat": "Generic Thermostat",
+        "climate": "Otro termostato para toda la casa",
+        "switch": "Interruptor (relé)",
+        "none": "Cada habitación se calienta por separado (válvulas termostáticas, calefactores, aire acondicionado)"
+      }
+    },
+    "command_mode": {
+      "options": {
+        "temperature": "Temperatura",
+        "preset": "Preajuste",
+        "hvac_mode": "Encendido / apagado (modo HVAC)"
+      }
+    },
+    "nearby_mode": {
+      "options": {
+        "preset": "Preajuste Eco",
+        "temperature": "Temperatura fija"
+      }
+    },
+    "aggregation": {
+      "options": {
+        "mean": "Media",
+        "min": "Mínima",
+        "median": "Mediana"
+      }
+    },
+    "calibration": {
+      "options": {
+        "off": "Desactivada",
+        "offset": "Desfase",
+        "external": "Entrada de temperatura externa"
+      }
+    },
+    "window_action": {
+      "options": {
+        "frost": "Protección antiheladas",
+        "off": "Apagar"
+      }
+    },
+    "schedule_source": {
+      "options": {
+        "internal": "Programación interna",
+        "helper": "Ayudante de horario"
+      }
+    },
+    "preset": {
+      "options": {
+        "home": "Home",
+        "sleep": "Sleep",
+        "eco": "Eco",
+        "away": "Away",
+        "comfort": "Comfort",
+        "activity": "Activity"
+      }
+    },
+    "weekday": {
+      "options": {
+        "mon": "Lunes",
+        "tue": "Martes",
+        "wed": "Miércoles",
+        "thu": "Jueves",
+        "fri": "Viernes",
+        "sat": "Sábado",
+        "sun": "Domingo"
+      }
+    },
+    "temperature_unit": {
+      "options": {
+        "celsius": "Celsius (°C)",
+        "fahrenheit": "Fahrenheit (°F)"
+      }
+    },
+    "source_criterion": {
+      "options": {
+        "none": "Ninguno (a mano o con una automatización)",
+        "pv_surplus": "Excedente fotovoltaico",
+        "cold": "Frío exterior",
+        "cheap_power": "Electricidad barata",
+        "entity": "Tu propia entidad"
+      }
+    }
+  },
+  "services": {
+    "set_override": {
+      "name": "Fijar un cambio manual",
+      "description": "Fija un nivel o una temperatura y lo mantiene como cambio manual.",
+      "fields": {
+        "room": {
+          "name": "Habitación",
+          "description": "Nombre o id de la habitación."
+        },
+        "entity_id": {
+          "name": "Entidades",
+          "description": "Cualquier entidad de la habitación (o su termostato)."
+        },
+        "preset": {
+          "name": "Preajuste",
+          "description": "Nivel que se fija."
+        },
+        "temperature": {
+          "name": "Temperatura",
+          "description": "Temperatura que se fija, en la unidad de la casa (°C o °F)."
+        },
+        "duration_hours": {
+          "name": "Duración",
+          "description": "Horas; vacío = la regla configurada para los cambios manuales."
+        }
+      }
+    },
+    "clear_override": {
+      "name": "Borrar el cambio manual",
+      "description": "Vuelve al control automático (todas las habitaciones si no se indica ninguna).",
+      "fields": {
+        "room": {
+          "name": "Habitación",
+          "description": "Nombre o id de la habitación."
+        },
+        "entity_id": {
+          "name": "Entidades",
+          "description": "Cualquier entidad de la habitación (o su termostato)."
+        }
+      }
+    },
+    "set_vacation": {
+      "name": "Fijar vacaciones",
+      "description": "Fija el periodo de vacaciones; los valores vacíos las borran.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Casa",
+          "description": "Solo es necesario con varias casas."
+        },
+        "start": {
+          "name": "Inicio de las vacaciones",
+          "description": "Inicio de las vacaciones."
+        },
+        "end": {
+          "name": "Fin de las vacaciones",
+          "description": "Fin de las vacaciones (el precalentamiento empieza antes)."
+        }
+      }
+    },
+    "reevaluate": {
+      "name": "Reevaluar",
+      "description": "Evalúa ahora todas las habitaciones.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Casa",
+          "description": "Solo es necesario con varias casas."
+        }
+      }
+    },
+    "set_schedule": {
+      "name": "Fijar programación",
+      "description": "Sustituye la programación de una habitación.",
+      "fields": {
+        "room": {
+          "name": "Habitación",
+          "description": "Nombre o id de la habitación."
+        },
+        "entity_id": {
+          "name": "Entidades",
+          "description": "Cualquier entidad de la habitación (o su termostato)."
+        },
+        "schedule": {
+          "name": "Programación",
+          "description": "p. ej., `workday: 00:00 sleep, 06:00 home, 22:00 sleep`"
+        },
+        "profiles": {
+          "name": "Perfiles",
+          "description": "Perfiles como objeto: nombre del perfil -> lista de horas y preajustes (lo usa la tarjeta)."
+        },
+        "profile_days": {
+          "name": "Días de los perfiles",
+          "description": "Días y activación de cada perfil: nombre del perfil -> días (all, workday, weekend o una lista de mon … sun) y enabled (true / false). Lo usa la tarjeta. Los perfiles activados no pueden solaparse."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "house_not_found": {
+      "message": "No hay ninguna casa de Smart Heating Control con el id {entry}."
+    },
+    "house_ambiguous": {
+      "message": "Hay varias casas configuradas; indica config_entry_id."
+    },
+    "room_not_found": {
+      "message": "No hay ninguna habitación que coincida."
+    },
+    "preset_or_temperature": {
+      "message": "Indica un preajuste o una temperatura."
+    },
+    "unknown_preset": {
+      "message": "Preajuste desconocido: {preset}."
+    },
+    "vacation_order": {
+      "message": "El final debe ser posterior al inicio."
+    },
+    "schedule_or_profiles": {
+      "message": "Indica schedule o profiles."
+    },
+    "schedule_external": {
+      "message": "Esta habitación usa un ayudante de horario; edita el ayudante en su lugar."
+    },
+    "invalid_schedule": {
+      "message": "Programación no válida: {error}"
+    },
+    "temperature_invalid": {
+      "message": "La temperatura debe ser un número."
+    },
+    "duration_invalid": {
+      "message": "La duración debe estar entre {min} y {max} horas."
+    }
+  },
+  "issues": {
+    "scenario_problem": {
+      "title": "El escenario {scenario} no se puede aplicar del todo",
+      "description": "En la casa {house}, el escenario **{scenario}** tiene habitaciones que se omiten al elegirlo: {details}.\n\nReconfigura el escenario (Ajustes → Dispositivos y servicios → Smart Heating Control) o elimínalo. Este mensaje desaparece solo cuando se corrige."
+    }
+  }
+}

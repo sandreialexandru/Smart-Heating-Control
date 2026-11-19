@@ -2,7 +2,7 @@
 
 # Smart Heating Control
 
-**English** | [Română](README.ro.md) | [Deutsch](README.de.md) | [Nederlands](README.nl.md) | [Français](README.fr.md) | [Italiano](README.it.md)
+**English** | [Română](README.ro.md) | [Deutsch](README.de.md) | [Nederlands](README.nl.md) | [Français](README.fr.md) | [Italiano](README.it.md) | [Español](README.es.md)
 
 [![Home Assistant Marketplace Default](https://img.shields.io/badge/Home%20Assistant%20Marketplace-Default-41BDF5.svg?logo=homeassistant&logoColor=white)](https://hacs.xyz/)
 [![Validate](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml/badge.svg)](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml)
@@ -178,7 +178,7 @@ Download the file and open it in a browser.
 
 The integration and the card: English, Romanian, German, Dutch, French, Italian and Spanish. The documentation: English and Romanian.
 
-The German, Dutch, French and Italian texts are new: if you speak one of them, help make them sound right in [this issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues/12).
+The German, Dutch, French, Italian and Spanish texts are new: if you speak one of them, help make them sound right in [this issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues/12).
 
 ## Support
 

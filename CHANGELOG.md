@@ -11,7 +11,7 @@ GitHub releases.
 
 - 🇪🇸 **Spanish** for the integration (settings, entities, services, the
   notifications and the Repairs details), the card and its editor, and the
-  panel ([#21](https://github.com/sandreialexandru/Smart-Heating-Control/pull/21),
+  panel, with a README in Spanish ([#21](https://github.com/sandreialexandru/Smart-Heating-Control/pull/21),
   thanks @PedroFlores199).
 - 🗂️ **SHC panel**: a page of its own in the sidebar (*SHC*, for every user)
   with the whole house: the house on top, the rooms on the side, the chosen

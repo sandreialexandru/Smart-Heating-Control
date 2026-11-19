@@ -2,7 +2,7 @@
 
 # Smart Heating Control
 
-[English](README.md) | [Română](README.ro.md) | [Deutsch](README.de.md) | **Nederlands** | [Français](README.fr.md) | [Italiano](README.it.md)
+[English](README.md) | [Română](README.ro.md) | [Deutsch](README.de.md) | **Nederlands** | [Français](README.fr.md) | [Italiano](README.it.md) | [Español](README.es.md)
 
 [![Home Assistant Marketplace Default](https://img.shields.io/badge/Home%20Assistant%20Marketplace-Default-41BDF5.svg?logo=homeassistant&logoColor=white)](https://hacs.xyz/)
 [![Validate](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml/badge.svg)](https://github.com/sandreialexandru/Smart-Heating-Control/actions/workflows/validate.yml)

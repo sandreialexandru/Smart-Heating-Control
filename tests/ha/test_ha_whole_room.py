@@ -7,6 +7,7 @@ from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry, async_mock_service
 
+from custom_components.advanced_climate.const import VERIFY_DELAY
 from tests.ha.test_ha_devices import GT_OPTIONS, GT_STATE, TRV, _house, _room, _tick, _unload
 
 LEFT = "climate.living_left"
@@ -416,7 +417,10 @@ async def test_an_on_off_thermostat_left_off_is_turned_on_with_the_others(
     # Only the left one took it; the right one stayed off.
     sent = len(modes)
     hass.states.async_set(LEFT, "heat", cold, context=Context())
-    await _tick(hass, freezer, 60)
+    # The same command is not sent again before the verification delay (a TRV may
+    # confirm late); a minute after it, at the latest.
+    for _ in range(VERIFY_DELAY // 60 + 2):
+        await _tick(hass, freezer, 60)
     assert {"entity_id": RIGHT, "hvac_mode": "heat"} in [m.data for m in modes[sent:]]
     assert {"entity_id": LEFT, "hvac_mode": "heat"} not in [m.data for m in modes[sent:]]
     await _unload(hass, entry)

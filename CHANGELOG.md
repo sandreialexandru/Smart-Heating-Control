@@ -102,6 +102,13 @@ GitHub releases.
 
 ### Fixed
 
+- 📐 **The card in a narrow column** of a dashboard on a big screen (a small
+  section, a masonry column): the rows of the schedule editor stuck out of the
+  card, as the narrow layout followed the width of the screen and not of the
+  card. They now follow the width of the room, and a field of the editor (the
+  days of a profile with a long name) never gets wider than the room. On a
+  small phone with big text, a folded room keeps its name: its icons go into a
+  column.
 - 📈 **The chart after a pinch and the bar on a phone**: the time under the
   finger could come out as no time at all, so the values showed *Invalid Date*
   and the outdoor temperature of now; the card could then fail with

@@ -114,6 +114,9 @@ export const STYLE = `
   .dates { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
   .datefield, .selectfield, .textfield { display: flex; flex-direction: column; gap: 4px; font-size: 0.8em; color: var(--ac-muted); }
   .datefield input, .selectfield select, .textfield input { font-size: 1.1em; }
+  /* A field never wider than its room (a long option on a small phone with big text). */
+  .datefield, .selectfield, .textfield { min-width: 0; max-width: 100%; }
+  .datefield input, .selectfield select, .textfield input { max-width: 100%; min-width: 0; box-sizing: border-box; }
   .datefield input { width: 100%; }
   input[type="datetime-local"]::-webkit-calendar-picker-indicator,
   input[type="time"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: .7; }
@@ -366,7 +369,15 @@ export const STYLE = `
   .slot-head { font-size: 0.75em; color: var(--ac-muted); }
   .slot-row .until { font-variant-numeric: tabular-nums; color: var(--ac-muted); font-size: 0.9em; }
   .profile.edit { background: var(--card-background-color); }
+  /* A narrow room (a phone, or a narrow column of a dashboard on a big screen):
+     the level under the time. By the width of the room, not of the screen. */
   @media (max-width: 480px) {
+    .slot-head { display: none; }
+    .slot-row { grid-template-columns: 10px 1fr auto; }
+    .slot-row .until { grid-column: 2 / 4; order: 5; }
+    .slot-row select { grid-column: 2 / 3; }
+  }
+  @container (max-width: 460px) {
     .slot-head { display: none; }
     .slot-row { grid-template-columns: 10px 1fr auto; }
     .slot-row .until { grid-column: 2 / 4; order: 5; }
@@ -577,6 +588,10 @@ export const STYLE = `
   .freason .dot { width: 8px; height: 8px; margin-top: 5px; }
   .freason > span:last-child { min-width: 0; overflow-wrap: anywhere; }
   .ficons { display: inline-flex; gap: 6px; flex: none; }
+  /* A narrow folded room (a small phone with big text, a narrow column): the icons
+     in a column, so the name and the line keep their room. */
+  .block.room.folded { container-type: inline-size; }
+  @container (max-width: 340px) { .ficons { flex-direction: column; gap: 4px; } }
 
   /* compact tiles */
   .rooms-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }

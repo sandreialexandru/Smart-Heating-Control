@@ -259,7 +259,7 @@ const PANEL_STYLE = `
   /* The name under the icon: words on up to two lines, never broken inside; a long
      word (Habitaciones, Estadísticas) smaller on a narrow screen, so it is not cut. */
   :host([narrow]) .tabname { white-space: normal; overflow-wrap: normal; text-align: center; max-width: 100%;
-    font-size: min(1em, 2.5vw); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    font-size: clamp(9px, 2.6vw, 1em); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   :host([narrow]) .tabcount { position: absolute; top: 1px; right: 1px; margin: 0; min-width: 1.1em; padding: 0 3px; font-size: 0.68em; }
   /* The house on a wide screen: the name, the people and the values on a row; the mode, the source, the scenarios and the buttons under it. */
   .pbar { gap: 10px; padding: 12px 16px; }

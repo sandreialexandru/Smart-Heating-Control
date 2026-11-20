@@ -462,6 +462,8 @@ test("schedule tab: today and the next 6 days as the integration runs them; no a
 });
 
 test("schedule tab: a holiday, a profile and a level from the calendar, the vacation", async (p) => {
+  // On a Tuesday, so the holiday (tomorrow) is a weekday: on a Friday it fell on a Saturday.
+  await p.context().clock.setFixedTime(new Date("2026-01-13T12:00:00+02:00"));
   const week = {
     holiday: [1],
     forced: { day: 2, profile: "weekend" },

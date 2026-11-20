@@ -667,10 +667,12 @@
         "extras": {
           "title": "Extras",
           "data": {
+            "device_change": "Changement sur un thermostat",
             "solar_offset": "Apports solaires",
             "valve_exercise": "Dégommage des vannes"
           },
           "data_description": {
+            "device_change": "Avec plusieurs thermostats dans la pièce. Seulement ce thermostat : une température ou un preset réglé sur un thermostat reste sur celui-ci (les autres gardent la décision). Toute la pièce : il est pris comme un changement depuis la carte et envoyé à tous les thermostats de la pièce (chacun dans ses limites et avec son décalage) ; un preset d'un niveau règle ce niveau. L'arrêt et un preset qui n'est pas un niveau (boost) restent sur ce thermostat. Avec toute la pièce, désactiver les fonctions des thermostats qui changent leur consigne (détection de fenêtre, boost) et utiliser plutôt des capteurs de fenêtre dans la pièce.",
             "solar_offset": "Une valeur négative (par exemple -1) baisse la consigne tant que le soleil brille, pour les pièces que le soleil réchauffe. Utilise l'entité météo de la maison (n'apparaît que si elle est définie). 0 = désactivé. Indépendamment de cela, la pièce apprend toute seule combien le soleil la réchauffe, pour le démarrage et l'arrêt optimaux.",
             "valve_exercise": "Ouvre complètement les têtes thermostatiques 5 minutes une fois par semaine, contre le calcaire, dans tous les modes (même en été). Une pause, une modification manuelle ou une fenêtre ouverte le reporte plus tard dans la journée ; il ne demande pas de chaleur."
           }
@@ -1132,6 +1134,12 @@
         "cold": "Froid dehors",
         "cheap_power": "Électricité bon marché",
         "entity": "Votre entité"
+      }
+    },
+    "device_change": {
+      "options": {
+        "device": "Seulement ce thermostat",
+        "room": "Toute la pièce"
       }
     }
   },

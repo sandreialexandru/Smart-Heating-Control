@@ -667,10 +667,12 @@
         "extras": {
           "title": "Extras",
           "data": {
+            "device_change": "Cambio en un termostato",
             "solar_offset": "Ganancia solar",
             "valve_exercise": "Antibloqueo de válvulas"
           },
           "data_description": {
+            "device_change": "Con varios termostatos en la habitación. Solo ese termostato: una temperatura o un preset puesto en un termostato se queda solo en él (los demás mantienen la decisión). Toda la habitación: se toma como un cambio desde la tarjeta y se envía a todos los termostatos de la habitación (cada uno dentro de sus límites y con su offset); un preset de un nivel pone ese nivel. Apagado y un preset que no es un nivel (boost) se quedan en ese termostato. Con toda la habitación, desactivar las funciones de los termostatos que cambian su objetivo (detección de ventana, boost) y usar en su lugar sensores de ventana en la habitación.",
             "solar_offset": "Un valor negativo (p. ej., -1) baja el objetivo mientras brilla el sol, para habitaciones que se calientan con el sol. Usa la entidad meteorológica de la casa (solo se muestra si hay una configurada). 0 = desactivado. Independientemente de esto, cuánto calienta el sol la habitación se aprende solo para el arranque y la parada óptimos.",
             "valve_exercise": "Abre por completo las válvulas termostáticas 5 minutos una vez a la semana, contra la cal, en todos los modos (también en verano). Una pausa, un cambio manual o una ventana abierta lo aplazan a más tarde ese mismo día; no pide calor."
           }
@@ -1132,6 +1134,12 @@
         "cold": "Frío exterior",
         "cheap_power": "Electricidad barata",
         "entity": "Tu propia entidad"
+      }
+    },
+    "device_change": {
+      "options": {
+        "device": "Solo ese termostato",
+        "room": "Toda la habitación"
       }
     }
   },

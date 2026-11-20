@@ -271,6 +271,7 @@ Details: [chapter 4](04-schedule.md) and
 
 | Field | When | What it does |
 | --- | --- | --- |
+| **A change on one thermostat** | only with more than one thermostat | *Only that thermostat* (default) or *The whole room*: a temperature or a level preset set on one thermostat is sent to all ([chapter 9](09-windows-manual-safety.md#manual-changes)). |
 | **Solar gain** | only with a weather entity in the house options | A negative value (e.g. −1 °C, between −3 and 0) that lowers the target while the sun shines, for rooms that get warm from the sun. 0 = off. |
 | **Valve exercise** | only for TRVs not commanded *On / off* | Opens the TRVs fully for 5 minutes once a week, against limescale, in every mode (also in summer). |
 

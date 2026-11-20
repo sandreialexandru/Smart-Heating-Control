@@ -667,10 +667,12 @@
         "extras": {
           "title": "Extras",
           "data": {
+            "device_change": "A change on one thermostat",
             "solar_offset": "Solar gain",
             "valve_exercise": "Valve exercise"
           },
           "data_description": {
+            "device_change": "With several thermostats in the room. Only that thermostat: a temperature or a preset set on a thermostat stays on it (the others keep the decision). The whole room: it is taken like a change from the card, sent to every thermostat of the room (each within its own limits and offset); a preset of a level sets that level. Off and a preset that is no level (boost) stay on that thermostat. With the whole room, turn off the thermostats' own features that change their target (window detection, boost) and use window sensors in the room instead.",
             "solar_offset": "Negative value (e.g. -1) lowers the target while the sun shines, for rooms that get warm from the sun. Uses the weather entity of the house (shown only when one is set). 0 = off. Independent of it, how much the sun warms the room is learned by itself for the optimal start and stop.",
             "valve_exercise": "Opens the TRVs fully 5 minutes once a week, against limescale, in every mode (also in summer). A pause, a manual change or an open window postpones it to later the same day; it does not ask for heat."
           }
@@ -1132,6 +1134,12 @@
         "cold": "Cold outside",
         "cheap_power": "Cheap power",
         "entity": "Your own entity"
+      }
+    },
+    "device_change": {
+      "options": {
+        "device": "Only that thermostat",
+        "room": "The whole room"
       }
     }
   },

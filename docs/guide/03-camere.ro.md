@@ -276,6 +276,7 @@ Detalii: [capitolul 4](04-program.ro.md) și
 
 | Câmp | Când apare | Ce face |
 | --- | --- | --- |
+| **Schimbare pe un termostat** | doar cu mai mult de un termostat | *Doar acel termostat* (implicit) sau *Toată camera*: o temperatură sau un preset de nivel pus pe un termostat se trimite tuturor ([capitolul 9](09-ferestre-manual-siguranta.ro.md#modificările-manuale)). |
 | **Câștig solar** | doar cu o entitate meteo în opțiunile casei | Valoare negativă (de exemplu −1 °C, între −3 și 0) care coboară ținta cât e soare, pentru camerele care se încălzesc de la soare. 0 = oprit. |
 | **Mișcarea robinetelor** | doar pentru TRV-uri care nu sunt comandate *Pornit / oprit* | Deschide TRV-urile complet 5 minute o dată pe săptămână, contra depunerilor, în orice mod (și vara). |
 

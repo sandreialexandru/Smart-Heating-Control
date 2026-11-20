@@ -225,6 +225,7 @@ One select for the house: **Auto / Away / Vacation / Off / Summer**.
 | Sensor unavailable | device sensor | External sensor down → device sensor → eco (never above the schedule: a lower level, e.g. away, stays), with alert |
 | Device unavailable | alert after 15 min | The other rooms keep working; also for the heat source (then not even frost protection can heat) |
 | Command verification | on | Retry once after 2 min, then alert |
+| A change on one thermostat | only that thermostat | With several thermostats: a temperature or a preset set on one stays on it, or (*the whole room*) becomes the room target sent to all, like a change from the card; off and a preset that is no level stay on that thermostat |
 | Valve exercise | off | Weekly full opening of the TRVs, in every mode (also in summer and outside the season); a pause, a manual change or an open window postpones it to later the same day; it does not ask for heat and its period is not learned |
 | Low battery | alert below 20 % | TRVs and sensors of the room |
 | Mold risk | with a humidity sensor | Only for a room with a *Humidity sensor* and a house with an outdoor temperature (else no alert): coldest wall = outdoor + 0.70 × (room − outdoor) (DIN 4108-2), humidity there from the vapour of the room air (Magnus formula); never warmer than the room; a warning at ≥ 80 % for 60 min, ended below 75 %, kept while a value is unavailable; `surface_humidity` on the decision sensor |

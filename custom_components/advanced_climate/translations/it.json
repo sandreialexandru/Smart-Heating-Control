@@ -667,10 +667,12 @@
         "extras": {
           "title": "Extra",
           "data": {
+            "device_change": "Modifica su un termostato",
             "solar_offset": "Apporto solare",
             "valve_exercise": "Movimento delle valvole"
           },
           "data_description": {
+            "device_change": "Con più termostati nella stanza. Solo quel termostato: una temperatura o un preset impostato su un termostato resta solo su di esso (gli altri mantengono la decisione). Tutta la stanza: vale come una modifica dalla scheda ed è inviata a tutti i termostati della stanza (ognuno nei propri limiti e con il proprio offset); un preset di un livello imposta quel livello. Spento e un preset che non è un livello (boost) restano su quel termostato. Con tutta la stanza, disattivare le funzioni dei termostati che cambiano il loro obiettivo (rilevamento finestra, boost) e usare invece sensori di finestra nella stanza.",
             "solar_offset": "Un valore negativo (per esempio -1) abbassa l'obiettivo mentre c'è il sole, per le stanze che il sole scalda. Usa l'entità meteo della casa (compare solo se è impostata). 0 = spento. Indipendentemente da questo, la stanza impara da sola quanto la scalda il sole, per l'avvio e lo spegnimento ottimali.",
             "valve_exercise": "Apre del tutto le valvole termostatiche per 5 minuti una volta a settimana, contro il calcare, in ogni modalità (anche d'estate). Una pausa, una modifica manuale o una finestra aperta lo spostano più tardi nello stesso giorno; non chiede calore."
           }
@@ -1132,6 +1134,12 @@
         "cold": "Freddo fuori",
         "cheap_power": "Corrente economica",
         "entity": "Entità propria"
+      }
+    },
+    "device_change": {
+      "options": {
+        "device": "Solo quel termostato",
+        "room": "Tutta la stanza"
       }
     }
   },

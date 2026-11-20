@@ -21,8 +21,10 @@ from homeassistant.core import Event, State
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_DEVICE_CHANGE,
     CONF_OVERRIDE_HOURS,
     CONF_OVERRIDE_MODE,
+    DEVICE_CHANGE_ROOM,
     OVERRIDE_FIXED,
     OVERRIDE_NEXT,
     PRESET_NONE,
@@ -173,6 +175,15 @@ class RoomOverride:
                 description = f"{from_celsius(value, unit):.1f} {unit}"
             elif entity_id in self.switches:
                 description = f"switch {new.state}"
+        target = self._whole_room_target(entity_id, new)
+        if target is not None:
+            # Taken like a change from the card: sent to every thermostat of the room.
+            self.apply_manual_target(target, None, source_device=entity_id)
+            if self.house.override_scope_house:
+                for room in self.house.rooms.values():
+                    if room is not self:
+                        room.set_override(description, source=self.name)
+            return
         # What the person set is kept, to set it again after an interruption
         # (a window opened, frost protection).
         devices = {entity_id: device_values(new)} if new is not None else None
@@ -184,6 +195,50 @@ class RoomOverride:
         else:
             self.set_override(description, devices=devices)
 
+    def _whole_room_target(self, entity_id: str, new: State | None) -> Target | None:
+        """The room target a change on one thermostat stands for, when it applies to the whole room.
+
+        Only in a room with several thermostats set so: a temperature becomes
+        the room temperature, a preset of a level becomes that level. Off and a
+        preset that is no level (boost) stay on that thermostat.
+        """
+        if (
+            new is None
+            or self.config.get(CONF_DEVICE_CHANGE) != DEVICE_CHANGE_ROOM
+            or entity_id not in self.climates
+            or len(self.climates) < 2
+            or new.state == STATE_OFF
+        ):
+            return None
+        preset = new.attributes.get("preset_mode")
+        if preset not in (None, PRESET_NONE):
+            level = self.level_of_device_preset(preset)
+            return Target(KIND_PRESET, preset=level) if level is not None else None
+        value = climate_temp(self.hass, new, ATTR_TEMPERATURE)
+        if value is None:
+            return None
+        return Target(KIND_TEMPERATURE, temperature=round(float(value), 2))
+
+    def apply_manual_target(
+        self, target: Target, hours: float | None, *, source_device: str | None = None
+    ) -> None:
+        """A level or temperature for the room, from the card, a service or a thermostat.
+
+        A temperature is kept between the frost protection and the maximum.
+        The new manual change ends the earlier one (and what it kept). It is
+        sent by the decision that follows, only when the manual change applies
+        (not in a pause, with a window open, in mode Off...).
+        """
+        if target.kind == KIND_TEMPERATURE and target.temperature is not None:
+            limited = min(max(target.temperature, self.frost_temp()), self.max_temp())
+            target = Target(KIND_TEMPERATURE, preset=target.preset, temperature=limited)
+        text = target.describe(self.house.unit)
+        if source_device is None:
+            description = f"set by service: {text}"
+        else:
+            description = f"{text} on {source_device}, whole room"
+        self.set_override(description, hours=hours, target=target, source_device=source_device)
+
     def set_override(
         self,
         description: str,
@@ -192,6 +247,7 @@ class RoomOverride:
         hours: float | None = None,
         target: Target | None = None,
         devices: dict[str, dict[str, Any]] | None = None,
+        source_device: str | None = None,
     ) -> None:
         """Start a manual override.
 
@@ -217,6 +273,8 @@ class RoomOverride:
             "mode": OVERRIDE_FIXED if until else OVERRIDE_NEXT,
             "signature": list(self.signature) if self.signature else None,
             "target": target.as_dict() if target else None,
+            # The thermostat a change for the whole room was made on.
+            "source_device": source_device,
             "devices": kept if target is None else {},
             "interrupted": False,
             # A change made on a device is already there; one from the card or
@@ -271,7 +329,12 @@ class RoomOverride:
             "until": iso(self.override.get("until")),
             "mode": self.override.get("mode"),
             # Set by the card / a service, or on the device itself.
-            "origin": "card" if self.override.get("target") else "device",
+            "origin": "room"
+            if self.override.get("source_device")
+            else "card"
+            if self.override.get("target")
+            else "device",
+            "source_device": self.override.get("source_device"),
             "devices": list((self.override.get("devices") or {}).keys()),
             # A higher rule changed the devices: the manual value comes back after it.
             "interrupted": bool(self.override.get("interrupted")),

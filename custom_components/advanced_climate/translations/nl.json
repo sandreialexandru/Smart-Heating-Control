@@ -667,10 +667,12 @@
         "extras": {
           "title": "Extra's",
           "data": {
+            "device_change": "Wijziging op één thermostaat",
             "solar_offset": "Zonnewarmte",
             "valve_exercise": "Kranen doorbewegen"
           },
           "data_description": {
+            "device_change": "Met meerdere thermostaten in de kamer. Alleen die thermostaat: een temperatuur of preset ingesteld op een thermostaat blijft alleen daarop (de andere houden de beslissing). De hele kamer: het geldt als een wijziging vanuit de kaart en wordt naar alle thermostaten van de kamer gestuurd (elk binnen zijn eigen grenzen en offset); een preset van een niveau zet dat niveau. Uit en een preset die geen niveau is (boost) blijven op die thermostaat. Bij de hele kamer de eigen functies van de thermostaten uitzetten die hun doel wijzigen (raamdetectie, boost) en in plaats daarvan raamsensoren in de kamer gebruiken.",
             "solar_offset": "Een negatieve waarde (bijv. -1) verlaagt de doeltemperatuur zolang de zon schijnt, voor kamers die warm worden van de zon. Gebruikt de weerentiteit van het huis (verschijnt alleen als die is ingesteld). 0 = uit. Los daarvan leert de kamer zelf hoeveel de zon hem verwarmt, voor de optimale start en stop.",
             "valve_exercise": "Zet de radiatorkranen één keer per week 5 minuten volledig open, tegen kalkaanslag, in elke modus (ook in de zomer). Een pauze, een handmatige wijziging of een open raam schuift het op naar later die dag; het vraagt niet om warmte."
           }
@@ -1132,6 +1134,12 @@
         "cold": "Koud buiten",
         "cheap_power": "Goedkope stroom",
         "entity": "Eigen entiteit"
+      }
+    },
+    "device_change": {
+      "options": {
+        "device": "Alleen die thermostaat",
+        "room": "De hele kamer"
       }
     }
   },

@@ -97,6 +97,26 @@ until 22:00, when the schedule goes to `sleep`; then the room goes to `sleep`.
 (default) or **Whole house** (a change in one room is copied to every room;
 only when every room has its own valves).
 
+**A room with several thermostats** (*A change on one thermostat*, in the
+room's *Extras*):
+
+| Choice | A temperature or a preset set on one thermostat |
+| --- | --- |
+| **Only that thermostat** (default) | stays on that thermostat; the others keep the decision. |
+| **The whole room** | is taken like a change from the card: it becomes the temperature of the room and is sent to every thermostat of the room, each within its own range, step and limits. A preset of a level (e.g. *Eco*) sets that level. |
+
+With *The whole room*, off and a preset that is no level (e.g. *Boost*) still
+stay on that thermostat. The value is taken as the thermostat shows it. The
+duration, *Manual change applies to*, the child lock, the pause and the windows
+work as for a change from the card. The card shows where it was made: *on
+Living TRV left · whole room*. A thermostat that reports late what was sent to
+it (a battery TRV) does not start a new change. With *The whole room*, turn off
+the thermostats' own features that change their target (their window detection,
+boost) and use window sensors in the room instead: such a change would be taken
+for the whole room. For a room with different kinds of devices (an air
+conditioner and a radiator, floor heating and a TRV) *Only that thermostat* is
+the better choice.
+
 **If a more important rule steps in.** If a window opens during a manual change
 (or frost protection steps in, or the mode changes), the devices follow that
 rule. When it ends, the manual value is set again: the value from the card /

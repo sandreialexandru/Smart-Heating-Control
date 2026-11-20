@@ -667,10 +667,12 @@
         "extras": {
           "title": "Extra",
           "data": {
+            "device_change": "Schimbare pe un termostat",
             "solar_offset": "Câștig solar",
             "valve_exercise": "Mișcarea robinetelor"
           },
           "data_description": {
+            "device_change": "Cu mai multe termostate în cameră. Doar acel termostat: o temperatură sau un preset setat pe un termostat rămâne doar pe el (celelalte păstrează decizia). Toată camera: se ia ca o schimbare din card, trimisă tuturor termostatelor din cameră (fiecare în limitele și cu offsetul lui); un preset al unui nivel setează acel nivel. Oprirea și un preset care nu e nivel (boost) rămân pe acel termostat. Cu toată camera, se recomandă oprirea funcțiilor termostatelor care le schimbă singure ținta (detecția ferestrei, boost) și folosirea senzorilor de fereastră în cameră.",
             "solar_offset": "Valoare negativă (de ex. -1) coboară ținta cât e soare, pentru camerele încălzite de soare. Folosește entitatea meteo a casei (apare doar dacă e setată). 0 = oprit. Separat de această setare, cât încălzește soarele camera se învață singur, pentru pornirea și oprirea anticipată.",
             "valve_exercise": "Deschide TRV-urile complet 5 minute o dată pe săptămână, contra calcarului, în orice mod (și vara). O pauză, o modificare manuală sau o fereastră deschisă o amână pentru mai târziu în aceeași zi; nu cere căldură."
           }
@@ -1132,6 +1134,12 @@
         "cold": "Frig afară",
         "cheap_power": "Curent ieftin",
         "entity": "Entitate proprie"
+      }
+    },
+    "device_change": {
+      "options": {
+        "device": "Doar acel termostat",
+        "room": "Toată camera"
       }
     }
   },

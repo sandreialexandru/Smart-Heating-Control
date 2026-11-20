@@ -205,7 +205,13 @@ export const RoomMixin = (Base) =>
       }
       if (a.override) {
         const until = this._overrideUntil(a);
-        const origin = a.override.origin ? ` · ${this._t(`origin_${a.override.origin}`)}` : "";
+        const src = a.override.source_device;
+        const origin =
+          a.override.origin === "room" && src
+            ? ` · ${this._t("origin_room").replace("{device}", this._hass?.states?.[src]?.attributes?.friendly_name || src)}`
+            : a.override.origin
+              ? ` · ${this._t(`origin_${a.override.origin}`)}`
+              : "";
         // While a higher rule wins: not sent yet, or set again once it ends.
         // (The maximum temperature limits the manual value for good.)
         const blocked = !["manual_override", "maximum_temperature"].includes(stateObj.state);

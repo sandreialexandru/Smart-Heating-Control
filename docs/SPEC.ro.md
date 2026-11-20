@@ -227,6 +227,7 @@ Un select pentru casă: **Auto / Plecat / Vacanță / Oprit / Vară**.
 | Senzor indisponibil | senzorul dispozitivului | Senzor extern căzut → senzorul dispozitivului → eco (niciodată peste program: un nivel mai jos, de exemplu away, rămâne), cu alertă |
 | Dispozitiv indisponibil | alertă după 15 min | Celelalte camere funcționează în continuare; și pentru sursa de căldură (atunci nici antiînghețul nu poate încălzi) |
 | Verificarea comenzilor | activă | Reîncearcă o dată după 2 min, apoi alertă |
+| Schimbare pe un termostat | doar acel termostat | Cu mai multe termostate: o temperatură sau un preset pus pe unul rămâne pe el, sau (*toată camera*) devine ținta camerei trimisă tuturor, ca o schimbare din card; oprirea și un preset care nu e nivel rămân pe acel termostat |
 | Mișcarea robinetelor | oprită | Deschidere completă săptămânală a TRV-urilor, în orice mod (și vara și în afara sezonului); o pauză, o modificare manuală sau o fereastră deschisă o amână pentru mai târziu în aceeași zi; nu cere căldură și perioada ei nu se învață |
 | Baterie descărcată | alertă sub 20 % | TRV-urile și senzorii camerei |
 | Risc de mucegai | cu senzor de umiditate | Doar pentru o cameră cu *Senzor de umiditate* și o casă cu temperatură de afară (altfel nicio alertă): peretele cel mai rece = afară + 0,70 × (cameră − afară) (DIN 4108-2), umiditatea acolo din vaporii aerului camerei (formula Magnus); niciodată mai cald decât camera; avertizare la ≥ 80 % timp de 60 min, încheiată sub 75 %, păstrată cât o valoare e indisponibilă; `surface_humidity` la senzorul de decizie |

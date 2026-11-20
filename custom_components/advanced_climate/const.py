@@ -381,6 +381,10 @@ CONF_SOLAR_OFFSET: Final = "solar_offset"
 CONF_VALVE_EXERCISE: Final = "valve_exercise"
 CONF_VALVE_DAY: Final = "valve_exercise_day"
 CONF_VALVE_TIME: Final = "valve_exercise_time"
+# A change made on one thermostat of a room with several: for that one, or the whole room.
+CONF_DEVICE_CHANGE: Final = "device_change"
+DEVICE_CHANGE_DEVICE: Final = "device"
+DEVICE_CHANGE_ROOM: Final = "room"
 
 SOURCE_GT: Final = "generic_thermostat"
 SOURCE_CLIMATE: Final = "climate"
@@ -461,6 +465,7 @@ ROOM_DEFAULTS: Final = {
     CONF_VALVE_EXERCISE: False,
     CONF_VALVE_DAY: "sun",
     CONF_VALVE_TIME: "10:00:00",
+    CONF_DEVICE_CHANGE: DEVICE_CHANGE_DEVICE,
 }
 
 # Generic Thermostat option keys holding the preset temperatures.

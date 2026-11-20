@@ -189,6 +189,14 @@ test("manual change shows the time left; compact line: time to target while heat
   ok(!lines[1].includes("~35 min") && /\d\d:\d\d/.test(lines[1]), lines[1]);
 });
 
+test("manual change made on one thermostat for the whole room: says on which one", async (p) => {
+  const override = { temperature: 23, until: null, origin: "room", source_device: "climate.living_left", preset: null, applied: true };
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Living", override }], extra: [["climate.living_left", "heat", { friendly_name: "Living TRV left" }]] });
+  ok((await text(p)).includes("on Living TRV left · whole room"), "whole room");
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Living", override }], extra: [["climate.living_left", "heat", { friendly_name: "TRV stânga" }]], lang: "ro" });
+  ok((await text(p)).includes("pe TRV stânga · toată camera"), "toată camera");
+});
+
 test("guest band: says when the away mode or a vacation waits for the guests", async (p) => {
   await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom" }], guest: true, mode: "away" });
   ok((await text(p)).includes("Guest mode: the away mode is suspended, the rooms follow the schedule"), "away suspended");

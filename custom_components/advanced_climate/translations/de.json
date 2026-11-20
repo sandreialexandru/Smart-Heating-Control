@@ -667,10 +667,12 @@
         "extras": {
           "title": "Extras",
           "data": {
+            "device_change": "Änderung an einem Thermostat",
             "solar_offset": "Sonneneinstrahlung",
             "valve_exercise": "Ventilbewegung"
           },
           "data_description": {
+            "device_change": "Bei mehreren Thermostaten im Raum. Nur dieses Thermostat: eine an einem Thermostat eingestellte Temperatur oder ein Preset bleibt nur dort (die anderen behalten die Entscheidung). Der ganze Raum: sie gilt wie eine Änderung in der Karte und wird an alle Thermostate des Raums gesendet (jedes mit seinen eigenen Grenzen und seinem Offset); ein Preset einer Stufe setzt diese Stufe. Aus und ein Preset, das keine Stufe ist (Boost), bleiben an diesem Thermostat. Beim ganzen Raum die eigenen Funktionen der Thermostate abschalten, die ihr Ziel ändern (Fenstererkennung, Boost), und stattdessen Fenstersensoren im Raum verwenden.",
             "solar_offset": "Ein negativer Wert (z. B. -1) senkt die Zieltemperatur, solange die Sonne scheint – für Räume, die von der Sonne warm werden. Nutzt die Wetter-Entität des Hauses (erscheint nur, wenn eine gesetzt ist). 0 = aus. Unabhängig davon lernt der Raum für den optimalen Start und Stopp selbst, wie stark die Sonne ihn wärmt.",
             "valve_exercise": "Öffnet die Heizkörperthermostate einmal pro Woche 5 Minuten lang ganz, gegen Verkalkung, in jedem Modus (auch im Sommer). Eine Pause, eine manuelle Änderung oder ein offenes Fenster verschiebt sie auf später am selben Tag; sie fordert keine Wärme an."
           }
@@ -1132,6 +1134,12 @@
         "cold": "Kälte draußen",
         "cheap_power": "Günstiger Strom",
         "entity": "Eigene Entität"
+      }
+    },
+    "device_change": {
+      "options": {
+        "device": "Nur dieses Thermostat",
+        "room": "Der ganze Raum"
       }
     }
   },

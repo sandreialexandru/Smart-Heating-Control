@@ -63,6 +63,7 @@ from .const import (
     CONF_CUTOFF_TEMP,
     CONF_DAY_BOUNDARY,
     CONF_DEPARTURE_DELAY,
+    CONF_DEVICE_CHANGE,
     CONF_FORECAST_ENABLED,
     CONF_FORECAST_HOURS,
     CONF_FROST_TEMP,
@@ -167,6 +168,8 @@ from .const import (
     CRITERION_NONE,
     CRITERION_PV,
     DEFAULT_LEVEL_TEMPS,
+    DEVICE_CHANGE_DEVICE,
+    DEVICE_CHANGE_ROOM,
     DOMAIN,
     GT_DOMAIN,
     HOME_RULE_ALL,
@@ -2331,13 +2334,21 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
     async def async_step_extras(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Solar gain and valve exercise (TRVs without on / off only)."""
+        """A change on one of several thermostats, solar gain and valve exercise (TRVs without on / off only)."""
         d = self._shown()
         valves = d[CONF_SOURCE] == SOURCE_CLIMATE and not self._on_off()
         # Solar gain needs the weather entity of the house (sunny or not).
         entry = self._get_entry()
         solar = bool({**entry.data, **entry.options}.get(CONF_WEATHER))
+        # Several thermostats: a change made on one is for that one, or the whole room.
+        several = (
+            d[CONF_SOURCE] in (SOURCE_CLIMATE, SOURCE_GT) and len(as_list(d.get(CONF_CLIMATES))) > 1
+        )
         fields: dict[Any, Any] = {}
+        if several:
+            fields[_req(CONF_DEVICE_CHANGE, d, ROOM_DEFAULTS)] = _select(
+                [DEVICE_CHANGE_DEVICE, DEVICE_CHANGE_ROOM], "device_change"
+            )
         if solar:
             fields[_req(CONF_SOLAR_OFFSET, d, ROOM_DEFAULTS)] = _number(-3, 0, 0.1, "°C")
         if valves:
@@ -2347,6 +2358,8 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
             user_input = {}
         if user_input is not None:
             self._data = _merge(self._data, schema, self._kept(user_input))
+            if not several:
+                self._data[CONF_DEVICE_CHANGE] = DEVICE_CHANGE_DEVICE
             if not solar:
                 self._data[CONF_SOLAR_OFFSET] = 0.0
             if not valves:

@@ -98,6 +98,26 @@ ca o setare nouă pe dispozitiv să fie văzută.
 (implicit) sau **Toată casa** (o schimbare într-o cameră e copiată în toate;
 doar când fiecare cameră are robinete proprii).
 
+**O cameră cu mai multe termostate** (*Schimbare pe un termostat*, în *Extra*
+ale camerei):
+
+| Alegere | O temperatură sau un preset pus pe un termostat |
+| --- | --- |
+| **Doar acel termostat** (implicit) | rămâne pe acel termostat; celelalte păstrează decizia. |
+| **Toată camera** | se ia ca o schimbare din card: devine temperatura camerei și se trimite tuturor termostatelor din cameră, fiecare în intervalul, pasul și limitele lui. Un preset al unui nivel (de exemplu *Eco*) setează acel nivel. |
+
+Cu *Toată camera*, oprirea și un preset care nu e nivel (de exemplu *Boost*)
+rămân tot pe acel termostat. Valoarea se ia cum o arată termostatul. Durata,
+*Modificarea manuală se aplică*, blocarea pentru copii, pauza și ferestrele
+funcționează ca la o schimbare din card. Cardul arată unde s-a făcut: *pe
+TRV stânga · toată camera*. Un termostat care raportează târziu ce i s-a trimis
+(un TRV pe baterii) nu pornește o schimbare nouă. Cu *Toată camera* se recomandă
+oprirea funcțiilor termostatelor care le schimbă singure ținta (detecția
+ferestrei, boost) și folosirea senzorilor de fereastră în cameră: o astfel de
+schimbare ar fi luată pentru toată camera. Pentru o cameră cu dispozitive de
+feluri diferite (aer condiționat și calorifer, încălzire în pardoseală și TRV)
+e mai potrivit *Doar acel termostat*.
+
 **Dacă o regulă mai importantă intervine.** Dacă în timpul unei modificări
 manuale se deschide o fereastră (sau intervine antiînghețul, sau se schimbă
 modul), dispozitivele se schimbă după acea regulă. Când regula se termină,

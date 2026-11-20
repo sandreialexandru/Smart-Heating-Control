@@ -1111,19 +1111,8 @@ class RoomDevices:
         self._verify_unsub = async_call_later(self.hass, VERIFY_DELAY, _verify)
 
     async def async_apply_manual(self, target: Target, hours: float | None) -> None:
-        """Service: set a manual target and keep it as an override.
-
-        A temperature is kept between the frost protection and the maximum.
-        The new manual change ends the earlier one (and what it kept).
-        """
-        if target.kind == KIND_TEMPERATURE and target.temperature is not None:
-            limited = min(max(target.temperature, self.frost_temp()), self.max_temp())
-            target = Target(KIND_TEMPERATURE, preset=target.preset, temperature=limited)
-        # Sent by the decision that follows, only when the manual change applies
-        # (not in a pause, with a window open, in mode Off...).
-        self.set_override(
-            f"set by service: {target.describe(self.house.unit)}", hours=hours, target=target
-        )
+        """Service: set a manual target and keep it as an override."""
+        self.apply_manual_target(target, hours)
 
     # ------------------------------------------------------------------
     # Calibration

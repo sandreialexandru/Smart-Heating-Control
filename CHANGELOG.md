@@ -9,6 +9,14 @@ GitHub releases.
 
 ### New
 
+- 🔗 **A change on one thermostat for the whole room**: in a room with several
+  thermostats, *A change on one thermostat* (in the room's *Extras*) chooses
+  *Only that thermostat* (as until now, the default) or *The whole room*. With
+  the whole room a temperature set on one TRV is sent to the others too (each
+  within its own range and limits), a preset of a level sets that level; off
+  and boost stay on that TRV. The card shows *on Living TRV left · whole room*
+  ([#24](https://github.com/sandreialexandru/Smart-Heating-Control/issues/24),
+  thanks @lars-a).
 - 🇮🇹 **Italian reviewed by a native speaker**: clearer wording and the terms
   of the Italian Home Assistant (the remote sensor of a TRV was translated as
   the outdoor one) ([#23](https://github.com/sandreialexandru/Smart-Heating-Control/pull/23),

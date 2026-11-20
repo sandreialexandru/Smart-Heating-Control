@@ -1498,3 +1498,43 @@ async def test_the_heat_source_answers_left_empty(hass: HomeAssistant) -> None:
     assert room["use_house_source"] is True
     assert room["starts_house_source"] is True
     assert room["top_up"] is False
+
+
+async def test_a_change_on_one_thermostat_only_with_several(hass: HomeAssistant) -> None:
+    """The choice is offered with more than one thermostat; with one it goes back to that one."""
+    for entity_id in ("climate.trv_a", "climate.trv_b"):
+        hass.states.async_set(entity_id, "heat", {"hvac_action": "idle", "temperature": 20.0})
+    entry = MockConfigEntry(domain=DOMAIN, title="Home", options={"weather": "weather.home"})
+    entry.add_to_hass(hass)
+    flow = hass.config_entries.subentries
+    result = await flow.async_init((entry.entry_id, SUBENTRY_ROOM), context={"source": SOURCE_USER})
+    result = await flow.async_configure(result["flow_id"], {"name": "Living", "source": "climate"})
+    result = await flow.async_configure(
+        result["flow_id"],
+        {"climates": ["climate.trv_a", "climate.trv_b"], "command_mode": "temperature"},
+    )
+    result = await _until(hass, result, flow, stop={"extras"})
+    assert result["step_id"] == "extras"
+    assert "device_change" in _keys(result)
+    schema = {str(k): k for k in result["data_schema"].schema}
+    assert schema["device_change"].default() == "device"
+    result = await flow.async_configure(result["flow_id"], {"device_change": "room"})
+    result = await _until(hass, result, flow, stop=set())
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.data["device_change"] == "room"
+
+    # Reconfigured with one thermostat: not offered, and back to that thermostat only.
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+    result = await flow.async_configure(result["flow_id"], {"name": "Living", "source": "climate"})
+    assert result["step_id"] == "devices"
+    result = await flow.async_configure(
+        result["flow_id"], {"climates": ["climate.trv_a"], "command_mode": "temperature"}
+    )
+    result = await _until(hass, result, flow, stop={"extras"})
+    if result["type"] is FlowResultType.FORM and result["step_id"] == "extras":
+        assert "device_change" not in _keys(result)
+        result = await _until(hass, result, flow, stop=set())
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.subentries[subentry.subentry_id].data["device_change"] == "device"

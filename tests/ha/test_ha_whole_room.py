@@ -3,10 +3,16 @@
 from __future__ import annotations
 
 from freezegun.api import FrozenDateTimeFactory
-from homeassistant.core import Context, HomeAssistant
-from pytest_homeassistant_custom_component.common import async_mock_service
+from homeassistant.core import Context, HomeAssistant, ServiceCall
+from homeassistant.helpers import entity_registry as er
+from pytest_homeassistant_custom_component.common import MockConfigEntry, async_mock_service
 
-from tests.ha.test_ha_devices import TRV, _house, _room, _tick, _unload
+from custom_components.advanced_climate.const import (
+    CONF_REEVAL_MINUTES,
+    HOUSE_DEFAULTS,
+    VERIFY_DELAY,
+)
+from tests.ha.test_ha_devices import GT_OPTIONS, GT_STATE, TRV, _house, _room, _tick, _unload
 
 LEFT = "climate.living_left"
 RIGHT = "climate.living_right"
@@ -236,4 +242,201 @@ async def test_the_child_lock_still_sets_the_trv_back(
     assert room.override is None
     assert _sent(calls, LEFT)[-1] == 21.0
     assert 25.0 not in _sent(calls, RIGHT)
+    await _unload(hass, entry)
+
+
+def _two_gts(hass: HomeAssistant) -> list[str]:
+    """Two Generic Thermostats set up in the UI, in one room."""
+    registry = er.async_get(hass)
+    ids = []
+    for name in ("living_gt_a", "living_gt_b"):
+        gt_entry = MockConfigEntry(domain="generic_thermostat", options=GT_OPTIONS)
+        gt_entry.add_to_hass(hass)
+        entity_id = registry.async_get_or_create(
+            "climate",
+            "generic_thermostat",
+            gt_entry.entry_id,
+            config_entry=gt_entry,
+            suggested_object_id=name,
+        ).entity_id
+        hass.states.async_set(entity_id, "heat", GT_STATE)
+        ids.append(entity_id)
+    return ids
+
+
+async def test_generic_thermostats_for_the_whole_room_without_a_loop(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Generic Thermostats take the preset of a temperature set (22 °C: comfort) by themselves.
+
+    A temperature of a preset set on one becomes that level in the room; one
+    of no preset becomes the temperature; nothing is sent over and over.
+    """
+    gt_a, gt_b = _two_gts(hass)
+    temps = {p: GT_OPTIONS[f"{p}_temp"] for p in ("home", "eco", "away", "sleep", "comfort")}
+    calls: list[tuple[str, str, object]] = []
+    saved = {gt_a: GT_STATE["temperature"], gt_b: GT_STATE["temperature"]}
+
+    def show(entity_id: str, value: float, preset: str, context: Context) -> None:
+        state = hass.states.get(entity_id)
+        hass.states.async_set(
+            entity_id,
+            state.state,
+            {**state.attributes, "temperature": value, "preset_mode": preset},
+            context=context,
+        )
+
+    async def set_temperature(call: ServiceCall) -> None:
+        entity_id, value = call.data["entity_id"], float(call.data["temperature"])
+        calls.append((entity_id, "temperature", value))
+        preset = next((p for p, t in temps.items() if t == value), "none")
+        if preset == "none":
+            saved[entity_id] = value
+        show(entity_id, value, preset, call.context)
+
+    async def set_preset_mode(call: ServiceCall) -> None:
+        entity_id, preset = call.data["entity_id"], call.data["preset_mode"]
+        calls.append((entity_id, "preset", preset))
+        state = hass.states.get(entity_id)
+        if state.attributes.get("preset_mode") in (None, "none"):
+            saved[entity_id] = state.attributes["temperature"]
+        show(
+            entity_id, saved[entity_id] if preset == "none" else temps[preset], preset, call.context
+        )
+
+    hass.services.async_register("climate", "set_temperature", set_temperature)
+    hass.services.async_register("climate", "set_preset_mode", set_preset_mode)
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Living",
+                {"source": "generic_thermostat", "climates": [gt_a, gt_b], "device_change": "room"},
+            )
+        ],
+    )
+    room = _room(entry, "Living")
+    assert hass.states.get(gt_b).attributes["preset_mode"] == "home"
+
+    # 22 °C on the first one: it takes comfort by itself, the room takes comfort.
+    calls.clear()
+    hass.states.async_set(
+        gt_a, "heat", {**GT_STATE, "temperature": 22.0, "preset_mode": "comfort"}, context=Context()
+    )
+    for _ in range(20):
+        await _tick(hass, freezer, 30)
+    assert room.override["source_device"] == gt_a
+    assert room.override["target"]["kind"] == "preset"
+    assert room.override["target"]["preset"] == "comfort"
+    assert hass.states.get(gt_b).attributes["preset_mode"] == "comfort"
+    # At most the preset, for each of the two: no loop.
+    assert len(calls) <= 2, calls
+
+    # 22.5 °C (no preset has it) on the second one: off its preset, the temperature for both.
+    calls.clear()
+    hass.states.async_set(
+        gt_b, "heat", {**GT_STATE, "temperature": 22.5, "preset_mode": "none"}, context=Context()
+    )
+    for _ in range(20):
+        await _tick(hass, freezer, 30)
+    assert room.override["source_device"] == gt_b
+    assert room.override["target"]["temperature"] == 22.5
+    state = hass.states.get(gt_a)
+    assert (state.attributes["temperature"], state.attributes["preset_mode"]) == (22.5, "none")
+    # At most off its preset and the temperature, for each of the two: no loop.
+    assert len(calls) <= 4, calls
+    assert not [a for a in entry.runtime_data.active_alerts if a.startswith("commands_")]
+    await _unload(hass, entry)
+
+
+async def test_thermostats_turned_on_and_off_for_the_whole_room(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Commanded by on / off: a temperature set on one becomes the room target, so both heat."""
+    modes = async_mock_service(hass, "climate", "set_hvac_mode")
+    temperatures = async_mock_service(hass, "climate", "set_temperature")
+    onoff = {"hvac_modes": ["heat", "off"], "current_temperature": 22.0, "temperature": 21.0}
+    for entity_id in (LEFT, RIGHT):
+        hass.states.async_set(entity_id, "off", onoff)
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Living",
+                {
+                    "source": "climate",
+                    "climates": [LEFT, RIGHT],
+                    "command_mode": "hvac_mode",
+                    "min_on_minutes": 0,
+                    "min_off_minutes": 0,
+                    "device_change": "room",
+                },
+            )
+        ],
+    )
+    room = _room(entry, "Living")
+    # 22 °C, above the 21 °C of the level: both off.
+    assert not [m for m in modes if m.data["hvac_mode"] == "heat"]
+    # Someone turns the left one on at 23 °C.
+    hass.states.async_set(LEFT, "heat", {**onoff, "temperature": 23.0}, context=Context())
+    await _tick(hass, freezer, 5)
+    assert room.override["source_device"] == LEFT
+    assert room.override["target"]["temperature"] == 23.0
+    # The room is on: the right one, still off, is turned on too, heating as far as it can
+    # (the room sensor turns them off), as the left one.
+    assert {"entity_id": RIGHT, "hvac_mode": "heat"} in [m.data for m in modes]
+    assert {c.data["entity_id"] for c in temperatures} == {LEFT, RIGHT}
+    assert {c.data["temperature"] for c in temperatures} == {room.max_temp()}
+    await _unload(hass, entry)
+
+
+async def test_an_on_off_thermostat_left_off_is_turned_on_with_the_others(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The room is on when one of its thermostats is: one that did not take the command follows."""
+    modes = async_mock_service(hass, "climate", "set_hvac_mode")
+    async_mock_service(hass, "climate", "set_temperature")
+    cold = {"hvac_modes": ["heat", "off"], "current_temperature": 19.0, "temperature": 21.0}
+    for entity_id in (LEFT, RIGHT):
+        hass.states.async_set(entity_id, "off", cold)
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Living",
+                {
+                    "source": "climate",
+                    "climates": [LEFT, RIGHT],
+                    "command_mode": "hvac_mode",
+                    "min_on_minutes": 0,
+                    "min_off_minutes": 0,
+                },
+            )
+        ],
+    )
+    assert {"entity_id": RIGHT, "hvac_mode": "heat"} in [m.data for m in modes]
+    # Only the left one took it; the right one stayed off.
+    sent = len(modes)
+    hass.states.async_set(LEFT, "heat", cold, context=Context())
+    # The same command is not sent again before the verification delay (a TRV may
+    # confirm late): it is at the next periodic evaluation after it (every 5 minutes
+    # by default), a minute after that at the latest.
+    for _ in range(max(VERIFY_DELAY // 60, HOUSE_DEFAULTS[CONF_REEVAL_MINUTES]) + 1):
+        await _tick(hass, freezer, 60)
+    room = _room(entry, "Living")
+    assert {"entity_id": RIGHT, "hvac_mode": "heat"} in [m.data for m in modes[sent:]], (
+        room.decision.rule if room.decision else None,
+        room.decision.target if room.decision else None,
+        room.override,
+        room.relay_waiting,
+        room.current_temp,
+        room.pending_command,
+        [m.data for m in modes],
+        hass.states.get(LEFT).state,
+        hass.states.get(RIGHT).state,
+    )
+    assert {"entity_id": LEFT, "hvac_mode": "heat"} not in [m.data for m in modes[sent:]]
     await _unload(hass, entry)

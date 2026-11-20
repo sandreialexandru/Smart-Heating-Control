@@ -80,35 +80,42 @@ def async_remove_panel(hass: HomeAssistant) -> None:
 
 
 async def async_register_card(hass: HomeAssistant) -> None:
-    """Serve the card and make every dashboard load it."""
-    if hass.data.get(f"{DOMAIN}_card_registered"):
-        return
+    """Serve the card and make every dashboard load it.
+
+    The files are served once per start of Home Assistant; the resource is
+    checked at each house set up: the last house deleted takes it away, and a
+    new house added without a restart puts it back.
+    """
     manifest = json.loads(await hass.async_add_executor_job(MANIFEST.read_text, "utf-8"))
     version = manifest.get("version", "0")
-    try:
-        from homeassistant.components.http import StaticPathConfig
+    if not hass.data.get(f"{DOMAIN}_card_registered"):
+        try:
+            from homeassistant.components.http import StaticPathConfig
 
-        await hass.http.async_register_static_paths(
-            [
-                StaticPathConfig(CARD_URL, str(CARD_FILE), False),
-                StaticPathConfig(modules_url(version), str(CARD_MODULES), True),
-            ]
-        )
-    except RuntimeError:
-        pass  # already registered (integration reloaded)
-    except (AttributeError, ImportError):
-        _LOGGER.debug("HTTP not available, the card is not registered")
-        return
-    hass.data[f"{DOMAIN}_card_registered"] = True
+            await hass.http.async_register_static_paths(
+                [
+                    StaticPathConfig(CARD_URL, str(CARD_FILE), False),
+                    StaticPathConfig(modules_url(version), str(CARD_MODULES), True),
+                ]
+            )
+        except RuntimeError:
+            pass  # already registered (integration reloaded)
+        except (AttributeError, ImportError):
+            _LOGGER.debug("HTTP not available, the card is not registered")
+            return
+        hass.data[f"{DOMAIN}_card_registered"] = True
 
     url = f"{CARD_URL}?v={version}"
 
     def _extra_module() -> None:
-        """Load the card on every page (when it cannot be a dashboard resource)."""
+        """Load the card on every page (when it cannot be a dashboard resource); once."""
+        if hass.data.get(f"{DOMAIN}_card_extra_module"):
+            return
         try:
             from homeassistant.components.frontend import add_extra_js_url
 
             add_extra_js_url(hass, url)
+            hass.data[f"{DOMAIN}_card_extra_module"] = True
         except (ImportError, KeyError):
             _LOGGER.debug("Frontend not loaded, extra module not added")
 

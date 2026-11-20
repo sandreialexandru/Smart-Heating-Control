@@ -929,13 +929,26 @@ class RoomDevices:
         if want or target.kind == KIND_OFF:
             self.inertia_stop = None
         if want == actual:
+            sent = False
             if want and self.source != SOURCE_SWITCH:
                 # Already on (turned on by hand, or on at the start): it heats as
-                # far as it can too, else it keeps its own lower target.
+                # far as it can too, else it keeps its own lower target. With
+                # several thermostats the room is on when one is: one left off
+                # (a command it did not take) is turned on with the others.
                 for entity_id in self.climates:
-                    await self._async_heat_to_max(entity_id)
+                    state = self.hass.states.get(entity_id)
+                    if valid(state) and state.state == STATE_OFF:  # type: ignore[union-attr]
+                        on_mode = heat_mode(state.attributes.get("hvac_modes"))  # type: ignore[union-attr]
+                        self.sent.start(entity_id)
+                        if await self._send(
+                            entity_id, "set_hvac_mode", "hvac_mode", on_mode, "state"
+                        ):
+                            sent = True
+                            await self._async_heat_to_max(entity_id, turned_on=True)
+                    else:
+                        await self._async_heat_to_max(entity_id)
             self._relay_held = held and want
-            return False
+            return sent
         if not released and self._relay_must_wait(actual, now):
             return False
         ok = True

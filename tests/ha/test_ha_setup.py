@@ -379,6 +379,38 @@ async def test_card_resource(hass: HomeAssistant) -> None:
     assert not [i for i in resources.async_items() if i["url"].startswith(CARD_URL)]
 
 
+async def test_card_resource_back_with_a_new_house_after_the_last_one_deleted(
+    hass: HomeAssistant,
+) -> None:
+    """The last house deleted takes the card off the resources; a new house puts it back (#25).
+
+    Before, the card was taken off and not put back until Home Assistant restarted:
+    "Custom element doesn't exist: smart-heating-control-card".
+    """
+    from unittest.mock import AsyncMock, MagicMock
+
+    from custom_components.advanced_climate import frontend
+    from custom_components.advanced_climate.const import CARD_URL
+
+    assert await async_setup_component(hass, "lovelace", {})
+    resources = frontend.lovelace_resources(hass)
+    hass.http = MagicMock()
+    hass.http.async_register_static_paths = AsyncMock()
+
+    def mine() -> list:
+        return [i for i in resources.async_items() if i["url"].startswith(CARD_URL)]
+
+    await frontend.async_register_card(hass)
+    assert len(mine()) == 1
+    await frontend.async_remove_lovelace_resource(hass)
+    assert not mine()
+    await frontend.async_register_card(hass)
+    assert len(mine()) == 1
+    # Served once per start of Home Assistant.
+    assert hass.http.async_register_static_paths.call_count == 1
+    hass.data.pop(f"{DOMAIN}_card_registered")
+
+
 async def test_card_modules_served_under_the_version(hass: HomeAssistant) -> None:
     """The card file is served as before, its modules from a folder of the version."""
     import json

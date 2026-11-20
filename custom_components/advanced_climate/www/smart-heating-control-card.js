@@ -7,4 +7,4 @@
  * also after Home Assistant stops serving the folder of the old version.
  * What the card exports is passed on for its tests (tests/card/page.html).
  */
-export * from "/advanced_climate/2.7.0rc10/shc/card.js";
+export * from "/advanced_climate/2.7.0rc11/shc/card.js";

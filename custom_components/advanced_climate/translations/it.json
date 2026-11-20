@@ -45,13 +45,13 @@
           "climates": "Termostati",
           "switches": "Interruttori (relè)",
           "command_mode": "Comando",
-          "trv_boost": "Riscaldamento in base ai sensori della stanza"
+          "trv_boost": "Scaldare in base ai sensori della stanza"
         },
         "data_description": {
           "climates": "Il termostato che comanda la caldaia, per esempio l'entità del Generic Thermostat (climate.climate).",
           "switches": "Solo quando un relè scalda direttamente la casa, senza termostato.",
           "command_mode": "Solo per termostati diversi dal Generic Thermostat. La differenza è spiegata nelle impostazioni della stanza.",
-          "trv_boost": "Finché la casa chiede calore (in base ai suoi sensori di temperatura, con l'isteresi), il termostato o le valvole termostatiche ricevono la Temperatura durante il riscaldamento (di default la temperatura massima della casa), così continuano a scaldare finché la casa è calda; il resto del tempo ricevono la temperatura obiettivo. Utile quando il dispositivo misura nel posto sbagliato (un termostato in corridoio, una valvola attaccata al termosifone). Serve un sensore di temperatura. Solo con il comando Temperatura. Non è la stessa cosa di 'Accendere e spegnere la fonte tramite la sua temperatura': quella è per un termostato che accende solo la caldaia per stanze con le proprie valvole termostatiche (scegli allora 'Ogni stanza si scalda da sola' e indica il termostato come fonte di calore)."
+          "trv_boost": "Finché la casa chiede calore (in base ai suoi sensori di temperatura, con l'isteresi), il termostato o le valvole termostatiche ricevono la Temperatura durante il riscaldamento (per impostazione predefinita la temperatura massima della casa), così continuano a scaldare finché la casa è calda; il resto del tempo ricevono la temperatura obiettivo. Utile quando il dispositivo misura nel posto sbagliato (un termostato in corridoio, una valvola attaccata al termosifone). Serve un sensore di temperatura. Solo con il comando Temperatura. Non è la stessa cosa di 'Accendere e spegnere la fonte tramite la sua temperatura': quella è per un termostato che accende solo la caldaia per stanze con le proprie valvole termostatiche (scegli allora 'Ogni stanza si scalda da sola' e indica il termostato come fonte di calore)."
         }
       },
       "heating_on_off": {
@@ -139,7 +139,7 @@
           "departure_delay": "Ritardo all'uscita",
           "arrival_delay": "Ritardo al rientro",
           "presence_sensors": "Sensori di presenza",
-          "guest_expire_hours": "La modalità ospiti si spegne dopo",
+          "guest_expire_hours": "La modalità ospiti si disattiva dopo",
           "proximity_distance": "Sensore di distanza Proximity",
           "proximity_direction": "Sensore di direzione Proximity",
           "travel_time": "Sensori del tempo di viaggio"
@@ -152,7 +152,7 @@
           "departure_delay": "Quanto tempo devono essere usciti tutti prima che il riscaldamento si abbassi. Evita di reagire alle uscite brevi (spesa, giro col cane).",
           "arrival_delay": "Di solito 0: il riscaldamento torna appena qualcuno è a casa. Alzalo solo se il GPS a volte segnala 'a casa' per sbaglio.",
           "presence_sensors": "Tengono la casa su 'a casa' finché sono attivi (mmWave, movimento, un interruttore per chi non ha il telefono). Lascia vuoto se tutti hanno l'app Companion.",
-          "guest_expire_hours": "La modalità ospiti tiene la casa su 'a casa' e si spegne da sola dopo questo numero di ore. 0 = solo a mano.",
+          "guest_expire_hours": "La modalità ospiti tiene la casa su 'a casa' e si disattiva da sola dopo questo numero di ore. 0 = solo a mano.",
           "proximity_distance": "Sensore di distanza dell'integrazione Proximity, per preriscaldare mentre si torna a casa (consigliato, insieme al sensore di direzione). Con più persone, il suo sensore della distanza più vicina. Lascia vuoto senza Proximity.",
           "proximity_direction": "Sensore di direzione di Proximity (con più persone, la direzione di viaggio del più vicino). Solo la direzione dice che qualcuno sta tornando a casa; vale anche per il tempo di viaggio.",
           "travel_time": "Tempo di viaggio fino a casa (Waze, Google Travel Time), un sensore per persona: conta il viaggio più breve (non quello di chi è già a casa, circa 0 minuti). Dice solo quanto è vicino qualcuno, non se sta tornando: chi resta nei paraggi tiene la casa calda. Meglio Proximity, perché conosce la direzione."
@@ -187,7 +187,7 @@
           "weather": "Usata per le previsioni, per l'apporto solare e come temperatura esterna quando non c'è un sensore.",
           "cutoff_enabled": "Ferma il riscaldamento quando la media esterna raggiunge la temperatura di spegnimento. Serve un sensore esterno o un'entità meteo.",
           "forecast_enabled": "Usa la media delle previsioni delle prossime Ore di previsione, mai una singola ora. Riscaldamento spento per la media esterna: può ripartire quando quella media è uguale o inferiore allo spegnimento meno l'isteresi. Riscaldamento acceso: si spegne prima quando quella media raggiunge lo spegnimento, e resta spento finché non scende allo spegnimento meno l'isteresi. Serve un'entità meteo con previsioni orarie e lo spegnimento attivo.",
-          "season_mode": "'Sempre' se cambi stagione con la modalità Estate. 'Tra due date' o 'Automatica' per non scaldare da solo fuori stagione. 'Automatica' richiede un sensore esterno o un'entità meteo.",
+          "season_mode": "'Sempre' se cambi stagione con la modalità Estate. 'Tra due date' o 'Automatica' per spegnere automaticamente il riscaldamento fuori stagione. 'Automatica' richiede un sensore esterno o un'entità meteo.",
           "compensation_enabled": "Alza un po' l'obiettivo quando fuori fa molto freddo (i muri sono più freddi). Serve un sensore esterno o un'entità meteo. Lascia spento se le stanze tengono bene la temperatura.",
           "window_ignore_above": "Le finestre aperte non abbassano il riscaldamento quando fuori fa così caldo. Serve un sensore esterno o un'entità meteo. Lascia vuoto per reagire sempre."
         }
@@ -199,7 +199,7 @@
           "pv_sensor": "Sensore del surplus fotovoltaico"
         },
         "data_description": {
-          "price_sensor": "Sensore del prezzo dell'energia (tariffa dinamica). Lascia vuoto con un prezzo fisso.",
+          "price_sensor": "Sensore del prezzo dell'energia (tariffa dinamica). Lascia vuoto se il prezzo è fisso.",
           "pv_sensor": "Potenza immessa in rete (W). Utile solo con riscaldamento elettrico o pompa di calore."
         }
       },
@@ -242,7 +242,7 @@
           "notify_critical": "Avvisi importanti a",
           "notify_warning": "Segnalazioni a",
           "notify_info": "Informazioni a",
-          "notify_resolved": "Avvisa quando un avviso finisce",
+          "notify_resolved": "Notifica quando un avviso si risolve",
           "quiet_start": "Ore di silenzio dalle",
           "quiet_end": "Ore di silenzio fino alle",
           "pause_remind_hours": "Ricorda quando la pausa dura più di",
@@ -257,7 +257,7 @@
         "data_description": {
           "notify_critical": "Niente riscaldamento: la fonte di calore o un termostato non è disponibile. Inviato subito, anche nelle ore di silenzio. Scegli i telefoni (notify.mobile_app_...) o altri servizi di notifica. Per l'email scrivi gli indirizzi dopo il servizio, per esempio notify.me_gmail_com: ana@example.com, ion@example.com (Google Mail li richiede). Lascia vuoto per le notifiche in Home Assistant.",
           "notify_warning": "Qualcosa da controllare: una finestra aperta, una batteria scarica, un sensore guasto, l'antigelo in una stanza, una pausa dimenticata, una stanza più fredda delle altre, un'impostazione che non funziona. Email: gli indirizzi dopo il servizio, come sopra. Lascia vuoto per le notifiche in Home Assistant.",
-          "notify_info": "Cosa ha fatto la casa da sola: la stagione di riscaldamento è iniziata o finita, è iniziata una vacanza pianificata, la casa si sta scaldando per il tuo rientro, la vacanza automatica è iniziata o finita, la modalità ospiti si è spenta da sola. Lascia vuoto per non essere avvisato.",
+          "notify_info": "Cosa ha fatto la casa da sola: la stagione di riscaldamento è iniziata o finita, è iniziata una vacanza pianificata, la casa si sta scaldando per il tuo rientro, la vacanza automatica è iniziata o finita, la modalità ospiti si è disattivata da sola. Lascia vuoto per non essere avvisato.",
           "notify_resolved": "Un messaggio quando un dispositivo torna a funzionare, una finestra viene chiusa o una batteria è stata cambiata (solo per gli avvisi inviati ai destinatari qui sopra). Sul telefono sostituisce l'avviso.",
           "quiet_start": "Da quest'ora partono solo gli avvisi importanti; gli altri aspettano la fine delle ore di silenzio e partono solo se valgono ancora. Lascia vuoti entrambi per non avere ore di silenzio.",
           "quiet_end": "Fine delle ore di silenzio (può essere la mattina dopo).",
@@ -293,7 +293,7 @@
           "climates": "Il termostato che comanda la caldaia, per esempio l'entità del Generic Thermostat (climate.climate).",
           "switches": "Solo quando un relè scalda direttamente la casa, senza termostato.",
           "command_mode": "Solo per termostati diversi dal Generic Thermostat. La differenza è spiegata nelle impostazioni della stanza.",
-          "trv_boost": "Finché la casa chiede calore (in base ai suoi sensori di temperatura, con l'isteresi), il termostato o le valvole termostatiche ricevono la Temperatura durante il riscaldamento (di default la temperatura massima della casa), così continuano a scaldare finché la casa è calda; il resto del tempo ricevono la temperatura obiettivo. Utile quando il dispositivo misura nel posto sbagliato (un termostato in corridoio, una valvola attaccata al termosifone). Serve un sensore di temperatura. Solo con il comando Temperatura. Non è la stessa cosa di 'Accendere e spegnere la fonte tramite la sua temperatura': quella è per un termostato che accende solo la caldaia per stanze con le proprie valvole termostatiche (scegli allora 'Ogni stanza si scalda da sola' e indica il termostato come fonte di calore)."
+          "trv_boost": "Finché la casa chiede calore (in base ai suoi sensori di temperatura, con l'isteresi), il termostato o le valvole termostatiche ricevono la Temperatura durante il riscaldamento (per impostazione predefinita la temperatura massima della casa), così continuano a scaldare finché la casa è calda; il resto del tempo ricevono la temperatura obiettivo. Utile quando il dispositivo misura nel posto sbagliato (un termostato in corridoio, una valvola attaccata al termosifone). Serve un sensore di temperatura. Solo con il comando Temperatura. Non è la stessa cosa di 'Accendere e spegnere la fonte tramite la sua temperatura': quella è per un termostato che accende solo la caldaia per stanze con le proprie valvole termostatiche (scegli allora 'Ogni stanza si scalda da sola' e indica il termostato come fonte di calore)."
         }
       },
       "heating_on_off": {
@@ -351,7 +351,7 @@
         },
         "data_description": {
           "cutoff_temp": "Il riscaldamento si ferma quando la media esterna raggiunge o supera questa temperatura.",
-          "cutoff_hysteresis": "Il riscaldamento riparte solo a spegnimento meno questo valore o sotto, così non oscilla intorno alla soglia. La media delle previsioni usa lo stesso limite.",
+          "cutoff_hysteresis": "Il riscaldamento riparte solo quando la media scende alla soglia di spegnimento meno questo valore, così non si accende e spegne di continuo intorno alla soglia. La media delle previsioni usa lo stesso limite.",
           "cutoff_avg_hours": "Lo spegnimento usa la media delle ultime ore, così un pomeriggio di sole non ferma il riscaldamento.",
           "forecast_hours": "Ore di previsione nella media (ogni valore per la sua ora, il valore misurato fino alla prossima ora prevista). Più ore spengono il riscaldamento prima di un periodo mite.",
           "season_start": "Primo giorno della stagione: mese e giorno, per esempio 10-15.",
@@ -394,14 +394,14 @@
           "source_criterion": "Scelta automatica della fonte"
         },
         "data_description": {
-          "boiler_min_rooms": "Quante stanze devono chiedere calore per accenderla. 1 = qualsiasi stanza. Le stanze secondarie (Può accendere la fonte di calore della casa spento) non contano.",
+          "boiler_min_rooms": "Quante stanze devono chiedere calore per accenderla. 1 = qualsiasi stanza. Le stanze secondarie (con 'Può accendere la fonte di calore della casa' disattivato) non contano.",
           "boiler_min_on": "Tempo minimo di funzionamento, contro i cicli brevi. 0 (predefinito) = la fonte si spegne appena nessuna stanza chiede calore. Un tempo più lungo richiede un bypass o un termosifone senza valvola termostatica.",
           "boiler_min_off": "Pausa minima tra due accensioni.",
-          "keep_last_open": "Quando nessuna stanza chiede più calore, le valvole termostatiche dell'ultima stanza che lo chiedeva restano aperte (ricevono la temperatura massima della stanza o restano accese). Così il calore rimasto nella fonte e nei tubi ha dove andare, come con un bypass, e la valvola non si muove di nuovo durante la notte. Finché un'altra stanza non chiede calore, una regola più forte non prende la stanza (finestra, modifica manuale, pausa, modalità, caldo fuori) o la stanza stessa non ha bisogno di calore. Nel frattempo la stanza non chiede calore, ma può diventare più calda del suo obiettivo, e il suo apprendimento salta quel periodo. Spento di default.",
+          "keep_last_open": "Quando nessuna stanza chiede più calore, le valvole termostatiche dell'ultima stanza che lo chiedeva restano aperte (ricevono la temperatura massima della stanza o restano accese). Così il calore rimasto nella fonte e nei tubi ha dove andare, come con un bypass, e la valvola non si muove di nuovo durante la notte. Restano così finché un'altra stanza chiede calore, una regola più forte prende il controllo della stanza (finestra, modifica manuale, pausa, modalità, caldo fuori) o la stanza stessa ha bisogno di calore. Nel frattempo la stanza non chiede calore, ma può diventare più calda del suo obiettivo, e il suo apprendimento salta quel periodo. Spento per impostazione predefinita.",
           "circuits": "Solo con più circuiti di riscaldamento sulla caldaia (per esempio pavimento radiante e termosifoni), ognuno con il proprio relè della pompa o della valvola di zona. Una stanza sulla fonte di calore sceglie allora il suo circuito (nelle sue impostazioni): quando chiede calore si accende prima il relè del circuito, poi la caldaia; quando nessuna stanza ne ha più bisogno, si spegne prima la caldaia, poi il relè. La caldaia non parte per una stanza il cui circuito è spento. Vuoto (predefinito): nessun circuito, non cambia nulla.",
-          "boiler_boost": "Un termostato usato come fonte di calore (per esempio Hive, Nest, Tado, un Generic Thermostat) accende la caldaia solo in base al proprio obiettivo e al proprio sensore. Acceso (predefinito): resta in modalità riscaldamento; per accendere riceve la temperatura massima della casa, per spegnere la temperatura di riposo (di default quella dell'antigelo della casa), così continua a proteggere dal gelo se Home Assistant si ferma. Un obiettivo impostato a mano viene annullato. Spento: si cambia solo la sua modalità (riscaldamento / spento). Un termostato senza temperatura obiettivo viene sempre comandato tramite la modalità. Non è la stessa cosa di 'Scaldare in base ai sensori della stanza' della zona di tutta la casa: quella è per un termostato che scalda da sé tutta la casa.",
+          "boiler_boost": "Un termostato usato come fonte di calore (per esempio Hive, Nest, Tado, un Generic Thermostat) accende la caldaia solo in base al proprio obiettivo e al proprio sensore. Acceso (predefinito): resta in modalità riscaldamento; per accendere riceve la temperatura massima della casa, per spegnere la temperatura di riposo (per impostazione predefinita quella dell'antigelo della casa), così continua a proteggere dal gelo se Home Assistant si ferma. Un obiettivo impostato a mano viene annullato. Spento: si cambia solo la sua modalità (riscaldamento / spento). Un termostato senza temperatura obiettivo viene sempre comandato tramite la modalità. Non è la stessa cosa di 'Scaldare in base ai sensori della stanza' della zona di tutta la casa: quella è per un termostato che scalda da sé tutta la casa.",
           "boiler_idle_temp": "Solo con 'Accendere e spegnere la fonte tramite la sua temperatura': cosa riceve il termostato finché nessuna stanza chiede calore. Vuoto (predefinito): la temperatura antigelo della casa, così la caldaia resta spenta. Un valore più alto (per esempio 17,5 °C) fa mantenere al termostato la sua zona a quella temperatura, con il proprio sensore: utile se scalda anche termosifoni senza valvola termostatica. Deve essere sotto la temperatura massima della casa.",
-          "source_criterion": "Cosa sceglie la fonte secondaria in Automatico: Surplus fotovoltaico (il sensore FV supera la sua soglia, in Energia), Freddo fuori (sotto una temperatura, al passo successivo), Corrente economica (il prezzo è al massimo il suo limite basso, in Energia), Entità propria (un'entità on / off a tua scelta: on = la fonte secondaria). Compare solo quello che la casa ha impostato. Nessuno (predefinito): niente Automatico, la fonte si sceglie a mano o con un'automazione. Con il surplus fotovoltaico usa la produzione dei pannelli o un surplus che comprende la pompa di calore: un sensore di immissione scende appena parte la pompa, e le fonti si alternerebbero di continuo."
+          "source_criterion": "Cosa sceglie la fonte secondaria in Automatico: Surplus fotovoltaico (il sensore FV supera la sua soglia, in Energia), Freddo fuori (sotto una temperatura, al passo successivo), Corrente economica (il prezzo è pari o inferiore alla soglia bassa, in Energia), Entità propria (un'entità on / off a tua scelta: on = la fonte secondaria). Compare solo quello che la casa ha impostato. Nessuno (predefinito): niente Automatico, la fonte si sceglie a mano o con un'automazione. Con il surplus fotovoltaico usa la produzione dei pannelli o un surplus che comprende la pompa di calore: un sensore di immissione scende appena parte la pompa, e le fonti si alternerebbero di continuo."
         }
       },
       "boiler_circuits": {
@@ -410,9 +410,9 @@
           "circuits": "Relè dei circuiti"
         },
         "data_description": {
-          "circuits": "I relè delle valvole di zona (o delle pompe) dei circuiti di riscaldamento, ad es. uno per piano. Ogni stanza sceglie poi il suo circuito (nelle sue impostazioni): il relè si accende finché una sua stanza chiede calore e si spegne appena nessuna lo fa. Vuoto (predefinito): nessun circuito."
+          "circuits": "I relè delle valvole di zona (o delle pompe) dei circuiti di riscaldamento, per esempio uno per piano. Ogni stanza sceglie poi il suo circuito (nelle sue impostazioni): il relè si accende finché una sua stanza chiede calore e si spegne appena nessuna lo fa. Vuoto (predefinito): nessun circuito."
         },
-        "description": "Senza fonte di calore: per valvole di zona cablate alla caldaia, che la avviano da sole quando si aprono (ad es. una valvola per piano). L'integrazione apre la valvola di un circuito finché una delle sue stanze chiede calore e la chiude quando nessuna lo fa; la caldaia segue le valvole."
+        "description": "Senza fonte di calore: per valvole di zona cablate alla caldaia, che la avviano da sole quando si aprono (per esempio una valvola per piano). L'integrazione apre la valvola di un circuito finché una delle sue stanze chiede calore e la chiude quando nessuna lo fa; la caldaia segue le valvole."
       },
       "behavior_details": {
         "title": "Modifiche manuali",
@@ -511,7 +511,7 @@
             "climates": "I termostati di questa stanza. Più termostati nella stessa stanza ricevono tutti lo stesso comando.",
             "switches": "I relè che scaldano questa stanza.",
             "command_mode": "Temperatura: l'integrazione invia la temperatura di ogni livello (quasi tutte le valvole termostatiche); una valvola in automatico (con il suo programma) viene messa in riscaldamento. Preset: ogni livello usa un preset del termostato, con la temperatura del termostato. Acceso / spento: il termostato viene solo acceso e spento, la temperatura la tiene l'integrazione.",
-            "trv_boost": "Finché la stanza chiede calore, le valvole termostatiche ricevono la Temperatura durante il riscaldamento (di default la temperatura massima della casa) e restano aperte finché la stanza è calda; il resto del tempo ricevono l'obiettivo. La richiesta di calore viene allora dal sensore della stanza, con l'isteresi. Serve un sensore di temperatura nella stanza. Solo con il comando Temperatura.",
+            "trv_boost": "Finché la stanza chiede calore, le valvole termostatiche ricevono la Temperatura durante il riscaldamento (per impostazione predefinita la temperatura massima della casa) e restano aperte finché la stanza è calda; il resto del tempo ricevono l'obiettivo. La richiesta di calore viene allora dal sensore della stanza, con l'isteresi. Serve un sensore di temperatura nella stanza. Solo con il comando Temperatura.",
             "use_house_source": "Acceso: il calore della stanza viene dalla fonte di calore della casa (termosifoni sulla caldaia). Accende la caldaia quando chiede calore (a meno che non diventi una stanza secondaria nel passo successivo) e scalda solo mentre la caldaia è accesa. Spento: la stanza ha il suo calore (stufetta elettrica, pompa di calore, condizionatore). Non accende la caldaia e scalda mentre il suo dispositivo è acceso."
           }
         },
@@ -525,7 +525,7 @@
           "data_description": {
             "starts_house_source": "Acceso (predefinito): quando questa stanza chiede calore accende la fonte di calore della casa (la caldaia), come ogni stanza. Spento: una stanza secondaria. Non accende mai la caldaia per sé; le sue valvole termostatiche, valvole o relè si aprono comunque quando è sotto l'obiettivo, quindi prende calore solo mentre la caldaia è accesa per un'altra stanza. Adatta a stanze che non devono essere fredde ma non devono essere calde a un'ora precisa: verande, camera degli ospiti, corridoio, ripostiglio. In una giornata mite la caldaia può accendersi poco, quindi la stanza può restare sotto l'obiettivo per ore. Per sicurezza l'antigelo accende comunque la caldaia per lei. Non conta tra le stanze necessarie per accendere la fonte di calore.",
             "circuit": "Il circuito di riscaldamento di questa stanza (il relè della sua pompa o valvola di zona), tra quelli della casa. Il relè si accende prima della caldaia quando la stanza chiede calore, e si spegne dopo che la caldaia si è fermata quando nessuna stanza del circuito ne ha bisogno. Vuoto: la stanza non ha un circuito.",
-            "top_up": "Spento (predefinito). Acceso: mentre la caldaia è accesa per altre stanze e questa stanza è appena sotto l'obiettivo (dentro la sua isteresi, 0,3 °C di default, quindi non chiede ancora calore), le sue valvole termostatiche o il relè si aprono e si scalda fino all'obiettivo. Avrebbe chiesto calore a breve e riacceso la caldaia: così la caldaia si accende meno spesso. Non accende mai la caldaia e non la tiene accesa, non conta tra le stanze necessarie e, con un circuito, si scalda solo se quel circuito è già aperto. Non durante una modifica manuale, con una finestra aperta, in pausa o durante lo spegnimento ottimale. Per una stanza secondaria, che non accende la caldaia, prende il calore mentre la caldaia è accesa per altre stanze, così non resta sotto l'obiettivo fino alla prossima accensione."
+            "top_up": "Spento (predefinito). Acceso: mentre la caldaia è accesa per altre stanze e questa stanza è appena sotto l'obiettivo (dentro la sua isteresi, 0,3 °C per impostazione predefinita, quindi non chiede ancora calore), le sue valvole termostatiche o il relè si aprono e si scalda fino all'obiettivo. Avrebbe chiesto calore a breve e riacceso la caldaia: così la caldaia si accende meno spesso. Non accende mai la caldaia e non la tiene accesa, non conta tra le stanze necessarie e, con un circuito, si scalda solo se quel circuito è già aperto. Non durante una modifica manuale, con una finestra aperta, in pausa o durante lo spegnimento ottimale. Per una stanza secondaria, che non accende la caldaia, prende il calore mentre la caldaia è accesa per altre stanze, così non resta sotto l'obiettivo fino alla prossima accensione."
           }
         },
         "room_circuit": {
@@ -621,7 +621,7 @@
           },
           "data_description": {
             "temperature_sensors": "Sensori nella stanza, usati al posto del sensore del termostato (più precisi se il termostato è vicino a una fonte di calore). Lascia vuoto per usare il sensore del termostato; obbligatori per i relè, che non hanno un sensore.",
-            "calibration_mode": "Serve un sensore di temperatura della stanza qui sopra. Offset: corregge il sensore della valvola. Temperatura esterna: scrive la temperatura della stanza nella valvola (se lo supporta). Altrimenti spento.",
+            "calibration_mode": "Serve un sensore di temperatura della stanza qui sopra. Offset: corregge il sensore della valvola. Temperatura da sensore remoto: scrive la temperatura della stanza nella valvola (se lo supporta). Altrimenti spento.",
             "occupancy_sensors": "Sensori di movimento / presenza della stanza: quando la stanza resta vuota per un po' passa a eco anche se qualcuno è a casa. Lascia vuoto per le stanze che devono seguire solo il programma.",
             "humidity_sensor": "Solo per l'avviso di rischio muffa: l'umidità della stanza, insieme alla temperatura esterna della casa, dà l'umidità sulla parete più fredda. Senza (o senza una temperatura esterna) non arriva nessun avviso di muffa."
           }
@@ -659,7 +659,7 @@
             "optimal_stop": "Spegnimento ottimale"
           },
           "data_description": {
-            "schedule_source": "Programma interno: scritto qui o modificato dalla scheda. Aiutante programma: un aiutante Programma di Home Assistant sceglie tra due livelli.",
+            "schedule_source": "Programma interno: scritto qui o modificato dalla scheda. Aiutante Calendarizzazione: un aiutante Calendarizzazione di Home Assistant sceglie tra due livelli.",
             "optimal_start": "Inizia a scaldare prima, così il livello successivo viene raggiunto in tempo. La velocità di riscaldamento si impara in pochi giorni.",
             "optimal_stop": "Abbassa il livello prima del successivo più freddo, non appena la stanza può raffreddarsi senza uscire dal comfort del livello attuale. Il raffreddamento si impara dai periodi senza richiesta di calore. Serve una temperatura esterna (sensore o meteo) nelle impostazioni della casa; compare solo in quel caso."
           }
@@ -689,15 +689,15 @@
           "data": {
             "temperature_aggregation": "Più sensori",
             "calibration_entities": "Entità di calibrazione",
-            "occupancy_minutes": "Eco dopo nessuna occupazione per",
-            "occupancy_return_minutes": "Fuori da eco dopo una presenza di",
+            "occupancy_minutes": "Eco dopo un'assenza di",
+            "occupancy_return_minutes": "Esce da eco dopo una presenza di",
             "hysteresis": "Isteresi"
           },
           "data_description": {
             "temperature_aggregation": "Con più sensori: media, il più freddo o la mediana.",
-            "calibration_entities": "Le entità number della valvola termostatica (offset o temperatura esterna).",
+            "calibration_entities": "Le entità number della valvola termostatica (offset o temperatura da sensore remoto).",
             "occupancy_minutes": "Per quanto la stanza deve restare vuota prima di passare a eco.",
-            "occupancy_return_minutes": "Per quanto qualcuno deve essere presente senza interruzioni prima che una stanza passata a eco per mancanza di occupazione torni al suo programma. 0 = subito (come prima). Una visita più breve (qualcuno prende qualcosa ed esce) lascia la stanza in eco, e il conteggio riparte alla presenza successiva. La presenza conta solo senza interruzioni: un sensore di movimento che si spegne tra un movimento e l'altro fa ripartire il conteggio. Un sensore di presenza (mmWave) o un sensore di movimento con un lungo tempo di ritorno va meglio.",
+            "occupancy_return_minutes": "Per quanto qualcuno deve essere presente senza interruzioni prima che una stanza passata a eco per mancanza di occupazione torni al suo programma. 0 = subito (come prima). Una visita più breve (qualcuno prende qualcosa ed esce) lascia la stanza in eco, e il conteggio riparte alla presenza successiva. La presenza conta solo senza interruzioni: un sensore di movimento che si spegne tra un movimento e l'altro fa ripartire il conteggio. Un sensore di presenza (mmWave) o un sensore di movimento con un tempo di reset lungo va meglio.",
             "hysteresis": "Con un sensore della stanza decide l'antigelo: sotto questo valore le valvole termostatiche vengono forzate ad aprirsi, fino ad antigelo più questo valore. Con 'Approfittare della caldaia già accesa': mentre la caldaia è accesa per altre stanze, la stanza ne approfitta quando è sotto il suo obiettivo di meno di questo valore (non chiede ancora calore)."
           }
         },
@@ -729,14 +729,14 @@
           }
         },
         "schedule_helper": {
-          "title": "Aiutante programma",
+          "title": "Aiutante Calendarizzazione",
           "data": {
-            "schedule_helper": "Aiutante programma",
+            "schedule_helper": "Aiutante Calendarizzazione",
             "helper_on_preset": "Livello quando l'aiutante è acceso",
             "helper_off_preset": "Livello quando l'aiutante è spento"
           },
           "data_description": {
-            "schedule_helper": "Un aiutante Programma di Home Assistant (Impostazioni → Aiutanti).",
+            "schedule_helper": "Un aiutante Calendarizzazione di Home Assistant (Impostazioni → Aiutanti).",
             "helper_on_preset": "Livello quando l'aiutante è acceso.",
             "helper_off_preset": "Livello quando l'aiutante è spento."
           }
@@ -749,8 +749,8 @@
             "stop_tolerance": "Tolleranza dello spegnimento ottimale"
           },
           "data_description": {
-            "optimal_start_max_minutes": "Non parte mai prima di così.",
-            "optimal_stop_minutes": "Non si ferma mai prima di così. Finché il raffreddamento non è appreso, il livello più basso inizia con questo anticipo.",
+            "optimal_start_max_minutes": "L'avvio non viene mai anticipato più di così.",
+            "optimal_stop_minutes": "Lo spegnimento non viene mai anticipato più di così. Finché il raffreddamento non è appreso, il livello più basso inizia con questo anticipo.",
             "stop_tolerance": "Per i termostati che comunicano hvac_action: di quanto la stanza può scendere sotto il livello attuale prima del cambio programmato (il suo comfort). 0 = la stanza non deve scendere sotto il livello, quindi si ferma prima solo se è più calda del livello."
           }
         },
@@ -787,7 +787,7 @@
         "no_devices": "Seleziona almeno un dispositivo.",
         "duplicate_names": "Due livelli hanno lo stesso nome.",
         "invalid_schedule": "Programma non valido.",
-        "helper_required": "Seleziona l'aiutante programma.",
+        "helper_required": "Seleziona l'aiutante Calendarizzazione.",
         "sensor_required": "I relè hanno bisogno di un sensore di temperatura nella stanza.",
         "entity_in_room": "{entity} è già comandato da {owner}. Un dispositivo può essere comandato da una sola stanza.",
         "entity_is_source": "{entity} è la fonte di calore di {owner}. Non può essere anche un dispositivo di una stanza.",
@@ -799,7 +799,7 @@
         "invalid_level_name": "Il nome di livello \"{name}\" non si può usare nel programma: usa lettere, cifre, spazi, \"_\" o \"-\" (niente \",\" \":\" \"#\").",
         "level_name_is_key": "Il nome \"{name}\" è già il nome di un altro livello nel programma (home, sleep, eco, away, comfort, activity, frost): scegline un altro.",
         "calibration_sensor_required": "La calibrazione scrive la temperatura della stanza nella valvola termostatica, quindi serve un sensore di temperatura nella stanza. Aggiungine uno o imposta la calibrazione su Spento.",
-        "calibration_entities_required": "Scegli le entità number della valvola in cui scrive la calibrazione (l'offset o la temperatura esterna), oppure imposta la calibrazione su Spento nella pagina precedente.",
+        "calibration_entities_required": "Scegli le entità number della valvola in cui scrive la calibrazione (l'offset o la temperatura da sensore remoto), oppure imposta la calibrazione su Spento nella pagina precedente.",
         "entity_is_circuit": "{entity} è un relè di circuito di {owner}. Non può essere anche un dispositivo di una stanza o un altro circuito."
       }
     },
@@ -874,7 +874,7 @@
           "house_away": "Modalità fuori casa",
           "presence_far": "Lontano",
           "presence_nearby": "Vicino",
-          "room_unoccupied": "Stanza non occupata",
+          "room_unoccupied": "Stanza vuota",
           "sensor_fallback": "Sensore non disponibile",
           "schedule": "Programma",
           "optimal_start": "Avvio ottimale",
@@ -883,7 +883,7 @@
         }
       },
       "target_temperature": {
-        "name": "Temperatura obiettivo"
+        "name": "Temperatura desiderata"
       },
       "room_temperature": {
         "name": "Temperatura della stanza"
@@ -1083,7 +1083,7 @@
       "options": {
         "off": "Spento",
         "offset": "Offset",
-        "external": "Ingresso della temperatura esterna"
+        "external": "Temperatura da sensore remoto"
       }
     },
     "window_action": {
@@ -1095,7 +1095,7 @@
     "schedule_source": {
       "options": {
         "internal": "Programma interno",
-        "helper": "Aiutante programma"
+        "helper": "Aiutante Calendarizzazione"
       }
     },
     "preset": {
@@ -1254,7 +1254,7 @@
       "message": "Indica schedule oppure profiles."
     },
     "schedule_external": {
-      "message": "Questa stanza usa un aiutante programma; modifica invece l'aiutante."
+      "message": "Questa stanza usa un aiutante Calendarizzazione; modifica invece l'aiutante."
     },
     "invalid_schedule": {
       "message": "Programma non valido: {error}"

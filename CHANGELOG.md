@@ -112,6 +112,10 @@ GitHub releases.
 
 ### Fixed
 
+- 🔌 **A room of several thermostats turned on and off** (*Command mode*:
+  on / off): the room counts as on when one of them is, so one left off (a
+  command it did not take, turned on by hand on another) stayed off. It is now
+  turned on with the others.
 - 📐 **The card in a narrow column** of a dashboard on a big screen (a small
   section, a masonry column): the rows of the schedule editor stuck out of the
   card, as the narrow layout followed the width of the screen and not of the

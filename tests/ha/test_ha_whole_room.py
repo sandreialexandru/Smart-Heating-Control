@@ -379,7 +379,44 @@ async def test_thermostats_turned_on_and_off_for_the_whole_room(
     await _tick(hass, freezer, 5)
     assert room.override["source_device"] == LEFT
     assert room.override["target"]["temperature"] == 23.0
+    # The room is on: the right one, still off, is turned on too, heating as far as it can
+    # (the room sensor turns them off), as the left one.
     assert {"entity_id": RIGHT, "hvac_mode": "heat"} in [m.data for m in modes]
-    # On / off only: no temperature is sent.
-    assert not temperatures
+    assert {c.data["entity_id"] for c in temperatures} == {LEFT, RIGHT}
+    assert {c.data["temperature"] for c in temperatures} == {room.max_temp()}
+    await _unload(hass, entry)
+
+
+async def test_an_on_off_thermostat_left_off_is_turned_on_with_the_others(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The room is on when one of its thermostats is: one that did not take the command follows."""
+    modes = async_mock_service(hass, "climate", "set_hvac_mode")
+    async_mock_service(hass, "climate", "set_temperature")
+    cold = {"hvac_modes": ["heat", "off"], "current_temperature": 19.0, "temperature": 21.0}
+    for entity_id in (LEFT, RIGHT):
+        hass.states.async_set(entity_id, "off", cold)
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Living",
+                {
+                    "source": "climate",
+                    "climates": [LEFT, RIGHT],
+                    "command_mode": "hvac_mode",
+                    "min_on_minutes": 0,
+                    "min_off_minutes": 0,
+                },
+            )
+        ],
+    )
+    assert {"entity_id": RIGHT, "hvac_mode": "heat"} in [m.data for m in modes]
+    # Only the left one took it; the right one stayed off.
+    sent = len(modes)
+    hass.states.async_set(LEFT, "heat", cold, context=Context())
+    await _tick(hass, freezer, 60)
+    assert {"entity_id": RIGHT, "hvac_mode": "heat"} in [m.data for m in modes[sent:]]
+    assert {"entity_id": LEFT, "hvac_mode": "heat"} not in [m.data for m in modes[sent:]]
     await _unload(hass, entry)

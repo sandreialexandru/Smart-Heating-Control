@@ -179,6 +179,15 @@ async def test_a_preset_of_a_level_sets_that_level_in_the_whole_room(
     assert room.override["target"] is None
     assert room.override["devices"].keys() == {LEFT}
     assert presets[-1].data["preset_mode"] != "Boost"
+    # The boost ends by itself (back to Comfort at 21 °C): still that TRV only.
+    hass.states.async_set(LEFT, "heat", SMART, context=Context())
+    await _tick(hass, freezer, 5)
+    assert room.override.get("source_device") is None
+    # A temperature set while the TRV keeps showing its preset: the temperature, not the preset.
+    hass.states.async_set(LEFT, "heat", {**SMART, "temperature": 24.0}, context=Context())
+    await _tick(hass, freezer, 5)
+    assert room.override["source_device"] == LEFT
+    assert room.override["target"] == {"kind": "temperature", "preset": None, "temperature": 24.0}
     await _unload(hass, entry)
 
 
@@ -192,6 +201,12 @@ async def test_off_stays_on_that_trv(hass: HomeAssistant, freezer: FrozenDateTim
     assert room.override.get("source_device") is None
     assert room.override["devices"].keys() == {LEFT}
     assert hass.states.get("sensor.living_decision").attributes["override"]["origin"] == "device"
+    # Turned on again with nothing else changed: that TRV only, nothing for the others.
+    sent = len(_calls)
+    hass.states.async_set(LEFT, "heat", preset_trv, context=Context())
+    await _tick(hass, freezer, 5)
+    assert room.override.get("source_device") is None
+    assert not [c for c in _calls[sent:] if c.data["entity_id"] == RIGHT]
     await _unload(hass, entry)
 
 

@@ -151,7 +151,9 @@ class RoomOverride:
                 return True
         return False
 
-    def _handle_manual_change(self, entity_id: str, new: State | None) -> None:
+    def _handle_manual_change(
+        self, entity_id: str, new: State | None, old: State | None = None
+    ) -> None:
         """Respect a manual change (or revert it with the child lock)."""
         # From now on the device shows a person's values, not ours: if the person
         # later sets the value we sent before, that is a manual change too.
@@ -175,7 +177,7 @@ class RoomOverride:
                 description = f"{from_celsius(value, unit):.1f} {unit}"
             elif entity_id in self.switches:
                 description = f"switch {new.state}"
-        target = self._whole_room_target(entity_id, new)
+        target = self._whole_room_target(entity_id, new, old)
         if target is not None:
             # Taken like a change from the card: sent to every thermostat of the room.
             self.apply_manual_target(target, None, source_device=entity_id)
@@ -195,12 +197,17 @@ class RoomOverride:
         else:
             self.set_override(description, devices=devices)
 
-    def _whole_room_target(self, entity_id: str, new: State | None) -> Target | None:
+    def _whole_room_target(
+        self, entity_id: str, new: State | None, old: State | None = None
+    ) -> Target | None:
         """The room target a change on one thermostat stands for, when it applies to the whole room.
 
-        Only in a room with several thermostats set so: a temperature becomes
-        the room temperature, a preset of a level becomes that level. Off and a
-        preset that is no level (boost) stay on that thermostat.
+        Only in a room with several thermostats set so, by what the person
+        changed: a preset of a level becomes that level, a temperature becomes
+        the room temperature (also when the thermostat keeps showing its
+        preset, or leaves a level preset for it). Off, a preset that is no
+        level (boost), the end of such a preset and only turning it on again
+        stay on that thermostat.
         """
         if (
             new is None
@@ -211,11 +218,21 @@ class RoomOverride:
         ):
             return None
         preset = new.attributes.get("preset_mode")
-        if preset not in (None, PRESET_NONE):
+        value = climate_temp(self.hass, new, ATTR_TEMPERATURE)
+        preset_changed = old is None or old.attributes.get("preset_mode") != preset
+        temp_changed = old is None or old.attributes.get(ATTR_TEMPERATURE) != new.attributes.get(
+            ATTR_TEMPERATURE
+        )
+        before = old.attributes.get("preset_mode") if old is not None else None
+        if (
+            before not in (None, PRESET_NONE, preset)
+            and self.level_of_device_preset(before) is None
+        ):
+            return None  # the end of a preset that is no level (boost): the device's own
+        if preset_changed and preset not in (None, PRESET_NONE):
             level = self.level_of_device_preset(preset)
             return Target(KIND_PRESET, preset=level) if level is not None else None
-        value = climate_temp(self.hass, new, ATTR_TEMPERATURE)
-        if value is None:
+        if not temp_changed or value is None:
             return None
         return Target(KIND_TEMPERATURE, temperature=round(float(value), 2))
 

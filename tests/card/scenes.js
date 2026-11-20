@@ -26,6 +26,10 @@ const DEVICES = {
     ["switch.valve", "unavailable", { friendly_name: "Valve" }],
   ],
 };
+// A change made on one of the TRVs, for the whole room (a long name, as a real one can be).
+const WHOLE = { rooms: [{ id: "r1", name: "Living", climates: ["climate.living_left", "climate.living_right"],
+  override: { temperature: 23, until: at(2 * H), origin: "room", source_device: "climate.living_left", preset: null, applied: true }, state: "manual_override" }],
+  extra: [["climate.living_left", "heat", { friendly_name: "Living room radiator TRV under the window", temperature: 23 }]] };
 const OPTIMAL = { kind: "optimal_start", at: at(5 * H), preset: "comfort", minutes: 90, starts_at: at(3.5 * H), started_at: null,
   outdoor: 5, outdoor_source: "now", learned: true, sent_as: "temperature", temperature: 22 };
 
@@ -111,6 +115,7 @@ const SCENES = [
   ["room-details-negative-curve", {}, { rooms: [{ id: "r1", name: "Bedroom", curve: -0.04 }] }, click('[data-key="details-r1"]')],
   ["room-levels", {}, { rooms: R1 }, click('[data-key="levels-r1"]')],
   ["room-quick", {}, { rooms: R1 }, click('[data-key="quick-r1"]')],
+  ["room-override-whole-room", {}, WHOLE],
   ["room-quick-override", {}, { rooms: [{ id: "r1", name: "Bedroom", override: OVERRIDE }] }, click('[data-key="quick-r1"]')],
   ["room-reset-confirm", {}, { rooms: R1 }, steps(click('[data-key="details-r1"]'), click('[data-action="reset-learning"]'))],
   // The schedule.
@@ -167,6 +172,7 @@ const PANEL = [
     else await p.waitForTimeout(300);
   }],
   ["panel-room-living", { ...P, hash: "r3" }, { rooms: ROOMS }],
+  ["panel-override-whole-room", { ...P, hash: "r1" }, WHOLE],
   ["panel-stats", P, { rooms: ROOMS }, click('[data-action="panel-tab"][data-option="stats"]')],
   ["panel-stats-weeks", P, { rooms: ROOMS }, steps(click('[data-action="panel-tab"][data-option="stats"]'), click('[data-action="stats-period"][data-option="week"]'))],
   ["panel-stats-pick", P, { rooms: ROOMS }, steps(click('[data-action="panel-tab"][data-option="stats"]'), click('.ps-cols .ps-col:nth-child(10)'))],

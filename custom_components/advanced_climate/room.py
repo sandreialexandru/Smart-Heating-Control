@@ -665,7 +665,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
     # ------------------------------------------------------------------
     # Events
     # ------------------------------------------------------------------
-    def _device_changed(self, entity_id: str, new: State | None) -> None:
+    def _device_changed(self, entity_id: str, new: State | None, old: State | None = None) -> None:
         """A device changed, not by the integration: a manual change, except in a pause.
 
         In a pause something else controls the heating (a heat pump making hot
@@ -676,7 +676,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         if self.house.paused:
             self.sent.forget(entity_id)
             return
-        self._handle_manual_change(entity_id, new)
+        self._handle_manual_change(entity_id, new, old)
 
     @callback
     def _async_entity_changed(self, event: Event[EventStateChangedData]) -> None:
@@ -693,7 +693,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             elif self._check_auto_return(entity_id, old, new, event.context):
                 pass  # back in auto by itself after heat, not a person
             elif self._is_manual_change(event, old, new):
-                self._device_changed(entity_id, new)
+                self._device_changed(entity_id, new, old)
                 self.max_sent.discard(entity_id)
             else:
                 self.sent.confirm(entity_id, new, now)
@@ -710,7 +710,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
                 and not self.house.is_own_context(event.context)
                 and not self.sent.is_echo(entity_id, old, new, now)
             ):
-                self._device_changed(entity_id, new)
+                self._device_changed(entity_id, new, old)
                 self.max_sent.discard(entity_id)
         if entity_id in as_list(self.config.get(CONF_TEMP_SENSORS)) or entity_id in self.climates:
             self._update_temperature(now)

@@ -421,6 +421,17 @@ async def test_an_on_off_thermostat_left_off_is_turned_on_with_the_others(
     # confirm late); a minute after it, at the latest.
     for _ in range(VERIFY_DELAY // 60 + 2):
         await _tick(hass, freezer, 60)
-    assert {"entity_id": RIGHT, "hvac_mode": "heat"} in [m.data for m in modes[sent:]]
+    room = _room(entry, "Living")
+    assert {"entity_id": RIGHT, "hvac_mode": "heat"} in [m.data for m in modes[sent:]], (
+        room.decision.rule if room.decision else None,
+        room.decision.target if room.decision else None,
+        room.override,
+        room.relay_waiting,
+        room.current_temp,
+        room.pending_command,
+        [m.data for m in modes],
+        hass.states.get(LEFT).state,
+        hass.states.get(RIGHT).state,
+    )
     assert {"entity_id": LEFT, "hvac_mode": "heat"} not in [m.data for m in modes[sent:]]
     await _unload(hass, entry)

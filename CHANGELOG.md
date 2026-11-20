@@ -9,6 +9,10 @@ GitHub releases.
 
 ### New
 
+- 🇮🇹 **Italian reviewed by a native speaker**: clearer wording and the terms
+  of the Italian Home Assistant (the remote sensor of a TRV was translated as
+  the outdoor one) ([#23](https://github.com/sandreialexandru/Smart-Heating-Control/pull/23),
+  thanks @mrCabez).
 - 🇪🇸 **Spanish** for the integration (settings, entities, services, the
   notifications and the Repairs details), the card and its editor, and the
   panel, with a README in Spanish ([#21](https://github.com/sandreialexandru/Smart-Heating-Control/pull/21),

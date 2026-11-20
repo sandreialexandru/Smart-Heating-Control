@@ -112,6 +112,11 @@ GitHub releases.
 
 ### Fixed
 
+- 🃏 **The card missing after a house was deleted and another added**
+  ("Custom element doesn't exist: smart-heating-control-card"): deleting the
+  last house takes the card off the dashboard resources, and a house added
+  then, without a restart of Home Assistant, did not put it back. It does now
+  ([#25](https://github.com/sandreialexandru/Smart-Heating-Control/issues/25)).
 - 🔌 **A room of several thermostats turned on and off** (*Command mode*:
   on / off): the room counts as on when one of them is, so one left off (a
   command it did not take, turned on by hand on another) stayed off. It is now

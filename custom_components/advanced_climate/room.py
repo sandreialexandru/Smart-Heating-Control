@@ -352,6 +352,10 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self.preset_stale: dict[str, float] = {
             str(k): float(v) for k, v in (stored.get("preset_stale") or {}).items()
         }
+        # The temperature sent after a preset (the one known for its level), by
+        # device: sent again after the preset when the command is repeated, else
+        # the preset alone would take the device back to its own temperature.
+        self.preset_followup: dict[str, str] = {}
         # Topped up to its target: not again until the room asks by itself
         # (and the target it was topped up to: a new target is looked at again).
         self._top_up_reached = False

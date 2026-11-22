@@ -1011,3 +1011,103 @@ async def test_topped_up_after_its_target_went_up(
     assert office.target_temperature == 21.0
     assert office.topped_up
     await _unload(hass, entry)
+
+
+async def test_a_preset_sent_again_takes_its_temperature_again(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A battery thermostat commanded by preset, whose presets have their own
+    temperature (comfort is 22 on the device) and that keeps a preset with a
+    temperature set on it, reports late. After the window it gets "comfort" and
+    the temperature known for it (21); not reported yet at the verification, the
+    command is repeated. The preset alone took it back to its own 22, taken for
+    a manual change; now the temperature goes again after the preset."""
+    from homeassistant.helpers.event import async_call_later
+
+    own = {"comfort": 22.0, "eco": 17.0}
+    sent: list[tuple[str, object]] = []
+    pending: dict = {}
+
+    def _late(change: dict) -> None:
+        first = not pending
+        state = hass.states.get(E)
+        pending.setdefault("attrs", dict(state.attributes)).update(change)
+        if first:
+
+            @callback
+            def _report(_now) -> None:
+                attrs = pending.pop("attrs")
+                hass.states.async_set(E, "heat", attrs, context=Context())
+
+            # It reports after the verification (two minutes).
+            async_call_later(hass, 150, _report)
+
+    @callback
+    def _temp(call: ServiceCall) -> None:
+        sent.append(("temperature", call.data["temperature"]))
+        _late({"temperature": call.data["temperature"]})
+
+    @callback
+    def _preset(call: ServiceCall) -> None:
+        preset = call.data["preset_mode"]
+        sent.append(("preset", preset))
+        _late({"preset_mode": preset, "temperature": own.get(preset, 21.0)})
+
+    hass.services.async_register("climate", "set_temperature", _temp)
+    hass.services.async_register("climate", "set_preset_mode", _preset)
+    hass.states.async_set("binary_sensor.window", "off")
+    hass.states.async_set(
+        E,
+        "heat",
+        {
+            "hvac_modes": ["heat"],
+            "preset_modes": ["comfort", "eco"],
+            "preset_mode": "comfort",
+            "temperature": 21.0,
+            "current_temperature": 20.0,
+            "min_temp": 7.0,
+            "max_temp": 30.0,
+        },
+    )
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {
+                    "source": "climate",
+                    "climates": [E],
+                    "command_mode": "preset",
+                    "preset_map": {
+                        "home": "comfort",
+                        "comfort": "comfort",
+                        "eco": "eco",
+                        "sleep": "eco",
+                        "away": "eco",
+                    },
+                    "window_sensors": ["binary_sensor.window"],
+                },
+            )
+        ],
+    )
+    await _tick(hass, freezer, 5)
+    room = _room(entry, "Office")
+    hass.states.async_set(E, "heat", {**hass.states.get(E).attributes, "current_temperature": 20.1})
+    await _tick(hass, freezer, 5)
+    assert room.observed_temps.get("home") == 21.0
+    hass.states.async_set("binary_sensor.window", "on")
+    for _ in range(6):
+        await _tick(hass, freezer, 60)
+    assert hass.states.get(E).attributes["temperature"] == 7.0
+    sent.clear()
+    hass.states.async_set("binary_sensor.window", "off")
+    for _ in range(8):
+        await _tick(hass, freezer, 60)
+    # The preset and its temperature, then both again at the verification.
+    assert sent[:4] == [("preset", "comfort"), ("temperature", 21.0)] * 2, sent
+    state = hass.states.get(E)
+    assert (state.attributes["preset_mode"], state.attributes["temperature"]) == ("comfort", 21.0)
+    assert room.override is None
+    assert room.decision.rule != "manual_override"
+    await _unload(hass, entry)

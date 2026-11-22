@@ -115,6 +115,11 @@ GitHub releases.
 
 ### Fixed
 
+- 🎚️ **A preset sent again by itself** (rooms commanded by preset): when a
+  thermostat that reports late did not show the command yet, the preset was
+  sent again without the temperature known for it, and a thermostat whose
+  presets have their own temperature went back to it, taken for a manual
+  change. The temperature now goes again after the preset.
 - 🃏 **The card missing after a house was deleted and another added**
   ("Custom element doesn't exist: smart-heating-control-card"): deleting the
   last house takes the card off the dashboard resources, and a house added

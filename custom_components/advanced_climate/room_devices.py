@@ -614,6 +614,11 @@ class RoomDevices:
                 # one known for it: one coming from another preset (e.g. away on a
                 # cloud heat pump that reports late) is left to its preset.
                 kept = state.attributes.get("preset_mode") == name
+                followup = self.preset_followup.get(entity_id)
+                if followup is not None and followup != target.preset:
+                    del self.preset_followup[entity_id]
+                    followup = None
+                known = self.observed_temps.get(target.preset or "")
                 sent = await self._send(
                     entity_id, "set_preset_mode", "preset_mode", name, force=force
                 )
@@ -621,6 +626,17 @@ class RoomDevices:
                     del self.preset_stale[entity_id]
                     if kept:
                         await self._async_preset_temperature(entity_id, target.preset or "", stale)
+                elif sent and followup is not None and known is not None:
+                    # The command repeated (a device that has not reported yet):
+                    # the temperature known for the level goes again after it.
+                    await self._send(
+                        entity_id,
+                        "set_temperature",
+                        ATTR_TEMPERATURE,
+                        self._device_value(state, known),
+                        keep_preset=True,
+                        force=force,
+                    )
                 return sent
         if self._on_other_level_preset(state, target):
             # Off the preset of the level before (e.g. away), then the temperature:
@@ -657,10 +673,10 @@ class RoomDevices:
         if float_attr(state, ATTR_TEMPERATURE) != sent:
             return
         value = self._device_value(state, known)
-        if value != sent:
-            await self._send(
-                entity_id, "set_temperature", ATTR_TEMPERATURE, value, keep_preset=True
-            )
+        if value != sent and await self._send(
+            entity_id, "set_temperature", ATTR_TEMPERATURE, value, keep_preset=True
+        ):
+            self.preset_followup[entity_id] = preset
 
     def _device_value(self, state: State, temperature: float) -> float:
         """Temperature to send, in the unit of the thermostat.

@@ -1018,10 +1018,11 @@ async def test_a_preset_sent_again_takes_its_temperature_again(
 ) -> None:
     """A battery thermostat commanded by preset, whose presets have their own
     temperature (comfort is 22 on the device) and that keeps a preset with a
-    temperature set on it, reports late. After the window it gets "comfort" and
-    the temperature known for it (21); not reported yet at the verification, the
-    command is repeated. The preset alone took it back to its own 22, taken for
-    a manual change; now the temperature goes again after the preset."""
+    temperature set on it, reports late. Turned on again with "comfort" and the
+    temperature known for it (21), it had not reported yet at the verification:
+    the command was repeated without the temperature, the preset took it back
+    to its own 22, taken for a manual change. Now the temperature goes again."""
+    from homeassistant.helpers import entity_registry as er
     from homeassistant.helpers.event import async_call_later
 
     own = {"comfort": 22.0, "eco": 17.0}
@@ -1030,14 +1031,19 @@ async def test_a_preset_sent_again_takes_its_temperature_again(
 
     def _late(change: dict) -> None:
         first = not pending
-        state = hass.states.get(E)
-        pending.setdefault("attrs", dict(state.attributes)).update(change)
+        if first:
+            state = hass.states.get(E)
+            pending["state"], pending["attrs"] = state.state, dict(state.attributes)
+        pending["attrs"].update({k: v for k, v in change.items() if k != "state"})
+        if "state" in change:
+            pending["state"] = change["state"]
         if first:
 
             @callback
             def _report(_now) -> None:
-                attrs = pending.pop("attrs")
-                hass.states.async_set(E, "heat", attrs, context=Context())
+                hass.states.async_set(
+                    E, pending.pop("state"), pending.pop("attrs"), context=Context()
+                )
 
             # It reports after the verification (two minutes).
             async_call_later(hass, 150, _report)
@@ -1053,14 +1059,20 @@ async def test_a_preset_sent_again_takes_its_temperature_again(
         sent.append(("preset", preset))
         _late({"preset_mode": preset, "temperature": own.get(preset, 21.0)})
 
+    @callback
+    def _mode(call: ServiceCall) -> None:
+        sent.append(("mode", call.data["hvac_mode"]))
+        _late({"state": call.data["hvac_mode"]})
+
     hass.services.async_register("climate", "set_temperature", _temp)
     hass.services.async_register("climate", "set_preset_mode", _preset)
+    hass.services.async_register("climate", "set_hvac_mode", _mode)
     hass.states.async_set("binary_sensor.window", "off")
     hass.states.async_set(
         E,
         "heat",
         {
-            "hvac_modes": ["heat"],
+            "hvac_modes": ["heat", "off"],
             "preset_modes": ["comfort", "eco"],
             "preset_mode": "comfort",
             "temperature": 21.0,
@@ -1096,18 +1108,44 @@ async def test_a_preset_sent_again_takes_its_temperature_again(
     hass.states.async_set(E, "heat", {**hass.states.get(E).attributes, "current_temperature": 20.1})
     await _tick(hass, freezer, 5)
     assert room.observed_temps.get("home") == 21.0
+    mode = next(
+        e.entity_id
+        for e in er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
+        if e.unique_id == f"{entry.entry_id}_mode"
+    )
+
+    async def _settle() -> None:
+        for _ in range(6):
+            await _tick(hass, freezer, 60)
+
+    # The window: the frost temperature on "comfort" (it keeps the preset).
     hass.states.async_set("binary_sensor.window", "on")
-    for _ in range(6):
-        await _tick(hass, freezer, 60)
+    await _settle()
     assert hass.states.get(E).attributes["temperature"] == 7.0
-    sent.clear()
+    # The house off meanwhile, the window closed: the thermostat off.
+    await hass.services.async_call(
+        "select", "select_option", {"entity_id": mode, "option": "off"}, blocking=True
+    )
     hass.states.async_set("binary_sensor.window", "off")
-    for _ in range(8):
-        await _tick(hass, freezer, 60)
-    # The preset and its temperature, then both again at the verification.
-    assert sent[:4] == [("preset", "comfort"), ("temperature", 21.0)] * 2, sent
+    await _settle()
+    assert hass.states.get(E).state == "off"
+    # Auto again: on, "comfort" and its temperature; it reports late.
+    sent.clear()
+    await hass.services.async_call(
+        "select", "select_option", {"entity_id": mode, "option": "auto"}, blocking=True
+    )
+    await _settle()
+    first = sent[: sent.index(("temperature", 21.0)) + 1]
+    again = sent[len(first) :]
+    assert ("preset", "comfort") in first and ("preset", "comfort") in again, sent
+    # Repeated with the temperature after the preset.
+    assert again[again.index(("preset", "comfort")) + 1 :][:1] == [("temperature", 21.0)], sent
     state = hass.states.get(E)
-    assert (state.attributes["preset_mode"], state.attributes["temperature"]) == ("comfort", 21.0)
+    assert (state.state, state.attributes["preset_mode"], state.attributes["temperature"]) == (
+        "heat",
+        "comfort",
+        21.0,
+    )
     assert room.override is None
     assert room.decision.rule != "manual_override"
     await _unload(hass, entry)

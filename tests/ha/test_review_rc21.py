@@ -1099,6 +1099,7 @@ async def test_a_preset_sent_again_takes_its_temperature_again(
                         "away": "eco",
                     },
                     "window_sensors": ["binary_sensor.window"],
+                    "window_action": "off",
                 },
             )
         ],
@@ -1118,22 +1119,23 @@ async def test_a_preset_sent_again_takes_its_temperature_again(
         for _ in range(6):
             await _tick(hass, freezer, 60)
 
-    # The window: the frost temperature on "comfort" (it keeps the preset).
-    hass.states.async_set("binary_sensor.window", "on")
-    await _settle()
-    assert hass.states.get(E).attributes["temperature"] == 7.0
-    # The house off meanwhile, the window closed: the thermostat off.
+    # The house off: the frost temperature on "comfort" (it keeps the preset).
     await hass.services.async_call(
         "select", "select_option", {"entity_id": mode, "option": "off"}, blocking=True
     )
-    hass.states.async_set("binary_sensor.window", "off")
     await _settle()
-    assert hass.states.get(E).state == "off"
-    # Auto again: on, "comfort" and its temperature; it reports late.
-    sent.clear()
+    assert hass.states.get(E).attributes["temperature"] == 7.0
+    # A window open (heating off): the thermostat off; then auto, still open.
+    hass.states.async_set("binary_sensor.window", "on")
+    await _settle()
     await hass.services.async_call(
         "select", "select_option", {"entity_id": mode, "option": "auto"}, blocking=True
     )
+    await _settle()
+    assert hass.states.get(E).state == "off"
+    # The window closed: on, "comfort" and its temperature; it reports late.
+    sent.clear()
+    hass.states.async_set("binary_sensor.window", "off")
     await _settle()
     first = sent[: sent.index(("temperature", 21.0)) + 1]
     again = sent[len(first) :]

@@ -94,7 +94,7 @@ test("editor: a switch not set shows what the card does (issue #19)", async (p) 
   });
   eq(fields, {
     title: undefined, rooms: undefined,
-    show_house: true, show_rooms: true, show_timeline: true, show_quick_override: true, show_levels: true,
+    show_title: true, show_house: true, show_rooms: true, show_timeline: true, show_quick_override: true, show_levels: true,
     show_details: true, show_schedule_editor: true, collapsed: false, compact: false, runtime_period: "day",
   }, "the default of every field");
   // A new card (empty configuration) shows exactly the parts the switches show on.
@@ -104,6 +104,19 @@ test("editor: a switch not set shows what the card does (issue #19)", async (p) 
     return { house: !!sr.querySelector(".house-head"), quick: !!sr.querySelector('[data-key="quick-r1"]'), compact: !!sr.querySelector("ha-card.compact") };
   });
   eq(shown, { house: true, quick: true, compact: false }, "the card with the defaults");
+});
+
+test("editor: the title hidden by its switch, or by an empty title in YAML (issue #27)", async (p) => {
+  const room = { rooms: [{ id: "r1", name: "Bedroom" }] };
+  const title = () => p.evaluate(() => card.shadowRoot.querySelector("h2.title")?.innerText.trim() ?? null);
+  await p.evaluate((h) => mount({}, h), room); await p.waitForTimeout(150);
+  eq(await title(), "Heating", "shown by default");
+  await p.evaluate((h) => mount({ title: "Casa" }, h), room); await p.waitForTimeout(150);
+  eq(await title(), "Casa", "its own title");
+  await p.evaluate((h) => mount({ title: "Casa", show_title: false }, h), room); await p.waitForTimeout(150);
+  eq(await title(), null, "hidden by the switch, also with a title set");
+  await p.evaluate((h) => mount({ title: "" }, h), room); await p.waitForTimeout(150);
+  eq(await title(), null, "hidden by an empty title (YAML)");
 });
 
 test("editor: the rooms chosen are dragged into the order of the card (issue #20)", async (p) => {

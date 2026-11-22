@@ -35,6 +35,7 @@ export const PRESET_COLORS = {
 };
 
 export const DEFAULTS = {
+  show_title: true,
   show_house: true,
   show_rooms: true,
   show_timeline: true,

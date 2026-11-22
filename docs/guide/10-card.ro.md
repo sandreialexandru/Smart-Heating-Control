@@ -28,6 +28,7 @@ type: custom:smart-heating-control-card
 | Opțiune | Implicit | Ce face |
 | --- | --- | --- |
 | `title` | Încălzire | Titlul cardului (un text gol îl ascunde). |
+| `show_title` | `true` | Titlul; *Afișează titlul* în editorul vizual. |
 | `rooms` | toate | Lista senzorilor *Decizie* ai camerelor de arătat, în ordinea din card (în editorul vizual se trag de mânere). Fără ea se arată toate camerele, după nume. |
 | `show_house` | `true` | Partea casei (mai jos). |
 | `show_rooms` | `true` | Camerele. |

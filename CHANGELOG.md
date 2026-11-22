@@ -9,6 +9,9 @@ GitHub releases.
 
 ### New
 
+- 🏷️ **Show the title** in the visual editor of the card: the title can be
+  hidden there too (until now only with an empty `title` in YAML)
+  ([#27](https://github.com/sandreialexandru/Smart-Heating-Control/issues/27)).
 - 🔗 **A change on one thermostat for the whole room**: in a room with several
   thermostats, *A change on one thermostat* (in the room's *Extras*) chooses
   *Only that thermostat* (as until now, the default) or *The whole room*. With

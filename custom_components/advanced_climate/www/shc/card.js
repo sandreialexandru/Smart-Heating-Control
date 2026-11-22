@@ -3,6 +3,7 @@
  *
  *   type: custom:smart-heating-control-card
  *   title: Heating               # optional
+ *   show_title: true             # false (or title: "") hides the title
  *   rooms:                       # optional: decision sensors to show (default: all)
  *     - sensor.living_decision
  *   show_house: true             # house: presence, mode, pause, guests, vacation, stats
@@ -25,7 +26,7 @@ import { esc } from "./core/format.js";
 import { TEXT } from "./core/i18n.js";
 import { STYLE } from "./core/style.js";
 
-const CARD_VERSION = "2.7.0rc11";
+const CARD_VERSION = "2.7.0rc12";
 
 class SmartHeatingControlCard extends ShcBase {
   /** Visual editor of the card (Home Assistant form). */
@@ -93,7 +94,7 @@ class SmartHeatingControlCard extends ShcBase {
     this._ensureCard();
     const cfg = this._config;
     const houses = this._hass ? this._houses() : [];
-    const title = cfg.title ?? this._t("title");
+    const title = cfg.show_title === false ? "" : (cfg.title ?? this._t("title"));
     this._blockCache = this._blockCache || {};
     const ver = (ids) =>
       ids

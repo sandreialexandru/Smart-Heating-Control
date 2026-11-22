@@ -378,6 +378,7 @@ type: custom:smart-heating-control-card
 | Option | Default | Shows |
 | --- | --- | --- |
 | `title` | Heating | Card title (empty string hides it) |
+| `show_title` | `true` | The title (*Show the title* in the visual editor) |
 | `rooms` | all | List of room *Decision* sensors to show |
 | `show_house` | `true` | Presence and people (round badges in the colour of where they are), tiles for the outdoor average (over the *Average over* hours), season, heat demand and heating time, mode (Auto / Away / Vacation / Off / Summer), and a row of buttons: Pause and Guests (on / off; guest mode shows a band at the top), Vacation (opens the dates), Reevaluate, Automatic (clears all manual changes) |
 | `show_rooms` | `true` | The rooms |

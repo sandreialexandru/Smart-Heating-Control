@@ -400,6 +400,7 @@ type: custom:smart-heating-control-card
 | Opțiune | Implicit | Arată |
 | --- | --- | --- |
 | `title` | Încălzire | Titlul cardului (un text gol îl ascunde) |
+| `show_title` | `true` | Titlul (*Afișează titlul* în editorul vizual) |
 | `rooms` | toate | Lista senzorilor *Decizie* ai camerelor de arătat |
 | `show_house` | `true` | Prezența și persoanele (cercuri în culoarea locului unde sunt), plăci pentru media temperaturii de afară (pe orele din *Medie pe*), sezon, cererea de căldură și timpul de încălzire, modul (Auto / Plecat / Vacanță / Oprit / Vară) și un rând de butoane: Pauză și Oaspeți (pornit / oprit; modul oaspeți arată o bandă sus), Vacanță (deschide datele), Reevaluează, Automat (anulează toate modificările manuale) |
 | `show_rooms` | `true` | Camerele |

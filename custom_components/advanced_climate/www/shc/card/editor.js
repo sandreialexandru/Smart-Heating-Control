@@ -12,6 +12,7 @@ export const EDITOR_SCHEMA = [
     type: "grid",
     name: "",
     schema: [
+      { name: "show_title", selector: { boolean: {} } },
       { name: "show_house", selector: { boolean: {} } },
       { name: "show_rooms", selector: { boolean: {} } },
       { name: "show_timeline", selector: { boolean: {} } },
@@ -53,6 +54,7 @@ export const EDITOR_LABELS = {
   en: {
     title: "Title",
     rooms: "Rooms (Decision sensors; empty = all)",
+    show_title: "Show the title",
     show_house: "House: presence, mode, pause, guests, vacation",
     show_rooms: "Rooms",
     show_timeline: "Chart: last 24 hours and the next 12",
@@ -67,6 +69,7 @@ export const EDITOR_LABELS = {
   ro: {
     title: "Titlu",
     rooms: "Camere (senzorii Decizie; gol = toate)",
+    show_title: "Afișează titlul",
     show_house: "Casa: prezență, mod, pauză, oaspeți, vacanță",
     show_rooms: "Camere",
     show_timeline: "Grafic: ultimele 24 de ore și următoarele 12",
@@ -81,6 +84,7 @@ export const EDITOR_LABELS = {
   de: {
     title: "Titel",
     rooms: "Räume (Entscheidungs-Sensoren; leer = alle)",
+    show_title: "Titel anzeigen",
     show_house: "Haus: Anwesenheit, Modus, Pause, Gäste, Urlaub",
     show_rooms: "Räume",
     show_timeline: "Diagramm: letzte 24 Stunden und die nächsten 12",
@@ -95,6 +99,7 @@ export const EDITOR_LABELS = {
   nl: {
     title: "Titel",
     rooms: "Kamers (Beslissing-sensoren; leeg = alle)",
+    show_title: "Titel tonen",
     show_house: "Huis: aanwezigheid, modus, pauze, gasten, vakantie",
     show_rooms: "Kamers",
     show_timeline: "Grafiek: laatste 24 uur en de komende 12",
@@ -109,6 +114,7 @@ export const EDITOR_LABELS = {
   fr: {
     title: "Titre",
     rooms: "Pièces (capteurs Décision ; vide = toutes)",
+    show_title: "Afficher le titre",
     show_house: "Maison : présence, mode, pause, invités, vacances",
     show_rooms: "Pièces",
     show_timeline: "Graphique : dernières 24 heures et les 12 prochaines",
@@ -123,6 +129,7 @@ export const EDITOR_LABELS = {
   it: {
     title: "Titolo",
     rooms: "Stanze (sensori Decisione; vuoto = tutte)",
+    show_title: "Mostra il titolo",
     show_house: "Casa: presenza, modalità, pausa, ospiti, vacanza",
     show_rooms: "Stanze",
     show_timeline: "Grafico: ultime 24 ore e le prossime 12",
@@ -137,6 +144,7 @@ export const EDITOR_LABELS = {
   es: {
     title: "Título",
     rooms: "Habitaciones (sensores Decisión; vacío = todas)",
+    show_title: "Mostrar el título",
     show_house: "Casa: presencia, modo, pausa, invitados, vacaciones",
     show_rooms: "Habitaciones",
     show_timeline: "Gráfico: últimas 24 horas y las próximas 12",

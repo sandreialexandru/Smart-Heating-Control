@@ -2,6 +2,13 @@ name: Bug report
 description: Something does not work as expected
 labels: [bug]
 body:
+  - type: checkboxes
+    id: guide
+    attributes:
+      label: Before you report
+      options:
+        - label: I have read the [guide](https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/docs/guide/README.md) and this is not how it is meant to work.
+          required: true
   - type: input
     id: version
     attributes:

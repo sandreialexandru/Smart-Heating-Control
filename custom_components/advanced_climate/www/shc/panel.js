@@ -530,6 +530,12 @@ class ShcPanel extends ShcBase {
       `<span class="pb-stat ${cls} ${entityId ? "link" : ""}" ${this._more(entityId)}><span class="k">${this._icon(icon)}<span>${esc(
         label
       )}</span></span><span class="v">${esc(value)}</span></span>`;
+    // The heat demand: since when and its heat source said on hover (one bar).
+    const times = this._demandTimes(demand);
+    const demandTitle = [times.when, times.source?.text].filter(Boolean).join("\n");
+    const demandStat = `<span class="pb-stat ${demand?.state === "on" ? "hot" : "off"} link" ${this._more(e.heat_demand, demandTitle || null)}><span class="k">${this._icon(
+      "fire"
+    )}<span>${esc(this._t("demand"))}</span></span><span class="v">${esc(onOff(demand))}</span></span>`;
     // The heating time; a tap changes its period (as in the card).
     const period = this._period();
     const runtimeChip = runtime
@@ -555,7 +561,7 @@ class ShcPanel extends ShcBase {
           <div class="pb-stats">
             ${stat("weather-partly-cloudy", this._outdoorLabel(outdoor), this._temp(outdoor?.state), e.outdoor_average)}
             ${stat("calendar-range", this._t("season"), onOff(season), e.heating_season, season?.state === "on" ? "" : "off")}
-            ${stat("fire", this._t("demand"), onOff(demand), e.heat_demand, demand?.state === "on" ? "hot" : "off")}
+            ${demandStat}
             ${runtimeChip}
           </div>
         </div>

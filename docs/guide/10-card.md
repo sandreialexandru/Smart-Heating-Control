@@ -68,7 +68,9 @@ collapsed: true
 - **The outdoor average** (over the *Average over* hours), the **season**, the
   **heat demand** and the **heating time**, as a table with thin lines: two by
   two on a narrow card (three in a row without the heating time), all in one
-  row on a wide one.
+  row on a wide one. Under the heat demand: since when, and the **heat source**
+  of the house, on or off since when, or how long its minimum on / off time
+  still holds it (*Boiler: kept off 3 min more*); a tap on it opens it.
 - The **mode** (Auto / Away / Vacation / Off / Summer), the chosen one tinted
   with the accent colour of the theme.
 - The **scenarios**, three per row in the same buttons as the modes (two per
@@ -260,9 +262,7 @@ In groups:
   **humidity** (with a humidity sensor: of the air and at the coldest wall,
   marked *mold risk* from 80 %), the active adjustments, the level temperatures;
 - **Heating**: since when the room asks for heat (*Yes · since 21:40 (25 min)*)
-  and heats, or stopped; the **heat source** of the house it waits for, on or
-  off since when, and how long its minimum on / off time still holds it (*kept
-  off 3 min more*), a tap opens it; the heating time;
+  and heats, or stopped; the heating time;
 - **Schedule**: the next optimal start / stop;
 - **Learning**: its state (*learned* with the usual error of the model, or,
   while learning, two bars with the hours seen with and without heating out of

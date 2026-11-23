@@ -473,6 +473,7 @@ export const STYLE = `
   .stat .k ha-icon { --mdc-icon-size: 14px; flex: none; }
   .stat .v { font-variant-numeric: tabular-nums; font-size: 1.25em; font-weight: 600; }
   .stat.hot .v { color: var(--ac-hot); }
+  .stat .sub { font-size: 0.75em; color: var(--ac-muted); overflow-wrap: anywhere; }
   .stat.warn .v { color: var(--ac-warn); }
   .hactions { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
   .abtn { --t: var(--ac-accent); grid-column: span var(--span, 2); display: flex; align-items: center; justify-content: center; gap: 8px;

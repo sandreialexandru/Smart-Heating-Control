@@ -96,11 +96,7 @@ export const DetailsMixin = (Base) =>
       return this._fold(`details-${a.room_id}`, this._t("details"), html);
     }
 
-    /**
-     * The heat demand of the room: since when it asks for heat and heats (or
-     * stopped), and the heat source of the house it waits for: running or not,
-     * since when, and how long its minimum on / off time still holds it.
-     */
+    /** The heat demand of the room: since when it asks for heat and heats (or stopped). */
     _heatingHtml(a, dl) {
       const since = (iso) => {
         const t = Date.parse(iso || "");
@@ -109,19 +105,9 @@ export const DetailsMixin = (Base) =>
         return ` · ${this._t("hd_since").replace("{time}", this._fmtTime(iso)).replace("{d}", this._duration(minutes))}`;
       };
       const yesNo = (on) => this._t(on ? "hd_yes" : "hd_no");
-      const onOff = (on) => this._t(on ? "on" : "off");
       let html =
         dl(this._t("asks_heat"), esc(`${yesNo(a.heat_demand)}${since(a.demand_since)}`)) +
         dl(this._t("heating"), esc(`${yesNo(a.heating)}${since(a.heating_since)}`));
-      const src = a.heat_source;
-      if (src && src.entity_id) {
-        let text = src.on === null || src.on === undefined ? this._t("hd_unknown") : `${onOff(src.on)}${since(src.since)}`;
-        const left = (Date.parse(src.until || "") - Date.now()) / 60000;
-        if (src.waiting && Number.isFinite(left) && left > 0) {
-          text += ` · ${this._t(`hd_held_${src.waiting}`).replace("{d}", this._duration(Math.max(1, left)))}`;
-        }
-        html += `<div class="wide link" ${this._more(src.entity_id)}><dt>${esc(this._t("heat_source"))}</dt><dd>${esc(text)}</dd></div>`;
-      }
       return html;
     }
 

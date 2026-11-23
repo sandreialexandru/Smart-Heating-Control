@@ -9,11 +9,12 @@ GitHub releases.
 
 ### New
 
-- 🔥 **Heating in the details of a room**: since when the room asks for heat
-  and heats (or stopped), the heat source of the house it waits for, on or off
-  since when, and how long its minimum on / off time still holds it (*kept off
-  3 min more*), a tap opening it; with the heating time
-  ([#30](https://github.com/sandreialexandru/Smart-Heating-Control/issues/30)).
+- 🔥 **Since when, and the heat source** ([#30](https://github.com/sandreialexandru/Smart-Heating-Control/issues/30)):
+  under the heat demand of the house, since when, and its heat source on or
+  off since when, or how long its minimum on / off time still holds it
+  (*Boiler: kept off 3 min more*), a tap opening it. In the details of a room,
+  *Heating*: since when it asks for heat and heats (or stopped), with its
+  heating time.
 
 ### Changed
 

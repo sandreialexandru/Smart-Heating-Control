@@ -68,7 +68,10 @@ collapsed: true
 - **Media temperaturii de afară** (pe orele din *Medie pe*), **sezonul**,
   **cererea de căldură** și **timpul de încălzire**, ca un tabel cu linii
   subțiri: două câte două pe un card îngust (trei pe rând fără timpul de
-  încălzire), toate pe un rând pe unul lat.
+  încălzire), toate pe un rând pe unul lat. Sub cererea de căldură: de când,
+  și **sursa de căldură** a casei, pornită sau oprită de când, sau cât o mai
+  ține timpul minim pornit / oprit (*Centrala: ținută oprită încă 3 min*); la
+  atingere se deschide.
 - **Modul** (Auto / Plecat / Vacanță / Oprit / Vară), cel ales colorat cu
   culoarea de accent a temei.
 - **Scenariile**, câte trei pe rând în aceleași butoane ca modurile (câte două
@@ -258,10 +261,7 @@ Pe grupuri:
   senzor de umiditate: a aerului și la peretele cel mai rece, marcată *risc de
   mucegai* de la 80 %), ajustările active, temperaturile nivelurilor;
 - **Încălzire**: de când camera cere căldură (*Da · de la 21:40 (25 min)*) și
-  încălzește, sau de când s-a oprit; **sursa de căldură** a casei pe care o
-  așteaptă, pornită sau oprită de când și cât o mai ține timpul minim pornit /
-  oprit (*ținută oprită încă 3 min*), la atingere se deschide; timpul de
-  încălzire;
+  încălzește, sau de când s-a oprit; timpul de încălzire;
 - **Program**: următoarea pornire / oprire anticipată;
 - **Învățare**: starea ei (*învățat*, cu eroarea obișnuită a modelului, sau,
   în timpul învățării, două bare cu orele văzute cu și fără încălzire din cele

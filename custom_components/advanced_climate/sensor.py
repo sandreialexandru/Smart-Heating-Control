@@ -250,7 +250,6 @@ class DecisionSensor(RoomEntity, SensorEntity):
             # Shown in the details only; the history keeps the states themselves.
             "demand_since",
             "heating_since",
-            "heat_source",
         }
     )
 
@@ -331,11 +330,9 @@ class DecisionSensor(RoomEntity, SensorEntity):
             "device_levels": room.device_levels,
             "heat_demand": room.heat_demand,
             "heating": room.heating,
-            # Since when it asks for heat / heats (or stopped), and the heat source
-            # of the house it waits for: running or not, since when, its minimum time.
+            # Since when it asks for heat / heats (or stopped).
             "demand_since": iso(room.demand_since),
             "heating_since": iso(room.heating_since),
-            "heat_source": room.house.source_details() if room.uses_house_source else None,
             "day_boundary": room.house.day_boundary_minutes,
             "source": room.source,
             "custom_levels": room.uses_custom_levels,

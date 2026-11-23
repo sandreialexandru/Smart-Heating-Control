@@ -503,14 +503,23 @@ async def test_since_when_a_room_asks_for_heat_heats_and_the_heat_source_runs(
     def attrs() -> dict:
         return hass.states.get("sensor.bedroom_decision").attributes
 
+    def source() -> dict:
+        # The heat source is of the house: with its heat demand.
+        return hass.states.get("binary_sensor.home_heat_demand").attributes["heat_source"]
+
     # 18 °C under 21 °C: asks for heat, the boiler started, the room heats.
     assert hass.states.get("switch.boiler").state == "on"
     started = attrs()
     assert started["heat_demand"] is True and started["heating"] is True
     assert started["demand_since"] is not None and started["heating_since"] is not None
-    source = started["heat_source"]
-    assert (source["entity_id"], source["on"], source["waiting"]) == ("switch.boiler", True, None)
-    assert source["since"] is not None
+    assert "heat_source" not in started
+    running = source()
+    assert (running["entity_id"], running["on"], running["waiting"]) == (
+        "switch.boiler",
+        True,
+        None,
+    )
+    assert running["since"] is not None
     # Warm: no heat asked any more, the boiler stopped.
     await _tick(hass, freezer, 60)
     hass.states.async_set("sensor.room_temp", "23.0", {"unit_of_measurement": "°C"})
@@ -519,15 +528,16 @@ async def test_since_when_a_room_asks_for_heat_heats_and_the_heat_source_runs(
     assert hass.states.get("switch.boiler").state == "off"
     stopped = attrs()
     assert stopped["heat_demand"] is False and stopped["heating"] is False
-    assert stopped["heat_source"]["on"] is False
+    assert source()["on"] is False
     # Cold again a minute later: the boiler waits for its 5 minutes off.
     await _tick(hass, freezer, 60)
     hass.states.async_set("sensor.room_temp", "18.0", {"unit_of_measurement": "°C"})
     await _tick(hass, freezer, 30)
     waiting = attrs()
     assert waiting["heat_demand"] is True and waiting["heating"] is False
-    assert waiting["heat_source"]["on"] is False
-    assert waiting["heat_source"]["waiting"] == "min_off"
-    until = dt_util.parse_datetime(waiting["heat_source"]["until"])
+    held = source()
+    assert held["on"] is False
+    assert held["waiting"] == "min_off"
+    until = dt_util.parse_datetime(held["until"])
     assert abs((until - stopped_at).total_seconds() - 5 * 60) < 60
     await _unload(hass, entry)

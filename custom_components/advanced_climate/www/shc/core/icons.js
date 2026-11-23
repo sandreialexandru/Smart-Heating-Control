@@ -29,10 +29,12 @@ export const IconMixin = (Base) =>
      * The flame: an outlined circle while there is a demand for heat, a full one
      * that flickers while the heat source runs. The words are in its title.
      */
-    _flame(heating, entityId = null, small = false) {
+    _flame(heating, entityId = null, small = false, glow = !small) {
       const text = this._t(heating ? "heating" : "asks_heat");
       const link = entityId ? this._more(entityId, text) : `title="${esc(text)}"`;
-      return `<span class="flame ${heating ? "on" : ""} ${small ? "sm" : ""} ${entityId ? "link" : ""}" ${link}
+      // Grey while it only asks (the heat source does not run yet), the colour of
+      // heat and its flicker while it heats; a glow too where it is shown big.
+      return `<span class="flame ${heating ? "on" : ""} ${heating && glow ? "glow" : ""} ${small ? "sm" : ""} ${entityId ? "link" : ""}" ${link}
         aria-label="${esc(text)}">${this._icon("fire")}</span>`;
     }
   };

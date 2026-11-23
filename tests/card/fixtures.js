@@ -68,6 +68,7 @@
         rate_learned: learned, humidity: r.humidity ?? null, surface_humidity: r.wall ?? null, area: r.area ?? null, circuit: r.circuit ?? null, device_levels: [],
         heat_demand: r.demand ?? true, heating: r.heating ?? true, temperature_trend: r.trend ?? 0, day_boundary: 0, source: r.source || "switch",
         custom_levels: true, house_name: house, entities: e, house_entities: he, devices: r.devices || [], held_at: r.heldAt ?? null,
+        ...(r.attrs || {}),
       };
       if (r.dropAttrs) for (const k of r.dropAttrs) delete a[k];
       st(e.decision, r.state || "schedule", a);

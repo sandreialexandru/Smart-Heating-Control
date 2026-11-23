@@ -110,9 +110,11 @@ senzor sau sursa de căldură indisponibile, o temperatură neacceptată, un
 program invalid, un nivel lipsă), chihlimbar pentru celelalte alerte.
 
 O **flacără** arată căldura peste tot (casa, camera deschisă, rândul pliat,
-placa compactă): un cerc conturat cât există cerere de căldură (*Cere
-căldură*), unul plin care pâlpâie cât sursa de căldură chiar merge
-(*Încălzește*); cuvintele apar la atingere sau la mouse.
+placa compactă): un cerc gri conturat cât există cerere de căldură, dar sursa
+de căldură nu merge încă (*Cere căldură*), unul plin, în culoarea căldurii, care
+pâlpâie cât sursa de căldură chiar merge (*Încălzește*), cu o strălucire în jur
+la casă și la camera deschisă; cuvintele apar la atingere sau la mouse.
+Flacăra casei deschide *cererea de căldură*: Home Assistant arată de când.
 
 O cameră pliată arată arcul și, sub nume, un rând: nivelul și ținta lui, apoi
 timpul până la țintă cât camera încălzește, altfel următoarea schimbare (de
@@ -255,7 +257,12 @@ Pe grupuri:
 - **Temperaturi**: camera, ținta, presetul termostatului, **umiditatea** (cu
   senzor de umiditate: a aerului și la peretele cel mai rece, marcată *risc de
   mucegai* de la 80 %), ajustările active, temperaturile nivelurilor;
-- **Program**: următoarea pornire / oprire anticipată, timpul de încălzire;
+- **Încălzire**: de când camera cere căldură (*Da · de la 21:40 (25 min)*) și
+  încălzește, sau de când s-a oprit; **sursa de căldură** a casei pe care o
+  așteaptă, pornită sau oprită de când și cât o mai ține timpul minim pornit /
+  oprit (*ținută oprită încă 3 min*), la atingere se deschide; timpul de
+  încălzire;
+- **Program**: următoarea pornire / oprire anticipată;
 - **Învățare**: starea ei (*învățat*, cu eroarea obișnuită a modelului, sau,
   în timpul învățării, două bare cu orele văzute cu și fără încălzire din cele
   4 necesare, cu valoarea implicită dedesubt) cu butonul **Resetează** (cu un

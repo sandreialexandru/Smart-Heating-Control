@@ -611,10 +611,12 @@ export const STYLE = `
   .alerticon { background: color-mix(in srgb, var(--ac-err) 16%, transparent); color: var(--ac-err-fg); }
   .alerticon.warn { background: color-mix(in srgb, var(--warning-color, #f0ad4e) 18%, transparent); color: var(--ac-warn-fg); }
   .flame { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none;
-    color: var(--ac-hot); background: color-mix(in srgb, var(--ac-hot) 10%, transparent); box-shadow: inset 0 0 0 1.5px var(--ac-hot); }
+    color: var(--secondary-text-color); background: color-mix(in srgb, var(--secondary-text-color) 10%, transparent);
+    box-shadow: inset 0 0 0 1.5px var(--secondary-text-color); }
   .flame ha-icon { --mdc-icon-size: 16px; }
   .flame.on { background: var(--ac-hot); color: #fff; box-shadow: none; }
   .flame.on ha-icon { animation: shc-flicker 1.6s ease-in-out infinite; transform-origin: 50% 85%; }
+  .flame.on.glow { animation: shc-pulse 2s ease-out infinite; }
 
   @keyframes shc-flicker {
     0%, 100% { transform: scale(1) rotate(0deg); }
@@ -635,6 +637,6 @@ export const STYLE = `
   .tile-info .tval { font-size: 1.15em; font-weight: 600; }
   .tile-info .muted { font-size: 0.8em; line-height: 1.35; overflow-wrap: anywhere; max-width: 100%; }
 
-  :host([offscreen]) .pulse, :host([offscreen]) .flame.on ha-icon { animation-play-state: paused; }
-  @media (prefers-reduced-motion: reduce) { .pulse, .flame.on ha-icon { animation: none; } * { transition: none !important; } }
+  :host([offscreen]) .pulse, :host([offscreen]) .flame.on ha-icon, :host([offscreen]) .flame.glow { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) { .pulse, .flame.on ha-icon, .flame.glow { animation: none; } * { transition: none !important; } }
 `;

@@ -5,6 +5,23 @@ release (and of each beta pre-release) are taken from here: a beta shows the
 *Unreleased* section, a release its own section. Older versions: see the
 GitHub releases.
 
+## Unreleased
+
+### New
+
+- 🔥 **Heating in the details of a room**: since when the room asks for heat
+  and heats (or stopped), the heat source of the house it waits for, on or off
+  since when, and how long its minimum on / off time still holds it (*kept off
+  3 min more*), a tap opening it; with the heating time
+  ([#30](https://github.com/sandreialexandru/Smart-Heating-Control/issues/30)).
+
+### Changed
+
+- 🔥 **The flame tells more at a glance**: grey while the room or the house
+  only asks for heat (the heat source does not run yet), in the colour of heat
+  and flickering while it really heats, with a glow on the house and on the
+  open room.
+
 ## 2.7.0 – 2026-11-23
 
 ### New

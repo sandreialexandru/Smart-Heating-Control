@@ -30,7 +30,7 @@ export const CompactMixin = (Base) =>
       const heating = !!a.heating;
       // Every state that applies, as small round icons (heating pulses).
       const status = [
-        a.heat_demand ? this._flame(heating) : "",
+        a.heat_demand ? this._flame(heating, null, false, false) : "",
         this._alertIcon(a),
         a.window_open ? `<span class="tstat warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>` : "",
         this._moldIcon(a, "tstat"),

@@ -209,3 +209,31 @@ test("a copy that a room refuses: the error, and that room stays chosen", async 
   eq(r.chosen, ["r3"], "the room that refused stays chosen");
   ok(/Copied to: Kid/.test(r.text), "the one that took it");
 });
+
+test("details: since when the room asks for heat and heats, the heat source and its minimum time (#30)", async (p) => {
+  const now = await p.evaluate(() => Date.now());
+  const iso = (m) => new Date(now + m * 60000).toISOString();
+  const waiting = { id: "r1", name: "Bedroom", demand: true, heating: false, attrs: {
+    demand_since: iso(-25), heating_since: iso(-90),
+    heat_source: { entity_id: "switch.boiler", on: false, since: iso(-4), waiting: "min_off", until: iso(3) },
+  } };
+  await mount(p, {}, { rooms: [waiting] }); await click(p, '[data-key="details-r1"]'); await p.waitForTimeout(100);
+  const all = await p.evaluate(() => [...card.shadowRoot.children].map((c) => c.innerText || "").join("\n"));
+  const text = all;
+  ok(/Asks for heat\s*Yes · since \d\d:\d\d \(25 min\)/.test(all), "asks since");
+  ok(/Heating\s*No · since \d\d:\d\d \(1 h 30 min\)/.test(all), "stopped since");
+  ok(/Heat source\s*Off · since \d\d:\d\d \(4 min\) · kept off 3 min more \(minimum off time\)/.test(all), "held off");
+  ok(text.length > 0, "details shown");
+  // A tap on the heat source opens it.
+  const id = await p.evaluate(() => new Promise((res) => {
+    card.addEventListener("hass-more-info", (e) => res(e.detail.entityId), { once: true });
+    [...card.shadowRoot.querySelectorAll(".details .link")].find((x) => x.innerText.includes("Heat source")).click();
+  }));
+  eq(id, "switch.boiler", "more info of the heat source");
+  // The flame: grey while it only asks, the colour of heat with a glow while it heats.
+  const flame = () => p.evaluate(() => { const f = card.shadowRoot.querySelector(".hero .flame, .badges .flame, .flame"); return f ? f.className : null; });
+  ok(!(await flame()).includes(" on"), "asking: not on");
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom", demand: true, heating: true }] });
+  const cls = await p.evaluate(() => [...card.shadowRoot.querySelectorAll(".flame")].map((f) => f.className));
+  ok(cls.some((c) => c.includes("on") && c.includes("glow")), "heating: on with a glow " + JSON.stringify(cls));
+});

@@ -477,3 +477,57 @@ async def test_a_secondary_room_is_never_the_cold_room_of_the_difference_alert(
     assert sent == ["room_difference"]
     house.rooms = real
     await _unload(hass, entry)
+
+
+async def test_since_when_a_room_asks_for_heat_heats_and_the_heat_source_runs(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The details of the heat demand (#30): since when the room asks for heat and
+    heats, the heat source on or off since when, and how long its minimum off
+    time still holds it."""
+    from homeassistant.core import ServiceCall, callback
+    from homeassistant.util import dt as dt_util
+
+    @callback
+    def _switch(call: ServiceCall) -> None:
+        state = "on" if call.service == "turn_on" else "off"
+        hass.states.async_set(call.data["entity_id"], state, context=call.context)
+
+    for service in ("turn_on", "turn_off"):
+        hass.services.async_register("switch", service, _switch)
+    hass.states.async_set("switch.boiler", "off")
+    entry, _room_obj, _ = await _room(
+        hass, freezer, {"boiler_entity": "switch.boiler", "boiler_min_off": 5}
+    )
+
+    def attrs() -> dict:
+        return hass.states.get("sensor.bedroom_decision").attributes
+
+    # 18 °C under 21 °C: asks for heat, the boiler started, the room heats.
+    assert hass.states.get("switch.boiler").state == "on"
+    started = attrs()
+    assert started["heat_demand"] is True and started["heating"] is True
+    assert started["demand_since"] is not None and started["heating_since"] is not None
+    source = started["heat_source"]
+    assert (source["entity_id"], source["on"], source["waiting"]) == ("switch.boiler", True, None)
+    assert source["since"] is not None
+    # Warm: no heat asked any more, the boiler stopped.
+    await _tick(hass, freezer, 60)
+    hass.states.async_set("sensor.room_temp", "23.0", {"unit_of_measurement": "°C"})
+    await _tick(hass, freezer, 30)
+    stopped_at = dt_util.utcnow()
+    assert hass.states.get("switch.boiler").state == "off"
+    stopped = attrs()
+    assert stopped["heat_demand"] is False and stopped["heating"] is False
+    assert stopped["heat_source"]["on"] is False
+    # Cold again a minute later: the boiler waits for its 5 minutes off.
+    await _tick(hass, freezer, 60)
+    hass.states.async_set("sensor.room_temp", "18.0", {"unit_of_measurement": "°C"})
+    await _tick(hass, freezer, 30)
+    waiting = attrs()
+    assert waiting["heat_demand"] is True and waiting["heating"] is False
+    assert waiting["heat_source"]["on"] is False
+    assert waiting["heat_source"]["waiting"] == "min_off"
+    until = dt_util.parse_datetime(waiting["heat_source"]["until"])
+    assert abs((until - stopped_at).total_seconds() - 5 * 60) < 60
+    await _unload(hass, entry)

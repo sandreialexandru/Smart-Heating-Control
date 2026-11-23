@@ -262,6 +262,10 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self.current_temp: float | None = None
         self.target_temperature: float | None = None
         self.heat_demand = False
+        # Since when the room asks for heat and heats, or stopped (None: not
+        # since this start of the integration).
+        self.demand_since: datetime | None = None
+        self.heating_since: datetime | None = None
         # The heat source runs for this room (see _update_demand); the learning
         # and the heating time count only then.
         self.heating = False
@@ -1481,6 +1485,8 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
                     self._top_up_settle = False
             # Frost protection from the room sensor (the TRVs are boosted for it).
             demand = demand or self._boost_demand
+        if demand != self.heat_demand:
+            self.demand_since = dt_util.utcnow()
         self.heat_demand = demand
         self._update_heating()
 
@@ -1516,6 +1522,8 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         if not heating and self._heating_since is not None:  # pragma: no mutate
             self._account_runtime(now)
             self._heating_since = None
+        if heating != self.heating:
+            self.heating_since = now
         self.heating = heating
 
     def _device_heating(self) -> bool | None:

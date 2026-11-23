@@ -110,9 +110,11 @@ its dots. A room with an alert is outlined: red when something does not work
 accepted, an invalid schedule, a missing level), amber for the other alerts.
 
 A **flame** shows the heat everywhere (house, open room, folded row, compact
-tile): an outlined circle while there is a demand for heat (*Asks for heat*), a
-full one that flickers while the heat source really runs (*Heating*); the words
-appear when it is touched or hovered.
+tile): a grey outlined circle while there is a demand for heat but the heat
+source does not run yet (*Asks for heat*), a full one in the colour of heat that
+flickers while the heat source really runs (*Heating*), with a glow around it on
+the house and on the open room; the words appear when it is touched or hovered.
+The flame of the house opens its *heat demand*: Home Assistant shows since when.
 
 A folded room shows the arc and, under the name, one line: the level and its
 target, then the time to the target while the room heats, else the next change
@@ -257,7 +259,11 @@ In groups:
 - **Temperatures**: the room, the target, the thermostat preset, the
   **humidity** (with a humidity sensor: of the air and at the coldest wall,
   marked *mold risk* from 80 %), the active adjustments, the level temperatures;
-- **Schedule**: the next optimal start / stop, the heating time;
+- **Heating**: since when the room asks for heat (*Yes · since 21:40 (25 min)*)
+  and heats, or stopped; the **heat source** of the house it waits for, on or
+  off since when, and how long its minimum on / off time still holds it (*kept
+  off 3 min more*), a tap opens it; the heating time;
+- **Schedule**: the next optimal start / stop;
 - **Learning**: its state (*learned* with the usual error of the model, or,
   while learning, two bars with the hours seen with and without heating out of
   the 4 needed, with the default under them) with a **Reset** button (with a

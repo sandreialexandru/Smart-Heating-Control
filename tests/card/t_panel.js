@@ -286,6 +286,9 @@ test("statistics: days without history kept have no bar; statistics that fail sa
 });
 
 test("history: newest first by day; decisions and alerts with start, end and the restart", async (p) => {
+  // At noon: the history of the fixtures spans three days (after midnight its hours fall on four).
+  const noon = new Date(); noon.setHours(12, 0, 0, 0);
+  await p.context().clock.setFixedTime(noon);
   await openPanel(p, { rooms: R4 });
   await tab(p, "history");
   const r = await inPanel(p, (sr) => ({

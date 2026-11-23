@@ -211,6 +211,9 @@ test("a copy that a room refuses: the error, and that room stays chosen", async 
 });
 
 test("details: since when the room asks for heat and heats; the house: since when and its heat source (#30)", async (p) => {
+  // At noon: 90 minutes earlier is still today (after midnight the time would carry the day).
+  const noon = new Date(); noon.setHours(12, 0, 0, 0);
+  await p.context().clock.setFixedTime(noon);
   const now = await p.evaluate(() => Date.now());
   const iso = (m) => new Date(now + m * 60000).toISOString();
   const waiting = { id: "r1", name: "Bedroom", demand: true, heating: false, attrs: { demand_since: iso(-25), heating_since: iso(-90) } };

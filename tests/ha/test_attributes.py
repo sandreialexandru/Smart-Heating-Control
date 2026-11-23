@@ -493,6 +493,8 @@ async def test_since_when_a_room_asks_for_heat_heats_and_the_heat_source_runs(
     hass.states.async_set("climate.trv", "heat", {**trv, "hvac_action": "heating"})
     entry = await _trv_house(hass, freezer, boiler_min_off=5)
     await _tick(hass, freezer, 15)
+    # The boiler started: the room heats from the evaluation that follows.
+    await _tick(hass, freezer, 5)
 
     def attrs() -> dict:
         return hass.states.get("sensor.office_decision").attributes

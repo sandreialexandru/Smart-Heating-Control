@@ -14,8 +14,8 @@
         "data_description": {
           "temperature_unit": "Alle Temperaturen dieses Hauses werden in dieser Einheit eingegeben und angezeigt. Du kannst sie später über „Neu konfigurieren“ ändern. Bestehende Werte werden umgerechnet.",
           "name": "Wird an den Geräten und in der Karte angezeigt.",
-          "persons": "Personen, deren Standort über den Status des Hauses entscheidet. Wenn die Anwesenheit von Personen keine Rolle spielen soll, leer lassen. Das Haus ist immer im Status „Zuhause“ und nur der Zeitplan entscheidet.",
-          "nearby_zones": "Zonen, die den Status des Hauses auf „in der Nähe“ setzen (Eco), z. B. deine Stadt. Außerhalb dieser Zonen gilt der Status „weit weg“ (Abwesend). Leer lassen, wenn du nur zwischen „Zuhause“ und „weit weg“ unterscheiden möchtest.",
+          "persons": "Personen, deren Standort über den Status des Hauses entscheidet. Wenn der Aufenthaltsort der Personen keine Rolle spielen soll, leer lassen. Das Haus bleibt dann dauerhaft auf „Zuhause“ und nur der Zeitplan entscheidet.",
+          "nearby_zones": "Zonen, in denen das Haus den Status „in der Nähe“ erhält (Eco), z. B. deine Stadt. Außerhalb dieser Zonen gilt der Status „weit weg“ (Abwesend). Leer lassen, wenn nur zwischen „Zuhause“ und „weit weg“ unterschieden werden soll.",
           "home_rule": "„Mindestens eine Person“ passt für die meisten Haushalte. „Alle“ senkt die Heizung ab, sobald eine Person geht."
         }
       },
@@ -34,9 +34,9 @@
         "data": {
           "source": "Beheizt durch"
         },
-        "description": "Das eine Thermostat (oder Relais), das die ganze Wohnung heizt. Es wird zur Zone {zone} und funktioniert mit allen Optionen des Hauses. Heizen die Räume getrennt (Heizkörperthermostate, Heizgeräte, Klimaanlagen), wähle „Jeder Raum heizt separat“ und ergänze die einzelnen Räume mit „Raum hinzufügen“.",
+        "description": "Das eine Thermostat (oder Relais), das die ganze Wohnung heizt. Es wird als Wärmequelle für die Zone {zone} eingerichtet und arbeitet mit allen Optionen des Hauses. Heizen die Räume getrennt (Heizkörperthermostate, Heizgeräte oder Klimaanlagen), wähle „Jeder Raum heizt separat“ und füge die Räume einzeln mit „Raum hinzufügen“ hinzu.",
         "data_description": {
-          "source": "Was das ganze Haus heizt: ein Generic Thermostat, ein anderes Thermostat (Nest, Tado, Hive…) oder ein Relais, das den Kessel startet. Wähle „Jeder Raum heizt separat“, wenn kein einzelnes Gerät die ganze Wohnung heizt z.B. Heizkörperthermostate, Ventile an den Heizkörpern, Elektroheizungen, Klimaanlagen oder Fußbodenheizungszonen. Hierbei wird jeder Raum mit seinem eigenen Gerät hinzugefügt. Bei Heizkörperthermostaten wählst du das Kesselrelais (oder das Thermostat, das den Kessel startet) als Wärmequelle."
+          "source": "Was das ganze Haus heizt: ein Generic Thermostat, ein anderes Thermostat (Nest, Tado, Hive…) oder ein Relais, das den Kessel startet. Wähle „Jeder Raum heizt separat“, wenn kein einzelnes Gerät die ganze Wohnung heizt, z. B. bei Heizkörperthermostaten, Heizkörperventilen, Elektroheizungen, Klimaanlagen oder Fußbodenheizungszonen. Dabei wird jeder Raum mit seinem eigenen Gerät hinzugefügt. Bei Heizkörperthermostaten wählst du das Kesselrelais (oder das Thermostat, das den Kessel startet) als Wärmequelle."
         }
       },
       "heating_devices": {
@@ -65,8 +65,8 @@
         },
         "description": "Die Integration schaltet die Heizung rund um die Zieltemperatur ein und aus.",
         "data_description": {
-          "temperature_sensors": "Sensoren im Raum, die statt des Thermostatsensors genutzt werden sollen (z.B. wenn das Thermostat eine zu hohe Temperatur misst, da es sich direkt neben der Wärmequelle befindet). Leer lassen, um keinen separaten Sensor zu nutzen. Für Relais nötig, da sie keinen eigenenSensor haben.",
-          "hysteresis": "Die Heizung startet unterhalb Zieltemperatur minus diesem Wert und stoppt über Zieltemperatur plus diesem Wert.",
+          "temperature_sensors": "Sensoren im Raum, die statt des Thermostatsensors genutzt werden sollen, z. B. wenn das Thermostat wegen seiner Lage neben der Wärmequelle eine zu hohe Temperatur misst. Leer lassen, wenn kein separater Sensor genutzt werden soll. Für Relais erforderlich, da sie keinen eigenen Sensor haben.",
+          "hysteresis": "Die Heizung startet unterhalb der Zieltemperatur minus diesem Wert und stoppt oberhalb der Zieltemperatur plus diesem Wert.",
           "min_on_minutes": "Wie lange mindestens geheizt wird. 0 für Heizgeräte, denen kurze Takte nichts ausmachen.",
           "min_off_minutes": "Wie lange mindestens zwischen zwei Starts pausiert wird.",
           "inertia_control": "Sobald der Raum gelernt hat, wie träge seine Heizung reagiert, wird diese etwas früher gestoppt, wenn die bereits abgegebene Wärme den Raum ohnehin an die Obergrenze der Hysterese bringen wird. Hingegen startet die Heizung etwas früher, wenn der Raum sonst unter die Untergrenze fiele, bevor die Wärme ankommt. Die Grenzen selbst bleiben. Am nützlichsten bei trägen Heizungen (Gussheizkörper, Fußbodenheizung). Aus: Nur die Hysterese entscheidet."
@@ -145,9 +145,9 @@
           "travel_time": "Fahrzeitsensoren"
         },
         "data_description": {
-          "persons": "Personen, deren Standort über den Status des Hauses entscheidet. Wenn die Anwesenheit von Personen keine Rolle spielen soll, leer lassen. Das Haus ist immer im Status „Zuhause“ und nur der Zeitplan entscheidet.",
+          "persons": "Personen, deren Standort über den Status des Hauses entscheidet. Wenn der Aufenthaltsort der Personen keine Rolle spielen soll, leer lassen. Das Haus bleibt dann dauerhaft auf „Zuhause“ und nur der Zeitplan entscheidet.",
           "home_rule": "„Mindestens eine Person“ passt für die meisten Haushalte. „Alle“ senkt die Heizung ab, sobald eine Person geht.",
-          "nearby_zones": "Zonen, die den Status des Hauses auf „in der Nähe“ setzen (Eco), z. B. deine Stadt. Außerhalb dieser Zonen gilt der Status „weit weg“ (Abwesend). Leer lassen, wenn du nur zwischen „Zuhause“ und „weit weg“ unterscheiden möchtest.",
+          "nearby_zones": "Zonen, in denen das Haus den Status „in der Nähe“ erhält (Eco), z. B. deine Stadt. Außerhalb dieser Zonen gilt der Status „weit weg“ (Abwesend). Leer lassen, wenn nur zwischen „Zuhause“ und „weit weg“ unterschieden werden soll.",
           "nearby_geometric": "Nutzt die GPS-Koordinaten: Wer in einer Zone ist, die innerhalb einer Zone in der Nähe liegt (z. B. Büro in der Stadt), gilt als in der Nähe. Ausschalten, wenn Personen keinen GPS-Standort haben.",
           "departure_delay": "Wie lange alle weg sein müssen, bevor die Heizung abgesenkt wird. Verhindert Reaktionen auf kurze Wege (Einkaufen, Gassi gehen).",
           "arrival_delay": "Meist 0: Die Heizung kommt zurück, sobald jemand zu Hause ist. Nur erhöhen, wenn GPS manchmal fälschlich „Zuhause“ meldet.",

@@ -2339,9 +2339,9 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
     async def async_step_extras(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """A change on one of several thermostats, solar gain and valve exercise (TRVs without on / off only)."""
+        """A change on one of several thermostats, solar gain and weekly valve exercise."""
         d = self._shown()
-        valves = d[CONF_SOURCE] == SOURCE_CLIMATE and not self._on_off()
+        valves = d[CONF_SOURCE] == SOURCE_CLIMATE and d.get(CONF_COMMAND_MODE) != COMMAND_HVAC
         # Solar gain needs the weather entity of the house (sunny or not).
         entry = self._get_entry()
         solar = bool({**entry.data, **entry.options}.get(CONF_WEATHER))

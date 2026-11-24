@@ -26,6 +26,7 @@ from homeassistant.helpers.event import async_call_later, async_track_state_chan
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    COMMAND_HVAC,
     COMMAND_PRESET,
     COMMAND_TEMPERATURE,
     CONF_AREA,
@@ -284,6 +285,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self._occupancy_wakeup: datetime | None = None
         self._started_at = dt_util.utcnow()
         self._exercise_until: datetime | None = None
+        self._exercise_devices: dict[str, dict[str, Any]] = {}
         self._relay_on: bool | None = None
         # An on / off TRV turned on only to be kept open for the heat source.
         self._relay_held = False
@@ -563,7 +565,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
     @property
     def supports_valve_exercise(self) -> bool:
         """Valve exercise only makes sense for climate devices (TRVs)."""
-        return self.source == SOURCE_CLIMATE and self.command_mode not in ON_OFF_COMMANDS
+        return self.source == SOURCE_CLIMATE and self.command_mode != COMMAND_HVAC
 
     @property
     def rule(self) -> str:

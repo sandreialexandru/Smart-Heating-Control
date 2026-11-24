@@ -580,6 +580,56 @@ async def test_nearby_temperature_set_from_its_number(
 # ---------------------------------------------------------------------------
 # Valve exercise and the Schedule helper
 # ---------------------------------------------------------------------------
+@pytest.mark.parametrize(("room_temp", "final_mode"), [(19, "heat"), (24, "off")])
+async def test_hybrid_weekly_exercise(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, room_temp: int, final_mode: str
+) -> None:
+    """An off TRV opens for maintenance, then follows the room again."""
+    trv = "climate.trv"
+    hass.states.async_set(trv, "off", {**TRV, "current_temperature": room_temp})
+
+    async def apply(call: ServiceCall) -> None:
+        state = hass.states.get(trv)
+        attrs = dict(state.attributes)
+        if "temperature" in call.data:
+            attrs["temperature"] = call.data["temperature"]
+        hass.states.async_set(
+            trv, call.data.get("hvac_mode", state.state), attrs, context=call.context
+        )
+
+    for service in ("set_hvac_mode", "set_temperature"):
+        hass.services.async_register("climate", service, apply)
+    entry = await _house(
+        hass,
+        freezer,
+        [
+            (
+                "Office",
+                {
+                    "source": "climate",
+                    "climates": [trv],
+                    "command_mode": "temperature_on_off",
+                    "valve_exercise": True,
+                    "valve_exercise_day": "mon",
+                    "valve_exercise_time": "11:00:00",
+                },
+            )
+        ],
+    )
+    room = _room(entry, "Office")
+    assert room.rule == "valve_exercise"
+    assert hass.states.get(trv).state == "heat"
+    assert hass.states.get(trv).attributes["temperature"] == 30
+    assert not room.heat_demand
+    await _tick(hass, freezer, 301)
+    assert room.rule == "schedule"
+    assert hass.states.get(trv).state == final_mode
+    if final_mode == "heat":
+        assert hass.states.get(trv).attributes["temperature"] == 21
+        assert room.heat_demand
+    await _unload(hass, entry)
+
+
 async def test_weekly_valve_exercise(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """On its day and time the TRVs open fully for 5 minutes, once that day."""
     calls = async_mock_service(hass, "climate", "set_temperature")

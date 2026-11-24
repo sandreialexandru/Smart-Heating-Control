@@ -51,6 +51,7 @@ from .const import (
     PRESET_NONE,
     PRESETS,
     RULE_OVERRIDE,
+    RULE_VALVE_EXERCISE,
     SOURCE_CLIMATE,
     SOURCE_GT,
     SOURCE_SWITCH,
@@ -67,6 +68,7 @@ from .engine import (
 )
 from .room_common import (
     SENT_RECENT,
+    device_values,
 )
 from .util import (
     as_list,
@@ -177,6 +179,22 @@ class RoomDevices:
     async def _async_apply(self, target: Target, *, force: bool = False) -> None:
         """Send the commands needed to reach ``target``."""
         on_off = self.source == SOURCE_SWITCH or self.command_mode in ON_OFF_COMMANDS
+        if self.command_mode == COMMAND_TEMPERATURE_ON_OFF:
+            if self.rule == RULE_VALVE_EXERCISE:
+                for entity_id in self.climates:
+                    state = self.hass.states.get(entity_id)
+                    if entity_id not in self._exercise_devices and valid(state):
+                        self._exercise_devices[entity_id] = device_values(state)
+            elif self._exercise_devices:
+                if target.kind == KIND_NONE and self.rule != RULE_OVERRIDE:
+                    # No schedule (or paused): undo the maintenance commands.
+                    for entity_id, values in list(self._exercise_devices.items()):
+                        if await self._async_restore_device(entity_id, values):
+                            self._exercise_devices.pop(entity_id)
+                            self.on_setpoints.pop(entity_id, None)
+                    self._relay_held = False
+                    return
+                self._exercise_devices.clear()
         if target.kind == KIND_NONE:
             # Nothing is sent (pause, no schedule) unless a manual change applies.
             self.relay_waiting = None
@@ -921,12 +939,15 @@ class RoomDevices:
         if actual is None:
             return False
         self._note_relay_state(actual, now)
-        held = self.opened_for_source
+        exercising = self.rule == RULE_VALVE_EXERCISE
+        held = self.opened_for_source or (exercising and (not actual or self._relay_held))
         # Just kept open for the heat source: the TRV was on only for it. The
         # band starts again from off, without the minimum on time.
         released = self._relay_held and not held
         band_from = False if released else actual
-        if target.kind == KIND_OFF:
+        if exercising:
+            want = True
+        elif target.kind == KIND_OFF:
             want = False
         else:
             temperature = self._resolve_temperature(target)
@@ -966,7 +987,7 @@ class RoomDevices:
                         await self._async_set_on_temperature(entity_id, target)
             self._relay_held = held and want
             return sent
-        if not released and self._relay_must_wait(actual, now):
+        if not exercising and not released and self._relay_must_wait(actual, now):
             return False
         ok = True
         if self.source == SOURCE_SWITCH:

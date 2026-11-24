@@ -3,7 +3,9 @@
 Each seed builds one or two houses from a random mix of what the integration
 supports: TRVs commanded by temperature, by preset or turned on and off,
 Generic Thermostats, relays; one to three thermostats a room, different ones
-(step, range, a lower maximum of the device, battery ones that report late);
+(step, range, a lower maximum of the device, battery ones that report late,
+slow ones that report the new value themselves while the command to them still
+waits, and sometimes time out after applying it);
 room sensors or not, windows, occupancy; a boiler relay, a boiler thermostat
 (by its temperature or by its mode) or no heat source; °C or °F; a change on
 one thermostat for it or for the whole room; manual changes for the room or the
@@ -23,12 +25,15 @@ After every step:
   a rule above it holds the room;
 - a temperature room that is settled (no manual change, no window, no boost) has
   every thermostat holding the decision, within its own step and range;
-- a heat demand that lasts starts the boiler relay.
+- a heat demand that lasts starts the boiler relay;
+- no manual change nobody made: a manual change on a thermostat only after a
+  person changed that thermostat.
 At the end: the panel commands and the diagnostics answer, the houses unload.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -38,6 +43,7 @@ from dataclasses import dataclass, field
 import pytest
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
@@ -77,6 +83,9 @@ class Device:
     high: float = 30.0
     device_max: float | None = None
     late: float = 0.0
+    # Reports the new value itself (a context of its own) while the command still
+    # waits for it (ZHA and a battery TRV), and sometimes times out after applying it.
+    slow: bool = False
     sent_paused: int = 0
 
 
@@ -96,6 +105,8 @@ class World:
     commands_in_pause: list[str] = field(default_factory=list)
     room_house: dict[str, str] = field(default_factory=dict)
     entries: list = field(default_factory=list)
+    # The thermostats a person changed.
+    by_hand: set[str] = field(default_factory=set)
 
 
 def _trv_attrs(d: Device, **values: object) -> dict:
@@ -198,10 +209,27 @@ def _install_services(hass: HomeAssistant, world: World) -> None:
                 if first:
                     async_call_later(hass, d.late, report)
             else:
-                hass.states.async_set(entity_id, mode, attrs, context=call.context)
+                # A slow one reports by itself, before the command returns.
+                context = Context() if d.slow else call.context
+                hass.states.async_set(entity_id, mode, attrs, context=context)
+
+    async def handle(call: ServiceCall) -> None:
+        apply(call)
+        ids = call.data["entity_id"]
+        slow = any(
+            world.devices[e].slow
+            for e in ([ids] if isinstance(ids, str) else ids)
+            if e in world.devices
+        )
+        if slow:
+            # The command still waits for the device meanwhile.
+            for _ in range(3):
+                await asyncio.sleep(0)
+            if world.rng.random() < 0.25:
+                raise HomeAssistantError("Failed to send request: device did not respond")
 
     for service in ("set_temperature", "set_preset_mode", "set_hvac_mode", "turn_on", "turn_off"):
-        hass.services.async_register("climate", service, apply)
+        hass.services.async_register("climate", service, handle)
 
 
 def _gt_entity(hass: HomeAssistant, name: str) -> str:
@@ -304,6 +332,7 @@ def _make_house(
                     device_max=rng.choice([None, None, None, 24.0]),
                     late=rng.choice([0.0, 0.0, 40.0, 120.0]),
                 )
+                d.slow = not d.late and rng.random() < 0.4
                 world.devices[entity_id] = d
                 hass.states.async_set(entity_id, "heat", _trv_attrs(d))
                 climates.append(entity_id)
@@ -514,6 +543,7 @@ async def _event(hass: HomeAssistant, world: World, entries: list, step: int) ->
         else:
             mode = "heat"
         world.pending.pop(entity_id, None)
+        world.by_hand.add(entity_id)
         hass.states.async_set(entity_id, mode, attrs, context=Context())
         world.log.append(
             f"{step} by hand {entity_id} {mode} {attrs.get('temperature')} {attrs.get('preset_mode')}"
@@ -676,6 +706,18 @@ async def test_random_houses_lived_in(
                 if room.window_open and not house.paused and decision.rule not in ABOVE_WINDOW:
                     assert decision.rule == "window_open", fail(
                         step, f"{room.name} window open, rule {decision.rule}"
+                    )
+                # No manual change nobody made.
+                if room.override:
+                    made = [
+                        room.override.get("source_device"),
+                        *(room.override.get("devices") or {}),
+                    ]
+                    nobody = [x for x in made if x and x not in world.by_hand]
+                    assert not nobody, fail(
+                        step,
+                        f"{room.name}: manual change on {nobody} nobody made: {room.override}, "
+                        f"devices {[(c, world.devices[c], hass.states.get(c).state, dict(hass.states.get(c).attributes)) for c in nobody if c in world.devices]}",
                     )
                 if not house.paused and targets.get(id(room)) == decision.target:
                     wrong = _settled_wrong(hass, world, room)

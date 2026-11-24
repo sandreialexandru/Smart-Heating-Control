@@ -655,7 +655,8 @@ async def test_random_houses_lived_in(
     def fail(step: int, what: object) -> str:
         debug = ""
         if DEBUG:
-            lines = [f"{r.created:.0f} {r.getMessage()}" for r in caplog.records[-80:]]
+            own = [r for r in caplog.records if r.name.startswith("custom_components.")]
+            lines = [f"{r.name.rsplit('.', 1)[-1]}: {r.getMessage()}" for r in own[-120:]]
             debug = "\ndebug:\n" + "\n".join(lines)
         return (
             f"seed {seed} step {step}: {what}\nconfig: {config}\nlast events: {world.log[-12:]}"

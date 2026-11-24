@@ -35,7 +35,8 @@
       forecast: o.noOutdoor ? [] : fc, unit_of_measurement: unit, heating_season: true,
       sun_forecast: o.sun === undefined ? [] : Array.from({ length: 49 }, (_, i) => [iso(Math.floor(now / 60000) * 60000 + i * 900e3), o.sun]) });
     st(he.heating_runtime, 2.5, { unit_of_measurement: "h" });
-    st(he.heating_season, "on"); st(he.outdoor_cutoff, "off"); st(he.heat_demand, "on");
+    st(he.heating_season, "on"); st(he.outdoor_cutoff, "off"); st(he.heat_demand, o.houseDemand ?? "on", o.houseDemandAttrs || {});
+    if (o.houseDemandSince) states[he.heat_demand].last_changed = o.houseDemandSince;
     st(he.pause, o.pause ? "on" : "off"); st(he.guest_mode, o.guest ? "on" : "off");
     st(he.vacation_start, "unknown"); st(he.vacation_end, "unknown");
     for (const b of ["clear_overrides", "reevaluate", "clear_vacation"]) st(he[b], "unknown");
@@ -68,6 +69,7 @@
         rate_learned: learned, humidity: r.humidity ?? null, surface_humidity: r.wall ?? null, area: r.area ?? null, circuit: r.circuit ?? null, device_levels: [],
         heat_demand: r.demand ?? true, heating: r.heating ?? true, temperature_trend: r.trend ?? 0, day_boundary: 0, source: r.source || "switch",
         custom_levels: true, house_name: house, entities: e, house_entities: he, devices: r.devices || [], held_at: r.heldAt ?? null,
+        ...(r.attrs || {}),
       };
       if (r.dropAttrs) for (const k of r.dropAttrs) delete a[k];
       st(e.decision, r.state || "schedule", a);

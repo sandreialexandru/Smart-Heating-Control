@@ -626,7 +626,7 @@ class RoomDevices:
                     del self.preset_stale[entity_id]
                     if kept:
                         await self._async_preset_temperature(entity_id, target.preset or "", stale)
-                elif False and sent and followup is not None and known is not None:
+                elif sent and followup is not None and known is not None:
                     # The command repeated (a device that has not reported yet):
                     # the temperature known for the level goes again after it.
                     await self._send(

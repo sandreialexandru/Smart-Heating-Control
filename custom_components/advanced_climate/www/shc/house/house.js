@@ -93,7 +93,7 @@ export const HouseMixin = (Base) =>
           <div class="stats ${runtime ? "" : "three"}">
             ${stat("weather-partly-cloudy", this._outdoorLabel(outdoor), this._temp(outdoor?.state), "", e.outdoor_average)}
             ${stat("calendar-range", this._t("season"), onOff(season), "", e.heating_season)}
-            ${stat("fire", this._t("demand"), onOff(demand), demand?.state === "on" ? "hot" : "", e.heat_demand)}
+            ${this._demandStat(demand, e.heat_demand, onOff)}
             ${runtime ? this._runtimeStat(e.heating_runtime) : ""}
           </div>
           ${this._cutoffHtml(outdoor, cutoff, e.outdoor_cutoff, mode, season, pause)}
@@ -231,6 +231,43 @@ export const HouseMixin = (Base) =>
             </div>
             ${this._error[vacKey] ? `<p class="error">${esc(this._error[vacKey])}</p>` : ""}
           </div>`;
+    }
+
+    /**
+     * The heat demand of the house, since when (#30), and under it the heat
+     * source it starts: on or off since when, or how long its minimum on / off
+     * time still holds it. A tap on the demand opens it, one on the source the source.
+     */
+    _demandStat(demand, entityId, onOff) {
+      const { when, source } = this._demandTimes(demand);
+      const sub = source ? `<small class="sub link" ${this._more(source.entityId)}>${esc(source.text)}</small>` : "";
+      return `<div class="stat ${demand?.state === "on" ? "hot" : ""} ${entityId ? "link" : ""}" ${this._more(entityId)}><span class="k">${this._icon(
+        "fire"
+      )}<span>${esc(this._t("demand"))}</span></span><span class="v">${esc(onOff(demand))}</span>${
+        when ? `<small class="sub">${esc(when)}</small>` : ""
+      }${sub}</div>`;
+    }
+
+    /**
+     * Since when the house asks for heat (or stopped), and its heat source: on or
+     * off since when, or how long its minimum on / off time still holds it.
+     */
+    _demandTimes(demand) {
+      const since = (iso) => {
+        const t = Date.parse(iso || "");
+        if (Number.isNaN(t)) return "";
+        return this._t("hd_since").replace("{time}", this._fmtTime(iso)).replace("{d}", this._duration(Math.max(1, (Date.now() - t) / 60000)));
+      };
+      const when = demand ? since(demand.last_changed) : "";
+      const src = demand?.attributes?.heat_source;
+      if (!src || !src.entity_id || src.on === null || src.on === undefined) return { when, source: null };
+      const name = this._hass?.states?.[src.entity_id]?.attributes?.friendly_name || this._t("heat_source");
+      const left = (Date.parse(src.until || "") - Date.now()) / 60000;
+      const text =
+        src.waiting && Number.isFinite(left) && left > 0
+          ? this._t(`hd_held_${src.waiting}`).replace("{d}", this._duration(Math.max(1, left)))
+          : [this._t(src.on ? "on" : "off"), since(src.since)].filter(Boolean).join(" · ");
+      return { when, source: { entityId: src.entity_id, text: `${name}: ${text}` } };
     }
 
     /** The heat source of the house: Automatic (with a criterion), the primary and the secondary one, by their names. */

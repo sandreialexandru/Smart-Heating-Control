@@ -84,14 +84,31 @@ export const DetailsMixin = (Base) =>
                <div class="levels-line">${levelTemps}</div>`
             : ""
         }`;
-      const program = estimate || runtimeHtml ? `<dl class="details">${estimate}${runtimeHtml}</dl>` : "";
+      const program = estimate ? `<dl class="details">${estimate}</dl>` : "";
+      const heating = `<dl class="details">${this._heatingHtml(a, dl)}${runtimeHtml}</dl>`;
       const learning = this._learnHtml(e, a);
       const html = `${group(this._t("grp_temps"), temps)}
+        ${group(this._t("grp_heating"), heating)}
         ${group(this._t("grp_program"), program)}
         ${group(this._t("grp_learning"), learning ? `<dl class="details">${learning}</dl>` : "")}
         ${group(this._t("grp_devices"), this._devicesHtml(a))}
         ${a.schedule_error ? `<p class="error">${esc(a.schedule_error)}</p>` : ""}`;
       return this._fold(`details-${a.room_id}`, this._t("details"), html);
+    }
+
+    /** The heat demand of the room: since when it asks for heat and heats (or stopped). */
+    _heatingHtml(a, dl) {
+      const since = (iso) => {
+        const t = Date.parse(iso || "");
+        if (Number.isNaN(t)) return "";
+        const minutes = Math.max(1, (Date.now() - t) / 60000);
+        return ` · ${this._t("hd_since").replace("{time}", this._fmtTime(iso)).replace("{d}", this._duration(minutes))}`;
+      };
+      const yesNo = (on) => this._t(on ? "hd_yes" : "hd_no");
+      let html =
+        dl(this._t("asks_heat"), esc(`${yesNo(a.heat_demand)}${since(a.demand_since)}`)) +
+        dl(this._t("heating"), esc(`${yesNo(a.heating)}${since(a.heating_since)}`));
+      return html;
     }
 
     /** Humidity of the room and at its coldest wall (with a humidity sensor). */

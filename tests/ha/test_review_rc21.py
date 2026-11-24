@@ -1132,7 +1132,7 @@ async def test_a_preset_sent_again_takes_its_temperature_again(
         "select", "select_option", {"entity_id": mode, "option": "auto"}, blocking=True
     )
     await _settle()
-    assert hass.states.get(E).state == "off", (sent, room.decision)
+    assert hass.states.get(E).state == "off"
     # The window closed: on, "comfort" and its temperature; it reports late.
     sent.clear()
     hass.states.async_set("binary_sensor.window", "off")

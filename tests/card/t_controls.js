@@ -209,3 +209,40 @@ test("a copy that a room refuses: the error, and that room stays chosen", async 
   eq(r.chosen, ["r3"], "the room that refused stays chosen");
   ok(/Copied to: Kid/.test(r.text), "the one that took it");
 });
+
+test("details: since when the room asks for heat and heats; the house: since when and its heat source (#30)", async (p) => {
+  // At noon: 90 minutes earlier is still today (after midnight the time would carry the day).
+  const noon = new Date(); noon.setHours(12, 0, 0, 0);
+  await p.context().clock.setFixedTime(noon);
+  const now = await p.evaluate(() => Date.now());
+  const iso = (m) => new Date(now + m * 60000).toISOString();
+  const waiting = { id: "r1", name: "Bedroom", demand: true, heating: false, attrs: { demand_since: iso(-25), heating_since: iso(-90) } };
+  const house = {
+    houseDemandSince: iso(-25),
+    houseDemandAttrs: { heat_source: { entity_id: "switch.boiler", on: false, since: iso(-4), waiting: "min_off", until: iso(3) } },
+    extra: [["switch.boiler", "off", { friendly_name: "Boiler" }]],
+  };
+  await mount(p, {}, { rooms: [waiting], ...house }); await click(p, '[data-key="details-r1"]'); await p.waitForTimeout(100);
+  const all = await p.evaluate(() => [...card.shadowRoot.children].map((c) => c.innerText || "").join("\n"));
+  ok(/Asks for heat\s*Yes · since \d\d:\d\d \(25 min\)/.test(all), "asks since");
+  ok(/Heating\s*No · since \d\d:\d\d \(1 h 30 min\)/.test(all), "stopped since");
+  ok(!/Heat source\s*Off/.test(all), "the heat source is not in the room details");
+  // The house: the heat demand since when, and its heat source held by its minimum off time.
+  const cell = await p.evaluate(() => [...card.shadowRoot.querySelectorAll(".stat")].find((s) => s.innerText.includes("Heat demand"))?.innerText);
+  ok(/On\s*since \d\d:\d\d \(25 min\)\s*Boiler: kept off 3 min more \(minimum off time\)/.test(cell), "house cell: " + cell);
+  const id = await p.evaluate(() => new Promise((res) => {
+    card.addEventListener("hass-more-info", (e) => res(e.detail.entityId), { once: true });
+    [...card.shadowRoot.querySelectorAll(".stat .sub.link")][0].click();
+  }));
+  eq(id, "switch.boiler", "a tap on the source opens it");
+  // Running: on since when.
+  await mount(p, {}, { rooms: [waiting], ...house, houseDemandAttrs: { heat_source: { entity_id: "switch.boiler", on: true, since: iso(-12), waiting: null, until: null } } });
+  const running = await p.evaluate(() => [...card.shadowRoot.querySelectorAll(".stat")].find((s) => s.innerText.includes("Heat demand"))?.innerText);
+  ok(/Boiler: On · since \d\d:\d\d \(12 min\)/.test(running), "running: " + running);
+  // The flame: grey while it only asks, the colour of heat with a glow while it heats.
+  const cls = await p.evaluate(() => [...card.shadowRoot.querySelectorAll(".flame")].map((f) => f.className));
+  ok(cls.some((c) => !/\bon\b/.test(c)), "asking: not on " + JSON.stringify(cls));
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom", demand: true, heating: true }] });
+  const hot = await p.evaluate(() => [...card.shadowRoot.querySelectorAll(".flame")].map((f) => f.className));
+  ok(hot.some((c) => /\bon\b/.test(c) && c.includes("glow")), "heating: on with a glow " + JSON.stringify(hot));
+});

@@ -440,3 +440,46 @@ async def test_an_on_off_thermostat_left_off_is_turned_on_with_the_others(
     )
     assert {"entity_id": LEFT, "hvac_mode": "heat"} not in [m.data for m in modes[sent:]]
     await _unload(hass, entry)
+
+
+async def test_a_slow_trv_reporting_before_the_command_returns_is_no_manual_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A TRV that reports the new target itself while the command still waits (#28).
+
+    ZHA waits for a battery TRV to confirm a write, sometimes for half a minute;
+    the TRV may report the new value meanwhile, with a context of its own. The
+    value was sent: no manual change, neither on that TRV nor on the whole room.
+    """
+    import asyncio
+
+    entry, _calls, _presets = await _living(hass, freezer, "room")
+    room = _room(entry, "Living")
+    sent: list[tuple[str, float]] = []
+
+    async def slow_set_temperature(call: ServiceCall) -> None:
+        entity_id = call.data["entity_id"]
+        value = call.data["temperature"]
+        sent.append((entity_id, value))
+        if entity_id == RIGHT:
+            # The TRV's own report, before the call returns.
+            state = hass.states.get(RIGHT)
+            hass.states.async_set(
+                RIGHT, "heat", {**state.attributes, "temperature": value}, context=Context()
+            )
+            for _ in range(5):
+                await asyncio.sleep(0)
+
+    hass.services.async_register("climate", "set_temperature", slow_set_temperature)
+    # Away: a new target for the room, sent to both TRVs.
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": "select.home_mode", "option": "away"},
+        blocking=True,
+    )
+    await _tick(hass, freezer, 5)
+    assert any(entity_id == RIGHT for entity_id, _value in sent)
+    assert room.override is None
+    assert hass.states.get("sensor.living_decision").state != "manual_override"
+    await _unload(hass, entry)

@@ -286,6 +286,9 @@ test("statistics: days without history kept have no bar; statistics that fail sa
 });
 
 test("history: newest first by day; decisions and alerts with start, end and the restart", async (p) => {
+  // At noon: the history of the fixtures spans three days (after midnight its hours fall on four).
+  const noon = new Date(); noon.setHours(12, 0, 0, 0);
+  await p.context().clock.setFixedTime(noon);
   await openPanel(p, { rooms: R4 });
   await tab(p, "history");
   const r = await inPanel(p, (sr) => ({
@@ -777,6 +780,9 @@ test("statistics: the outdoor mean as a line over the bars of the house, on its 
 });
 
 test("statistics: the heating by hour of every room, the mean of 7 days or one day", async (p) => {
+  // At noon: today has hours to come (late in the evening it would have none).
+  const noon = new Date(); noon.setHours(12, 0, 0, 0);
+  await p.context().clock.setFixedTime(noon);
   await openPanel(p, { rooms: [{ id: "r1", name: "Bedroom" }, { id: "r2", name: "Kid" }] });
   await clickIn(p, '[data-action="panel-tab"][data-option="stats"]'); await p.waitForTimeout(300);
   const look = () => inPanel(p, (sr) => ({

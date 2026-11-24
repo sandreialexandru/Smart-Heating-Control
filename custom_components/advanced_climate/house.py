@@ -245,6 +245,10 @@ class House:
         self._told: dict[str, Any] = {}
         # Why the heat source waits: "min_on" / "min_off" (minimum times), else None.
         self.source_waiting: str | None = None
+        # The heat source in use as last seen: running or not, and since when
+        # (None: not known, e.g. a thermostat that only tells it by its action).
+        self._source_seen: tuple[str, bool | None] | None = None
+        self.source_since: datetime | None = None
         self._unsubs: list[Callable[[], None]] = []
         self._timer_unsub: Callable[[], None] | None = None
         self._eval_unsub: Callable[[], None] | None = None
@@ -1372,6 +1376,7 @@ class House:
         # without one while at least one room heats.
         configured, source_on = self.heat_source_state()
         running = bool(source_on) if configured else any(r.heating for r in self.rooms.values())
+        self._note_source(now, source_on)
         self._check_source_available(now)
         self._check_circuits_available(now)
         if self._source_running_since is not None:
@@ -1950,6 +1955,38 @@ class House:
             return True
         target = float_attr(state, "temperature")
         return state.state != "off" and target is not None and abs(target - boost[1]) < 0.05
+
+    def _note_source(self, now: datetime, source_on: bool | None) -> None:
+        """Since when the heat source in use runs or stands (for the details of a room)."""
+        entity_id = self.source_entity
+        seen = (entity_id, source_on) if entity_id else None
+        if seen == self._source_seen:
+            return
+        first = self._source_seen is None or self._source_seen[0] != entity_id
+        self._source_seen = seen
+        self.source_since = now
+        if first and entity_id and source_on is not None:
+            # Seen for the first time (a start): since its last change, when its
+            # state tells it (a thermostat that tells it by its action does not).
+            state = self.hass.states.get(entity_id)
+            if state is not None and "hvac_action" not in state.attributes:
+                self.source_since = state.last_changed
+            else:
+                self.source_since = None
+
+    def source_details(self) -> dict[str, Any] | None:
+        """The heat source in use: running or not, since when, what it waits for."""
+        entity_id = self.source_entity
+        if not entity_id:
+            return None
+        _configured, running = self.heat_source_state()
+        return {
+            "entity_id": entity_id,
+            "on": running,
+            "since": iso(self.source_since),
+            "waiting": self.source_waiting,
+            "until": iso(self._source_wait_until) if self.source_waiting else None,
+        }
 
     def heat_source_state(self) -> tuple[bool, bool | None]:
         """(configured, running) of the heat source of the house in use.

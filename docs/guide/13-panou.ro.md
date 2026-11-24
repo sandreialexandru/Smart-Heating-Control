@@ -27,8 +27,9 @@ conturat.
 ## Camere
 
 Sus este casa (prezența, modul, pauza, oaspeții, vacanța, temperatura de afară
-și încălzirea), pe margine sunt camerele, iar camera aleasă este deschisă la
-mijloc, cu tot ce arată și face cardul.
+și încălzirea), pe margine sunt camerele, iar camera aleasă (marcată în listă
+cu o bară în culoarea de accent a temei) este deschisă la mijloc, cu tot ce
+arată și face cardul.
 
 - O atingere pe o cameră din listă o deschide. Camera se păstrează în adresă
   (`/shc#<cameră>`), așa că un link sau un semn de carte deschide acea cameră,

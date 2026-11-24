@@ -64,7 +64,7 @@ collapsed: true
 - **Titlul** e același în orice vedere: iconița și numele casei, prezența
   (Acasă / Aproape / Departe) și flacăra.
 - **Prezența**, cu fiecare persoană ca un cerc (poza sau inițiala) în culoarea
-  locului unde e: portocaliu acasă, verde aproape, gri departe.
+  locului unde e: auriu acasă, verde aproape, gri departe.
 - **Media temperaturii de afară** (pe orele din *Medie pe*), **sezonul**,
   **cererea de căldură** și **timpul de încălzire**, ca un tabel cu linii
   subțiri: două câte două pe un card îngust (trei pe rând fără timpul de
@@ -154,7 +154,7 @@ cu un titlu (de exemplu *Senzor tăcut*), textul în limba cardului și, când e
 despre o entitate, o săgeată; o atingere deschide entitatea.
 
 Mai jos, butoanele (câte trei pe rând; unul e colorat doar cât e deschisă
-secțiunea lui) deschid secțiunile **Temporar** (*Setează temporar*),
+secțiunea lui, cu culoarea de accent a temei, ca orice buton ales) deschid secțiunile **Temporar** (*Setează temporar*),
 **Program**, **Grafic**, **Niveluri** (*Temperaturile nivelurilor*) și
 **Detalii**, fiecare separat (pot fi deschise mai multe deodată);
 butonul unei secțiuni deschise rămâne colorat. Butonul **Blocare** de lângă ele
@@ -254,19 +254,21 @@ Fiecare profil cu zilele lui și un comutator pornit / oprit:
 
 <p align="center"><img src="../images/card-details.png" alt="Detaliile camerei cu ce a învățat camera" width="380"></p>
 
-Pe grupuri:
+Mai întâi alertele camerei și ale casei. Apoi grupuri, fiecare cu titlul lui
+și câte un rând pentru fiecare valoare (numele în stânga, valoarea în
+dreapta), câte două grupuri alăturate când cardul e destul de lat:
 
-- **alertele** camerei și ale casei, primele;
 - **Temperaturi**: camera, ținta, presetul termostatului, **umiditatea** (cu
   senzor de umiditate: a aerului și la peretele cel mai rece, marcată *risc de
-  mucegai* de la 80 %), ajustările active, temperaturile nivelurilor;
+  mucegai* de la 80 %), ajustările, când există, temperaturile nivelurilor;
 - **Încălzire**: de când camera cere căldură (*Da · de la 21:40 (25 min)*) și
   încălzește, sau de când s-a oprit; timpul de încălzire;
 - **Program**: următoarea pornire / oprire anticipată;
 - **Învățare**: starea ei (*învățat*, cu eroarea obișnuită a modelului, sau,
   în timpul învățării, două bare cu orele văzute cu și fără încălzire din cele
-  4 necesare, cu valoarea implicită dedesubt) cu butonul **Resetează** (cu un
-  al doilea clic pentru confirmare); după ce s-a învățat, câte o placă pentru
+  4 necesare, cu valoarea implicită dedesubt), cu butonul **Resetează** în
+  titlul grupului (cu un al doilea clic pentru confirmare); după ce s-a
+  învățat, câte un rând pentru
   **încălzire** (minutele pe grad acum, de exemplu *45 min/°C*), **inerție**
   (de exemplu *30 min*), **curba de temperatură** (de exemplu *+0.050 °C/h
   pentru fiecare °C mai frig afară* sau *fără*), **soare** (după ce s-a

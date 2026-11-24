@@ -64,7 +64,7 @@ collapsed: true
 - The **title** is the same in every view: the house icon and name, the
   presence (Home / Nearby / Away) and the flame.
 - **Presence**, with every person as a round badge (the photo or the initial)
-  in the colour of where they are: orange home, green nearby, grey far.
+  in the colour of where they are: gold home, green nearby, grey far.
 - **The outdoor average** (over the *Average over* hours), the **season**, the
   **heat demand** and the **heating time**, as a table with thin lines: two by
   two on a narrow card (three in a row without the heating time), all in one
@@ -154,7 +154,8 @@ The **alerts** of the room and of the house follow, in a list with their
 number: each with a title (e.g. *Sensor silent*), the text in the language of
 the card and, when it is about an entity, an arrow; a tap opens that entity.
 
-Below, buttons (three per row; one is coloured only while its section is open)
+Below, buttons (three per row; one is coloured only while its section is open,
+with the accent colour of the theme, as every chosen button)
 open the sections **For a while** (*Set for a while*),
 **Schedule**, **Chart**, **Levels** (*Level temperatures*) and **Details**, each on its own (several can be open at once); an
 open section's button stays coloured. A **Lock** button next to them turns the
@@ -255,19 +256,22 @@ Every profile with its days and an on / off switch:
 
 <p align="center"><img src="../images/card-details.png" alt="Room details with what the room learned" width="380"></p>
 
-In groups:
+The alerts of the room and the house come first. Then groups, each with its
+title and one row per value (the name on the left, the value on the right), two
+groups side by side when the card is wide enough:
 
-- the **alerts** of the room and the house, first;
 - **Temperatures**: the room, the target, the thermostat preset, the
   **humidity** (with a humidity sensor: of the air and at the coldest wall,
-  marked *mold risk* from 80 %), the active adjustments, the level temperatures;
+  marked *mold risk* from 80 %), the adjustments when there are some, the
+  level temperatures;
 - **Heating**: since when the room asks for heat (*Yes · since 21:40 (25 min)*)
   and heats, or stopped; the heating time;
 - **Schedule**: the next optimal start / stop;
 - **Learning**: its state (*learned* with the usual error of the model, or,
   while learning, two bars with the hours seen with and without heating out of
-  the 4 needed, with the default under them) with a **Reset** button (with a
-  second click to confirm); once learned, one tile each for the **heating**
+  the 4 needed, with the default under them), a **Reset** button in the title
+  of the group (with a second click to confirm); once learned, one row each
+  for the **heating**
   (minutes per degree now, e.g. *45 min/°C*), the **inertia** (e.g. *30 min*),
   the **weather curve** (e.g. *+0.050 °C/h for each °C colder outdoors*, or
   *none*), the **sun** (once learned) and the **heat loss** (how fast the room

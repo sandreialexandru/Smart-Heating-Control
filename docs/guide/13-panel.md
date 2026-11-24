@@ -27,7 +27,8 @@ outlined.
 
 The house is on top (presence, mode, pause, guests, vacation, the outdoor
 temperature and the heating), the rooms are listed on the side and the chosen
-room is open in the middle, with everything the card shows and does.
+room (marked in the list by a bar in the accent colour of the theme) is open in
+the middle, with everything the card shows and does.
 
 - A tap on a room in the list opens it. The room is kept in the address
   (`/shc#<room>`), so a link or a bookmark opens that room, and in the browser.

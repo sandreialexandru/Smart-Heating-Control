@@ -22,6 +22,18 @@ GitHub releases.
   only asks for heat (the heat source does not run yet), in the colour of heat
   and flickering while it really heats, with a glow on the house and on the
   open room.
+- 🎨 **Colours that say what they mean**: the levels go from warm to cold by
+  what each is for (*Comfort* raspberry, *Home* gold, *Activity* lime, *Eco*
+  teal, *Sleep* indigo, *Away* slate, *Frost* ice), none of them the colour of
+  the heat (the flame) nor of the alerts. Every chosen button (a mode, an open
+  section, the lock) has the accent colour of the theme; the chosen room of
+  the panel is marked by a bar, so an alert stays the one that stands out.
+  The secondary text is a little darker, readable on the grey of the blocks
+  too (at least 4.5:1).
+- 📋 **Details easier to read**: groups with a title, one row per value (the
+  name on the left, the value on the right), two groups side by side on a
+  wide card; *Reset* in the title of *Learning*; adjustments only when there
+  are some.
 
 ### Fixed
 
@@ -31,6 +43,12 @@ GitHub releases.
   taken for a person's change; with *A change on one thermostat: the whole
   room*, the room then kept it for the manual change time. What is sent is now
   noted before the command.
+- 🖐️ **A preset sent again, with its own temperature, taken for a manual
+  change**: a slow TRV on a preset sent again takes back the preset's own
+  temperature and reports it by itself; that is no person's change.
+- ⏸️ **A command right after the pause began**: a decision made just before
+  the pause (while a slow thermostat held the commands of the house) is no
+  longer sent once the house is paused.
 
 ## 2.7.0 – 2026-11-23
 

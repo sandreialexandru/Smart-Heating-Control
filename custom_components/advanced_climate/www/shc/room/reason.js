@@ -22,7 +22,8 @@ export const ReasonMixin = (Base) =>
         would: p.preset ? `${this._presetName(a, p.preset)}${num(p.temperature) !== null ? ` ${this._temp(p.temperature)}` : ""}` : temp(p.temperature),
       };
       const fill = (text) => text.replace(/\{(\w+)\}/g, (m, k) => (values[k] !== undefined ? values[k] : m));
-      let text = fill(base);
+      // A missing value leaves no dangling colon ("Schedule:" without its level).
+      let text = fill(base).replace(/:\s*$/, "");
       if (p.extra) text += ` (${this._t(`rs_${p.extra}`)})`;
       const offsets = (a.offsets || [])
         .map(([label, delta]) => `${this._offsetName(label)} ${delta > 0 ? "+" : ""}${delta}°`)

@@ -101,3 +101,25 @@ def test_device_limits_are_kept_a_while() -> None:
     assert limits.learn(TRV, "max", 26.0, T0 + timedelta(hours=1)) == 25.0
     assert limits.get(TRV, "max", T0 + timedelta(hours=26)) == (None, True)
     assert limits.get(TRV, "max", T0 + timedelta(hours=26)) == (None, False)
+
+
+def test_a_preset_sent_brings_its_own_temperature() -> None:
+    """A TRV on a preset sent again takes the preset's temperature, reported with its own context."""
+    sent = _sent()
+
+    def trv(temperature: float, preset: str) -> State:
+        return State(
+            TRV,
+            "heat",
+            {"temperature": temperature, "preset_mode": preset, "target_temp_step": 0.5},
+        )
+
+    sent.start(TRV)
+    sent.record(TRV, "preset_mode", "Comfort", "Comfort", T0)
+    # Comfort (with 18 °C from before) goes back to Comfort's own 21 °C.
+    assert sent.is_echo(TRV, trv(18, "Comfort"), trv(21, "Comfort"), T0 + timedelta(seconds=5))
+    # Shown for a minute: a new temperature on the same preset is a person's.
+    sent.confirm(TRV, trv(21, "Comfort"), T0 + timedelta(seconds=5))
+    assert not sent.is_echo(TRV, trv(21, "Comfort"), trv(23, "Comfort"), T0 + timedelta(seconds=70))
+    # Another preset than the one sent is a person's too.
+    assert not sent.is_echo(TRV, trv(21, "Comfort"), trv(15, "Away"), T0 + timedelta(seconds=10))

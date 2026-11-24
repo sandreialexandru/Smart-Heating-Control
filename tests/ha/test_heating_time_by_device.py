@@ -234,6 +234,45 @@ async def test_temperature_on_off_sends_room_target_and_turns_off_when_warm(
     await _unload(hass, entry)
 
 
+async def test_hybrid_device_override_drives_room_and_house_demand(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    _, _, entry, room = await _on_off_device(
+        hass,
+        freezer,
+        {"temperature": 17.0},
+        lambda _, value: value,
+        lambda preset: preset,
+        command_mode="temperature_on_off",
+    )
+    trv = "climate.onoff"
+    await room.async_set_level("home", 19.0)
+    hass.states.async_set("sensor.onoff_room", "20.0", SENSOR)
+    await _tick(hass, freezer, 300)
+    assert hass.states.get(trv).state == "off"
+    assert not room.house.heat_demand
+
+    attrs = dict(hass.states.get(trv).attributes)
+    hass.states.async_set(trv, "heat", {**attrs, "temperature": 21.0})
+    await _tick(hass, freezer, 30)
+    assert room.override_info()["origin"] == "device"
+    assert room.heat_demand and room.house.heat_demand
+    hass.states.async_set("sensor.onoff_room", "22.0", SENSOR)
+    await _tick(hass, freezer, 300)
+    assert hass.states.get(trv).state == "off"
+    assert not room.house.heat_demand
+    hass.states.async_set("sensor.onoff_room", "20.0", SENSOR)
+    await _tick(hass, freezer, 300)
+    assert hass.states.get(trv).state == "heat"
+    assert hass.states.get(trv).attributes["temperature"] == 21.0
+    assert room.house.heat_demand
+    await _tick(hass, freezer, 600)  # Let the last SHC command settle.
+    hass.states.async_set(trv, "off", dict(hass.states.get(trv).attributes))
+    await _tick(hass, freezer, 300)
+    assert not room.heat_demand and not room.house.heat_demand
+    await _unload(hass, entry)
+
+
 async def test_an_on_off_thermostat_with_its_own_limit_gets_the_maximum_once(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:

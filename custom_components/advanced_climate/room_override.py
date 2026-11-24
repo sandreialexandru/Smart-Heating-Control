@@ -21,6 +21,7 @@ from homeassistant.core import Event, State
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    COMMAND_TEMPERATURE_ON_OFF,
     CONF_DEVICE_CHANGE,
     CONF_OVERRIDE_HOURS,
     CONF_OVERRIDE_MODE,
@@ -32,6 +33,7 @@ from .const import (
 )
 from .device_echo import close, step_margin
 from .engine import (
+    KIND_OFF,
     KIND_PRESET,
     KIND_TEMPERATURE,
     Target,
@@ -42,6 +44,7 @@ from .room_common import (
 )
 from .util import (
     climate_temp,
+    finite,
     from_celsius,
     iso,
     system_unit,
@@ -322,8 +325,29 @@ class RoomOverride:
             self.override = None
 
     def _override_target(self) -> Target | None:
-        """Level or temperature of a manual change set by the card or a service."""
+        """Target to regulate while a manual change applies."""
         stored = (self.override or {}).get("target")
+        # A device-local change is the room target when the hybrid room has
+        # only one thermostat. Use the saved choice even after SHC cycles it off.
+        if (
+            stored is None
+            and self.command_mode == COMMAND_TEMPERATURE_ON_OFF
+            and len(self.climates) == 1
+        ):
+            values = ((self.override or {}).get("devices") or {}).get(self.climates[0], {})
+            if values.get("state") == STATE_OFF:
+                return Target(KIND_OFF)
+            if values.get("state") == "heat" and values.get("preset_mode") in (
+                None,
+                PRESET_NONE,
+                "manual",
+            ):
+                temperature = to_celsius(finite(values.get("temperature")), system_unit(self.hass))
+                if temperature is not None:
+                    return Target(
+                        KIND_TEMPERATURE,
+                        temperature=min(max(temperature, self.frost_temp()), self.max_temp()),
+                    )
         if not isinstance(stored, dict) or stored.get("kind") not in (
             KIND_TEMPERATURE,
             KIND_PRESET,

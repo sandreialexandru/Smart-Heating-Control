@@ -53,8 +53,10 @@ pe TRV, în aplicație, în Home Assistant, din card sau cu serviciul
 **Cum le recunoaște.** Comenzile trimise de integrare au un „context” propriu în
 Home Assistant, deci integrarea știe care sunt ale ei. Un dispozitiv care doar
 raportează mai târziu ce i-a trimis integrarea (de exemplu un TRV Zigbee pe
-baterie care se trezește rar) nu e o modificare manuală, nici când raportează o
-valoare mai veche după ce a fost trimisă una nouă: se recunosc și valorile
+baterie care se trezește rar, sau unul care raportează valoarea nouă cât timp
+comanda către el încă își așteaptă confirmarea) nu e o modificare manuală, nici
+când raportează o valoare mai veche după ce a fost trimisă una nouă: se
+recunosc și valorile
 trimise în ultimele 5 minute și temperatura sau presetul pe care le arăta
 dispozitivul înainte de fiecare comandă, până când dispozitivul arată ultima valoare de 1 minut (unele
 TRV-uri arată imediat valoarea nouă, apoi mai raportează o dată pe cea veche);

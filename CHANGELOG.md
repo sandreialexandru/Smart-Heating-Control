@@ -23,6 +23,15 @@ GitHub releases.
   and flickering while it really heats, with a glow on the house and on the
   open room.
 
+### Fixed
+
+- 🖐️ **A slow TRV taken for a manual change** ([#28](https://github.com/sandreialexandru/Smart-Heating-Control/issues/28)):
+  a battery TRV that reported the new target itself while the command to it
+  was still waiting (ZHA waits for it to confirm, sometimes half a minute) was
+  taken for a person's change; with *A change on one thermostat: the whole
+  room*, the room then kept it for the manual change time. What is sent is now
+  noted before the command.
+
 ## 2.7.0 – 2026-11-23
 
 ### New

@@ -52,9 +52,10 @@ service. The integration keeps it for a while, then takes over again.
 **How it recognises them.** Commands sent by the integration carry their own
 "context" in Home Assistant, so the integration knows which are its own. A
 device that only reports later what the integration sent it (e.g. a battery
-Zigbee TRV that wakes up rarely) is not a manual change, also when it reports
-an older value after a newer one was sent: the values sent in the last 5
-minutes and the temperature or preset the device showed before each command are
+Zigbee TRV that wakes up rarely, or one that reports the new value while the
+command to it still waits for its confirmation) is not a manual change, also
+when it reports an older value after a newer one was sent: the values sent in
+the last 5 minutes and the temperature or preset the device showed before each command are
 recognised too,
 until the device has shown the last value for 1 minute (some TRVs show the new
 value at once and then report the old one once more); after that any other value

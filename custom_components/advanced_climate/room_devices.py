@@ -376,16 +376,20 @@ class RoomDevices:
                 if (wanted != STATE_OFF) != actual and self._relay_must_wait(actual, now):
                     return False
         if domain != "climate":
-            if (
-                wanted in (STATE_ON, STATE_OFF)
-                and state.state != wanted
-                and await self._call(
+            if wanted in (STATE_ON, STATE_OFF) and state.state != wanted:
+                # Noted before the call: the device may report before it returns.
+                before = self.sent.last.get(entity_id)
+                self.sent.set_last(entity_id, {"state": wanted})
+                if not await self._call(
                     domain,
                     SERVICE_TURN_ON if wanted == STATE_ON else SERVICE_TURN_OFF,
                     {ATTR_ENTITY_ID: entity_id},
-                )
-            ):
-                self.sent.set_last(entity_id, {"state": wanted})
+                ):
+                    if before is None:
+                        self.sent.last.pop(entity_id, None)
+                    else:
+                        self.sent.set_last(entity_id, before)
+                    return True
                 if entity_id in self.switches:
                     self._relay_on = wanted == STATE_ON
                     self._relay_changed = dt_util.utcnow()
@@ -882,9 +886,13 @@ class RoomDevices:
         if service == "set_temperature" and self.command_mode == COMMAND_PRESET and not keep_preset:
             self.preset_stale[entity_id] = float(value)
         waiting[name] = (service, value, now)
+        # Noted before the call too (#28): a slow TRV (ZHA waits for it to confirm)
+        # may report the new value itself while the call still waits, with a context
+        # of its own. Kept when the call fails: a TRV that timed out often applies
+        # the command anyway, and its late report is no person's change either.
+        self.sent.record(entity_id, name, value, shown, now)
         ok = await self._call("climate", service, {ATTR_ENTITY_ID: entity_id, key: value})
         if ok:
-            self.sent.record(entity_id, name, value, shown, now)
             return ok
         if pending is None:
             waiting.pop(name, None)
@@ -970,13 +978,19 @@ class RoomDevices:
         ok = True
         if self.source == SOURCE_SWITCH:
             for entity_id in self.switches:
+                # Noted before the call: the switch may report before it returns.
+                before = self.sent.last.get(entity_id)
+                self.sent.set_last(entity_id, {"state": STATE_ON if want else STATE_OFF})
                 sent = await self._call(
                     entity_id.split(".", 1)[0],
                     SERVICE_TURN_ON if want else SERVICE_TURN_OFF,
                     {ATTR_ENTITY_ID: entity_id},
                 )
-                if sent:
-                    self.sent.set_last(entity_id, {"state": STATE_ON if want else STATE_OFF})
+                if not sent:
+                    if before is None:
+                        self.sent.last.pop(entity_id, None)
+                    else:
+                        self.sent.set_last(entity_id, before)
                 ok &= sent
         else:
             for entity_id in self.climates:

@@ -47,7 +47,8 @@ const PANEL_STYLE = `
   .pside .block.room.folded { cursor: pointer; }
   .pside .frow:hover { background: none; }
   .pside .block.room.folded:hover { background: var(--ac-surface-2); }
-  .pside .block.room.folded.chosen { border-color: var(--ac-active-line); background: var(--ac-active-bg); }
+  /* The chosen room: a bar of the accent, so that an alert stays the one that stands out. */
+  .pside .block.room.folded.chosen { box-shadow: inset 4px 0 0 var(--ac-accent); background: var(--ac-surface-2); }
   .pside .block.room.folded.chosen:hover { background: color-mix(in srgb, var(--ac-accent) 24%, transparent); }
   :host([narrow]) .pbody { padding: 8px; gap: 8px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "house" "side" "main"; }
   :host([narrow]) .pside { position: static; max-height: none; overflow: visible; }

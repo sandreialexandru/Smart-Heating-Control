@@ -49,7 +49,10 @@ from .const import (
     CONF_VERIFY_COMMANDS,
     PRESET_NONE,
     PRESETS,
+    RULE_MAX,
     RULE_OVERRIDE,
+    RULE_PAUSE,
+    RULE_SAFETY,
     SOURCE_CLIMATE,
     SOURCE_GT,
     SOURCE_SWITCH,
@@ -175,6 +178,12 @@ class RoomDevices:
 
     async def _async_apply(self, target: Target, *, force: bool = False) -> None:
         """Send the commands needed to reach ``target``."""
+        if self.house.paused and (
+            self.decision is None or self.decision.rule not in (RULE_PAUSE, RULE_SAFETY, RULE_MAX)
+        ):
+            # Paused meanwhile (a slow thermostat held the commands of the house):
+            # a decision made before the pause is not sent; the pause decides now.
+            return
         on_off = self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC
         if target.kind == KIND_NONE:
             # Nothing is sent (pause, no schedule) unless a manual change applies.

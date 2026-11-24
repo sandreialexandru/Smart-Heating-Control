@@ -56,7 +56,7 @@
       const plan = [{ at: iso(now), preset: r.preset || "home" }, { at: iso(now + 3 * HOUR), preset: "sleep" }, { at: iso(now + 10 * HOUR), preset: "home" }];
       const learned = r.learned !== false;
       const a = {
-        room_id: r.id, entry_id: entry, room_name: r.name, reason: "Schedule", reason_key: r.reasonKey || "schedule", reason_params: r.reasonParams || {},
+        room_id: r.id, entry_id: entry, room_name: r.name, reason: "Schedule", reason_key: r.reasonKey || "schedule", reason_params: r.reasonParams || { preset: "home" },
         target_kind: "preset", preset: r.preset || "home", temperature_unit: unit, target_temperature: T(r.target ?? 21),
         current_temperature: cur === null ? null : T(cur), offsets: r.offsets || [], presence: "home", window_open: !!r.window,
         override: r.override || null, profile: "workday", next_change: plan[1].at, next_preset: "sleep", plan,

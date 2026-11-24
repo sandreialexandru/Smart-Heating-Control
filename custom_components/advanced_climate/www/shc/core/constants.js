@@ -24,10 +24,12 @@ export const ALERT_ERRORS = [
   "preset_missing",
 ];
 
+// From warm to cold, by what each level is for; none of them the colour of the
+// heat (the flame, --ac-hot) nor of the alerts (amber, red).
 export const PRESET_COLORS = {
-  comfort: "#d9480f",
-  home: "#f08c00",
-  activity: "#e0a030",
+  comfort: "#c2255c",
+  home: "#f2a900",
+  activity: "#74b816",
   eco: "#2f9e8f",
   sleep: "#5f6fd1",
   away: "#8a96a3",

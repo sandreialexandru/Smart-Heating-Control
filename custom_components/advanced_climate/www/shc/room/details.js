@@ -20,9 +20,8 @@ export const DetailsMixin = (Base) =>
     /** Details: temperatures, heating rate and time, device preset, adjustments, levels. */
     _detailsHtml(a, e) {
       const runtime = this._state(e.heating_runtime);
-      const offsets =
-        (a.offsets || []).map(([label, delta]) => `${this._offsetName(label)} ${delta > 0 ? "+" : ""}${delta}°`).join(", ") ||
-        this._t("none");
+      // Only when there are some: "none" says nothing.
+      const offsets = (a.offsets || []).map(([label, delta]) => `${this._offsetName(label)} ${delta > 0 ? "+" : ""}${delta}°`).join(", ");
       const active = a.device_level !== undefined ? a.device_level : a.device_preset;
       const fromDevice = a.custom_levels ? a.device_levels || [] : [];
       const levelTemps = Object.entries(a.levels || {})
@@ -44,9 +43,13 @@ export const DetailsMixin = (Base) =>
             : rawPreset
           : null;
       const dl = (k, v) => `<div><dt>${esc(k)}</dt><dd>${v}</dd></div>`;
-      const group = (title, body) => (body.trim() ? `<div class="label">${esc(title)}</div>${body}` : "");
+      // A group: a title with its icon (and an action), then its rows.
+      const group = (title, icon, body, action = "") =>
+        body.trim()
+          ? `<section class="dgroup"><div class="dgroup-head">${this._icon(icon)}<span>${esc(title)}</span>${action}</div>${body}</section>`
+          : "";
       const estimate = a.next_estimate
-        ? `<div class="wide link" ${this._more(e.decision)}><dt>${esc(this._t("est_label"))}</dt><dd>${esc(
+        ? `<div class="wide stacked link" ${this._more(e.decision)}><dt>${esc(this._t("est_label"))}</dt><dd>${esc(
             this._estimate(a)
           )}${
             a.next_estimate.kind === "optimal_start" && !a.next_estimate.learned && this._heatDefault(e)
@@ -76,7 +79,7 @@ export const DetailsMixin = (Base) =>
               : ""
           }
           ${this._humidityHtml(a, dl)}
-          ${dl(this._t("adjustments"), esc(offsets))}
+          ${offsets ? dl(this._t("adjustments"), esc(offsets)) : ""}
         </dl>
         ${
           levelTemps
@@ -87,12 +90,14 @@ export const DetailsMixin = (Base) =>
       const program = estimate ? `<dl class="details">${estimate}</dl>` : "";
       const heating = `<dl class="details">${this._heatingHtml(a, dl)}${runtimeHtml}</dl>`;
       const learning = this._learnHtml(e, a);
-      const html = `${group(this._t("grp_temps"), temps)}
-        ${group(this._t("grp_heating"), heating)}
-        ${group(this._t("grp_program"), program)}
-        ${group(this._t("grp_learning"), learning ? `<dl class="details">${learning}</dl>` : "")}
-        ${group(this._t("grp_devices"), this._devicesHtml(a))}
-        ${a.schedule_error ? `<p class="error">${esc(a.schedule_error)}</p>` : ""}`;
+      const html = `${a.schedule_error ? `<p class="error">${esc(a.schedule_error)}</p>` : ""}
+        <div class="dgroups">
+        ${group(this._t("grp_temps"), "thermometer", temps)}
+        ${group(this._t("grp_heating"), "fire", heating)}
+        ${group(this._t("grp_program"), "calendar-clock", program)}
+        ${group(this._t("grp_learning"), "school-outline", learning ? `<dl class="details">${learning}</dl>` : "", this._resetButton(e))}
+        ${group(this._t("grp_devices"), "devices", this._devicesHtml(a))}
+        </div>`;
       return this._fold(`details-${a.room_id}`, this._t("details"), html);
     }
 
@@ -147,15 +152,6 @@ export const DetailsMixin = (Base) =>
         const tau = num(heat.attributes.inertia_minutes) ?? 0;
         const need = num(heat.attributes.hours_needed) ?? 4;
         const err = num(heat.attributes.error_per_hour);
-        const resetId = e.reset_learning;
-        const confirming = this._confirmReset === resetId;
-        const reset =
-          resetId && this._state(resetId)
-            ? this._btn(this._t(confirming ? "reset_confirm" : "reset"), `data-action="reset-learning" data-entity="${esc(resetId)}"`, {
-                icon: "refresh",
-                kind: confirming ? "soft-warn" : "",
-              })
-            : "";
         let body;
         if (learned) {
           body = esc(
@@ -176,9 +172,9 @@ export const DetailsMixin = (Base) =>
             heat.attributes.hours_idle
           )}${sub ? `<small class="sub">${esc(sub)}</small>` : ""}`;
         }
-        html += `<div class="wide learn"><div class="link" ${this._more(e.heating_rate)}><dt>${esc(
+        html += `<div class="wide link ${learned ? "" : "stacked"}" ${this._more(e.heating_rate)}><dt>${esc(
           this._t("learn_state")
-        )}</dt><dd>${body}</dd></div>${reset}</div>`;
+        )}</dt><dd>${body}</dd></div>`;
         if (learned) {
           html += tile(e.heating_rate, this._t("learn_heat"), value === null ? "–" : `${Math.round(value)} ${unit}`, this._t("learn_heat_sub"));
           html += tile(e.heating_rate, this._t("learn_inertia"), `${Math.round(tau)} min`, this._t("learn_inertia_sub"));
@@ -212,6 +208,17 @@ export const DetailsMixin = (Base) =>
         html += tile(e.cooling_rate, this._t("learn_cool"), value === null ? "–" : `${value.toFixed(2)} ${unit}`, this._t("learn_cool_sub"));
       }
       return html;
+    }
+
+    /** Forget the learning: in the head of its group (a second tap confirms). */
+    _resetButton(e) {
+      const resetId = e.reset_learning;
+      if (!resetId || !this._state(resetId) || !this._state(e.heating_rate)) return "";
+      const confirming = this._confirmReset === resetId;
+      return this._btn(this._t(confirming ? "reset_confirm" : "reset"), `data-action="reset-learning" data-entity="${esc(resetId)}"`, {
+        icon: "refresh",
+        kind: `small ${confirming ? "soft-warn" : ""}`,
+      });
     }
 
     /** One entity of a room: its name, icon, its state now in words and whether it is unavailable. */

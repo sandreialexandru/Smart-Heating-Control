@@ -15,7 +15,6 @@ from homeassistant.const import (
 )
 
 from .const import (
-    COMMAND_HVAC,
     CONF_BOILER_MIN_ROOMS,
     CONF_CALIBRATION_ENTITIES,
     CONF_HUMIDITY_SENSOR,
@@ -24,6 +23,7 @@ from .const import (
     CONF_OCCUPANCY_SENSORS,
     CONF_TEMP_SENSORS,
     CONF_WINDOW_SENSORS,
+    ON_OFF_COMMANDS,
     PRESETS,
     RULE_PAUSE,
     SOURCE_SWITCH,
@@ -83,7 +83,7 @@ class RoomStatus:
             if count < needed:
                 return {"code": "rooms_needed", "count": count, "needed": needed}
             return {"code": "source_off"}
-        if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost:
+        if self.source == SOURCE_SWITCH or self.command_mode in ON_OFF_COMMANDS or self.boost:
             if self.relay_waiting:
                 return {"code": f"relay_{self.relay_waiting}"}
             if self.inertia_stop is not None:

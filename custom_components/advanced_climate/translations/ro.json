@@ -1065,7 +1065,8 @@
       "options": {
         "temperature": "Temperatură",
         "preset": "Preset",
-        "hvac_mode": "Pornit / oprit (hvac mode)"
+        "hvac_mode": "Pornit / oprit (hvac mode)",
+        "temperature_on_off": "Temperatură + pornit/oprit"
       }
     },
     "nearby_mode": {

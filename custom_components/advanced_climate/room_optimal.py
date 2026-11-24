@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    COMMAND_HVAC,
     CONF_HYSTERESIS,
     CONF_INERTIA_CONTROL,
     CONF_OPTIMAL_START,
@@ -23,6 +22,7 @@ from .const import (
     CONF_OPTIMAL_STOP,
     CONF_OPTIMAL_STOP_MINUTES,
     CONF_STOP_TOLERANCE,
+    ON_OFF_COMMANDS,
     RULE_OPTIMAL_START,
     RULE_OPTIMAL_STOP,
     SOURCE_GT,
@@ -87,7 +87,7 @@ class RoomOptimal:
             hot = self._gt_tolerance("hot_tolerance")
             return None if cold is None or hot is None else (cold, hot, False)
         hysteresis = float(self.config[CONF_HYSTERESIS])
-        if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost:
+        if self.source == SOURCE_SWITCH or self.command_mode in ON_OFF_COMMANDS or self.boost:
             return hysteresis, hysteresis, bool(self.config.get(CONF_INERTIA_CONTROL, True))
         if self.lacks_hvac_action():
             return hysteresis, hysteresis, False
@@ -99,7 +99,7 @@ class RoomOptimal:
             return self._gt_cold_tolerance()
         if (
             self.source == SOURCE_SWITCH
-            or self.command_mode == COMMAND_HVAC
+            or self.command_mode in ON_OFF_COMMANDS
             or self.boost
             or self.lacks_hvac_action()
         ):

@@ -140,7 +140,12 @@ async def test_on_off_counted_while_the_thermostat_heats_though_told_off(
 # An on / off thermostat already on: the maximum once, not at each evaluation
 # ---------------------------------------------------------------------------
 async def _on_off_device(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, attrs: dict, on_temperature, on_preset
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    attrs: dict,
+    on_temperature,
+    on_preset,
+    command_mode: str = "hvac_mode",
 ) -> tuple[list, list, object, object]:
     """A thermostat found on, the room cold (19 with a target of 21): returns the
     temperature and preset calls."""
@@ -192,7 +197,7 @@ async def _on_off_device(
                 "Gab",
                 {
                     "source": "climate",
-                    "command_mode": "hvac_mode",
+                    "command_mode": command_mode,
                     "climates": ["climate.onoff"],
                     "temperature_sensors": ["sensor.onoff_room"],
                 },
@@ -202,6 +207,31 @@ async def _on_off_device(
     for _ in range(48):  # four hours, the room still cold
         await _tick(hass, freezer, 300)
     return temps, presets, entry, _room(entry, "Gab")
+
+
+async def test_temperature_on_off_sends_room_target_and_turns_off_when_warm(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    temps, _, entry, room = await _on_off_device(
+        hass,
+        freezer,
+        {"temperature": 17.0},
+        lambda _, value: value,
+        lambda preset: preset,
+        command_mode="temperature_on_off",
+    )
+    assert [c.data["temperature"] for c in temps] == [21.0]
+    await room.async_set_level("home", 22.0)
+    await _tick(hass, freezer, 300)
+    assert [c.data["temperature"] for c in temps] == [21.0, 22.0]
+    hass.states.async_set("sensor.onoff_room", "23.0", SENSOR)
+    await _tick(hass, freezer, 300)
+    assert hass.states.get("climate.onoff").state == "off"
+    hass.states.async_set("sensor.onoff_room", "19.0", SENSOR)
+    await _tick(hass, freezer, 300)
+    assert hass.states.get("climate.onoff").state == "heat"
+    assert hass.states.get("climate.onoff").attributes["temperature"] == 22.0
+    await _unload(hass, entry)
 
 
 async def test_an_on_off_thermostat_with_its_own_limit_gets_the_maximum_once(
@@ -278,12 +308,12 @@ async def test_a_change_on_the_on_off_thermostat_gets_the_maximum_again(
     for _ in range(3):
         await _tick(hass, freezer, 300)
     assert hass.states.get("climate.onoff").state == "off"
-    assert "climate.onoff" not in room.max_sent
+    assert "climate.onoff" not in room.on_setpoints
     hass.states.async_set("sensor.onoff_room", "19.0", SENSOR)
     for _ in range(6):
         await _tick(hass, freezer, 300)
     assert hass.states.get("climate.onoff").state == "heat"
-    assert "climate.onoff" in room.max_sent
+    assert "climate.onoff" in room.on_setpoints
     assert hass.states.get("climate.onoff").attributes["temperature"] == room.max_temp()
     await _unload(hass, entry)
 

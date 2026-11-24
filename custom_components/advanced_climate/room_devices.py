@@ -35,9 +35,9 @@ from .const import (
     CALIBRATION_EXTERNAL,
     CALIBRATION_OFFSET,
     CALIBRATION_REFRESH_MINUTES,
-    COMMAND_HVAC,
     COMMAND_PRESET,
     COMMAND_TEMPERATURE,
+    COMMAND_TEMPERATURE_ON_OFF,
     CONF_CALIBRATION_ENTITIES,
     CONF_CALIBRATION_MODE,
     CONF_HYSTERESIS,
@@ -47,6 +47,7 @@ from .const import (
     CONF_TEMP_SENSORS,
     CONF_TRV_BOOST_TEMP,
     CONF_VERIFY_COMMANDS,
+    ON_OFF_COMMANDS,
     PRESET_NONE,
     PRESETS,
     RULE_OVERRIDE,
@@ -175,7 +176,7 @@ class RoomDevices:
 
     async def _async_apply(self, target: Target, *, force: bool = False) -> None:
         """Send the commands needed to reach ``target``."""
-        on_off = self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC
+        on_off = self.source == SOURCE_SWITCH or self.command_mode in ON_OFF_COMMANDS
         if target.kind == KIND_NONE:
             # Nothing is sent (pause, no schedule) unless a manual change applies.
             self.relay_waiting = None
@@ -239,7 +240,7 @@ class RoomDevices:
     @property
     def _boost_capable(self) -> bool:
         """TRVs commanded with a temperature or a preset can be boosted."""
-        return self.source == SOURCE_CLIMATE and self.command_mode != COMMAND_HVAC
+        return self.source == SOURCE_CLIMATE and self.command_mode not in ON_OFF_COMMANDS
 
     def _frost_boost_possible(self) -> bool:
         """A TRV room without the boost, with its own room sensor (frost protection).
@@ -367,7 +368,7 @@ class RoomDevices:
         assert state is not None
         domain = entity_id.split(".", 1)[0]
         wanted = values.get("state")
-        on_off = self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC
+        on_off = self.source == SOURCE_SWITCH or self.command_mode in ON_OFF_COMMANDS
         if on_off and wanted and state.state != wanted:
             actual = self._relay_actual()
             now = dt_util.utcnow()
@@ -520,7 +521,7 @@ class RoomDevices:
         """The room is reconfigured: its thermostats are tried in heat again."""
         self.keeps_auto.clear()
         self.reports_heating.clear()
-        self.max_sent.clear()
+        self.on_setpoints.clear()
         self.auto_returns.clear()
         self.auto_left_at.clear()
         self._window_before = {}
@@ -960,9 +961,9 @@ class RoomDevices:
                             entity_id, "set_hvac_mode", "hvac_mode", on_mode, "state"
                         ):
                             sent = True
-                            await self._async_heat_to_max(entity_id, turned_on=True)
+                            await self._async_set_on_temperature(entity_id, target, turned_on=True)
                     else:
-                        await self._async_heat_to_max(entity_id)
+                        await self._async_set_on_temperature(entity_id, target)
             self._relay_held = held and want
             return sent
         if not released and self._relay_must_wait(actual, now):
@@ -987,9 +988,9 @@ class RoomDevices:
                     entity_id, "set_hvac_mode", "hvac_mode", on_mode if want else STATE_OFF, "state"
                 )
                 if want:
-                    await self._async_heat_to_max(entity_id, turned_on=True)
+                    await self._async_set_on_temperature(entity_id, target, turned_on=True)
                 else:
-                    self.max_sent.discard(entity_id)
+                    self.on_setpoints.pop(entity_id, None)
         if ok:
             self._relay_on = want
             self._relay_held = held and want
@@ -998,30 +999,34 @@ class RoomDevices:
                 self._relay_changed = now
         return ok
 
-    async def _async_heat_to_max(self, entity_id: str, *, turned_on: bool = False) -> None:
-        """An on / off thermostat that is on heats as far as it can: its own
-        target (at 20 with the room at 21) would close it before the room is
-        warm. The room sensor turns it off.
-
-        Sent once per time it is on (turned on, or found on): one that keeps
-        its own limit, or a schedule preset that ignores the temperature, is
-        not sent it again and again. A change made on it sends it again.
-        """
+    async def _async_set_on_temperature(
+        self, entity_id: str, target: Target, *, turned_on: bool = False
+    ) -> None:
+        """Send the room target (hybrid) or the room maximum (on/off) while on."""
         state = self.hass.states.get(entity_id)
         if not valid(state):
             return
         assert state is not None
-        if not turned_on and entity_id in self.max_sent:
+        temperature = self.max_temp()
+        if self.command_mode == COMMAND_TEMPERATURE_ON_OFF:
+            temperature = self._resolve_temperature(target)
+            if temperature is None:
+                return
+        value = self._device_value(state, temperature)
+        if not turned_on and self.on_setpoints.get(entity_id) == value:
             return
-        self.max_sent.add(entity_id)
         if entity_id not in self.keeps_auto and (manual := _manual_preset(state)) is not None:
             # On its schedule preset: put on manual, so it takes the temperature.
             self.auto_left_at[entity_id] = dt_util.utcnow()
             await self._send(entity_id, "set_preset_mode", "preset_mode", manual)
         current = float_attr(state, ATTR_TEMPERATURE)
-        value = self._device_value(state, self.max_temp())
-        if current is not None and current != value:
-            await self._send(entity_id, "set_temperature", ATTR_TEMPERATURE, value)
+        if (
+            current != value
+            and (current is not None or self.command_mode == COMMAND_TEMPERATURE_ON_OFF)
+            and not await self._send(entity_id, "set_temperature", ATTR_TEMPERATURE, value)
+        ):
+            return
+        self.on_setpoints[entity_id] = value
 
     def _inertia_extreme(self, now: datetime) -> Callable[[bool], float] | None:
         """The learned model for starting and stopping by the inertia (None: the band only).
@@ -1099,7 +1104,7 @@ class RoomDevices:
             if current != expected:
                 self._verify_attempts = 0
                 return
-            if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC:
+            if self.source == SOURCE_SWITCH or self.command_mode in ON_OFF_COMMANDS:
                 self._verify_attempts = 0
                 return
             mismatched = []

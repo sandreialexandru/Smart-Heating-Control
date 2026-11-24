@@ -1065,7 +1065,8 @@
       "options": {
         "temperature": "Temperatuur",
         "preset": "Preset",
-        "hvac_mode": "Aan / uit (HVAC-modus)"
+        "hvac_mode": "Aan / uit (HVAC-modus)",
+        "temperature_on_off": "Temperatuur + aan/uit"
       }
     },
     "nearby_mode": {

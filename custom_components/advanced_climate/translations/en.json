@@ -1065,7 +1065,8 @@
       "options": {
         "temperature": "Temperature",
         "preset": "Preset",
-        "hvac_mode": "On / off (hvac mode)"
+        "hvac_mode": "On / off (hvac mode)",
+        "temperature_on_off": "Temperature + on/off"
       }
     },
     "nearby_mode": {

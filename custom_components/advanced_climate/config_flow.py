@@ -31,6 +31,7 @@ from .const import (
     COMMAND_HVAC,
     COMMAND_PRESET,
     COMMAND_TEMPERATURE,
+    COMMAND_TEMPERATURE_ON_OFF,
     CONF_ALERT_NO_EFFECT_HOURS,
     CONF_ALERT_SILENT_HOURS,
     CONF_ALERT_UNAVAILABLE_MINUTES,
@@ -178,6 +179,7 @@ from .const import (
     NEARBY_PRESET,
     NEARBY_TEMPERATURE,
     OCCUPANCY_RETURN_MAX,
+    ON_OFF_COMMANDS,
     OVERRIDE_FIXED,
     OVERRIDE_HOURS_MAX,
     OVERRIDE_HOURS_MIN,
@@ -753,7 +755,8 @@ def _devices_schema(d: dict[str, Any]) -> vol.Schema:
                     "climate", multiple=True
                 ),
                 vol.Required(CONF_COMMAND_MODE, default=d[CONF_COMMAND_MODE]): _select(
-                    [COMMAND_TEMPERATURE, COMMAND_PRESET, COMMAND_HVAC], "command_mode"
+                    [COMMAND_TEMPERATURE, COMMAND_PRESET, COMMAND_HVAC, COMMAND_TEMPERATURE_ON_OFF],
+                    "command_mode",
                 ),
                 vol.Required(CONF_TRV_BOOST, default=bool(d.get(CONF_TRV_BOOST, False))): _bool(),
             }
@@ -915,7 +918,7 @@ def _devices_done(d: dict[str, Any], user_input: dict[str, Any]) -> dict[str, st
 def _is_on_off(d: dict[str, Any]) -> bool:
     """Relays, or thermostats switched on and off by the integration."""
     return d[CONF_SOURCE] == SOURCE_SWITCH or (
-        d[CONF_SOURCE] == SOURCE_CLIMATE and d.get(CONF_COMMAND_MODE) == COMMAND_HVAC
+        d[CONF_SOURCE] == SOURCE_CLIMATE and d.get(CONF_COMMAND_MODE) in ON_OFF_COMMANDS
     )
 
 
@@ -2161,7 +2164,7 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
         if (
             (as_list(d.get(CONF_TEMP_SENSORS)) or d.get(CONF_TOP_UP))
             and d[CONF_SOURCE] == SOURCE_CLIMATE
-            and d.get(CONF_COMMAND_MODE) != COMMAND_HVAC
+            and d.get(CONF_COMMAND_MODE) not in ON_OFF_COMMANDS
             and not _boost_on(d)
             and not _no_hvac_action(self.hass, d)
         ):

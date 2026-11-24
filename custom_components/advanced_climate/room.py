@@ -26,7 +26,6 @@ from homeassistant.helpers.event import async_call_later, async_track_state_chan
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    COMMAND_HVAC,
     COMMAND_PRESET,
     COMMAND_TEMPERATURE,
     CONF_AREA,
@@ -89,6 +88,7 @@ from .const import (
     MODE_SUMMER,
     MODE_VACATION,
     OCCUPANCY_RETURN_MAX,
+    ON_OFF_COMMANDS,
     PRESET_FROST,
     PRESETS,
     ROOM_DEFAULTS,
@@ -346,7 +346,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         # heating time (one stuck on idle is not).
         self.reports_heating: set[str] = set(stored.get("reports_heating") or [])
         # On / off thermostats that got the maximum while on (sent once per on).
-        self.max_sent: set[str] = set()
+        self.on_setpoints: dict[str, float] = {}
         # Commanded by preset and sent a temperature since: the preset shown no
         # longer says what the device holds (some keep the preset with it).
         self.preset_stale: dict[str, float] = {
@@ -563,7 +563,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
     @property
     def supports_valve_exercise(self) -> bool:
         """Valve exercise only makes sense for climate devices (TRVs)."""
-        return self.source == SOURCE_CLIMATE and self.command_mode != COMMAND_HVAC
+        return self.source == SOURCE_CLIMATE and self.command_mode not in ON_OFF_COMMANDS
 
     @property
     def rule(self) -> str:
@@ -698,10 +698,10 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
                 pass  # back in auto by itself after heat, not a person
             elif self._is_manual_change(event, old, new):
                 self._device_changed(entity_id, new, old)
-                self.max_sent.discard(entity_id)
+                self.on_setpoints.pop(entity_id, None)
             else:
                 self.sent.confirm(entity_id, new, now)
-            if self.command_mode == COMMAND_HVAC:
+            if self.command_mode in ON_OFF_COMMANDS:
                 # On / off: the heating time follows the thermostat at once.
                 self._update_heating()
         elif entity_id in self.switches:
@@ -715,7 +715,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
                 and not self.sent.is_echo(entity_id, old, new, now)
             ):
                 self._device_changed(entity_id, new, old)
-                self.max_sent.discard(entity_id)
+                self.on_setpoints.pop(entity_id, None)
         if entity_id in as_list(self.config.get(CONF_TEMP_SENSORS)) or entity_id in self.climates:
             self._update_temperature(now)
         self._update_window(now)
@@ -757,7 +757,9 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             device = round(sum(device_values) / len(device_values), 2)
         self.current_temp = external if external is not None else device
         # Without any temperature a relay cannot be regulated.
-        needs_temp = self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC or self.boost
+        needs_temp = (
+            self.source == SOURCE_SWITCH or self.command_mode in ON_OFF_COMMANDS or self.boost
+        )
         self.sensor_failed = self.current_temp is None and (bool(sensors) or needs_temp)
         # A quick drop of the temperature counts as an open window (a change of
         # the sensors that give it is not a drop).
@@ -1166,7 +1168,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             vacation_preheat=preheat,
             frost_holding=self._frost_holding(),
             device_setpoint=self._device_setpoint(),
-            on_off=self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC,
+            on_off=self.source == SOURCE_SWITCH or self.command_mode in ON_OFF_COMMANDS,
             keep_open=house.keep_open_room == self.id,
             keep_open_temp=self._keep_open_temp(),
             top_up=self.id in house.top_up_rooms,
@@ -1329,7 +1331,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
 
     def _device_setpoint(self) -> float | None:
         """Highest temperature set on the thermostats (not for on / off control)."""
-        if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC:
+        if self.source == SOURCE_SWITCH or self.command_mode in ON_OFF_COMMANDS:
             return None
         values = [
             v
@@ -1383,7 +1385,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
 
     def _supports_off(self) -> bool:
         """True when the devices can be turned off (else the frost temperature is used)."""
-        if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC:
+        if self.source == SOURCE_SWITCH or self.command_mode in ON_OFF_COMMANDS:
             return True
         for entity_id in self.climates:
             state = self.hass.states.get(entity_id)
@@ -1451,7 +1453,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             # The valves are exercised, or kept open or topped up for the heat
             # source: no heat is asked for.
             pass
-        elif self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC:
+        elif self.source == SOURCE_SWITCH or self.command_mode in ON_OFF_COMMANDS:
             demand = bool(self._relay_on)
         elif self.boost:
             demand = self._boost_demand  # from the room sensor, with the hysteresis
@@ -1490,7 +1492,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         # Heating time: by the device when it says it heats (an on / off
         # thermostat keeps its own band while on, and can heat when told off).
         if (
-            self.command_mode == COMMAND_HVAC
+            self.command_mode in ON_OFF_COMMANDS
             and self.source != SOURCE_SWITCH
             and self._exercise_until is None
             and not self.opened_for_source
@@ -1546,7 +1548,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
 
     def _device_minimum(self) -> float | None:
         """The highest min_temp of the thermostat entities (°C), when sent temperatures."""
-        if self.source not in (SOURCE_CLIMATE, SOURCE_GT) or self.command_mode == COMMAND_HVAC:
+        if self.source not in (SOURCE_CLIMATE, SOURCE_GT) or self.command_mode in ON_OFF_COMMANDS:
             return None
         minimums = [
             value

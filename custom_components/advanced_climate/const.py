@@ -393,6 +393,8 @@ SOURCE_SWITCH: Final = "switch"
 COMMAND_PRESET: Final = "preset"
 COMMAND_TEMPERATURE: Final = "temperature"
 COMMAND_HVAC: Final = "hvac_mode"
+COMMAND_TEMPERATURE_ON_OFF: Final = "temperature_on_off"
+ON_OFF_COMMANDS: Final = (COMMAND_HVAC, COMMAND_TEMPERATURE_ON_OFF)
 
 NEARBY_PRESET: Final = "preset"
 NEARBY_TEMPERATURE: Final = "temperature"

@@ -1065,7 +1065,8 @@
       "options": {
         "temperature": "Temperatur",
         "preset": "Preset",
-        "hvac_mode": "Ein / Aus (HVAC-Modus)"
+        "hvac_mode": "Ein / Aus (HVAC-Modus)",
+        "temperature_on_off": "Temperatur + Ein/Aus"
       }
     },
     "nearby_mode": {

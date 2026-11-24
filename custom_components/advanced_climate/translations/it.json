@@ -1065,7 +1065,8 @@
       "options": {
         "temperature": "Temperatura",
         "preset": "Preset",
-        "hvac_mode": "Acceso / spento (modalità HVAC)"
+        "hvac_mode": "Acceso / spento (modalità HVAC)",
+        "temperature_on_off": "Temperatura + acceso/spento"
       }
     },
     "nearby_mode": {

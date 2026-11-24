@@ -904,6 +904,8 @@ def _devices_done(d: dict[str, Any], user_input: dict[str, Any]) -> dict[str, st
     if not user_input.get(key):
         return {key: "no_devices"}
     boost = source == SOURCE_CLIMATE and bool(user_input.get(CONF_TRV_BOOST, False))
+    if user_input.get(CONF_COMMAND_MODE) == COMMAND_TEMPERATURE_ON_OFF:
+        boost = False
     if boost and user_input.get(CONF_COMMAND_MODE) != COMMAND_TEMPERATURE:
         return {CONF_TRV_BOOST: "boost_temperature_only"}
     other = CONF_CLIMATES if source == SOURCE_SWITCH else CONF_SWITCHES

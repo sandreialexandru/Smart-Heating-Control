@@ -27,10 +27,9 @@ export const CompactMixin = (Base) =>
     /** One tile per room in the compact card: arc, level, target; a tap opens the room. */
     _compactRow(stateObj, color) {
       const a = stateObj.attributes;
-      const heating = !!a.heating;
       // Every state that applies, as small round icons (heating pulses).
       const status = [
-        a.heat_demand ? this._flame(heating) : "",
+        this._roomHeatIcon(a),
         this._alertIcon(a),
         a.window_open ? `<span class="tstat warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>` : "",
         this._moldIcon(a, "tstat"),
@@ -40,7 +39,7 @@ export const CompactMixin = (Base) =>
       // While heating the time to the target, else the next change (the icons above say the rest).
       const line = this._roomNext(a);
       return `<button class="tile ${this._alertLevel(a)}" data-action="fold" data-key="room-${esc(a.room_id)}" aria-expanded="false" style="--c:${color}"
-          aria-label="${esc(`${a.room_name}, ${this._temp(a.current_temperature)}, ${this._label(stateObj)}`)}">
+          aria-label="${esc(`${a.room_name}, ${this._temp(a.current_temperature)}, ${this._label(stateObj)}${this._thermostatsOff(a) ? `, ${this._t("thermostat_off")}` : ""}`)}">
           <span class="tile-head"><span class="tname"><span class="cname">${esc(a.room_name)}</span></span>${
             status ? `<span class="tstats">${status}</span>` : ""
           }</span>

@@ -48,10 +48,11 @@ export const RoomMixin = (Base) =>
           .map((id) => this._state(id))
           .find((s) => s && num(s.attributes.current_temperature) !== null);
         if (dev) {
+          const off = dev.state === "off";
+          const text = this._t("device_temp").replace("{temp}", this._temp(dev.attributes.current_temperature));
+          const label = off ? `${this._t("thermostat_off")} · ${text}` : null;
           chips.push(
-            `<span class="chip soft neutral link" ${this._more(dev.entity_id)}>${this._icon("thermostat")}<span>${esc(
-              this._t("device_temp").replace("{temp}", this._temp(dev.attributes.current_temperature))
-            )}</span></span>`
+            `<span class="chip soft neutral link" ${this._more(dev.entity_id, label)}${label ? ` aria-label="${esc(label)}"` : ""}>${this._icon(off ? "power" : "thermostat")}<span>${esc(text)}</span></span>`
           );
         }
       }
@@ -260,10 +261,23 @@ export const RoomMixin = (Base) =>
       return `<span class="pill preset"><span class="dot"></span>${esc(this._presetName(a, a.preset))}${target}</span>`;
     }
 
+    /** A room shows power off only when every configured thermostat confirms it. */
+    _thermostatsOff(a) {
+      const ids = a.climate_entities || [];
+      return a.source === "climate" && ids.length > 0 && ids.every((id) => this._state(id)?.state === "off");
+    }
+
+    _roomHeatIcon(a, small = false) {
+      if (this._thermostatsOff(a)) {
+        const label = esc(this._t("thermostat_off"));
+        return `<span class="${small ? "cicon" : "tstat"} thermostat-off" role="img" title="${label}" aria-label="${label}">${this._icon("power")}</span>`;
+      }
+      return a.heat_demand ? this._flame(!!a.heating, null, small) : "";
+    }
+
     /** Small icons of a folded room: heating, window open, manual change. */
     _statusIcons(a) {
-      const icons = [];
-      if (a.heat_demand) icons.push(this._flame(!!a.heating, null, true));
+      const icons = [this._roomHeatIcon(a, true)];
       if ((a.alerts || []).length) icons.push(this._alertIcon(a, true));
       if (a.window_open) icons.push(`<span class="cicon warn" title="${esc(this._t("window"))}">${this._icon("window-open-variant")}</span>`);
       icons.push(this._moldIcon(a, "cicon"));

@@ -206,3 +206,29 @@ test("guest band: says when the away mode or a vacation waits for the guests", a
   await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom" }], mode: "away" });
   ok(!(await text(p)).includes("Guest mode"), "no band without guests");
 });
+
+test("manual thermostat off updates the compact tile and device chip", async (p) => {
+  const id = "climate.office";
+  const opts = { lang: "es", rooms: [{ id: "r1", name: "Office", source: "climate",
+    climates: [id], demand: false, heating: false }],
+    extra: [[id, "heat", { current_temperature: 19, hvac_action: "idle" }]] };
+  await mount(p, { compact: true }, opts);
+  const tile = p.locator(".tile");
+  eq(await tile.locator(".thermostat-off").count(), 0);
+  const update = (mode) => p.evaluate(([id, mode]) => {
+    const hass = card._hass;
+    card.hass = { ...hass, states: { ...hass.states, [id]: { ...hass.states[id], state: mode } } };
+  }, [id, mode]);
+  await update("off");
+  await tile.locator('.thermostat-off[title="Cabezal apagado"]').waitFor();
+  ok((await tile.getAttribute("aria-label")).includes("Cabezal apagado"));
+  await update("heat");
+  await tile.locator(".thermostat-off").waitFor({ state: "detached" });
+  opts.extra[0][1] = "off";
+  await mount(p, {}, opts);
+  const chip = p.locator('.chip[data-entity="climate.office"]');
+  await chip.locator('ha-icon[icon="mdi:power"]').waitFor();
+  ok((await chip.getAttribute("title")).includes("Cabezal apagado"));
+  await update("heat");
+  await chip.locator('ha-icon[icon="mdi:thermostat"]').waitFor();
+});

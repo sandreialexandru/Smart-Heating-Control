@@ -214,7 +214,7 @@ export const DetailsMixin = (Base) =>
         const parts = [];
         if (num(at.current_temperature) !== null) parts.push(this._temp(at.current_temperature));
         if (num(at.temperature) !== null) parts.push(`→ ${this._temp(at.temperature)}`);
-        if (st.state === "off") parts.push(this._t("off").toLowerCase());
+        if (st.state === "off") parts.push(this._t("thermostat_off"));
         else if (at.hvac_action === "heating") parts.push(this._t("dev_heating"));
         else if (at.hvac_action === "idle") parts.push(this._t("dev_idle"));
         value = parts.join(" ") || st.state;

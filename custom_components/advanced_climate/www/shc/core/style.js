@@ -606,6 +606,7 @@ export const STYLE = `
   .tstat, .cicon, .alerticon { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
     flex: none; background: var(--ac-surface-2); color: var(--primary-text-color); }
   .tstat ha-icon, .cicon ha-icon, .alerticon ha-icon { --mdc-icon-size: 16px; }
+  .thermostat-off { color: var(--secondary-text-color); }
   .tstat.warn, .cicon.warn { background: color-mix(in srgb, var(--warning-color, #f0ad4e) 18%, transparent); color: var(--ac-warn-fg); }
   .tstat.teal, .cicon.teal { background: color-mix(in srgb, var(--ac-teal) 18%, transparent); color: color-mix(in srgb, var(--ac-teal) 75%, var(--primary-text-color)); }
   .alerticon { background: color-mix(in srgb, var(--ac-err) 16%, transparent); color: var(--ac-err-fg); }

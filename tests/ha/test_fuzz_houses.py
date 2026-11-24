@@ -56,6 +56,10 @@ from custom_components.advanced_climate.websocket import HISTORY, WEEK, ws_histo
 
 # 16 houses in every run; more before a release: SHC_FUZZ_SEEDS=96 pytest ...
 SEEDS = list(range(int(os.environ.get("SHC_FUZZ_SEEDS", "16"))))
+# Some seeds only, with the debug log of the integration in a failure: SHC_FUZZ_ONLY=10,56
+if os.environ.get("SHC_FUZZ_ONLY"):
+    SEEDS = [int(x) for x in os.environ["SHC_FUZZ_ONLY"].split(",")]
+DEBUG = bool(os.environ.get("SHC_FUZZ_ONLY"))
 STEPS = 2 * 144  # two days of 10 minutes
 PRESET_TEMPS = {"Comfort": 21.0, "Eco": 18.0, "Away": 15.0, "Boost": 30.0}
 GT_TEMPS = {"home": 21.5, "eco": 18.0, "away": 16.0, "sleep": 19.0, "comfort": 22.0}
@@ -633,7 +637,9 @@ async def test_random_houses_lived_in(
         hass, "input_boolean", {"input_boolean": {b: {} for b in booleans}}
     )
     _install_services(hass, world)
-    caplog.set_level(logging.WARNING, logger="custom_components.advanced_climate")
+    caplog.set_level(
+        logging.DEBUG if DEBUG else logging.WARNING, logger="custom_components.advanced_climate"
+    )
     _physics(hass, world, 3.0)
     entries = []
     for title, options, rooms in houses:
@@ -647,7 +653,14 @@ async def test_random_houses_lived_in(
     demand_since: dict[str, int] = {}
 
     def fail(step: int, what: object) -> str:
-        return f"seed {seed} step {step}: {what}\nconfig: {config}\nlast events: {world.log[-12:]}"
+        debug = ""
+        if DEBUG:
+            lines = [f"{r.created:.0f} {r.getMessage()}" for r in caplog.records[-80:]]
+            debug = "\ndebug:\n" + "\n".join(lines)
+        return (
+            f"seed {seed} step {step}: {what}\nconfig: {config}\nlast events: {world.log[-12:]}"
+            + debug
+        )
 
     # The weather of these two days: cold, mild or warm enough to stop the heating.
     base = world.rng.choice([-8.0, 3.0, 3.0, 12.0, 19.0])

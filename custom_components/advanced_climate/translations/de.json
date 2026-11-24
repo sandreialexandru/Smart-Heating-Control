@@ -34,7 +34,7 @@
         "data": {
           "source": "Beheizt durch"
         },
-        "description": "Das eine Thermostat (oder Relais), das die ganze Wohnung heizt. Es wird als Wärmequelle für die Zone {zone} eingerichtet und arbeitet mit allen Optionen des Hauses. Heizen die Räume getrennt (Heizkörperthermostate, Heizgeräte oder Klimaanlagen), wähle „Jeder Raum heizt separat“ und füge die Räume einzeln mit „Raum hinzufügen“ hinzu.",
+        "description": "Das eine Thermostat (oder Relais), das die ganze Wohnung heizt. Es wird zur Zone {zone} und arbeitet mit allen Optionen des Hauses. Heizen die Räume getrennt (Heizkörperthermostate, Heizgeräte oder Klimaanlagen), wähle „Jeder Raum heizt separat“ und füge die Räume einzeln mit „Raum hinzufügen“ hinzu.",
         "data_description": {
           "source": "Was das ganze Haus heizt: ein Generic Thermostat, ein anderes Thermostat (Nest, Tado, Hive…) oder ein Relais, das den Kessel startet. Wähle „Jeder Raum heizt separat“, wenn kein einzelnes Gerät die ganze Wohnung heizt, z. B. bei Heizkörperthermostaten, Heizkörperventilen, Elektroheizungen, Klimaanlagen oder Fußbodenheizungszonen. Dabei wird jeder Raum mit seinem eigenen Gerät hinzugefügt. Bei Heizkörperthermostaten wählst du das Kesselrelais (oder das Thermostat, das den Kessel startet) als Wärmequelle."
         }
@@ -276,7 +276,7 @@
         "data": {
           "source": "Beheizt durch"
         },
-        "description": "Das eine Thermostat (oder Relais), das die ganze Wohnung heizt. Es wird zur Zone {zone} und funktioniert mit allen Optionen des Hauses. Heizen die Räume getrennt (Heizkörperthermostate, Heizgeräte, Klimaanlagen), wähle „Jeder Raum heizt separat“ und füge jeden Raum mit „Raum hinzufügen“ hinzu.",
+        "description": "Das eine Thermostat (oder Relais), das die ganze Wohnung heizt. Es wird zur Zone {zone} und arbeitet mit allen Optionen des Hauses. Heizen die Räume getrennt (Heizkörperthermostate, Heizgeräte oder Klimaanlagen), wähle „Jeder Raum heizt separat“ und füge die Räume einzeln mit „Raum hinzufügen“ hinzu.",
         "data_description": {
           "source": "Was das ganze Haus heizt: ein Generic Thermostat, ein anderes Thermostat (Nest, Tado, Hive…) oder ein Relais, das den Kessel startet. „Jeder Raum heizt separat“, wenn kein einzelnes Gerät die ganze Wohnung heizt: Heizkörperthermostate oder Ventile an den Heizkörpern, Elektroheizungen, Klimaanlagen, Fußbodenheizungszonen. Jeder Raum wird dann mit seinem eigenen Gerät hinzugefügt, und bei Heizkörperthermostaten wählst du das Kesselrelais (oder das Thermostat, das den Kessel startet) als Wärmequelle."
         }

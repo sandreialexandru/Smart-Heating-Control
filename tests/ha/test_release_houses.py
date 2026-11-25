@@ -293,7 +293,7 @@ async def test_two_houses_for_three_days(
         {"unit_of_measurement": "°C", "device_class": "temperature"},
     )
     _install(hass)
-    caplog.set_level(logging.DEBUG, logger="custom_components.advanced_climate")
+    caplog.set_level(logging.WARNING, logger="custom_components.advanced_climate")
     entries = []
     for title, options, rooms in (HOME, CABIN):
         entry = _entry(title, options, rooms)
@@ -334,29 +334,8 @@ async def test_two_houses_for_three_days(
     assert _temp(hass, "climate.kids_a") == 22.5
 
     # A level preset on a preset thermostat: the level in the whole bedroom.
-    trace = []
-    for name in ("_check_device_limit", "_check_auto_return", "_is_manual_change", "_device_changed", "_handle_manual_change", "apply_manual_target", "clear_override"):
-        if hasattr(bedroom, name):
-            orig = getattr(bedroom, name)
-            def wrap(*a, _o=orig, _n=name, **k):
-                r = _o(*a, **k)
-                trace.append((_n, str(a[0])[:60] if a else "", r if not hasattr(r, "__await__") else "coro", str(bedroom.override)[:120]))
-                return r
-            setattr(bedroom, name, wrap)
-    orig_echo = bedroom.sent.is_echo
-    def echo(*a, **k):
-        r = orig_echo(*a, **k)
-        trace.append(("is_echo", a[0], r, dict(bedroom.sent.last.get(a[0]) or {}), [x for x in bedroom.sent.recent.get(a[0], [])][-6:]))
-        return r
-    bedroom.sent.is_echo = echo
     _by_hand(hass, "climate.bed_b", preset_mode="Away", temperature=15.0)
     await _steps(hass, freezer, 6)
-    dbg = "\n".join(
-        f"{r.name.rsplit('.', 1)[-1]}: {r.getMessage()}"
-        for r in caplog.records
-        if r.name.startswith("custom_components") and ("Bedroom" in r.getMessage() or "bed_" in r.getMessage())
-    )
-    assert bedroom.override is not None, "DBGSTART " + repr(trace)[-5000:] + " DBGEND"
     assert bedroom.override["target"] == {"kind": "preset", "preset": "away", "temperature": None}
     assert hass.states.get("climate.bed_a").attributes["preset_mode"] == "Away"
     # Boost on one: that one only; the other keeps Away.
@@ -430,7 +409,7 @@ async def test_two_houses_for_three_days(
         BY_ID["climate.living_right"].received[-3:],
         [r.getMessage() for r in caplog.records[mark:] if "Living" in r.getMessage()][:30],
     )
-    caplog.set_level(logging.DEBUG, logger="custom_components.advanced_climate")
+    caplog.set_level(logging.WARNING, logger="custom_components.advanced_climate")
     assert hass.states.get("climate.living_left").state == "heat"
     assert _temp(hass, "climate.living_left") == 20.5
 

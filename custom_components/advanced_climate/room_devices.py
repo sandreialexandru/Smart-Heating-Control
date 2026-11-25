@@ -52,7 +52,6 @@ from .const import (
     PRESETS,
     RULE_MAX,
     RULE_OVERRIDE,
-    RULE_PAUSE,
     RULE_SAFETY,
     SOURCE_CLIMATE,
     SOURCE_GT,
@@ -123,11 +122,23 @@ class RoomDevices:
     # ------------------------------------------------------------------
     # Commands
     # ------------------------------------------------------------------
+    def _held_by_pause(self) -> bool:
+        """Paused meanwhile: what was decided before the pause is not sent.
+
+        A slow thermostat may hold the commands of the house for a while; the
+        pause decides from then on (only the safety rules send in a pause).
+        """
+        return self.house.paused and (
+            self.decision is None or self.decision.rule not in (RULE_SAFETY, RULE_MAX)
+        )
+
     async def _call(self, domain: str, service: str, data: dict[str, Any]) -> bool:
         """Call a service with the context of the integration; False when it fails.
 
         A device getting too many commands (a loop) gets none for a while.
         """
+        if self._held_by_pause():
+            return False
         entity_id = data.get(ATTR_ENTITY_ID)
         if isinstance(entity_id, str) and not self._command_allowed(entity_id):
             return False
@@ -187,11 +198,7 @@ class RoomDevices:
 
     async def _async_apply(self, target: Target, *, force: bool = False) -> None:
         """Send the commands needed to reach ``target``."""
-        if self.house.paused and (
-            self.decision is None or self.decision.rule not in (RULE_PAUSE, RULE_SAFETY, RULE_MAX)
-        ):
-            # Paused meanwhile (a slow thermostat held the commands of the house):
-            # a decision made before the pause is not sent; the pause decides now.
+        if self._held_by_pause():
             return
         on_off = self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC
         if target.kind == KIND_NONE:

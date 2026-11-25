@@ -52,9 +52,9 @@ show how many houses an idea would help.
   The same three questions as for a request apply, and a PR is easier to
   accept when the approach was agreed before the code was written.
 - **Fixes and translations are welcome directly.**
-- **What a PR brings with it:** tests for what it changes, the documentation
-  in English and Romanian, a line in the *Unreleased* section of
-  `CHANGELOG.md`. The version is not changed in a PR: it is set at release.
+- **What a PR brings with it:** tests for what it changes and a line in the
+  *Unreleased* section of `CHANGELOG.md`. The documentation is updated by the
+  project; the version is not changed in a PR: it is set at release.
 - **It works the same for every house:** no device- or setup-specific
   branches, no limits or margins nobody agreed on.
 - **Tested in your own Home Assistant**, not only by the automatic tests.

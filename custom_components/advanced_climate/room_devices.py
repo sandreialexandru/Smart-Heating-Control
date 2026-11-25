@@ -9,7 +9,6 @@ keeps (``self``), set up in ``Room.__init__``.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import math
 from collections.abc import Callable
@@ -231,16 +230,8 @@ class RoomDevices:
         if on_off:
             sent = await self._async_apply_relay(target)
         else:
-            # All the thermostats at once (#28): a slow one (ZHA waits for a
-            # battery TRV to confirm) does not hold the others back.
-            sent = any(
-                await asyncio.gather(
-                    *(
-                        self._async_apply_climate(entity_id, target, force)
-                        for entity_id in self.climates
-                    )
-                )
-            )
+            for entity_id in self.climates:
+                sent |= await self._async_apply_climate(entity_id, target, force)
         if self._boost_capable:
             self._boosted = self._boost_demand
             self._boost_base = (
@@ -358,21 +349,16 @@ class RoomDevices:
         temperature = self._resolve_temperature(target)
         if self._boosted and self._boost_base is not None:
             temperature = self._boost_base
-            base = self._boost_base
-            sends = []
             for entity_id in self.climates:
                 state = self.hass.states.get(entity_id)
                 if valid(state):
                     assert state is not None
-                    sends.append(
-                        self._send(
-                            entity_id,
-                            "set_temperature",
-                            ATTR_TEMPERATURE,
-                            self._device_value(state, base),
-                        )
+                    await self._send(
+                        entity_id,
+                        "set_temperature",
+                        ATTR_TEMPERATURE,
+                        self._device_value(state, self._boost_base),
                     )
-            await asyncio.gather(*sends)
         self._boosted = False
         heat = self._exercise_until is None
         # Without the TRV boost the demand comes from the TRVs again.
@@ -982,8 +968,7 @@ class RoomDevices:
                 # far as it can too, else it keeps its own lower target. With
                 # several thermostats the room is on when one is: one left off
                 # (a command it did not take) is turned on with the others.
-
-                async def keep_on(entity_id: str) -> bool:
+                for entity_id in self.climates:
                     state = self.hass.states.get(entity_id)
                     if valid(state) and state.state == STATE_OFF:  # type: ignore[union-attr]
                         on_mode = heat_mode(state.attributes.get("hvac_modes"))  # type: ignore[union-attr]
@@ -991,22 +976,17 @@ class RoomDevices:
                         if await self._send(
                             entity_id, "set_hvac_mode", "hvac_mode", on_mode, "state"
                         ):
+                            sent = True
                             await self._async_heat_to_max(entity_id, turned_on=True)
-                            return True
-                        return False
-                    await self._async_heat_to_max(entity_id)
-                    return False
-
-                sent = any(await asyncio.gather(*(keep_on(e) for e in self.climates)))
+                    else:
+                        await self._async_heat_to_max(entity_id)
             self._relay_held = held and want
             return sent
         if not released and self._relay_must_wait(actual, now):
             return False
         ok = True
-        # All the devices at once: a slow one does not hold the others back.
         if self.source == SOURCE_SWITCH:
-
-            async def switch(entity_id: str) -> bool:
+            for entity_id in self.switches:
                 # Noted before the call: the switch may report before it returns.
                 before = self.sent.last.get(entity_id)
                 self.sent.set_last(entity_id, {"state": STATE_ON if want else STATE_OFF})
@@ -1020,25 +1000,19 @@ class RoomDevices:
                         self.sent.last.pop(entity_id, None)
                     else:
                         self.sent.set_last(entity_id, before)
-                return sent
-
-            ok = all(await asyncio.gather(*(switch(e) for e in self.switches)))
+                ok &= sent
         else:
-
-            async def climate(entity_id: str) -> bool:
+            for entity_id in self.climates:
                 state = self.hass.states.get(entity_id)
                 on_mode = heat_mode(state.attributes.get("hvac_modes") if valid(state) else None)  # type: ignore[union-attr]
                 self.sent.start(entity_id)
-                sent = await self._send(
+                ok &= await self._send(
                     entity_id, "set_hvac_mode", "hvac_mode", on_mode if want else STATE_OFF, "state"
                 )
                 if want:
                     await self._async_heat_to_max(entity_id, turned_on=True)
                 else:
                     self.max_sent.discard(entity_id)
-                return sent
-
-            ok = all(await asyncio.gather(*(climate(e) for e in self.climates)))
         if ok:
             self._relay_on = want
             self._relay_held = held and want

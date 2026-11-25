@@ -134,14 +134,14 @@ class SentValues:
             if old.attributes.get(attr) != new.attributes.get(attr):
                 changed[attr] = new.attributes.get(attr)
         matched = False
-        # A preset just sent brings its own temperature: the device reports it
-        # with the preset (also a preset it already showed, sent again).
-        presets = ([sent["preset_mode"]] if "preset_mode" in sent else []) + [
-            v for k, v in recent if k == "preset_mode"
-        ]
+        # The preset of the command now brings its own temperature: the device
+        # reports it with the preset (also a preset it already showed, sent
+        # again). Only that one: a person picking another preset sent earlier
+        # sets a temperature of their own.
         preset_brings = (
-            "preset_mode" not in stable
-            and new.attributes.get("preset_mode") in presets
+            "preset_mode" in sent
+            and "preset_mode" not in stable
+            and new.attributes.get("preset_mode") == sent["preset_mode"]
             and new.attributes.get("preset_mode") not in (None, "none")
         )
         for key, value in changed.items():

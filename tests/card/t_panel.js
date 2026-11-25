@@ -889,3 +889,13 @@ test("the address names the tab: a link opens it, a tab chosen is written in it,
   eq(await p.evaluate(() => location.hash), "#r2", "back on Rooms: the room again");
   await p.evaluate(() => { localStorage.removeItem("shc-panel-tab"); localStorage.removeItem("shc-panel-room"); history.replaceState(null, "", location.pathname); });
 });
+
+test("stats: how the optimal starts ended, in the range", async (p) => {
+  await openPanel(p, { rooms: R4 });
+  await tab(p, "stats");
+  await p.waitForTimeout(400);
+  const text = await p.evaluate(() => panel.shadowRoot.querySelector(".ps-pres")?.innerText || "");
+  // Four in the last 14 days (the one of 400 days ago is not): 2 in time (16 min early on average), 1 late, 1 not reached.
+  ok(/4 starts · in time 2, on average 16 min early · late 1, on average 8 min · not reached 1/.test(text), text);
+  eq(await p.evaluate(() => panel.shadowRoot.querySelectorAll(".ps-pre").length), 1, "only the room with some");
+});

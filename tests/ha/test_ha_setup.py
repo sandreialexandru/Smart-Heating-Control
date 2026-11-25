@@ -534,6 +534,12 @@ async def test_history_of_the_decisions_and_alerts(
     assert last["rule"] == "manual_override" and last["reason_key"] == "manual_override"
     assert last["reason_params"] == {"temperature": 22.5}
     assert last["target"]["temperature"] == 22.5
+    # How the optimal starts ended: in the history, and kept over a restart.
+    done = {"at": "2026-10-12T05:00:00+00:00", "preset": "home", "started": "x", "offset": -12}
+    room.preheats.results.append(done)
+    ws_history(hass, Connection(), {"id": 3, "type": HISTORY})
+    assert sent["result"]["houses"][0]["rooms"][0]["preheats"] == [done]
+    assert house._data_to_save()["rooms"][room.id]["preheats"] == [done]
 
     # Kept over a restart: an alert still open then ends at the restart.
     saved = house._data_to_save()["house"]["alert_journal"]

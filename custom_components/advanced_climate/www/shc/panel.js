@@ -77,6 +77,11 @@ const PANEL_STYLE = `
   :host([tab="rooms"]) .pextra { display: none !important; }
   .ps-stats .segmented, .ph-filters .segmented { max-width: 420px; }
   .ps-title { margin: 8px 0 0; font-size: 0.95em; font-weight: 600; }
+  .ps-pres { display: flex; flex-direction: column; }
+  .ps-pre { display: grid; grid-template-columns: minmax(70px, 160px) 1fr; gap: 10px; padding: 6px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--primary-text-color) 6%, transparent); }
+  .ps-pre:last-child { border-bottom: none; }
+  :host([narrow]) .ps-pre { grid-template-columns: 1fr; gap: 2px; }
   .ps-house { margin: 12px 0 0; font-size: 1.1em; }
   /* The columns touch (their room is padding), so the centre of column i is at (i + ½) / n of the width:
      the line of the outdoor temperature is drawn over them in those units. */

@@ -166,7 +166,15 @@
               { time: at(26), rule: "schedule", target: { kind: "preset", preset: "sleep", temperature: null }, description: "Schedule: sleep", reason_key: "schedule", reason_params: { preset: "sleep" } },
               { time: at(5), rule: "window_open", target: { kind: "off" }, description: "Window open", reason_key: "window_open", reason_params: {} },
               { time: at(1), rule: "schedule", target: { kind: "preset", preset: "home", temperature: null }, description: "Schedule: home", reason_key: "schedule", reason_params: { preset: "home" } },
-            ] })),
+            ],
+            // How its optimal starts ended: in time 12 and 20 min early, late 8 min, not reached; and one too old.
+            preheats: r.id === rooms[0]?.id ? [
+              { at: at(24 * 3), preset: "home", started: at(24 * 3 + 1), offset: -12 },
+              { at: at(24 * 2), preset: "home", started: at(24 * 2 + 1), offset: -20 },
+              { at: at(24), preset: "home", started: at(25), offset: 8 },
+              { at: at(2), preset: "home", started: at(3), offset: null },
+              { at: at(24 * 400), preset: "home", started: at(24 * 400 + 1), offset: -5 },
+            ] : [] })),
             alerts: [
               { key: "dev", code: "device_unavailable", params: { entity: "climate.trv", minutes: 15 }, room: rooms[0]?.id, start: at(30), end: at(29.25) },
               { key: "mold", code: "mold_risk", params: { surface: 84, humidity: 62 }, room: rooms[0]?.id, start: at(3), end: null },

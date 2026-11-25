@@ -483,3 +483,38 @@ async def test_a_slow_trv_reporting_before_the_command_returns_is_no_manual_chan
     assert room.override is None
     assert hass.states.get("sensor.living_decision").state != "manual_override"
     await _unload(hass, entry)
+
+
+async def test_a_slow_thermostat_does_not_hold_the_others_back(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The thermostats of a room get their commands at once, not one after the other."""
+    import asyncio
+
+    entry, _calls, _presets = await _living(hass, freezer, "device")
+    order: list[str] = []
+
+    async def set_temperature(call: ServiceCall) -> None:
+        entity_id = call.data["entity_id"]
+        first = not order
+        order.append(f"start {entity_id}")
+        if first:
+            # The first one called is slow: its call still waits.
+            for _ in range(10):
+                await asyncio.sleep(0)
+        order.append(f"end {entity_id}")
+
+    hass.services.async_register("climate", "set_temperature", set_temperature)
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": "select.home_mode", "option": "away"},
+        blocking=True,
+    )
+    await _tick(hass, freezer, 5)
+    assert f"start {LEFT}" in order and f"start {RIGHT}" in order
+    # The other one started before the slow first one ended.
+    slow = order[0].removeprefix("start ")
+    other = RIGHT if slow == LEFT else LEFT
+    assert order.index(f"start {other}") < order.index(f"end {slow}")
+    await _unload(hass, entry)

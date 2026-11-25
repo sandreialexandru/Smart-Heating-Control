@@ -1,8 +1,14 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Idea / feature request
+    url: https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas
+    about: Propose it in the Ideas discussions, where others can add their vote and their setup
   - name: Question / help with the setup
     url: https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/q-a
     about: Ask in the Q&A discussions; an answer there helps the next one with the same question
+  - name: Translation
+    url: https://github.com/sandreialexandru/Smart-Heating-Control/issues/12
+    about: A new language, or a text that is wrong or missing in one
   - name: Guide
     url: https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/docs/guide/README.md
     about: Every function explained, with examples

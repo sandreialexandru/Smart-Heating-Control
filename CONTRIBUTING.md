@@ -2,13 +2,15 @@
 
 *Română: [CONTRIBUTING.ro.md](CONTRIBUTING.ro.md)*
 
-- **A bug**: open an issue with the *Bug report* form.
+- **A bug**: open an issue with the *Bug report* form. Issues are for bugs
+  only.
 - **A question about the setup**: ask in the
   [Q&A discussions](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/q-a).
-- **An idea**: shape it in the
+- **An idea or a feature request**: propose it in the
   [Ideas discussions](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas),
-  or open an issue with the *Idea* form.
-- **A translation**: open an issue with the *Translation* form.
+  where others can add their vote and say how their setup would use it.
+- **A translation**: in [issue #12](https://github.com/sandreialexandru/Smart-Heating-Control/issues/12)
+  or as a pull request.
 
 ## How feature requests are decided
 
@@ -37,7 +39,7 @@ editable dashboard. The card can be placed on your own dashboard next to any
 other card.
 
 A request that is not taken is not a judgement of the need or of the person.
-It is how the integration stays reliable for everyone who runs it. If you are
-unsure, start in the
-[Ideas discussions](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas):
-an idea is easier to shape before it is written as a request.
+It is how the integration stays reliable for everyone who runs it. The votes and
+the setups in the
+[Ideas discussions](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas)
+show how many houses an idea would help.

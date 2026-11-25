@@ -1,0 +1,53 @@
+body:
+  - type: checkboxes
+    id: guide
+    attributes:
+      label: Before you ask
+      options:
+        - label: I have read the [guide](https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/docs/guide/README.md) and did not find the answer.
+          required: true
+  - type: input
+    id: version
+    attributes:
+      label: Smart Heating Control version
+      description: Settings → Marketplace (or HACS) → Smart Heating Control, or Settings → Devices & services → Smart Heating Control.
+      placeholder: "2.7.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: heating
+    attributes:
+      label: How the rooms are heated
+      multiple: true
+      options:
+        - Generic Thermostat
+        - Other thermostat / TRV (temperature)
+        - Other thermostat / TRV (preset)
+        - Other thermostat (on / off with hvac_mode)
+        - Relay / switch
+        - Heat source (boiler) started by the integration
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: What you want to do
+      description: The house and the rooms, the devices, and how you would like them to heat.
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What you tried
+      description: The options you set and what happened.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: >-
+        Optional. Settings → Devices & services → Smart Heating Control → ⋮ →
+        Download diagnostics, then drag the file here.
+    validations:
+      required: false

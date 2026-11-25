@@ -43,3 +43,21 @@ It is how the integration stays reliable for everyone who runs it. The votes and
 the setups in the
 [Ideas discussions](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas)
 show how many houses an idea would help.
+
+## Pull requests
+
+- **Against `dev`**, not `main`: `main` holds the released versions only.
+- **A new function: discuss it first** in the
+  [Ideas discussions](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas).
+  The same three questions as for a request apply, and a PR is easier to
+  accept when the approach was agreed before the code was written.
+- **Fixes and translations are welcome directly.**
+- **What a PR brings with it:** tests for what it changes, the documentation
+  in English and Romanian, a line in the *Unreleased* section of
+  `CHANGELOG.md`. The version is not changed in a PR: it is set at release.
+- **It works the same for every house:** no device- or setup-specific
+  branches, no limits or margins nobody agreed on.
+- **Tested in your own Home Assistant**, not only by the automatic tests.
+
+A PR that is not merged is not a judgement of the work: the same reasons as
+for a request apply.

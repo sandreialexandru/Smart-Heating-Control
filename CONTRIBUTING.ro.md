@@ -43,3 +43,21 @@ rămâne integrarea sigură pentru toți cei care o folosesc. Voturile și
 configurațiile din
 [Ideas](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas)
 arată câte case ar ajuta o idee.
+
+## Pull requesturi
+
+- **Spre `dev`**, nu spre `main`: `main` conține doar versiunile publicate.
+- **O funcție nouă se discută întâi** în
+  [discuțiile Ideas](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas).
+  Se aplică aceleași trei întrebări ca la o cerere, iar un PR se acceptă mai
+  ușor când abordarea a fost stabilită înainte de a scrie codul.
+- **Corecturile și traducerile sunt binevenite direct.**
+- **Ce aduce un PR odată cu el:** teste pentru ce schimbă, documentația în
+  engleză și română, un rând în secțiunea *Unreleased* din `CHANGELOG.md`.
+  Versiunea nu se schimbă într-un PR: se stabilește la publicare.
+- **Funcționează la fel în orice casă:** fără ramuri pentru un anumit
+  dispozitiv sau o anumită configurație, fără limite sau marje nestabilite.
+- **Testat în propriul Home Assistant**, nu doar de testele automate.
+
+Un PR care nu se preia nu e o judecată asupra muncii: se aplică aceleași
+motive ca la o cerere.

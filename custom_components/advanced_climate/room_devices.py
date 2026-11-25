@@ -10,6 +10,7 @@ keeps (``self``), set up in ``Room.__init__``.
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import logging
 import math
 from collections.abc import Callable
@@ -52,6 +53,7 @@ from .const import (
     PRESETS,
     RULE_MAX,
     RULE_OVERRIDE,
+    RULE_PAUSE,
     RULE_SAFETY,
     SOURCE_CLIMATE,
     SOURCE_GT,
@@ -106,6 +108,12 @@ COMMAND_PAUSE = timedelta(minutes=15)
 COMMAND_CALM = timedelta(hours=1)
 
 
+# The rule of the decision an apply sends for (each apply in its own task).
+_APPLYING: contextvars.ContextVar[str | None] = contextvars.ContextVar(
+    "advanced_climate_applying", default=None
+)
+
+
 async def _at_once(*calls: Any) -> list[Any]:
     """The commands to several devices at once (a slow one does not hold the
     others back); one device: in the same step, as before."""
@@ -128,9 +136,10 @@ class RoomDevices:
         A slow thermostat may hold the commands of the house for a while; the
         pause decides from then on (only the safety rules send in a pause).
         """
-        return self.house.paused and (
-            self.decision is None or self.decision.rule not in (RULE_SAFETY, RULE_MAX)
-        )
+        rule = _APPLYING.get()
+        if rule is None and self.decision is not None:
+            rule = self.decision.rule
+        return self.house.paused and rule not in (RULE_PAUSE, RULE_SAFETY, RULE_MAX)
 
     async def _call(self, domain: str, service: str, data: dict[str, Any]) -> bool:
         """Call a service with the context of the integration; False when it fails.
@@ -198,6 +207,16 @@ class RoomDevices:
 
     async def _async_apply(self, target: Target, *, force: bool = False) -> None:
         """Send the commands needed to reach ``target``."""
+        # The rule this apply sends for: its commands (also those of a slow
+        # thermostat, sent later) are told apart from those of a newer decision.
+        token = _APPLYING.set(self.decision.rule if self.decision is not None else None)
+        try:
+            await self._async_apply_for(target, force)
+        finally:
+            _APPLYING.reset(token)
+
+    async def _async_apply_for(self, target: Target, force: bool) -> None:
+        """``_async_apply`` for the rule set in ``_APPLYING``."""
         if self._held_by_pause():
             return
         on_off = self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC

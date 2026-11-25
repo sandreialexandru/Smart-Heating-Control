@@ -189,3 +189,17 @@ def test_limit_kind_at_its_edges() -> None:
     assert limit_kind(7, 11.75, 0.25, target=7, exercising=False, lowest_level=12) is None
     # Without the lowest level there is no minimum.
     assert limit_kind(7, 10, 0.25, target=7, exercising=False, lowest_level=None) is None
+
+
+def test_a_preset_sent_before_a_new_command_still_brings_its_temperature() -> None:
+    """The preset only among the recent values (a new command started since)."""
+    sent = _sent()
+
+    def trv(temperature: float, preset: str) -> State:
+        return State(TRV, "heat", {"temperature": temperature, "preset_mode": preset})
+
+    sent.start(TRV)
+    sent.record(TRV, "preset_mode", "Comfort", "Comfort", T0)
+    sent.start(TRV)  # the next command: what was sent is in the recent values only
+    sent.record(TRV, "hvac_mode", "heat", None, T0 + timedelta(seconds=1))
+    assert sent.is_echo(TRV, trv(18, "Comfort"), trv(21, "Comfort"), T0 + timedelta(seconds=5))

@@ -182,6 +182,13 @@ Die Dokumentation gibt es auf Englisch und Rumänisch.
 | [Spezifikation](docs/SPEC.md) | Die vollständige Spezifikation |
 | [Änderungen](CHANGELOG.md) | Was sich geändert hat, Version für Version |
 
+## Fragen und Ideen
+
+- Eine Frage zur Einrichtung: in den [Q&A-Diskussionen](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/q-a).
+- Eine Idee oder ein Funktionswunsch: in den [Ideas-Diskussionen](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas), wo andere abstimmen können. Wie über Wünsche entschieden wird: [CONTRIBUTING](CONTRIBUTING.md).
+- Ein Fehler: ein [Issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues/new/choose).
+- Neue Versionen: in den [Announcements](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/announcements).
+
 ## Übersetzungen
 
 Integration und Karte: Englisch, Rumänisch, Deutsch, Niederländisch,

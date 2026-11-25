@@ -193,7 +193,15 @@ următoarele 12 ore și se deschide pe ultimele 24 de ore și următoarele 12:
 - **soarele** așteptat, ca o zonă galbenă discretă jos pe banda temperaturii
   de afară (de la deloc la soarele plin: la zenit pe cer senin), după ce
   camera a învățat că soarele o încălzește;
-- următoarea pornire / oprire anticipată, ca perioadă umbrită.
+- următoarea pornire / oprire anticipată, ca perioadă umbrită;
+- cu un *Senzor preț energie* sau un *Senzor surplus fotovoltaic* (vezi
+  [capitolul 8](08-sursa-si-energie.ro.md#tariful-dinamic)), **energia** pe o
+  bandă sus, până acum: prețul mare roșu, prețul mic verde (după *Preț mare de
+  la* și *Preț mic până la*), surplusul PV galben (de la *Surplus de la*),
+  fiecare senzor pe rândul lui. Căsuța cu valori dă prețul și surplusul din
+  acel moment, în unitatea senzorului. Un senzor nu dă valori înainte, așa că
+  banda se oprește la acum; istoricul vine din recorder (un senzor exclus din
+  el nu arată nimic).
 
 Fiecare element din legenda de sub grafic ascunde sau arată seria lui la
 atingere (tăiat cât e ascuns); alegerea se păstrează în acest browser pentru

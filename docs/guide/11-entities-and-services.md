@@ -77,6 +77,7 @@ the house or the room, e.g. `sensor.bedroom_decision`.
 | `reason`, `reason_key`, `reason_params` | The reason (English text, and the key with parameters for translation) |
 | `preset`, `target_temperature`, `current_temperature` | The level, the target, the room temperature |
 | `offsets` | The active adjustments |
+| `energy` | The price and PV surplus sensors with the limits of their adjustments (`price`: `entity`, `high`, `low`; `pv`: `entity`, `threshold`), for the chart; empty without them; not kept in the history |
 | `profile`, `next_change`, `next_preset`, `plan` | Today's profile, the next change, the plan of the next hours |
 | `time_to_target` | Minutes to the target |
 | `temperature_trend` | 1 while the room warms, −1 while it cools, 0 when steady or not known yet: at least 0.2 °C per hour over the last 30 minutes |

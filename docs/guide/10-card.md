@@ -194,7 +194,15 @@ and opens on the last 24 hours and the next 12:
 - the **sun** expected ahead, as a faint yellow area at the bottom of the
   outdoor band (from nothing to the full sun: overhead in a clear sky), once
   the room has learned that the sun warms it;
-- the next optimal start / stop, as a shaded period.
+- the next optimal start / stop, as a shaded period;
+- with an *Energy price sensor* or a *PV surplus sensor* (see
+  [chapter 8](08-heat-source-and-energy.md#dynamic-tariff)), the **energy** in
+  a lane at the top, until now: the high price red, the low price green (by
+  *High price from* and *Low price up to*), the PV surplus yellow (from
+  *Surplus from*), each sensor on its own row. The values box gives the price
+  and the surplus then, in the unit of the sensor. A sensor gives no values
+  ahead, so the lane ends at now; the history comes from the recorder (a sensor
+  left out of it shows nothing).
 
 Every item of the legend under the chart hides or shows its series when
 tapped (crossed out while hidden); the choice is kept in this browser for all

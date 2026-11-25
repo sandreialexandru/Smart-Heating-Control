@@ -320,3 +320,62 @@ test("tooltip far ahead without a forecast: no outdoor value (not the one of now
   const text = await p.evaluate(() => card.shadowRoot.querySelector(".tip").innerText);
   ok(!/outdoor/i.test(text), "no outdoor 11 h ahead: " + text);
 });
+
+const ENERGY = { price: { entity: "sensor.price", high: 0.8, low: 0.3 }, pv: { entity: "sensor.pv_export", threshold: 1000 } };
+const ENERGY_STATES = [["sensor.price", "0.2", { unit_of_measurement: "€/kWh" }], ["sensor.pv_export", "200", { unit_of_measurement: "W" }]];
+
+test("energy: the high and low price and the PV surplus in a lane at the top, from the sensor history", async (p) => {
+  await p.evaluate(() => { try { localStorage.removeItem("shc-hidden-series"); } catch (e) {} });
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom" }], energy: ENERGY, extra: ENERGY_STATES }); await openChart(p);
+  const r = await p.evaluate(() => {
+    const q = (s) => card.shadowRoot.querySelectorAll(s).length;
+    const d = card._charts.r1;
+    // Each period ends where the next value starts, and none goes past now.
+    const kinds = new Set(d.energy.periods.map((x) => x[2]));
+    const asked = window.calls.ws.filter((c) => c.type === "history/history_during_period").at(-1).entity_ids;
+    return { lanes: q(".elane"), high: q(".ebar.high"), low: q(".ebar.low"), pv: q(".ebar.pv"), kinds: [...kinds].sort(),
+      past: d.energy.periods.every(([s, e]) => s < e && e <= d.now), legend: q('[data-series="energy"]'), asked };
+  });
+  eq(r.lanes, 2, "a row for the price and one for the PV");
+  ok(r.high > 0 && r.low > 0 && r.pv > 0, JSON.stringify(r));
+  eq(r.kinds, ["high", "low", "pv"], "kinds");
+  ok(r.past, "only the past");
+  eq(r.legend, 1, "legend");
+  ok(r.asked.includes("sensor.price") && r.asked.includes("sensor.pv_export"), "history of both sensors");
+  // The legend hides the lane, and the plot takes its place again.
+  await p.evaluate(() => card.shadowRoot.querySelector('[data-action="series"][data-series="energy"]').click()); await p.waitForTimeout(150);
+  eq(await p.evaluate(() => card.shadowRoot.querySelectorAll(".elane, .ebar").length), 0, "hidden");
+  await p.evaluate(() => card.shadowRoot.querySelector('[data-action="series"][data-series="energy"]').click()); await p.waitForTimeout(150);
+  await p.evaluate(() => { localStorage.removeItem("shc-hidden-series"); });
+});
+
+test("energy: the tooltip gives the price and the surplus with their units, nothing ahead", async (p) => {
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom" }], energy: ENERGY, extra: ENERGY_STATES }); await openChart(p);
+  // ``t``: a time, or null for 3 hours ahead.
+  const tipAt = async (t) => {
+    const xy = await p.evaluate((when) => {
+      const d = card._charts.r1; const b = card.shadowRoot.querySelector(".hchart").getBoundingClientRect();
+      return [b.left + (b.width * ((when ?? d.now + 3 * 3600e3) - d.v0)) / (d.v1 - d.v0), b.top + 30];
+    }, t);
+    await p.mouse.move(xy[0], xy[1]); await p.waitForTimeout(120);
+    return p.evaluate(() => card.shadowRoot.querySelector(".tip").innerText);
+  };
+  // In the middle of the first high price period.
+  const high = await p.evaluate(() => { const [s, e] = card._charts.r1.energy.periods.find((x) => x[2] === "high" && x[0] > card._charts.r1.v0); return (s + e) / 2; });
+  const past = await tipAt(high);
+  ok(past.includes("Price 0.9 €/kWh · high tariff"), past);
+  ok(/Solar surplus (1500|200) W/.test(past), past);
+  const ahead = await tipAt(null);
+  ok(!ahead.includes("Price") && !ahead.includes("Solar surplus"), ahead);
+});
+
+test("energy: only the sensors chosen; none, no lane and no legend", async (p) => {
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom" }], energy: { price: null, pv: ENERGY.pv }, extra: ENERGY_STATES }); await openChart(p);
+  const one = await p.evaluate(() => ({ lanes: card.shadowRoot.querySelectorAll(".elane").length, price: card.shadowRoot.querySelectorAll(".ebar.high, .ebar.low").length,
+    y: [...card.shadowRoot.querySelectorAll(".ebar.pv")].every((r) => r.getAttribute("y") === "0") }));
+  eq(one, { lanes: 1, price: 0, y: true }, "PV only, on the first row");
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom" }] }); await openChart(p);
+  const none = await p.evaluate(() => ({ lanes: card.shadowRoot.querySelectorAll(".elane, .ebar").length, legend: card.shadowRoot.querySelectorAll('[data-series="energy"]').length,
+    asked: window.calls.ws.filter((c) => c.type === "history/history_during_period").at(-1).entity_ids.length }));
+  eq(none, { lanes: 0, legend: 0, asked: 4 }, "no energy sensors");
+});

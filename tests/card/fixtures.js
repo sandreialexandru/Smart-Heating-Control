@@ -69,6 +69,7 @@
         rate_learned: learned, humidity: r.humidity ?? null, surface_humidity: r.wall ?? null, area: r.area ?? null, circuit: r.circuit ?? null, device_levels: [],
         heat_demand: r.demand ?? true, heating: r.heating ?? true, temperature_trend: r.trend ?? 0, day_boundary: 0, source: r.source || "switch",
         custom_levels: true, house_name: house, entities: e, house_entities: he, devices: r.devices || [], held_at: r.heldAt ?? null,
+        energy: o.energy || null,
         ...(r.attrs || {}),
       };
       if (r.dropAttrs) for (const k of r.dropAttrs) delete a[k];
@@ -191,6 +192,9 @@
           else if (id.endsWith("_target_temperature")) out[id] = [{ s: String(T(21)), a: { preset: "home" }, lu: s / 1000 }];
           else if (id.endsWith("_heat_demand")) out[id] = pts((t) => ({ s: Math.floor(t / HOUR) % 3 === 0 ? "on" : "off", a: { heating: true }, lu: t / 1000 }));
           else if (id.endsWith("_outdoor_average")) out[id] = pts((t) => ({ s: "5", a: { latest: T(5 + 3 * Math.sin(t / HOUR)) }, lu: t / 1000 }));
+          // A price that is high 2 hours of 6 and low 2 of 6; a PV surplus that is above 1000 W 3 hours of 8.
+          else if (id === "sensor.price") out[id] = pts((t) => ({ s: String([0.9, 0.9, 0.5, 0.5, 0.2, 0.2][Math.floor(t / HOUR) % 6]), lu: t / 1000 }));
+          else if (id === "sensor.pv_export") out[id] = pts((t) => ({ s: Math.floor(t / HOUR) % 8 < 3 ? "1500" : "200", lu: t / 1000 }));
         }
         return out;
       },

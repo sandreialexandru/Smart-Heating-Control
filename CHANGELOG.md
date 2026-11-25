@@ -9,6 +9,10 @@ GitHub releases.
 
 ### New
 
+- 💶 **Energy in the chart**: with an energy price sensor or a PV surplus
+  sensor, a lane at the top of the room chart shows when the price was high
+  (red) or low (green) and when there was a PV surplus (yellow), by the limits
+  of their adjustments; the values box gives the price and the surplus then.
 - ⏱️ **How the optimal start did**, in the statistics of the panel: for each
   room, how its optimal starts ended in the period shown: reached in time
   (how many minutes early, on average), late (how many minutes, on average)

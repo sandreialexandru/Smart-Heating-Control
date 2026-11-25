@@ -254,6 +254,8 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self.decisions: deque[dict[str, Any]] = deque(
             stored.get("decisions", []), maxlen=MAX_DECISION_LOG
         )
+        # The last state of each thermostat the room handled.
+        self.seen_states: dict[str, State | None] = {}
         # How the optimal starts ended (as many as the decisions are kept).
         self.preheats = PreheatTracker(stored.get("preheats"), MAX_DECISION_LOG)
         self.last_exercise: str | None = stored.get("last_exercise")
@@ -698,6 +700,9 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         new: State | None = event.data["new_state"]
         now = dt_util.utcnow()
         if entity_id in self.climates:
+            # What the room has seen of it (a command in flight reads this, not
+            # a change of a person not handled yet).
+            self.seen_states[entity_id] = new
             self._note_report(entity_id, old, new)
             self._remember_preset_temp(new)
             if self._check_device_limit(entity_id, old, new):

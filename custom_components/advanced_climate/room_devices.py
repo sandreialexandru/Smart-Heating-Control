@@ -908,7 +908,13 @@ class RoomDevices:
         # after showing the new value, however long ago it was set. Only for the
         # temperature and the preset: turning a device off by hand right after it
         # was turned on stays a manual change.
-        before = self.hass.states.get(entity_id)
+        # As the room last saw it: a person's change that came meanwhile, not
+        # handled yet, is no value the device showed before the command.
+        before = (
+            self.seen_states[entity_id]
+            if entity_id in self.seen_states
+            else self.hass.states.get(entity_id)
+        )
         shown = None
         if valid(before) and name != "state":
             shown = before.state if name == "state" else before.attributes.get(name)  # type: ignore[union-attr]

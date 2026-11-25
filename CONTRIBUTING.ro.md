@@ -2,13 +2,15 @@
 
 *English: [CONTRIBUTING.md](CONTRIBUTING.md)*
 
-- **O eroare**: un issue cu formularul *Bug report*.
+- **O eroare**: un issue cu formularul *Bug report*. Issue-urile sunt doar
+  pentru erori.
 - **O întrebare despre configurare**: în
   [discuțiile Q&A](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/q-a).
-- **O idee**: se conturează în
-  [discuțiile Ideas](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas)
-  sau într-un issue cu formularul *Idea*.
-- **O traducere**: un issue cu formularul *Translation*.
+- **O idee sau o cerere de funcție**: în
+  [discuțiile Ideas](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas),
+  unde și alții pot vota și pot spune cum le-ar folosi în configurația lor.
+- **O traducere**: în [issue-ul #12](https://github.com/sandreialexandru/Smart-Heating-Control/issues/12)
+  sau ca pull request.
 
 ## Cum se decid cererile de funcții
 
@@ -37,7 +39,7 @@ Nu intră în scop: monitorizarea sau comanda altor echipamente decât
 lângă orice alt card.
 
 O cerere care nu se preia nu e o judecată asupra nevoii sau a persoanei. Așa
-rămâne integrarea sigură pentru toți cei care o folosesc. În caz de
-nesiguranță, ajută o discuție în
-[Ideas](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas):
-o idee se conturează mai ușor înainte de a deveni cerere.
+rămâne integrarea sigură pentru toți cei care o folosesc. Voturile și
+configurațiile din
+[Ideas](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas)
+arată câte case ar ajuta o idee.

@@ -1272,6 +1272,29 @@ class House:
             offsets.append(("pv_surplus", float(opts[CONF_PV_OFFSET])))
         return offsets
 
+    def energy_limits(self) -> dict[str, Any] | None:
+        """The price and PV surplus sensors with their limits, for the chart of the card.
+
+        The same limits as the adjustments: a high price from ``high``, a low one
+        up to ``low``, a surplus from ``threshold``. None without either sensor.
+        """
+        opts = self.options
+
+        def limit(key: str) -> float | None:
+            value = opts.get(key)
+            return None if value in (None, "") else float(value)
+
+        price = opts.get(CONF_PRICE_SENSOR)
+        pv = opts.get(CONF_PV_SENSOR)
+        if not price and not pv:
+            return None
+        return {
+            "price": {"entity": price, "high": limit(CONF_PRICE_HIGH), "low": limit(CONF_PRICE_LOW)}
+            if price
+            else None,
+            "pv": {"entity": pv, "threshold": limit(CONF_PV_THRESHOLD)} if pv else None,
+        }
+
     def sunny(self) -> bool:
         """Return True when the sun is up and the sky is clear."""
         sun = self.hass.states.get("sun.sun")

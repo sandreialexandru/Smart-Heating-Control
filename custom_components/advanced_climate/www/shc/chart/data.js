@@ -70,10 +70,12 @@ export const ChartDataMixin = (Base) =>
       const key = a.room_id;
       const e = a.entities || {};
       const outdoorId = a.house_entities?.outdoor_average;
-      const ids = [e.room_temperature, e.target_temperature, e.heat_demand, outdoorId].filter(Boolean);
+      const priceId = a.energy?.price?.entity;
+      const pvId = a.energy?.pv?.entity;
+      const ids = [e.room_temperature, e.target_temperature, e.heat_demand, outdoorId, priceId, pvId].filter(Boolean);
       const previous = this._hist[key];
       if (!ids.length || !this._hass?.callWS) {
-        this._hist[key] = { at: Date.now(), loading: false, temp: [], target: [], heat: [], outdoor: [] };
+        this._hist[key] = { at: Date.now(), loading: false, temp: [], target: [], heat: [], outdoor: [], price: [], pv: [] };
         return;
       }
       this._hist[key] = { ...(previous || {}), at: Date.now(), loading: true };
@@ -107,6 +109,9 @@ export const ChartDataMixin = (Base) =>
           outdoor: rows(outdoorId)
             .map((p) => [p.t, num(p.a.latest)])
             .filter((p) => p[1] !== null),
+          // The price and the PV surplus (null while unknown: no period then).
+          price: priceId ? rows(priceId).map((p) => [p.t, num(p.s)]) : [],
+          pv: pvId ? rows(pvId).map((p) => [p.t, num(p.s)]) : [],
         };
         // What is kept before the new part, then the new part (its first point is
         // the state at its start); older than 7 days is dropped.
@@ -118,7 +123,7 @@ export const ChartDataMixin = (Base) =>
         }
         this._hist[key] = { at: Date.now(), end: end.getTime(), ids: ids.join("|"), loading: false, ...merged };
       } catch (err) {
-        this._hist[key] = { at: Date.now(), loading: false, temp: [], target: [], heat: [], outdoor: [], failed: true };
+        this._hist[key] = { at: Date.now(), loading: false, temp: [], target: [], heat: [], outdoor: [], price: [], pv: [], failed: true };
       }
       const active = this.shadowRoot.activeElement;
       if (this._editing || this._drag || (active && ["INPUT", "SELECT"].includes(active.tagName))) return;
@@ -292,13 +297,61 @@ export const ChartDataMixin = (Base) =>
         .filter(([t, v]) => Number.isFinite(t) && v !== null)
         .sort((p, q) => p[0] - q[0]);
       const { pts: pred, heat: predHeat } = this._prediction(a, segs, forecast, latest, now, t1, sun);
+      const energy = this._energyData(a, hist, t0, now);
       // The learned sun gain (°C/h for the full sun), in the unit of the chart: 0 until seen.
       const rateState = this._state(a.entities?.heating_rate);
       const gainC = num(rateState?.attributes?.model?.s) ?? 0;
       const sunGain = String(rateState?.attributes?.unit_of_measurement || "").endsWith("°F") ? gainC * 1.8 : gainC;
       return {
         t0, t1, now, segs, temp, heat, predHeat, lo, hi, outdoor, forecast, olo, ohi, cutoffAt, pred,
-        sun: sunGain > 0 ? sun.filter(([t]) => t < t1) : [], sunGain, loading: !hist,
+        sun: sunGain > 0 ? sun.filter(([t]) => t < t1) : [], sunGain, loading: !hist, energy,
+      };
+    }
+
+    /**
+     * The price and the PV surplus of the house, with the limits of its
+     * adjustments: the values until now (``price`` / ``pv``: [time, value or
+     * null]) and the periods SHC took them as a high or low price or a surplus
+     * (``periods``: [start, end, "high" | "low" | "pv"]). None without either
+     * sensor. Only the past: a sensor gives no values ahead.
+     */
+    _energyData(a, hist, t0, now) {
+      const cfg = a.energy;
+      if (!cfg || (!cfg.price && !cfg.pv)) return null;
+      const series = (name, id) => {
+        const pts = hist ? (hist[name] || []).filter((p) => p[0] >= t0 - 3600 * 1000) : [];
+        const st = this._state(id);
+        if (st) pts.push([now, num(st.state)]);
+        return pts;
+      };
+      // From each value to the next one, the kind it has (null: none).
+      const periods = [];
+      const spans = (pts, kindOf) => {
+        let open = null;
+        for (const [t, v] of pts) {
+          const kind = v === null ? null : kindOf(v);
+          if (open && open[2] === kind) continue;
+          if (open) {
+            open[1] = Math.max(t, t0);
+            if (open[1] > open[0]) periods.push(open);
+          }
+          open = kind ? [Math.max(t, t0), now, kind] : null;
+        }
+        if (open && now > open[0]) periods.push(open);
+      };
+      const price = cfg.price ? series("price", cfg.price.entity) : [];
+      const pv = cfg.pv ? series("pv", cfg.pv.entity) : [];
+      const high = num(cfg.price?.high);
+      const low = num(cfg.price?.low);
+      const threshold = num(cfg.pv?.threshold);
+      // As the adjustments: a high price first, else a low one.
+      if (cfg.price) spans(price, (v) => (high !== null && v >= high ? "high" : low !== null && v <= low ? "low" : null));
+      if (cfg.pv && threshold !== null) spans(pv, (v) => (v >= threshold ? "pv" : null));
+      const unit = (id) => this._state(id)?.attributes?.unit_of_measurement || "";
+      return {
+        price, pv, periods, rows: (cfg.price ? 1 : 0) + (cfg.pv ? 1 : 0),
+        priceUnit: cfg.price ? unit(cfg.price.entity) : "", pvUnit: cfg.pv ? unit(cfg.pv.entity) : "",
+        hasPrice: !!cfg.price, hasPv: !!cfg.pv,
       };
     }
 

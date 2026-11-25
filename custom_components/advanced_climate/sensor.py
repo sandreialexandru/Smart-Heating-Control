@@ -250,6 +250,7 @@ class DecisionSensor(RoomEntity, SensorEntity):
             # Shown in the details only; the history keeps the states themselves.
             "demand_since",
             "heating_since",
+            "energy",
         }
     )
 
@@ -339,6 +340,8 @@ class DecisionSensor(RoomEntity, SensorEntity):
             "house_name": room.house.entry.title,
             "entities": entity_map(self.hass, room.id, ROOM_ENTITY_KEYS),
             "house_entities": entity_map(self.hass, room.house.entry.entry_id, HOUSE_ENTITY_KEYS),
+            # The price and PV surplus sensors with their limits, for the chart.
+            "energy": room.house.energy_limits(),
         }
 
 

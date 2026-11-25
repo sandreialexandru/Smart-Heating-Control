@@ -16,6 +16,7 @@ export const STYLE = `
     --ac-warn: #c98a12;
     --ac-err: var(--error-color, #db4437);
     --ac-teal: #2f9e8f;
+    --ac-ok: #2f9e44;
     /* The home level (PRESET_COLORS), also for the presence at home. */
     --ac-home: #f2a900;
     /* The chosen button (mode, scenario): tinted with the accent, never only bold. */
@@ -254,6 +255,13 @@ export const STYLE = `
   .ylabels .olab { color: var(--ac-out); }
   .lg-out { background: var(--ac-out); }
   .hchart .heatlane { fill: var(--primary-text-color); opacity: 0.05; }
+  .hchart .elane { fill: var(--primary-text-color); opacity: 0.05; }
+  .hchart .ebar { opacity: 0.85; }
+  .hchart .ebar.high, .tip .ebar-i.high { fill: var(--ac-err); background: var(--ac-err); }
+  .hchart .ebar.low, .tip .ebar-i.low { fill: var(--ac-ok); background: var(--ac-ok); }
+  .hchart .ebar.pv, .tip .ebar-i.pv { fill: var(--ac-sun); background: var(--ac-sun); }
+  .tip .ebar-i { background: var(--ac-line); }
+  .lg-energy { background: linear-gradient(90deg, var(--ac-err) 0 33%, var(--ac-ok) 33% 66%, var(--ac-sun) 66%); height: 6px !important; }
   .hchart .heatbar { fill: var(--ac-hot); opacity: 0.9; }
   .hchart .heatbar.future { opacity: 0.35; }
   .lg-heat.future { opacity: 0.35 !important; }

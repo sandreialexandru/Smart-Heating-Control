@@ -154,7 +154,11 @@ export const ChartMixin = (Base) =>
       }
       const W = 1000;
       const H = 100;
-      const TOP = 6;
+      // The energy lane at the top (a row for the price, one for the PV surplus), when shown.
+      const ROW = 3;
+      const en = d.energy && shows("energy") ? d.energy : null;
+      const ELANE = en ? en.rows * ROW + (en.rows - 1) * 0.6 : 0;
+      const TOP = en ? ELANE + 6 : 6;
       // The plot ends above a band for the outdoor temperature (when known)
       // and a separate lane for the heating periods.
       const LANE = 7;
@@ -188,6 +192,23 @@ export const ChartMixin = (Base) =>
             `<rect x="${x(s)}" y="${H - LANE}" width="${Math.max(2, x(e) - x(s))}" height="${LANE}" class="heatbar future"></rect>`
         )
         .join("")}`;
+      let energy = "";
+      if (en) {
+        // The price on the first row, the PV surplus on the next one (the first without a price).
+        const rowY = (kind) => (kind === "pv" && en.hasPrice ? ROW + 0.6 : 0);
+        const lanes = [en.hasPrice ? "high" : null, en.hasPv ? "pv" : null]
+          .filter(Boolean)
+          // Until now: a sensor gives no values ahead.
+          .map((k) => `<rect x="0" y="${rowY(k)}" width="${Math.min(W, Math.max(0, nowX))}" height="${ROW}" class="elane"></rect>`)
+          .join("");
+        energy = lanes + en.periods
+          .filter(([s, e]) => e >= view.v0 && s <= view.v1)
+          .map(
+            ([s, e, kind]) =>
+              `<rect x="${x(s)}" y="${rowY(kind)}" width="${Math.max(2, x(e) - x(s))}" height="${ROW}" class="ebar ${kind}"></rect>`
+          )
+          .join("");
+      }
       // A fine line at every midnight (in the time zone of the card), between the days.
       const days = [];
       const off = this._offset(view.v0);
@@ -408,7 +429,7 @@ export const ChartMixin = (Base) =>
                 <stop offset="1" stop-color="var(--ac-accent)" stop-opacity="0"></stop>
               </linearGradient></defs>
               <rect x="${Math.min(W, Math.max(0, nowX))}" y="0" width="${W - Math.min(W, Math.max(0, nowX))}" height="${BOTTOM}" class="futurebg"></rect>
-              ${grid}${days.join("")}${optimal}${heat}${segs}${steps}${outdoorSvg}
+              ${grid}${days.join("")}${energy}${optimal}${heat}${segs}${steps}${outdoorSvg}
               ${tempArea ? `<path d="${tempArea}" fill="url(#${gid})" class="tempfill"></path>` : ""}
               ${tempPath ? `<path d="${tempPath}" class="templine"></path>` : ""}
               ${predPath ? `<path d="${predPath}" class="predline"></path>` : ""}
@@ -435,6 +456,7 @@ export const ChartMixin = (Base) =>
             ${d.pred.length ? legend("pred", "legend_pred") : ""}
             ${hasOut ? legend("out", "legend_outdoor") : ""}
             ${hasOut && d.sun.some(([, v]) => v > 0) ? legend("sun", "legend_sun") : ""}
+            ${d.energy ? legend("energy", "legend_energy") : ""}
             ${d.loading ? `<span class="muted">${this._t("loading")}</span>` : ""}
           </div>
           <div class="meta"><span>${this._t("today")}: <b>${esc(a.profile || (a.profile_days && a.schedule ? this._t("frost_level") : "–"))}</b></span>${next}</div>`;
@@ -553,6 +575,38 @@ export const ChartMixin = (Base) =>
         }
         if (sun !== null && sun > 0) {
           rows.push(`<span><i class="lg-sun"></i>${esc(this._t("legend_sun"))} +${(d.sunGain * sun).toFixed(2)}°/h</span>`);
+        }
+      }
+      // The price and the PV surplus then (until now: sensors give no values ahead).
+      if (d.energy && !hidden.has("energy") && t <= d.now) {
+        const at = (pts) => {
+          let v = null;
+          for (const [pt, pv] of pts) {
+            if (pt <= t) v = pv;
+            else break;
+          }
+          return v;
+        };
+        const kind = d.energy.periods.filter(([s, e]) => s <= t && t <= e).map((p) => p[2]);
+        const value = (v, unit) => `${+v.toFixed(3)}${unit ? ` ${esc(unit)}` : ""}`;
+        const price = d.energy.hasPrice ? at(d.energy.price) : null;
+        if (price !== null) {
+          const state = kind.includes("high") ? "off_tariff_high" : kind.includes("low") ? "off_tariff_low" : null;
+          rows.push(
+            `<span><i class="ebar-i ${state ? kind.find((k) => k !== "pv") : ""}"></i>${esc(this._t("tip_price"))} ${value(price, d.energy.priceUnit)}${
+              state ? ` · ${esc(this._t(state))}` : ""
+            }</span>`
+          );
+        }
+        const surplus = d.energy.hasPv ? at(d.energy.pv) : null;
+        if (surplus !== null) {
+          const name = this._t("off_pv_surplus");
+          rows.push(
+            `<span><i class="ebar-i ${kind.includes("pv") ? "pv" : ""}"></i>${esc(name.charAt(0).toUpperCase() + name.slice(1))} ${value(
+              surplus,
+              d.energy.pvUnit
+            )}</span>`
+          );
         }
       }
       cross.hidden = false;

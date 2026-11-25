@@ -1,0 +1,37 @@
+name: Translation
+description: A new language, or a text that is wrong or missing in one
+labels: [enhancement]
+body:
+  - type: checkboxes
+    id: guide
+    attributes:
+      label: Before you ask
+      options:
+        - label: I have read the [guide](https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/docs/guide/README.md) and checked that the language or the text is not there yet.
+          required: true
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      placeholder: "German"
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      multiple: true
+      options:
+        - The setup and the options (adding the house or a room)
+        - The entities and the notifications
+        - The card
+        - The panel (SHC in the sidebar)
+    validations:
+      required: true
+  - type: textarea
+    id: texts
+    attributes:
+      label: The texts
+      description: The text as it is now and how it should be, or for a new language, whether you can help translate or check it.
+    validations:
+      required: true

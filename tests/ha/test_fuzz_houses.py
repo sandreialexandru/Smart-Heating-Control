@@ -772,8 +772,12 @@ async def test_random_houses_lived_in(
             else:
                 demand_since.pop(entry.title, None)
 
-    # The battery thermostats report what they still have before the end.
-    await _tick(hass, freezer, 200)
+    # The battery thermostats report what they still have before the end (a
+    # command sent meanwhile waits for its own late report too).
+    for _ in range(5):
+        await _tick(hass, freezer, 200)
+        if not world.pending:
+            break
     sent: dict = {}
 
     class Connection:

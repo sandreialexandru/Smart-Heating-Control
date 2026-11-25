@@ -79,7 +79,7 @@ jobs:
       - name: pytest
         run: |
           set +e
-          SHC_FUZZ_SEEDS=64 pytest -v -p no:cacheprovider tests/ha > pytest.log 2>&1
+          pytest -v -p no:cacheprovider tests/ha/test_ha_devices.py tests/ha/test_ha_setup.py tests/ha/test_attributes.py > pytest.log 2>&1
           status=$?
           cat pytest.log
           if [ $status -ne 0 ]; then

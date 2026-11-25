@@ -64,11 +64,14 @@ collapsed: true
 - **Titlul** e același în orice vedere: iconița și numele casei, prezența
   (Acasă / Aproape / Departe) și flacăra.
 - **Prezența**, cu fiecare persoană ca un cerc (poza sau inițiala) în culoarea
-  locului unde e: portocaliu acasă, verde aproape, gri departe.
+  locului unde e: auriu acasă, verde aproape, gri departe.
 - **Media temperaturii de afară** (pe orele din *Medie pe*), **sezonul**,
   **cererea de căldură** și **timpul de încălzire**, ca un tabel cu linii
   subțiri: două câte două pe un card îngust (trei pe rând fără timpul de
-  încălzire), toate pe un rând pe unul lat.
+  încălzire), toate pe un rând pe unul lat. Sub cererea de căldură: de când,
+  și **sursa de căldură** a casei, pornită sau oprită de când, sau cât o mai
+  ține timpul minim pornit / oprit (*Centrala: ținută oprită încă 3 min*); la
+  atingere se deschide.
 - **Modul** (Auto / Plecat / Vacanță / Oprit / Vară), cel ales colorat cu
   culoarea de accent a temei.
 - **Scenariile**, câte trei pe rând în aceleași butoane ca modurile (câte două
@@ -110,9 +113,11 @@ senzor sau sursa de căldură indisponibile, o temperatură neacceptată, un
 program invalid, un nivel lipsă), chihlimbar pentru celelalte alerte.
 
 O **flacără** arată căldura peste tot (casa, camera deschisă, rândul pliat,
-placa compactă): un cerc conturat cât există cerere de căldură (*Cere
-căldură*), unul plin care pâlpâie cât sursa de căldură chiar merge
-(*Încălzește*); cuvintele apar la atingere sau la mouse.
+placa compactă): un cerc gri conturat cât există cerere de căldură, dar sursa
+de căldură nu merge încă (*Cere căldură*), unul plin, în culoarea căldurii, care
+pâlpâie cât sursa de căldură chiar merge (*Încălzește*), cu o strălucire în jur
+la casă și la camera deschisă; cuvintele apar la atingere sau la mouse.
+Flacăra casei deschide *cererea de căldură*: Home Assistant arată de când.
 
 O cameră pliată arată arcul și, sub nume, un rând: nivelul și ținta lui, apoi
 timpul până la țintă cât camera încălzește, altfel următoarea schimbare (de
@@ -149,7 +154,7 @@ cu un titlu (de exemplu *Senzor tăcut*), textul în limba cardului și, când e
 despre o entitate, o săgeată; o atingere deschide entitatea.
 
 Mai jos, butoanele (câte trei pe rând; unul e colorat doar cât e deschisă
-secțiunea lui) deschid secțiunile **Temporar** (*Setează temporar*),
+secțiunea lui, cu culoarea de accent a temei, ca orice buton ales) deschid secțiunile **Temporar** (*Setează temporar*),
 **Program**, **Grafic**, **Niveluri** (*Temperaturile nivelurilor*) și
 **Detalii**, fiecare separat (pot fi deschise mai multe deodată);
 butonul unei secțiuni deschise rămâne colorat. Butonul **Blocare** de lângă ele
@@ -188,7 +193,15 @@ următoarele 12 ore și se deschide pe ultimele 24 de ore și următoarele 12:
 - **soarele** așteptat, ca o zonă galbenă discretă jos pe banda temperaturii
   de afară (de la deloc la soarele plin: la zenit pe cer senin), după ce
   camera a învățat că soarele o încălzește;
-- următoarea pornire / oprire anticipată, ca perioadă umbrită.
+- următoarea pornire / oprire anticipată, ca perioadă umbrită;
+- cu un *Senzor preț energie* sau un *Senzor surplus fotovoltaic* (vezi
+  [capitolul 8](08-sursa-si-energie.ro.md#tariful-dinamic)), **energia** pe o
+  bandă sus, până acum: prețul mare roșu, prețul mic verde (după *Preț mare de
+  la* și *Preț mic până la*), surplusul PV galben (de la *Surplus de la*),
+  fiecare senzor pe rândul lui. Căsuța cu valori dă prețul și surplusul din
+  acel moment, în unitatea senzorului. Un senzor nu dă valori înainte, așa că
+  banda se oprește la acum; istoricul vine din recorder (un senzor exclus din
+  el nu arată nimic).
 
 Fiecare element din legenda de sub grafic ascunde sau arată seria lui la
 atingere (tăiat cât e ascuns); alegerea se păstrează în acest browser pentru
@@ -249,17 +262,21 @@ Fiecare profil cu zilele lui și un comutator pornit / oprit:
 
 <p align="center"><img src="../images/card-details.png" alt="Detaliile camerei cu ce a învățat camera" width="380"></p>
 
-Pe grupuri:
+Mai întâi alertele camerei și ale casei. Apoi grupuri, fiecare cu titlul lui
+și câte un rând pentru fiecare valoare (numele în stânga, valoarea în
+dreapta), câte două grupuri alăturate când cardul e destul de lat:
 
-- **alertele** camerei și ale casei, primele;
 - **Temperaturi**: camera, ținta, presetul termostatului, **umiditatea** (cu
   senzor de umiditate: a aerului și la peretele cel mai rece, marcată *risc de
-  mucegai* de la 80 %), ajustările active, temperaturile nivelurilor;
-- **Program**: următoarea pornire / oprire anticipată, timpul de încălzire;
+  mucegai* de la 80 %), ajustările, când există, temperaturile nivelurilor;
+- **Încălzire**: de când camera cere căldură (*Da · de la 21:40 (25 min)*) și
+  încălzește, sau de când s-a oprit; timpul de încălzire;
+- **Program**: următoarea pornire / oprire anticipată;
 - **Învățare**: starea ei (*învățat*, cu eroarea obișnuită a modelului, sau,
   în timpul învățării, două bare cu orele văzute cu și fără încălzire din cele
-  4 necesare, cu valoarea implicită dedesubt) cu butonul **Resetează** (cu un
-  al doilea clic pentru confirmare); după ce s-a învățat, câte o placă pentru
+  4 necesare, cu valoarea implicită dedesubt), cu butonul **Resetează** în
+  titlul grupului (cu un al doilea clic pentru confirmare); după ce s-a
+  învățat, câte un rând pentru
   **încălzire** (minutele pe grad acum, de exemplu *45 min/°C*), **inerție**
   (de exemplu *30 min*), **curba de temperatură** (de exemplu *+0.050 °C/h
   pentru fiecare °C mai frig afară* sau *fără*), **soare** (după ce s-a

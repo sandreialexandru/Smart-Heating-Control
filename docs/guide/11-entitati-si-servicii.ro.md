@@ -77,6 +77,7 @@ Numele entităților sunt date ca în interfața în română. ID-urile încep c
 | `reason`, `reason_key`, `reason_params` | Motivul (text în engleză, și cheia cu parametrii pentru traducere) |
 | `preset`, `target_temperature`, `current_temperature` | Nivelul, ținta, temperatura camerei |
 | `offsets` | Ajustările active |
+| `energy` | Senzorii de preț și de surplus PV cu limitele ajustărilor lor (`price`: `entity`, `high`, `low`; `pv`: `entity`, `threshold`), pentru grafic; gol fără ei; nu se păstrează în istoric |
 | `profile`, `next_change`, `next_preset`, `plan` | Profilul de azi, următoarea schimbare, planul următoarelor ore |
 | `time_to_target` | Minutele până la țintă |
 | `temperature_trend` | 1 cât camera se încălzește, −1 cât se răcește, 0 cât e stabilă sau nu se știe încă: cel puțin 0,2 °C pe oră în ultimele 30 de minute |

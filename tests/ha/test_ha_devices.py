@@ -965,6 +965,11 @@ async def test_tariff_and_solar_adjust_the_target(
     assert target() == "22.0"
     offsets = [o[0] for o in hass.states.get("sensor.bedroom_decision").attributes["offsets"]]
     assert offsets == ["tariff_low", "pv_surplus"]
+    # The sensors and their limits for the chart of the card, not in the history.
+    assert hass.states.get("sensor.bedroom_decision").attributes["energy"] == {
+        "price": {"entity": "sensor.price", "high": 0.5, "low": 0.1},
+        "pv": {"entity": "sensor.pv", "threshold": 1000.0},
+    }
     await _unload(hass, entry)
 
 
@@ -990,6 +995,8 @@ async def test_calendar_event_names_the_level(
     )
     await _reevaluate(hass)
     assert hass.states.get("sensor.office_decision").attributes["preset"] == "eco"
+    # No price or PV sensor: nothing for the chart.
+    assert hass.states.get("sensor.office_decision").attributes["energy"] is None
     assert hass.states.get("sensor.office_target_temperature").state == "17.0"
     hass.states.async_set("calendar.heating", "off", {})
     await _reevaluate(hass)

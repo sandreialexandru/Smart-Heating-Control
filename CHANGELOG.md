@@ -9,6 +9,62 @@ GitHub releases.
 
 ### New
 
+- 💶 **Energy in the chart**: with an energy price sensor or a PV surplus
+  sensor, a lane at the top of the room chart shows when the price was high
+  (red) or low (green) and when there was a PV surplus (yellow), by the limits
+  of their adjustments; the values box gives the price and the surplus then.
+- ⏱️ **How the optimal start did**, in the statistics of the panel: for each
+  room, how its optimal starts ended in the period shown: reached in time
+  (how many minutes early, on average), late (how many minutes, on average)
+  or not reached while the level held.
+- 🔥 **Since when, and the heat source** ([#30](https://github.com/sandreialexandru/Smart-Heating-Control/issues/30)):
+  under the heat demand of the house, since when, and its heat source on or
+  off since when, or how long its minimum on / off time still holds it
+  (*Boiler: kept off 3 min more*), a tap opening it. In the details of a room,
+  *Heating*: since when it asks for heat and heats (or stopped), with its
+  heating time.
+
+### Changed
+
+- ⚡ **The devices of a room get their commands at once**, not one after the
+  other: a slow one (ZHA waits for a battery TRV to confirm, sometimes half a
+  minute) no longer holds the others back.
+- 🔥 **The flame tells more at a glance**: grey while the room or the house
+  only asks for heat (the heat source does not run yet), in the colour of heat
+  and flickering while it really heats, with a glow on the house and on the
+  open room.
+- 🎨 **Colours that say what they mean**: the levels go from warm to cold by
+  what each is for (*Comfort* raspberry, *Home* gold, *Activity* lime, *Eco*
+  teal, *Sleep* indigo, *Away* slate, *Frost* ice), none of them the colour of
+  the heat (the flame) nor of the alerts. Every chosen button (a mode, an open
+  section, the lock) has the accent colour of the theme; the chosen room of
+  the panel is marked by a bar, so an alert stays the one that stands out.
+  The secondary text is a little darker, readable on the grey of the blocks
+  too (at least 4.5:1).
+- 📋 **Details easier to read**: groups with a title, one row per value (the
+  name on the left, the value on the right), two groups side by side on a
+  wide card; *Reset* in the title of *Learning*; adjustments only when there
+  are some.
+
+### Fixed
+
+- 🖐️ **A slow TRV taken for a manual change** ([#28](https://github.com/sandreialexandru/Smart-Heating-Control/issues/28)):
+  a battery TRV that reported the new target itself while the command to it
+  was still waiting (ZHA waits for it to confirm, sometimes half a minute) was
+  taken for a person's change; with *A change on one thermostat: the whole
+  room*, the room then kept it for the manual change time. What is sent is now
+  noted before the command.
+- 🖐️ **A preset sent again, with its own temperature, taken for a manual
+  change**: a slow TRV on a preset sent again takes back the preset's own
+  temperature and reports it by itself; that is no person's change.
+- ⏸️ **A command right after the pause began**: a decision made just before
+  the pause (while a slow thermostat held the commands of the house) is no
+  longer sent once the house is paused.
+
+## 2.7.0 – 2026-11-23
+
+### New
+
 - 🏷️ **Show the title** in the visual editor of the card: the title can be
   hidden there too (until now only with an empty `title` in YAML)
   ([#27](https://github.com/sandreialexandru/Smart-Heating-Control/issues/27)).

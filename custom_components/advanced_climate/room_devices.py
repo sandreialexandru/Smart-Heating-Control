@@ -107,6 +107,14 @@ COMMAND_PAUSE = timedelta(minutes=15)
 COMMAND_CALM = timedelta(hours=1)
 
 
+async def _at_once(*calls: Any) -> list[Any]:
+    """The commands to several devices at once (a slow one does not hold the
+    others back); one device: in the same step, as before."""
+    if len(calls) == 1:
+        return [await calls[0]]
+    return list(await asyncio.gather(*calls))
+
+
 class RoomDevices:
     """Commands to the devices of a room (mixin of the room)."""
 
@@ -234,7 +242,7 @@ class RoomDevices:
             # All the thermostats at once (#28): a slow one (ZHA waits for a
             # battery TRV to confirm) does not hold the others back.
             sent = any(
-                await asyncio.gather(
+                await _at_once(
                     *(
                         self._async_apply_climate(entity_id, target, force)
                         for entity_id in self.climates
@@ -372,7 +380,7 @@ class RoomDevices:
                             self._device_value(state, base),
                         )
                     )
-            await asyncio.gather(*sends)
+            await _at_once(*sends)
         self._boosted = False
         heat = self._exercise_until is None
         # Without the TRV boost the demand comes from the TRVs again.
@@ -997,7 +1005,7 @@ class RoomDevices:
                     await self._async_heat_to_max(entity_id)
                     return False
 
-                sent = any(await asyncio.gather(*(keep_on(e) for e in self.climates)))
+                sent = any(await _at_once(*(keep_on(e) for e in self.climates)))
             self._relay_held = held and want
             return sent
         if not released and self._relay_must_wait(actual, now):
@@ -1022,7 +1030,7 @@ class RoomDevices:
                         self.sent.set_last(entity_id, before)
                 return sent
 
-            ok = all(await asyncio.gather(*(switch(e) for e in self.switches)))
+            ok = all(await _at_once(*(switch(e) for e in self.switches)))
         else:
 
             async def climate(entity_id: str) -> bool:
@@ -1038,7 +1046,7 @@ class RoomDevices:
                     self.max_sent.discard(entity_id)
                 return sent
 
-            ok = all(await asyncio.gather(*(climate(e) for e in self.climates)))
+            ok = all(await _at_once(*(climate(e) for e in self.climates)))
         if ok:
             self._relay_on = want
             self._relay_held = held and want

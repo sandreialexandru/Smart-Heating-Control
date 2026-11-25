@@ -1,5 +1,11 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Question / help with the setup
+    url: https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/q-a
+    about: Ask in the Q&A discussions; an answer there helps the next one with the same question
   - name: Guide
     url: https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/docs/guide/README.md
     about: Every function explained, with examples
+  - name: How feature requests are decided
+    url: https://github.com/sandreialexandru/Smart-Heating-Control/blob/main/CONTRIBUTING.md
+    about: What makes a request likely to be added, and what can already be done

@@ -178,6 +178,13 @@ De documentatie is in het Engels en Roemeens.
 | [Specificatie](docs/SPEC.md) | De volledige specificatie |
 | [Wijzigingen](CHANGELOG.md) | Wat er veranderd is, versie voor versie |
 
+## Vragen en ideeën
+
+- Een vraag over de instelling: in de [Q&A-discussies](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/q-a).
+- Een idee of een functieverzoek: in de [Ideas-discussies](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas), waar anderen kunnen stemmen. Hoe over verzoeken wordt beslist: [CONTRIBUTING](CONTRIBUTING.md).
+- Een fout: een [issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues/new/choose).
+- Nieuwe versies: in de [Announcements](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/announcements).
+
 ## Vertalingen
 
 Integratie en kaart: Engels, Roemeens, Duits, Nederlands, Frans,

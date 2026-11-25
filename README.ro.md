@@ -177,6 +177,13 @@ Fișierul se descarcă și se deschide într-un browser.
 | [Specificație](docs/SPEC.ro.md) | Specificația completă |
 | [Changelog](CHANGELOG.md) | Ce s-a schimbat, versiune cu versiune (în engleză) |
 
+## Întrebări și idei
+
+- O întrebare despre configurare: în [discuțiile Q&A](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/q-a).
+- O idee sau o cerere de funcție: în [discuțiile Ideas](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas), unde și alții pot vota. Cum se decid cererile: [CONTRIBUTING](CONTRIBUTING.ro.md).
+- O eroare: un [issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues/new/choose).
+- Versiunile noi: în [Announcements](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/announcements).
+
 ## Traduceri
 
 Integrarea și cardul: română, engleză, germană, olandeză, franceză, italiană și spaniolă. Documentația: română și engleză.

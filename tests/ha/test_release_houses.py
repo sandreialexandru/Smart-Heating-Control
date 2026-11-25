@@ -336,6 +336,12 @@ async def test_two_houses_for_three_days(
     # A level preset on a preset thermostat: the level in the whole bedroom.
     _by_hand(hass, "climate.bed_b", preset_mode="Away", temperature=15.0)
     await _steps(hass, freezer, 6)
+    dbg = "\n".join(
+        f"{r.name.rsplit('.', 1)[-1]}: {r.getMessage()}"
+        for r in caplog.records
+        if r.name.startswith("custom_components") and ("Bedroom" in r.getMessage() or "bed_" in r.getMessage())
+    )
+    assert bedroom.override is not None, "DBGSTART\n" + dbg[-6000:] + "\nDBGEND"
     assert bedroom.override["target"] == {"kind": "preset", "preset": "away", "temperature": None}
     assert hass.states.get("climate.bed_a").attributes["preset_mode"] == "Away"
     # Boost on one: that one only; the other keeps Away.

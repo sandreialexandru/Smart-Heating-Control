@@ -52,9 +52,10 @@ arată câte case ar ajuta o idee.
   Se aplică aceleași trei întrebări ca la o cerere, iar un PR se acceptă mai
   ușor când abordarea a fost stabilită înainte de a scrie codul.
 - **Corecturile și traducerile sunt binevenite direct.**
-- **Ce aduce un PR odată cu el:** teste pentru ce schimbă, documentația în
-  engleză și română, un rând în secțiunea *Unreleased* din `CHANGELOG.md`.
-  Versiunea nu se schimbă într-un PR: se stabilește la publicare.
+- **Ce aduce un PR odată cu el:** teste pentru ce schimbă și un rând în
+  secțiunea *Unreleased* din `CHANGELOG.md`. Documentația se actualizează în
+  cadrul proiectului; versiunea nu se schimbă într-un PR: se stabilește la
+  publicare.
 - **Funcționează la fel în orice casă:** fără ramuri pentru un anumit
   dispozitiv sau o anumită configurație, fără limite sau marje nestabilite.
 - **Testat în propriul Home Assistant**, nu doar de testele automate.

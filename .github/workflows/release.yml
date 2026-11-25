@@ -23,6 +23,8 @@ on:
 
 permissions:
   contents: write
+  # A stable release opens its discussion in Announcements.
+  discussions: write
 
 concurrency:
   group: release
@@ -118,11 +120,27 @@ jobs:
         run: |
           if [[ "$BETA" == "true" ]]; then kind=(--prerelease --latest=false); else kind=(--latest); fi
           if [[ -f notes.md ]]; then notes=(--notes-file notes.md); else notes=(--generate-notes); fi
-          gh release create "$TAG" advanced_climate.zip \
-            --target "$SHA" \
-            --title "Smart Heating Control $TAG" \
-            "${notes[@]}" \
-            "${kind[@]}"
+          # A stable release opens a discussion in Announcements, where users can
+          # comment on it; a pre-release does not (one for every beta is noise).
+          create() {
+            gh release create "$TAG" advanced_climate.zip \
+              --target "$SHA" \
+              --title "Smart Heating Control $TAG" \
+              "${notes[@]}" \
+              "${kind[@]}" "$@"
+          }
+          if [[ "$BETA" == "true" ]]; then
+            create
+          elif ! create --discussion-category "Announcements"; then
+            # No such category (renamed, or Discussions turned off): the release
+            # without its discussion. gh makes a release with a file as a draft
+            # first, so a refused one may be left as a draft: removed before
+            # trying again. A published release that failed after: an error.
+            draft=$(gh release view "$TAG" --json isDraft -q .isDraft 2>/dev/null || echo none)
+            if [[ "$draft" == "false" ]]; then exit 1; fi
+            if [[ "$draft" == "true" ]]; then gh release delete "$TAG" --yes; fi
+            create
+          fi
 
       # HACS reads only the first releases GitHub lists, and GitHub sorts the
       # pre-release names as text (a10 between a1 and a2), so a new alpha could

@@ -174,6 +174,13 @@ Download the file and open it in a browser.
 | [Specification](docs/SPEC.md) | The full specification |
 | [Changelog](CHANGELOG.md) | What changed, version by version |
 
+## Questions and ideas
+
+- A question about the setup: in the [Q&A discussions](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/q-a).
+- An idea or a feature request: in the [Ideas discussions](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/ideas), where others can vote. How requests are decided: [CONTRIBUTING](CONTRIBUTING.md).
+- A bug: an [issue](https://github.com/sandreialexandru/Smart-Heating-Control/issues/new/choose).
+- New versions: in the [Announcements](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/categories/announcements).
+
 ## Translations
 
 The integration and the card: English, Romanian, German, Dutch, French, Italian and Spanish. The documentation: English and Romanian.

@@ -132,6 +132,13 @@ are kept for as long as Home Assistant keeps those.
 - **Times the heat source was asked to start**, by day. These come from the
   history of Home Assistant, which is kept for 10 days by default: older days
   have no bar.
+- **Optimal start**: for each room that has the optimal start, how its starts
+  ended in the period shown (or the one chosen): reached **in time** (and how
+  many minutes before the time of the level, on average), **late** (how many
+  minutes after it, on average) or **not reached** while the level held. Only
+  the starts that ran up to the time of the level count: one stopped before
+  (someone left, a window, a manual change) did not get to try. The integration
+  keeps the last 100 of each room, over restarts.
 
 - **Heating by hour**: below, a row of 24 hours for each room, the darker the
   more minutes of that hour the room was heated, over the last 7 days: as the

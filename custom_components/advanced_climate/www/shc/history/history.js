@@ -27,7 +27,8 @@ export const HistoryMixin = (Base) =>
         failed = true;
       }
       this._historyLog = { at: Date.now(), loading: false, data, failed };
-      if (this._tab === "history") this._render();
+      // The history also holds how the optimal starts ended (the statistics).
+      if (this._tab === "history" || this._tab === "stats") this._render();
     }
 
     /** Every line of the history: {t, room, kind, html}, newest first. */

@@ -121,6 +121,7 @@ from .engine import (
     optimal_stop_state,
 )
 from .learning import ThermalLearner
+from .preheat import PreheatTracker
 from .room_alerts import RoomAlerts
 from .room_common import (
     DEVICE_LIMIT_KEEP,
@@ -253,6 +254,8 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         self.decisions: deque[dict[str, Any]] = deque(
             stored.get("decisions", []), maxlen=MAX_DECISION_LOG
         )
+        # How the optimal starts ended (as many as the decisions are kept).
+        self.preheats = PreheatTracker(stored.get("preheats"), MAX_DECISION_LOG)
         self.last_exercise: str | None = stored.get("last_exercise")
         # The profile chosen last from its select (shown while it is on).
         self.chosen_profile: str | None = stored.get("chosen_profile")
@@ -492,6 +495,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             "keeps_auto": sorted(self.keeps_auto),
             "reports_heating": sorted(self.reports_heating),
             "decisions": list(self.decisions),
+            "preheats": list(self.preheats.results),
             "last_exercise": self.last_exercise,
             "chosen_profile": self.chosen_profile,
             "relay_changed": iso(self._relay_changed),
@@ -1024,6 +1028,15 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             else self._resolve_temperature(decision.target)
         )
 
+        self.preheats.observe(
+            now,
+            decision.rule == RULE_OPTIMAL_START,
+            state.next_change if state else None,
+            state.next_preset if state else None,
+            self.level_temp(state.next_preset) if state and state.next_preset else None,
+            self.current_temp,
+            state.preset if state and decision.rule == RULE_SCHEDULE else None,
+        )
         await self._async_apply(decision.target)
         await self._async_calibrate(now)
         self._update_demand()

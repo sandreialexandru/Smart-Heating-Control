@@ -64,6 +64,8 @@ def history(house: House) -> dict[str, Any]:
                 "room_id": room.id,
                 "name": room.name,
                 "decisions": [_decision(d, unit) for d in room.decisions],
+                # How the optimal starts ended (the statistics of the panel).
+                "preheats": list(room.preheats.results),
             }
             for room in house.rooms.values()
         ],

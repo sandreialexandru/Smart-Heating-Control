@@ -134,6 +134,14 @@ cât timp le păstrează Home Assistant.
 - **De câte ori a fost cerută pornirea sursei de căldură**, pe zile. Acestea
   vin din istoricul Home Assistant, păstrat implicit 10 zile: zilele mai vechi
   nu au bară.
+- **Pornirea anticipată**: pentru fiecare cameră care o are, cum s-au încheiat
+  pornirile în perioada arătată (sau în cea aleasă): temperatura nivelului
+  atinsă **la timp** (și cu câte minute înainte de ora nivelului, în medie),
+  **întârziat** (cu câte minute după ea, în medie) sau **neatinsă** cât a ținut
+  nivelul. Se numără doar pornirile care au mers până la ora nivelului: una
+  oprită înainte (a plecat cineva, o fereastră, o schimbare manuală) nu a avut
+  ocazia să încerce. Integrarea păstrează ultimele 100 ale fiecărei camere, și
+  după repornire.
 
 - **Încălzirea pe ore**: dedesubt, un rând de 24 de ore pentru fiecare cameră,
   cu atât mai închis la culoare cu cât camera a fost încălzită mai multe

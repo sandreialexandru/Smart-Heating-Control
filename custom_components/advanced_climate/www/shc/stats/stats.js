@@ -301,6 +301,41 @@ export const StatsMixin = (Base) =>
       return { html: `<svg class="ps-line ${under ? "under" : ""}">${parts.join("")}</svg>${tip}`, axis };
     }
 
+    /**
+     * How the optimal starts of each room ended in [from, to): in time (how
+     * early on average), late (how late on average), not reached. From the
+     * history of the house (advanced_climate/history); rooms without any are left out.
+     */
+    _statsPreheat(house, from, to) {
+      const h = this._historyData();
+      if (!h?.data) return "";
+      const byRoom = {};
+      for (const hh of h.data.houses || []) for (const r of hh.rooms || []) byRoom[r.room_id] = r.preheats || [];
+      const mean = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
+      const rows = (house.rooms || [])
+        .map((room) => {
+          const all = (byRoom[room.attributes?.room_id] || []).filter((p) => {
+            const t = Date.parse(p.at);
+            return t >= from && t < to;
+          });
+          if (!all.length) return "";
+          const early = all.filter((p) => p.offset !== null && p.offset <= 0).map((p) => -p.offset);
+          const late = all.filter((p) => p.offset !== null && p.offset > 0).map((p) => p.offset);
+          const missed = all.filter((p) => p.offset === null).length;
+          const parts = [this._t("st_pre_starts").replace("{n}", all.length)];
+          if (early.length)
+            parts.push(this._t("st_pre_early").replace("{n}", early.length).replace("{m}", this._duration(Math.max(1, Math.round(mean(early))))));
+          if (late.length)
+            parts.push(this._t("st_pre_late").replace("{n}", late.length).replace("{m}", this._duration(Math.max(1, Math.round(mean(late))))));
+          if (missed) parts.push(this._t("st_pre_missed").replace("{n}", missed));
+          return `<div class="ps-pre"><span class="ps-name">${esc(room.attributes?.room_name || room.name || "")}</span><span>${esc(parts.join(" · "))}</span></div>`;
+        })
+        .join("");
+      return rows
+        ? `<h3 class="ps-title">${esc(this._t("st_preheat"))}</h3><div class="ps-pres">${rows}</div><p class="muted">${esc(this._t("st_pre_note"))}</p>`
+        : "";
+    }
+
     /** The statistics of every house. */
     _statsHtml(houses) {
       const period = this._statsPeriod();
@@ -416,7 +451,12 @@ export const StatsMixin = (Base) =>
           ${detail}
           <h3 class="ps-title">${esc(this._t("st_rooms"))} · ${esc(when)}</h3>
           ${roomRows ? `<div class="ps-rows">${roomRows}</div>` : `<p class="muted">${esc(this._t("st_none"))}</p>`}
-          ${requests}`;
+          ${requests}
+          ${this._statsPreheat(
+            house,
+            picked === null ? Date.now() - STATS_RANGE[period] * PERIOD_MS[period] : picked,
+            picked === null ? Date.now() + 1 : picked + PERIOD_MS[period]
+          )}`;
       });
       return `<section class="block ps-stats">${head}${parts.join("")}</section>`;
     }

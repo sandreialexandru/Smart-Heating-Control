@@ -9,6 +9,10 @@ GitHub releases.
 
 ### New
 
+- ⏱️ **How the optimal start did**, in the statistics of the panel: for each
+  room, how its optimal starts ended in the period shown: reached in time
+  (how many minutes early, on average), late (how many minutes, on average)
+  or not reached while the level held.
 - 🔥 **Since when, and the heat source** ([#30](https://github.com/sandreialexandru/Smart-Heating-Control/issues/30)):
   under the heat demand of the house, since when, and its heat source on or
   off since when, or how long its minimum on / off time still holds it
@@ -18,6 +22,9 @@ GitHub releases.
 
 ### Changed
 
+- ⚡ **The devices of a room get their commands at once**, not one after the
+  other: a slow one (ZHA waits for a battery TRV to confirm, sometimes half a
+  minute) no longer holds the others back.
 - 🔥 **The flame tells more at a glance**: grey while the room or the house
   only asks for heat (the heat source does not run yet), in the colour of heat
   and flickering while it really heats, with a glow on the house and on the

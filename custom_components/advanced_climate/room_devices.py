@@ -684,7 +684,9 @@ class RoomDevices:
                     entity_id, "set_preset_mode", "preset_mode", name, force=force
                 )
                 if sent and stale is not None:
-                    del self.preset_stale[entity_id]
+                    # Another apply (the check after a command, sent at the same
+                    # time) may have ended it meanwhile.
+                    self.preset_stale.pop(entity_id, None)
                     if kept:
                         await self._async_preset_temperature(entity_id, target.preset or "", stale)
                 elif sent and followup is not None and known is not None:

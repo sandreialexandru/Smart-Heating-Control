@@ -57,6 +57,9 @@ GitHub releases.
 - 🖐️ **A preset sent again, with its own temperature, taken for a manual
   change**: a slow TRV on a preset sent again takes back the preset's own
   temperature and reports it by itself; that is no person's change.
+- 🧩 **An error with a preset TRV when two commands met**: the check after a
+  command, sent at the same time as a new decision for the same room, could
+  end with an error in the log and leave that room's commands unfinished.
 - ⏸️ **A command right after the pause began**: a decision made just before
   the pause (while a slow thermostat held the commands of the house) is no
   longer sent once the house is paused.

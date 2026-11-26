@@ -163,6 +163,19 @@ def _install_services(hass: HomeAssistant, world: World) -> None:
                     or call.service == "turn_off"
                     or float(call.data.get("temperature", 99)) < 15
                 )
+                # The boost left on the TRVs taken back as the pause begins, so no
+                # TRV keeps the boost temperature while nobody regulates it.
+                stop = stop or (
+                    call.service == "set_temperature"
+                    and any(
+                        entity_id in r.climates
+                        and r.boost_active
+                        and r.decision is not None
+                        and r.decision.rule == "pause"
+                        for e in world.entries
+                        for r in e.runtime_data.rooms.values()
+                    )
+                )
                 world.commands_in_pause.append(
                     (
                         f"{'stop ' if stop else ''}{entity_id} {call.service} {dict(call.data)}",
@@ -690,7 +703,7 @@ async def test_random_houses_lived_in(
         safety = {"frost_protection", "maximum_temperature", "frost_demand"}
         for sent_cmd, rules in world.commands_in_pause:
             # The heat source started for frost protection is stopped again (its idle
-            # temperature, or off) once no longer needed.
+            # temperature, or off) once no longer needed; a boost is taken back.
             stop = sent_cmd.startswith("stop ")
             assert stop or safety & set(rules), fail(
                 step, f"sent in a pause: {sent_cmd}, rules {rules}"

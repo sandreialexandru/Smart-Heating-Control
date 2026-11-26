@@ -9,6 +9,9 @@ GitHub releases.
 
 ### New
 
+- 🔔 **On / off rooms checked too**: with *Verify commands*, a relay or an on /
+  off thermostat that never reported the state sent to it gets it once more,
+  then the alert *… did not turn on* or *… did not turn off*.
 - 💶 **Energy in the chart**: with an energy price sensor or a PV surplus
   sensor, a lane at the top of the room chart shows when the price was high
   (red) or low (green) and when there was a PV surplus (yellow), by the limits
@@ -48,6 +51,13 @@ GitHub releases.
 
 ### Fixed
 
+- 🔁 **An on / off thermostat or relay that confirms late** ([#44](https://github.com/sandreialexandru/Smart-Heating-Control/issues/44)):
+  a Zigbee TRV or relay reports off (or on) seconds after the command; an
+  evaluation in between (the heat source's own report, any room entity) read
+  its older state back as the room's, so the heat demand came back for a second
+  and the boiler started again (three relay clicks at each stop). Until the
+  device reports, the room takes it as sent; any change of its state, also a
+  person's, ends this at once.
 - 🖐️ **A slow TRV taken for a manual change** ([#28](https://github.com/sandreialexandru/Smart-Heating-Control/issues/28)):
   a battery TRV that reported the new target itself while the command to it
   was still waiting (ZHA waits for it to confirm, sometimes half a minute) was

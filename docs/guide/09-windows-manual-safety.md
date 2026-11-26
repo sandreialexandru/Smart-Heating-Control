@@ -242,8 +242,16 @@ In both cases you get an alert. A sensor value that is not a number (`nan`,
 With *Verify commands* (on by default), 2 minutes after a command the
 integration checks that the device accepted it (also for a manual change from
 the card). If not, it sends it again once; if it still fails, it raises the alert
-*… did not accept …*. Turn the check off only if a device reports its state very
-slowly.
+*… did not accept …*. An on / off room (a relay, or a thermostat turned on and
+off) is checked the same way: a device that never reported the state sent to
+it gets it once more, then the alert *… did not turn on* or *… did not turn
+off*. Turn the check off only if a device reports its state very slowly.
+
+Until an on / off device reports the state sent to it (a Zigbee TRV or relay
+may confirm seconds later), the room takes it as sent: its older state, read
+back meanwhile, does not turn the room's heat demand on again, nor start the
+heat source again. Any change of its state (also a person's) ends this at once;
+a device that does not report within the 2 minutes is read as it is again.
 
 ## Valve exercise
 
@@ -301,6 +309,7 @@ as the recipient of the important alerts and of the warnings.
 | Heating for … h, but the temperature rose by only …° | see *Heating without effect* below |
 | Low battery on … | below *Low battery below* (20 % by default) |
 | … did not accept … | the command check failed twice |
+| … did not turn on / off | the command check of an on / off room failed twice: the device never reported the state sent to it |
 | … got … commands in … min, something keeps changing it back … | a device is changed back again and again (its own schedule, an automation, a TRV that does not keep the value): no commands to it for 15 min, to save its battery; the alert ends after a calm hour |
 | … accepts at least …, so the room is held at … | the entity of the thermostat goes no lower than that minimum (above, *The range of the entity*) |
 | … accepts at most / at least … | the TRV keeps its own *Max / Min temperature* set on the device (above, *Limits of the device*) |

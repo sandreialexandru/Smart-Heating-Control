@@ -699,6 +699,9 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         old: State | None = event.data["old_state"]
         new: State | None = event.data["new_state"]
         now = dt_util.utcnow()
+        if entity_id in self.switches:
+            # The state sent to it reported: no longer waited for.
+            self._note_report(entity_id, old, new)
         if entity_id in self.climates:
             # What the room has seen of it (a command in flight reads this, not
             # a change of a person not handled yet).

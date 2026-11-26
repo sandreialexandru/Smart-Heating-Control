@@ -733,19 +733,24 @@ class RoomDevices:
     def _device_value(self, state: State, temperature: float) -> float:
         """Temperature to send, in the unit of the thermostat.
 
-        A thermostat rounds to its own step; where that would take a value
-        within the maximum of the house above it, the value is rounded down to
-        the step instead, so the thermostat never holds more than the maximum.
-        A value meant to be above the maximum (the valve exercise) is sent as
-        it is.
+        Rounded to the step of the thermostat, as it would round it: what it
+        reports is then what was sent (19.8 on a step of 0.5 goes as 20.0, so
+        it is not sent again and again, nor taken as refused). Where that would
+        take a value within the maximum of the house above it, the value is
+        rounded down to the step instead, so the thermostat never holds more
+        than the maximum. A value meant to be above the maximum (the valve
+        exercise) is sent as it is.
         """
         unit = system_unit(self.hass)
         value = round(float(from_celsius(temperature, unit)), 1)
         step = float_attr(state, "target_temp_step")
         if step:
             maximum = float(from_celsius(self.max_temp(), unit))
-            if value <= maximum + 1e-9 < round(value / step) * step:
+            rounded = round(round(value / step) * step, 2)
+            if value <= maximum + 1e-9 < rounded:
                 value = round(math.floor(maximum / step + 1e-9) * step, 2)
+            elif value <= maximum + 1e-9:
+                value = rounded
         # The limits the device applies by itself: sent within them, so what it
         # reports is what was sent (not a manual change).
         high = self._device_limit(state.entity_id, "max")

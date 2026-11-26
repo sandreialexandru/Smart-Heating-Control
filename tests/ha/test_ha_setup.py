@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 import pytest
 from freezegun.api import FrozenDateTimeFactory
-from homeassistant.core import Context, HomeAssistant, SupportsResponse
+from homeassistant.core import Context, HomeAssistant, State, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1215,7 +1215,8 @@ async def test_rounded_down_to_the_step_at_the_maximum(
 async def test_a_level_on_a_tenth_rounded_by_the_thermostat_is_no_manual_change(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """19.8 is sent as it is; a TRV with a step of 0.5 reporting 20.0 is its own rounding (#45)."""
+    """19.8 goes to a TRV with a step of 0.5 as 20.0, as it would round it: its report
+    is no manual change, and nothing is sent again (#45)."""
     trv = {
         "hvac_modes": ["heat", "off"],
         "current_temperature": 18.0,
@@ -1231,12 +1232,24 @@ async def test_a_level_on_a_tenth_rounded_by_the_thermostat_is_no_manual_change(
     room.levels["home"] = 19.8
     await hass.services.async_call(DOMAIN, "reevaluate", {}, blocking=True)
     await hass.async_block_till_done()
-    assert calls[-1].data["temperature"] == 19.8
+    assert calls[-1].data["temperature"] == 20.0
+    # The room keeps its own target, e.g. for a room sensor.
+    assert room._resolve_temperature(room.decision.target) == 19.8
     sent = len(calls)
     hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 20.0})
     await _tick(hass, freezer, 15)
     assert room.override is None
+    for _ in range(3):
+        await _tick(hass, freezer, 121)  # VERIFY_DELAY is 120 s
     assert len(calls) == sent
+    assert not [a for a in room.house.alerts_for(room) if a["code"] == "not_accepted"]
+    # Without a step (most thermostats tell none): the tenth as it is.
+    plain = {k: v for k, v in trv.items() if k != "target_temp_step"}
+    assert room._device_value(State("climate.trv", "heat", plain), 19.8) == 19.8
+    assert (
+        room._device_value(State("climate.trv", "heat", {**trv, "target_temp_step": 1.0}), 19.4)
+        == 19.0
+    )
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 

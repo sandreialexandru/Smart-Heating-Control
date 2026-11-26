@@ -6,7 +6,6 @@ changed number of decimals or a wrong conversion is noticed.
 
 from __future__ import annotations
 
-
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -258,7 +257,9 @@ async def test_level_numbers_in_fahrenheit(
     await _unload(hass, entry)
 
 
-async def test_level_numbers_on_a_tenth(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+async def test_level_numbers_on_a_tenth(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Steps of 0.1: 19.8 is kept as it is (#45)."""
     entry, room, entities = await _room(hass, freezer)
     number = _entity(hass, entities["level_home"])

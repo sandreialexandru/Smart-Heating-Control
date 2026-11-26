@@ -6,7 +6,6 @@ changed number of decimals or a wrong conversion is noticed.
 
 from __future__ import annotations
 
-import math
 
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import HomeAssistant

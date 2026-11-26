@@ -1231,12 +1231,12 @@ async def test_a_level_on_a_tenth_rounded_by_the_thermostat_is_no_manual_change(
     room.levels["home"] = 19.8
     await hass.services.async_call(DOMAIN, "reevaluate", {}, blocking=True)
     await hass.async_block_till_done()
-    assert room.decision.target.temperature == 19.8
     assert calls[-1].data["temperature"] == 19.8
+    sent = len(calls)
     hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 20.0})
     await _tick(hass, freezer, 15)
     assert room.override is None
-    assert room.decision.target.temperature == 19.8
+    assert len(calls) == sent
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 

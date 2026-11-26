@@ -27,7 +27,7 @@ export const QuickMixin = (Base) =>
             ${this._btn(this._t("apply"), `data-action="quick-temp" data-room="${esc(a.room_id)}"`, {
               icon: "thermometer-check",
             })}
-            <label class="numfield"><input type="number" step="0.5" min="${
+            <label class="numfield"><input type="number" step="0.1" min="${
               num(a.min_temperature) ?? (fahrenheit ? 41 : 5)
             }" max="${num(a.max_temperature) ?? (fahrenheit ? 86 : 30)}" aria-label="${esc(this._t("target_tag"))}"
               data-quick="temp" data-room="${esc(a.room_id)}" value="${target}"><em>${esc(unit)}</em></label>
@@ -49,7 +49,7 @@ export const QuickMixin = (Base) =>
           const name = s.attributes.friendly_name?.replace(`${a.room_name} `, "") || this._presetName(a, preset);
           return `<label class="numfield level"><span class="dot" style="--c:${
             PRESET_COLORS[preset] || "var(--divider-color)"
-          }"></span><span class="lname">${esc(name)}</span><input type="number" step="${s.attributes.step || 0.5}" min="${
+          }"></span><span class="lname">${esc(name)}</span><input type="number" step="${s.attributes.step || 0.1}" min="${
             s.attributes.min ?? 5
           }" max="${s.attributes.max ?? 30}" data-action="number" data-entity="${esc(id)}" value="${esc(
             s.state

@@ -1953,8 +1953,10 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
                     fields[vol.Optional(f"name_{preset}", default=names.get(preset, preset))] = (
                         _text()
                     )
+                # Steps of 0.1: a room regulated by its sensor uses the value as it is;
+                # a thermostat gets it rounded to its own step.
                 fields[vol.Required(f"temp_{preset}", default=levels[preset])] = _number(
-                    low, high, 0.5, "°C"
+                    low, high, 0.1, "°C"
                 )
         schema = vol.Schema(fields)
         if not fields:
@@ -2035,7 +2037,7 @@ class RoomSubentryFlow(_UnitForms, ConfigSubentryFlow):
         current = float(self._data.get(CONF_NEARBY_TEMP, ROOM_DEFAULTS[CONF_NEARBY_TEMP]))
         shown = _shown({CONF_NEARBY_TEMP: min(max(current, low), high)}, self._unit())
         schema = vol.Schema(
-            {_req(CONF_NEARBY_TEMP, shown, ROOM_DEFAULTS): _number(low, high, 0.5, "°C")}
+            {_req(CONF_NEARBY_TEMP, shown, ROOM_DEFAULTS): _number(low, high, 0.1, "°C")}
         )
         if user_input is not None:
             self._data = _merge(self._data, schema, self._kept(user_input))

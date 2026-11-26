@@ -54,7 +54,9 @@ class LevelNumber(RoomEntity, NumberEntity):
         super().__init__(room, f"level_{preset}")
         self.preset = preset
         self._attr_native_unit_of_measurement = room.house.unit
-        self._attr_native_step = 0.5
+        # Steps of 0.1: a room regulated by its sensor uses the value as it is; a
+        # thermostat gets it rounded to its own step.
+        self._attr_native_step = 0.1
         if preset != "nearby" and room.preset_names.get(preset, preset) != preset:
             # Custom level name chosen by the user.
             self._attr_translation_key = "level_custom"
@@ -64,13 +66,14 @@ class LevelNumber(RoomEntity, NumberEntity):
     def native_min_value(self) -> float:
         """Frost protection temperature (no level can be colder)."""
         # Rounded up to the step, so the lowest value is not below the frost protection.
-        return math.ceil(float(from_celsius(self.room.frost_temp(), self.room.house.unit)) * 2) / 2
+        # (Rounded to 6 decimals first: 44.6 * 10 is 446.00000000000006.)
+        return math.ceil(round(float(from_celsius(self.room.frost_temp(), self.room.house.unit)) * 10, 6)) / 10
 
     @property
     def native_max_value(self) -> float:
         """Maximum temperature (no level can be warmer)."""
         # Rounded down to the step, so the highest value is not above the maximum.
-        return math.floor(float(from_celsius(self.room.max_temp(), self.room.house.unit)) * 2) / 2
+        return math.floor(round(float(from_celsius(self.room.max_temp(), self.room.house.unit)) * 10, 6)) / 10
 
     @property
     def native_value(self) -> float:

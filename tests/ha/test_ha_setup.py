@@ -1212,6 +1212,35 @@ async def test_rounded_down_to_the_step_at_the_maximum(
     await hass.async_block_till_done()
 
 
+async def test_a_level_on_a_tenth_rounded_by_the_thermostat_is_no_manual_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """19.8 is sent as it is; a TRV with a step of 0.5 reporting 20.0 is its own rounding (#45)."""
+    trv = {
+        "hvac_modes": ["heat", "off"],
+        "current_temperature": 18.0,
+        "temperature": 17.0,
+        "target_temp_step": 0.5,
+        "hvac_action": "idle",
+    }
+    hass.states.async_set("climate.trv", "heat", trv)
+    entry = await _trv_house(hass, freezer, boiler_entity=None)
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    await _tick(hass, freezer, 15)
+    room = next(iter(entry.runtime_data.rooms.values()))
+    room.levels["home"] = 19.8
+    await hass.services.async_call(DOMAIN, "reevaluate", {}, blocking=True)
+    await hass.async_block_till_done()
+    assert room.decision.target.temperature == 19.8
+    assert calls[-1].data["temperature"] == 19.8
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 20.0})
+    await _tick(hass, freezer, 15)
+    assert room.override is None
+    assert room.decision.target.temperature == 19.8
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_forecast_cancels_or_triggers_the_cutoff(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:

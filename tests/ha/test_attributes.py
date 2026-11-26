@@ -240,13 +240,15 @@ async def test_next_estimate_in_fahrenheit(
 async def test_level_numbers_in_fahrenheit(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Limits on the 0.5 step inside the frost protection and the maximum; °F kept as °C."""
+    """Limits on the 0.1 step inside the frost protection and the maximum; °F kept as °C."""
     entry, room, entities = await _room(hass, freezer, {**FAHRENHEIT, "max_temp": 25.3})
     number = _entity(hass, entities["level_home"])
-    assert number.native_step == 0.5
+    assert number.native_step == 0.1
     assert number.native_unit_of_measurement == "°F"
-    # Frost protection 7 °C = 44.6 °F: up to 45.0; maximum 25.3 °C = 77.54 °F: down to 77.5.
-    assert number.native_min_value == math.ceil(_f(room.frost_temp()) * 2) / 2
+    # Frost protection 7 °C = 44.6 °F: 44.6 (not 44.7 from 446.00000000000006);
+    # maximum 25.3 °C = 77.54 °F: down to 77.5.
+    assert room.frost_temp() == 7.0
+    assert number.native_min_value == 44.6
     assert number.native_max_value == 77.5
     room.levels["home"] = 20.37
     assert number.native_value == round(_f(20.37), 1)
@@ -254,6 +256,19 @@ async def test_level_numbers_in_fahrenheit(
     await hass.async_block_till_done()
     # 70 °F = 21.111 °C, kept with two decimals.
     assert room.levels["home"] == 21.11
+    await _unload(hass, entry)
+
+
+async def test_level_numbers_on_a_tenth(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Steps of 0.1: 19.8 is kept as it is (#45)."""
+    entry, room, entities = await _room(hass, freezer)
+    number = _entity(hass, entities["level_home"])
+    assert number.native_step == 0.1
+    assert number.native_min_value == room.frost_temp()
+    await number.async_set_native_value(19.8)
+    await hass.async_block_till_done()
+    assert room.levels["home"] == 19.8
+    assert number.native_value == 19.8
     await _unload(hass, entry)
 
 

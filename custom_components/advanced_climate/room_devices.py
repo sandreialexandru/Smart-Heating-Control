@@ -148,6 +148,9 @@ class RoomDevices:
         """
         if self._held_by_pause():
             return False
+        if self.house.paused:
+            import traceback
+            _LOGGER.warning("PAUSECALL %s %s %s applying=%s decision=%s boosted=%s base=%s\n%s", self.name, service, data, _APPLYING.get(), self.decision.rule if self.decision else None, self._boosted, self._boost_base, "".join(traceback.format_stack(limit=10)))
         entity_id = data.get(ATTR_ENTITY_ID)
         if isinstance(entity_id, str) and not self._command_allowed(entity_id):
             return False

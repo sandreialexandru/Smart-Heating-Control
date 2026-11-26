@@ -1215,8 +1215,8 @@ async def test_rounded_down_to_the_step_at_the_maximum(
 async def test_a_level_on_a_tenth_rounded_by_the_thermostat_is_no_manual_change(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """19.8 goes to a TRV with a step of 0.5 as 20.0, as it would round it: its report
-    is no manual change, and nothing is sent again (#45)."""
+    """19.8 is sent as it is; a TRV with a step of 0.5 showing 20.0 holds it: no manual
+    change, nothing sent again, no alert (#45)."""
     trv = {
         "hvac_modes": ["heat", "off"],
         "current_temperature": 18.0,
@@ -1232,9 +1232,7 @@ async def test_a_level_on_a_tenth_rounded_by_the_thermostat_is_no_manual_change(
     room.levels["home"] = 19.8
     await hass.services.async_call(DOMAIN, "reevaluate", {}, blocking=True)
     await hass.async_block_till_done()
-    assert calls[-1].data["temperature"] == 20.0
-    # The room keeps its own target, e.g. for a room sensor.
-    assert room._resolve_temperature(room.decision.target) == 19.8
+    assert calls[-1].data["temperature"] == 19.8
     sent = len(calls)
     hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 20.0})
     await _tick(hass, freezer, 15)

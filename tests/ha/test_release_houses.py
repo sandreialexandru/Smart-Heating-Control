@@ -375,7 +375,7 @@ async def test_two_houses_for_three_days(
     _by_hand(hass, "climate.lounge_a", temperature=27.0)
     await _steps(hass, freezer, 8)
     assert lounge.override["source_device"] == "climate.lounge_c"
-    assert _temp(hass, "climate.lounge_a") == 21.5, (BY_ID["climate.lounge_a"].received[-8:], lounge.pending_command.get("climate.lounge_a"), lounge.sent.last.get("climate.lounge_a"), lounge.decision, lounge.override, hass.states.get("climate.lounge_a"))
+    assert _temp(hass, "climate.lounge_a") == 21.5
     assert _temp(hass, "climate.lounge_b") == b_before
     await lounge.async_set_child_lock(False)
 

@@ -578,13 +578,18 @@ class RoomDevices:
         self.house.async_save()
 
     def _holds(self, state: State, target: Target) -> bool:
-        """The thermostat holds the temperature of the target (in its own unit)."""
+        """The thermostat holds the temperature of the target (in its own unit).
+
+        Within half its step: a thermostat rounds what it gets to its step, so
+        19.8 shown as 20.0 on a step of 0.5 is held (not sent again and again,
+        nor taken as refused); without a step, within 0.05.
+        """
         temperature = self._climate_temperature(target)
         if temperature is None:
             return False
         current = float_attr(state, ATTR_TEMPERATURE)
         wanted = self._device_value(state, temperature)
-        return current is not None and abs(current - wanted) < 0.05
+        return current is not None and abs(current - wanted) <= step_margin(state)
 
     def _matches(self, state: State, target: Target) -> bool:
         """Return True if the climate state already matches the target."""
@@ -733,24 +738,19 @@ class RoomDevices:
     def _device_value(self, state: State, temperature: float) -> float:
         """Temperature to send, in the unit of the thermostat.
 
-        Rounded to the step of the thermostat, as it would round it: what it
-        reports is then what was sent (19.8 on a step of 0.5 goes as 20.0, so
-        it is not sent again and again, nor taken as refused). Where that would
-        take a value within the maximum of the house above it, the value is
-        rounded down to the step instead, so the thermostat never holds more
-        than the maximum. A value meant to be above the maximum (the valve
-        exercise) is sent as it is.
+        A thermostat rounds to its own step; where that would take a value
+        within the maximum of the house above it, the value is rounded down to
+        the step instead, so the thermostat never holds more than the maximum.
+        A value meant to be above the maximum (the valve exercise) is sent as
+        it is.
         """
         unit = system_unit(self.hass)
         value = round(float(from_celsius(temperature, unit)), 1)
         step = float_attr(state, "target_temp_step")
         if step:
             maximum = float(from_celsius(self.max_temp(), unit))
-            rounded = round(round(value / step) * step, 2)
-            if value <= maximum + 1e-9 < rounded:
+            if value <= maximum + 1e-9 < round(value / step) * step:
                 value = round(math.floor(maximum / step + 1e-9) * step, 2)
-            elif value <= maximum + 1e-9:
-                value = rounded
         # The limits the device applies by itself: sent within them, so what it
         # reports is what was sent (not a manual change).
         high = self._device_limit(state.entity_id, "max")

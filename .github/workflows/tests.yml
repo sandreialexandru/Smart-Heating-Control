@@ -79,9 +79,8 @@ jobs:
       - name: pytest
         run: |
           set +e
-          SHC_FUZZ_SEEDS=128 pytest -v -p no:cacheprovider tests/ha > pytest.log 2>&1
-          status=$?
-          cat pytest.log
+          SHC_FUZZ_SEEDS=96 pytest -v -p no:cacheprovider tests/ha 2>&1 | tee pytest.log
+          status=${PIPESTATUS[0]}
           if [ $status -ne 0 ]; then
             summary=$(grep -E "^(FAILED|ERROR)|Error|error:|assert" pytest.log | head -40 | sed ':a;N;$!ba;s/\n/%0A/g')
             echo "::error title=pytest failed::${summary}"

@@ -19,6 +19,8 @@ export const ALERT_ERRORS = [
   "device_unavailable",
   "sensor_unavailable",
   "not_accepted",
+  "not_turned_on",
+  "not_turned_off",
   "schedule_invalid",
   "outdoor_unavailable",
   "preset_missing",

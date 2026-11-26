@@ -53,6 +53,10 @@ const input = (sel, value) => async (p) => {
   await p.evaluate(([s, v]) => { const i = card.shadowRoot.querySelector(s); i.value = v; i.dispatchEvent(new Event("change", { bubbles: true })); }, [sel, value]);
   await p.waitForTimeout(100);
 };
+const ENERGY = {
+  energy: { price: { entity: "sensor.price", high: 0.8, low: 0.3 }, pv: { entity: "sensor.pv_export", threshold: 1000 } },
+  extra: [["sensor.price", "0.2", { unit_of_measurement: "€/kWh" }], ["sensor.pv_export", "200", { unit_of_measurement: "W" }]],
+};
 const openChart = (room = "r1") => steps(click(`[data-key="chart-${room}"]`), async (p) => p.waitForTimeout(300));
 const editSchedule = steps(click('[data-key="sched-r1"]'), click('[data-action="edit"][data-room="r1"]'));
 
@@ -138,6 +142,8 @@ const SCENES = [
     await p.mouse.move(pt[0], pt[1]); await p.mouse.wheel(-300, 0); await p.waitForTimeout(250);
   })],
   ["chart-empty-history", {}, { rooms: R1, emptyHistory: true }, openChart()],
+  // The energy lane (price high / low, PV surplus) and its values in the box.
+  ["chart-energy", {}, { rooms: R1, ...ENERGY }, steps(openChart(), hoverChart(0.3, 0.4))],
 ];
 
 // Scenes that only send something: the services and messages are compared too.

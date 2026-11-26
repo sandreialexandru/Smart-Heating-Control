@@ -62,6 +62,11 @@ GitHub releases.
 
 ### Fixed
 
+- 🚪 **An empty room heated again after each restart** ([#46](https://github.com/sandreialexandru/Smart-Heating-Control/issues/46)):
+  the last time someone was seen in a room with occupancy sensors is kept over
+  a restart, so an empty room stays in eco instead of following its schedule
+  for *Eco after no occupancy for* again. Someone present right after a restart
+  (or a sensor unavailable while the house started) counts at once.
 - 🔁 **An on / off thermostat or relay that confirms late** ([#44](https://github.com/sandreialexandru/Smart-Heating-Control/issues/44)):
   a Zigbee TRV or relay reports off (or on) seconds after the command; an
   evaluation in between (the heat source's own report, any room entity) read

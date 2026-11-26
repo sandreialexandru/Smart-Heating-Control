@@ -218,7 +218,9 @@ simplă.
 
 **Ocuparea camerei.** Funcționează doar când programul cere un nivel mai cald
 decât `eco`: o cameră goală nu ajunge niciodată mai caldă decât ar fi după
-program.
+program. Ultima prezență se păstrează la o repornire, deci o cameră goală
+rămâne goală; cineva prezent imediat după o repornire contează pe loc, fără
+*Revenire din eco după prezență de*.
 
 ## Pasul 6: Ferestre și uși
 

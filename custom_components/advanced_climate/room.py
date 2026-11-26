@@ -287,7 +287,13 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         # Warming or cooling now (the arrow of the card).
         self.trend = TemperatureTrend()
         self._window_timer: Callable[[], None] | None = None
-        self._last_occupied: datetime | None = None
+        # The last time someone was seen, kept over a restart (#46): an empty room
+        # stays empty, instead of counting from the start again.
+        self._last_occupied: datetime | None = from_iso(stored.get("last_occupied"))
+        self._last_occupied_saved = self._last_occupied
+        # Restored and nobody seen since the start: a presence then counts at once
+        # (a sensor that was unavailable while the house started is no return).
+        self._occupancy_restored = self._last_occupied is not None
         # Since when someone is present in a room that is in eco for no occupancy.
         self._present_since: datetime | None = None
         self._occupancy_wakeup: datetime | None = None
@@ -501,6 +507,7 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
             "last_exercise": self.last_exercise,
             "chosen_profile": self.chosen_profile,
             "relay_changed": iso(self._relay_changed),
+            "last_occupied": iso(self._last_occupied),
         }
 
     # ------------------------------------------------------------------
@@ -880,6 +887,13 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         )
         if not present:
             self._present_since = None
+            # Nobody seen since the start: the count runs from it, and goes on over a
+            # restart from there.
+            self._last_occupied = since
+            if self._last_occupied != self._last_occupied_saved:
+                # The last presence, kept once the room is empty.
+                self._last_occupied_saved = self._last_occupied
+                self.house.async_save()
             if not empty:
                 self._occupancy_wakeup = since + timedelta(
                     minutes=float(self.config[CONF_OCCUPANCY_MINUTES])
@@ -891,7 +905,8 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
                 OCCUPANCY_RETURN_MAX,
             )
         )
-        if empty and back > timedelta(0):
+        restored, self._occupancy_restored = self._occupancy_restored, False
+        if empty and back > timedelta(0) and not restored:
             self._present_since = self._present_since or now
             if now - self._present_since < back:
                 self._occupancy_wakeup = self._present_since + back

@@ -149,8 +149,6 @@ async def test_a_trv_that_reports_at_once_raises_no_alert(
 
 async def _relay_room(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
     """An on / off room on a relay and a room sensor; the relay takes no command by itself."""
-    on = async_mock_service(hass, "switch", "turn_on")
-    off = async_mock_service(hass, "switch", "turn_off")
     hass.states.async_set(RELAY, "on")
     hass.states.async_set("sensor.living", "15.0", {"unit_of_measurement": "°C"})
     entry = await _house(
@@ -169,6 +167,9 @@ async def _relay_room(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
             )
         ],
     )
+    # After the setup: the switch platform of the integration registers the real ones.
+    on = async_mock_service(hass, "switch", "turn_on")
+    off = async_mock_service(hass, "switch", "turn_off")
     room = _room(entry, "Living")
     assert room.heat_demand
     return entry, room, on, off
@@ -181,7 +182,7 @@ async def test_a_relay_off_not_reported_yet_is_not_read_back_as_on(
     entry, room, on, off = await _relay_room(hass, freezer)
     hass.states.async_set("sensor.living", "26.0", {"unit_of_measurement": "°C"})
     await _tick(hass, freezer, 15)
-    assert len(off) == 1, (len(on), room.pending_command, room._relay_on, room.relay_waiting, hass.states.get(RELAY).state, room.sent.last)
+    assert len(off) == 1
     assert not room.heat_demand
     hass.states.async_set("sensor.living", "26.2", {"unit_of_measurement": "°C"})
     await _tick(hass, freezer, 15)

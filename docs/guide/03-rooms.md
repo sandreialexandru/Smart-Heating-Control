@@ -214,7 +214,10 @@ its own sensor the TRV ignores the value written. *Offset* needs nothing set on
 the TRV, so it is the simpler choice.
 
 **Room occupancy.** It works only when the schedule asks for a level warmer than
-`eco`: an empty room never gets warmer than the schedule would make it.
+`eco`: an empty room never gets warmer than the schedule would make it. The last
+time someone was seen is kept over a restart, so an empty room stays empty;
+someone present right after a restart counts at once, without *Back from eco
+after presence of*.
 
 ## Step 6: Windows and doors
 

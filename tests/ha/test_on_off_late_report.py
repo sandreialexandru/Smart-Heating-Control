@@ -181,7 +181,7 @@ async def test_a_relay_off_not_reported_yet_is_not_read_back_as_on(
     entry, room, on, off = await _relay_room(hass, freezer)
     hass.states.async_set("sensor.living", "26.0", {"unit_of_measurement": "°C"})
     await _tick(hass, freezer, 15)
-    assert len(off) == 1, (room.decision, room.current_temp, room.heat_demand)
+    assert len(off) == 1, (len(on), room.pending_command, room._relay_on, room.relay_waiting, hass.states.get(RELAY).state, room.sent.last)
     assert not room.heat_demand
     hass.states.async_set("sensor.living", "26.2", {"unit_of_measurement": "°C"})
     await _tick(hass, freezer, 15)

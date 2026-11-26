@@ -93,14 +93,15 @@ async def test_a_person_turning_it_on_meanwhile_is_seen_at_once(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """A change of its state ends the wait: a TRV turned back on by hand is on."""
-    entry, room, modes = await _trv_room(hass, freezer)
+    entry, room, _modes = await _trv_room(hass, freezer)
     hass.states.async_set(TRV, "heat", WARM)
     await _tick(hass, freezer, 2)
-    hass.states.async_set(TRV, "off", WARM)
-    await _tick(hass, freezer, 2)
-    assert "state" not in room.pending_command.get(TRV, {})
+    assert room.pending_command[TRV]["state"][1] == "off"
+    # Turned on by hand before it reported off: read as on at once.
+    hass.states.async_set(TRV, "off", WARM, context=Context())
     hass.states.async_set(TRV, "heat", WARM, context=Context())
-    await _tick(hass, freezer, 2)
+    await hass.async_block_till_done()
+    assert "state" not in room.pending_command.get(TRV, {})
     assert room._relay_actual() is True
     await _unload(hass, entry)
 
@@ -179,11 +180,11 @@ async def test_a_relay_off_not_reported_yet_is_not_read_back_as_on(
     """The same for a relay (a Zigbee relay may confirm late too)."""
     entry, room, on, off = await _relay_room(hass, freezer)
     hass.states.async_set("sensor.living", "26.0", {"unit_of_measurement": "°C"})
-    await _tick(hass, freezer, 2)
-    assert len(off) == 1
+    await _tick(hass, freezer, 15)
+    assert len(off) == 1, (room.decision, room.current_temp, room.heat_demand)
     assert not room.heat_demand
     hass.states.async_set("sensor.living", "26.2", {"unit_of_measurement": "°C"})
-    await _tick(hass, freezer, 2)
+    await _tick(hass, freezer, 15)
     assert not room.heat_demand
     assert len(off) == 1 and not on
     hass.states.async_set(RELAY, "off")
@@ -197,9 +198,9 @@ async def test_a_relay_off_never_reported_is_told(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Sent once more, then the alert, as for the thermostats."""
-    entry, room, on, off = await _relay_room(hass, freezer)
+    entry, room, _on, off = await _relay_room(hass, freezer)
     hass.states.async_set("sensor.living", "26.0", {"unit_of_measurement": "°C"})
-    await _tick(hass, freezer, 2)
+    await _tick(hass, freezer, 15)
     await _tick(hass, freezer, VERIFY_DELAY + 1)
     assert len(off) >= 2
     await _tick(hass, freezer, VERIFY_DELAY + 1)

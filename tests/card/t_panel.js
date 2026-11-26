@@ -266,10 +266,10 @@ test("statistics: the tab is kept in the browser; the rows sorted by time", asyn
   ok(await inPanel(p, (sr) => getComputedStyle(sr.querySelector(".pextra")).display !== "none"), "statistics again");
   const hours = await inPanel(p, (sr) => [...sr.querySelectorAll(".ps-row .ps-fill")].map((f) => parseFloat(f.style.width)));
   eq([...hours].sort((a, b) => b - a), hours, "longest first");
-  // The colour of the heating time, as the bars of the house: not the level of the
-  // room now (a manual temperature has none, and the bar was grey on grey).
+  // The colour of heating, as the bars of the house, the chart and the hours: not the
+  // level of the room now (a manual temperature has none, and the bar was grey on grey).
   const colors = await inPanel(p, (sr) => [...new Set([...sr.querySelectorAll(".ps-row .ps-fill")].map((f) => f.style.getPropertyValue("--c")))]);
-  eq(colors, ["var(--ac-accent)"], "one colour");
+  eq(colors, ["var(--ac-hot)"], "one colour");
   await p.evaluate(() => localStorage.removeItem("shc-panel-tab"));
 });
 

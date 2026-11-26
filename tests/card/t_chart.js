@@ -379,3 +379,25 @@ test("energy: only the sensors chosen; none, no lane and no legend", async (p) =
     asked: window.calls.ws.filter((c) => c.type === "history/history_during_period").at(-1).entity_ids.length }));
   eq(none, { lanes: 0, legend: 0, asked: 4 }, "no energy sensors");
 });
+
+test("the day on one line: its profile and the next change on the bar of the day, none under the chart", async (p) => {
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom" }] }); await openChart(p);
+  const r = await p.evaluate(() => {
+    const sr = card.shadowRoot;
+    const line = sr.querySelector(".today .tlabel");
+    return { meta: sr.querySelectorAll(".chart-card .meta").length, text: line && line.innerText.replace(/\s+/g, " "), bar: !!sr.querySelector(".today .tbar") };
+  });
+  eq(r.meta, 0, "no row under the chart");
+  ok(r.bar && /Today · workday/.test(r.text) && /Next \d\d:\d\d → Sleep/.test(r.text), JSON.stringify(r));
+});
+
+test("no profile today: the day says frost protection, with the next change, without a bar", async (p) => {
+  const off = { workday: { days: "workday", enabled: false }, weekend: { days: "weekend", enabled: false } };
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom", profileDays: off, attrs: { profile: null } }] });
+  const r = await p.evaluate(() => {
+    const sr = card.shadowRoot;
+    const line = sr.querySelector(".today .tlabel");
+    return { text: line && line.innerText.replace(/\s+/g, " "), bar: !!sr.querySelector(".today .tbar") };
+  });
+  ok(!r.bar && /Today · Frost protection/i.test(r.text), JSON.stringify(r));
+});

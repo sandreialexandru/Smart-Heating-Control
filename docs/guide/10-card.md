@@ -143,8 +143,10 @@ header:
   room, and what the device itself measures (rooms with TRVs / climate
   devices); under **Next**, the next level, its temperature and when (e.g.
   *Sleep 18.5° at 22:00*);
-- **Today**: the profile of the day as a bar over the schedule day (from the
-  house *Schedule day starts at*, e.g. 00 → 24 or 04 → 04), with the time now.
+- **Today**: the profile of the day and, on the same line, the next change
+  (*Next 22:00 → Sleep*), over a bar of the schedule day (from the house
+  *Schedule day starts at*, e.g. 00 → 24 or 04 → 04), with the time now. A day
+  without a profile says *frost protection*, without a bar.
 While there is a manual change, a band under the arc says until when and where
 it was made, and an **Automatic** button first in the row of buttons clears it
 (back to automatic). If a room below its

@@ -29,6 +29,11 @@ GitHub releases.
 
 ### Changed
 
+- 🎨 **Clearer card and panel**: the heating time in the statistics in the
+  colour of heating, as in the chart and the hours (the starts asked a lighter
+  shade of it); the profile of the day and the next change on one line over the
+  bar of the day (no more row under the chart); the outdoor values of the chart
+  easier to read; less space between the house and the rooms in the panel.
 - 🎚️ **Level temperatures in steps of 0.1** ([#45](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/45)):
   in the room options, the level numbers and the temporary target of the card
   (was 0.5). A room regulated by its sensor uses e.g. 19.8 as it is; a

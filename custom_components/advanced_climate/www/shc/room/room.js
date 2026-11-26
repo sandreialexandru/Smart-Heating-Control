@@ -61,7 +61,16 @@ export const RoomMixin = (Base) =>
     /** Today's profile as a bar from 00 to 24, with the time now. */
     _todayHtml(a) {
       const slots = a.profile && a.schedule ? a.schedule[a.profile] : null;
-      if (!slots || !slots.length) return "";
+      // The profile of the day and the next change, on one line above the bar.
+      const label = (profile) => `<span class="tlabel"><span>${esc(this._t("today"))} · <b>${esc(profile)}</b></span>${
+        a.next_change
+          ? `<span>${esc(this._t("next"))} <b>${esc(this._fmtTime(a.next_change))}</b> → ${esc(this._presetName(a, a.next_preset))}</span>`
+          : ""
+      }</span>`;
+      if (!slots || !slots.length) {
+        // No profile today: the room keeps frost protection, said without a bar.
+        return a.profile_days && a.schedule ? `<div class="today">${label(this._t("frost_level"))}</div>` : "";
+      }
       // The schedule day starts at the day start of the house (Day starts at), as the integration counts it;
       // before its first time the last time of the profile goes on.
       const start = ((Math.round(num(a.day_boundary) ?? 0) % 1440) + 1440) % 1440;
@@ -84,14 +93,14 @@ export const RoomMixin = (Base) =>
         .join("");
       const p = this._parts(Date.now());
       const now = (key(p.h * 60 + p.mi) / 1440) * 100;
-      const label = (k) => {
+      const tick = (k) => {
         const text = clock(k);
         return text.endsWith(":00") ? text.slice(0, 2) : text;
       };
       return `<div class="today">
-          <span class="tlabel">${esc(this._t("today"))} · ${esc(a.profile)}</span>
+          ${label(a.profile)}
           <div class="tbar">${segs}<b style="left:${now}%"></b></div>
-          <div class="tticks">${[0, 360, 720, 1080, 1440].map((k) => `<span>${label(k)}</span>`).join("")}</div>
+          <div class="tticks">${[0, 360, 720, 1080, 1440].map((k) => `<span>${tick(k)}</span>`).join("")}</div>
         </div>`;
     }
 

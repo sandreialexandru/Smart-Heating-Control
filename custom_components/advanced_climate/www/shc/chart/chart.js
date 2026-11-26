@@ -408,11 +408,6 @@ export const ChartMixin = (Base) =>
           </span>
         </div>`;
 
-      const next = a.next_change
-        ? `<span>${this._t("next")}: <b>${esc(this._fmtTime(a.next_change))}</b> → ${esc(
-            this._presetName(a, a.next_preset)
-          )}</span>`
-        : "";
       const nowIn = d.now >= view.v0 && d.now <= view.v1;
       // Each legend item hides or shows its series.
       const legend = (k, label) =>
@@ -459,7 +454,7 @@ export const ChartMixin = (Base) =>
             ${d.energy ? legend("energy", "legend_energy") : ""}
             ${d.loading ? `<span class="muted">${this._t("loading")}</span>` : ""}
           </div>
-          <div class="meta"><span>${this._t("today")}: <b>${esc(a.profile || (a.profile_days && a.schedule ? this._t("frost_level") : "–"))}</b></span>${next}</div>`;
+`;
       if (innerOnly) return inner;
       const touching = this._touched === a.room_id ? " touching" : "";
       return `<div class="chart-card${touching}" data-chartcard="${esc(a.room_id)}">${inner}</div>`;

@@ -252,7 +252,7 @@ export const STYLE = `
   .optlab.end { transform: translate(calc(-100% - 4px), calc(-100% - 4px)); }
   .optlab.below { transform: translate(4px, 4px); }
   .optlab.end.below { transform: translate(calc(-100% - 4px), 4px); }
-  .ylabels .olab { color: var(--ac-out); }
+  .ylabels .olab { color: color-mix(in srgb, var(--ac-out) 55%, var(--primary-text-color)); }
   .lg-out { background: var(--ac-out); }
   .hchart .heatlane { fill: var(--primary-text-color); opacity: 0.05; }
   .hchart .elane { fill: var(--primary-text-color); opacity: 0.05; }
@@ -577,7 +577,8 @@ export const STYLE = `
   .chip.neutral ha-icon { color: var(--ac-muted); }
   .chip.guest ha-icon { color: #2f9e8f; }
   .today { display: flex; flex-direction: column; gap: 4px; }
-  .tlabel { font-size: 0.78em; color: var(--ac-muted); }
+  .tlabel { font-size: 0.78em; color: var(--ac-muted); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .tlabel b { color: var(--primary-text-color); font-weight: 600; }
   .tbar { position: relative; height: 14px; border-radius: 7px; background: var(--ac-surface-2); }
   .tbar i { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--c) 85%, transparent); }
   .tbar i:first-child { border-radius: 7px 0 0 7px; }

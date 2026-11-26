@@ -379,7 +379,7 @@ export const StatsMixin = (Base) =>
               r.name
             )}</span><span class="ps-track"><span class="ps-fill" style="width:${
               roomMax > 0 ? ((r.hours / roomMax) * 100).toFixed(1) : 0
-            }%;--c:var(--ac-accent)"></span></span><span class="ps-temp">${
+            }%;--c:var(--ac-hot)"></span></span><span class="ps-temp">${
               r.tempOver
                 ? esc(
                     this._t("st_room_temp")
@@ -398,7 +398,7 @@ export const StatsMixin = (Base) =>
               total,
               (t) => this._statsLabel(t, period),
               (v) => this._hours(v),
-              "var(--ac-accent)",
+              "var(--ac-hot)",
               (v) => this._shortHours(v),
               null,
               outdoor.size ? starts.map((t) => ({ t, ...(outdoor.get(t) || { mean: null, min: null, max: null }) })) : null
@@ -419,7 +419,7 @@ export const StatsMixin = (Base) =>
               values,
               (t) => this._statsLabel(t, period),
               (v) => (v === null ? "–" : String(v)),
-              "var(--ac-hot)",
+              "color-mix(in srgb, var(--ac-hot) 45%, var(--ac-surface-2))",
               undefined,
               null,
               null,

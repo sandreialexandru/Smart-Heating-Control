@@ -887,6 +887,9 @@ class Room(RoomDevices, RoomOverride, RoomOptimal, RoomAlerts, RoomStatus):
         )
         if not present:
             self._present_since = None
+            # Nobody seen since the start: the count runs from it, and goes on over a
+            # restart from there.
+            self._last_occupied = since
             if self._last_occupied != self._last_occupied_saved:
                 # The last presence, kept once the room is empty.
                 self._last_occupied_saved = self._last_occupied

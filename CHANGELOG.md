@@ -29,6 +29,12 @@ GitHub releases.
 
 ### Changed
 
+- 🎚️ **Level temperatures in steps of 0.1** ([#45](https://github.com/sandreialexandru/Smart-Heating-Control/discussions/45)):
+  in the room options, the level numbers and the temporary target of the card
+  (was 0.5). A room regulated by its sensor uses e.g. 19.8 as it is; a
+  thermostat rounds it to its own step, and one that tells its step holds the
+  target within half of it: not sent again and again, nor taken as refused
+  (also a level in °C on a thermostat in whole °F).
 - ⚡ **The devices of a room get their commands at once**, not one after the
   other: a slow one (ZHA waits for a battery TRV to confirm, sometimes half a
   minute) no longer holds the others back.

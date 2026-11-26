@@ -43,7 +43,7 @@ the house or the room, e.g. `sensor.bedroom_decision`.
 | *Clear manual change* (button) | Clears the room's manual change. |
 | *Reset learning* (button) | Forgets the room's learning; the room learns again within about a day. |
 | *Schedule profile* (select) | The profile chosen last while it is on, else the one used today (attribute *Used today*: the profile used today); choosing one turns it on (see [chapter 4](04-schedule.md#the-profile-select)). Only for rooms with their own schedule. |
-| *Level Home* … *Level Activity*, *Nearby temperature* (numbers) | The level temperatures, only for rooms without Generic Thermostat. A level with its own name appears as *Level "name"*. |
+| *Level Home* … *Level Activity*, *Nearby temperature* (numbers) | The level temperatures, only for rooms without Generic Thermostat. A level with its own name appears as *Level "name"*. In steps of 0.1 (also in the room options and the temporary target of the card): a room regulated by its sensor uses the value as it is; a thermostat rounds it to its own step (many TRVs use 0.5, so 19.8 becomes 20.0 there); one that tells its step (`target_temp_step`) holds the target within half of it, so it is neither a manual change nor sent again. |
 
 ### States of the *Decision* sensor
 

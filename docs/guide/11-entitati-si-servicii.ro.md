@@ -43,7 +43,7 @@ Numele entităților sunt date ca în interfața în română. ID-urile încep c
 | *Anulează modificarea manuală* (buton) | Anulează modificarea manuală a camerei. |
 | *Resetează învățarea* (buton) | Uită învățarea camerei; camera învață din nou în circa o zi. |
 | *Profil de program* (select) | Ultimul profil ales cât timp e pornit, altfel cel folosit azi (atributul *Folosit azi*: profilul folosit azi); alegerea unuia îl pornește (vezi [capitolul 4](04-program.ro.md#selectul-de-profil)). Doar pentru camerele cu programul lor. |
-| *Nivel Home* … *Nivel Activity*, *Temperatură „aproape”* (numere) | Temperaturile nivelurilor, doar la camerele fără Generic Thermostat. Un nivel cu nume propriu apare ca *Level „nume”*. |
+| *Nivel Home* … *Nivel Activity*, *Temperatură „aproape”* (numere) | Temperaturile nivelurilor, doar la camerele fără Generic Thermostat. Un nivel cu nume propriu apare ca *Level „nume”*. Din 0,1 în 0,1 (și în opțiunile camerei și la ținta temporară din card): o cameră reglată după senzorul ei folosește valoarea așa cum e; un termostat o rotunjește la pasul lui (multe TRV-uri au 0,5, deci 19,8 devine acolo 20,0); unul care își spune pasul (`target_temp_step`) ține ținta în limita a jumătate din pas, așa că nu e nici modificare manuală, nici nu i se trimite din nou. |
 
 ### Stările senzorului *Decizie*
 

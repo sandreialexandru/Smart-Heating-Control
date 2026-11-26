@@ -578,13 +578,18 @@ class RoomDevices:
         self.house.async_save()
 
     def _holds(self, state: State, target: Target) -> bool:
-        """The thermostat holds the temperature of the target (in its own unit)."""
+        """The thermostat holds the temperature of the target (in its own unit).
+
+        Within half its step: a thermostat rounds what it gets to its step, so
+        19.8 shown as 20.0 on a step of 0.5 is held (not sent again and again,
+        nor taken as refused); without a step, within 0.05.
+        """
         temperature = self._climate_temperature(target)
         if temperature is None:
             return False
         current = float_attr(state, ATTR_TEMPERATURE)
         wanted = self._device_value(state, temperature)
-        return current is not None and abs(current - wanted) < 0.05
+        return current is not None and abs(current - wanted) <= step_margin(state)
 
     def _matches(self, state: State, target: Target) -> bool:
         """Return True if the climate state already matches the target."""

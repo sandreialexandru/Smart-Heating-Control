@@ -373,7 +373,9 @@ async def test_two_houses_for_three_days(
     await lounge.async_set_child_lock(True)
     b_before = _temp(hass, "climate.lounge_b")
     _by_hand(hass, "climate.lounge_a", temperature=27.0)
-    await _steps(hass, freezer, 8)
+    # A battery TRV (it reports 120 s late) holding the target within its step gets
+    # nothing before: the maximum, then the target, each when it wakes up.
+    await _steps(hass, freezer, 12)
     assert lounge.override["source_device"] == "climate.lounge_c"
     assert _temp(hass, "climate.lounge_a") == 21.5
     assert _temp(hass, "climate.lounge_b") == b_before

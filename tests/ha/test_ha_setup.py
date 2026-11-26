@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 import pytest
 from freezegun.api import FrozenDateTimeFactory
-from homeassistant.core import Context, HomeAssistant, SupportsResponse
+from homeassistant.core import Context, HomeAssistant, State, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1208,6 +1208,46 @@ async def test_rounded_down_to_the_step_at_the_maximum(
     # The valve exercise is meant to go above the maximum: sent as it is.
     state = hass.states.get("climate.trv")
     assert room._device_value(state, 30.0) == 30.0
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_a_level_on_a_tenth_rounded_by_the_thermostat_is_no_manual_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """19.8 is sent as it is; a TRV with a step of 0.5 showing 20.0 holds it: no manual
+    change, nothing sent again, no alert (#45)."""
+    trv = {
+        "hvac_modes": ["heat", "off"],
+        "current_temperature": 18.0,
+        "temperature": 17.0,
+        "target_temp_step": 0.5,
+        "hvac_action": "idle",
+    }
+    hass.states.async_set("climate.trv", "heat", trv)
+    entry = await _trv_house(hass, freezer, boiler_entity=None)
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    await _tick(hass, freezer, 15)
+    room = next(iter(entry.runtime_data.rooms.values()))
+    room.levels["home"] = 19.8
+    await hass.services.async_call(DOMAIN, "reevaluate", {}, blocking=True)
+    await hass.async_block_till_done()
+    assert calls[-1].data["temperature"] == 19.8
+    sent = len(calls)
+    hass.states.async_set("climate.trv", "heat", {**trv, "temperature": 20.0})
+    await _tick(hass, freezer, 15)
+    assert room.override is None
+    for _ in range(3):
+        await _tick(hass, freezer, 121)  # VERIFY_DELAY is 120 s
+    assert len(calls) == sent
+    assert not [a for a in room.house.alerts_for(room) if a["code"] == "not_accepted"]
+    # Held within half its step; without a step, within 0.05.
+    target = room.decision.target
+    assert room._holds(State("climate.trv", "heat", {**trv, "temperature": 20.0}), target)
+    assert not room._holds(State("climate.trv", "heat", {**trv, "temperature": 20.5}), target)
+    plain = {k: v for k, v in trv.items() if k != "target_temp_step"}
+    assert not room._holds(State("climate.trv", "heat", {**plain, "temperature": 20.0}), target)
+    assert room._holds(State("climate.trv", "heat", {**plain, "temperature": 19.8}), target)
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 

@@ -39,7 +39,7 @@ const PANEL_STYLE = `
   .ptop button[hidden] { display: none; }
   .pbody { box-sizing: border-box; max-width: 1600px; margin: 0 auto; padding: 16px; display: grid; gap: 16px;
     grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); grid-template-areas: "house house" "side main"; align-items: start; }
-  .phouse { grid-area: house; }
+  .phouse { grid-area: house; margin-bottom: -20px; }
   .pside { grid-area: side; position: sticky; top: 72px; max-height: calc(100vh - 88px); overflow: auto; }
   .pmain { grid-area: main; min-width: 0; }
   .pside .hname { margin: 4px 4px 0; font-size: 0.85em; color: var(--ac-muted); font-weight: 600; }

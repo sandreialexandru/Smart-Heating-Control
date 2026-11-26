@@ -3508,6 +3508,78 @@ async def test_room_returns_from_eco_at_once_by_default(
     await hass.async_block_till_done()
 
 
+async def test_an_empty_room_stays_empty_over_a_restart(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The last presence is kept: empty before the restart, empty right after it, not
+    30 more minutes on its schedule (#46); the count goes on from that presence."""
+    hass.states.async_set("binary_sensor.motion", "off")
+    entry = await _setup(
+        hass, freezer, occupancy_sensors=["binary_sensor.motion"], occupancy_minutes=30
+    )
+
+    def state() -> str:
+        return hass.states.get("sensor.bedroom_decision").state
+
+    for _ in range(31):
+        await _tick(hass, freezer, 60)
+    assert state() == "room_unoccupied"
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await _tick(hass, freezer, 15)
+    assert state() == "room_unoccupied"
+    # Someone for a moment, gone 10 min before a restart: about 20 more minutes, not 30.
+    hass.states.async_set("binary_sensor.motion", "on")
+    await _tick(hass, freezer, 60)
+    hass.states.async_set("binary_sensor.motion", "off")
+    for _ in range(10):
+        await _tick(hass, freezer, 60)
+    assert state() == "schedule"
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    for _ in range(14):
+        await _tick(hass, freezer, 60)
+    assert state() == "schedule"
+    for _ in range(10):
+        await _tick(hass, freezer, 60)
+    assert state() == "room_unoccupied"
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_a_presence_right_after_a_restart_counts_at_once(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Empty before the restart, someone there after it (or a sensor that was
+    unavailable while the house started): no presence time to wait (#46)."""
+    hass.states.async_set("binary_sensor.motion", "off")
+    entry = await _setup(
+        hass,
+        freezer,
+        occupancy_sensors=["binary_sensor.motion"],
+        occupancy_minutes=30,
+        occupancy_return_minutes=10,
+    )
+    for _ in range(31):
+        await _tick(hass, freezer, 60)
+    assert hass.states.get("sensor.bedroom_decision").state == "room_unoccupied"
+    hass.states.async_set("binary_sensor.motion", "unavailable")
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await _tick(hass, freezer, 15)
+    assert hass.states.get("sensor.bedroom_decision").state == "room_unoccupied"
+    hass.states.async_set("binary_sensor.motion", "on")
+    await _tick(hass, freezer, 15)
+    assert hass.states.get("sensor.bedroom_decision").state == "schedule"
+    # Later on, the presence time holds again.
+    hass.states.async_set("binary_sensor.motion", "off")
+    for _ in range(31):
+        await _tick(hass, freezer, 60)
+    hass.states.async_set("binary_sensor.motion", "on")
+    for _ in range(3):
+        await _tick(hass, freezer, 60)
+    assert hass.states.get("sensor.bedroom_decision").state == "room_unoccupied"
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_optimal_start_when_the_target_cannot_be_reached(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:

@@ -142,8 +142,10 @@ deschisă. Sub antet:
   cameră și ce măsoară dispozitivul însuși (camerele cu TRV / dispozitive
   climate); la **Următor**, nivelul următor, temperatura lui și ora (de
   exemplu *Somn 18.5° la 22:00*);
-- **Azi**: profilul zilei ca bară pe ziua programului (de la *Ziua programului începe la*
-  a casei, de exemplu 00 → 24 sau 04 → 04), cu ora de acum.
+- **Azi**: profilul zilei și, pe același rând, următoarea schimbare (*Următor
+  22:00 → Sleep*), peste o bară a zilei programului (de la *Ziua programului începe
+  la* a casei, de exemplu 00 → 24 sau 04 → 04), cu ora de acum. O zi fără profil
+  arată *antiîngheț*, fără bară.
 Cât există o modificare manuală, o bandă sub arc spune până când și de unde a
 fost făcută, iar butonul **Automat**, primul din rândul de butoane, o anulează
 (înapoi la automat). Dacă o cameră sub

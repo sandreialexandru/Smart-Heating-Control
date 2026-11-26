@@ -377,7 +377,7 @@ async def test_two_houses_for_three_days(
     # nothing before: the maximum, then the target, each when it wakes up.
     await _steps(hass, freezer, 12)
     assert lounge.override["source_device"] == "climate.lounge_c"
-    assert _temp(hass, "climate.lounge_a") == 21.5, (BY_ID["climate.lounge_a"].received[-8:], hass.states.get("climate.lounge_a"))
+    assert _temp(hass, "climate.lounge_a") == 21.5
     assert _temp(hass, "climate.lounge_b") == b_before
     await lounge.async_set_child_lock(False)
 

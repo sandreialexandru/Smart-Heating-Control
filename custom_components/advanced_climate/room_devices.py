@@ -434,18 +434,7 @@ class RoomDevices:
                     return False
         if domain != "climate":
             if wanted in (STATE_ON, STATE_OFF) and state.state != wanted:
-                # Noted before the call: the device may report before it returns.
-                before = self.sent.last.get(entity_id)
-                self.sent.set_last(entity_id, {"state": wanted})
-                if not await self._call(
-                    domain,
-                    SERVICE_TURN_ON if wanted == STATE_ON else SERVICE_TURN_OFF,
-                    {ATTR_ENTITY_ID: entity_id},
-                ):
-                    if before is None:
-                        self.sent.last.pop(entity_id, None)
-                    else:
-                        self.sent.set_last(entity_id, before)
+                if not await self._async_switch(entity_id, wanted == STATE_ON):
                     return True
                 if entity_id in self.switches:
                     self._relay_on = wanted == STATE_ON
@@ -1047,24 +1036,7 @@ class RoomDevices:
         ok = True
         # All the devices at once: a slow one does not hold the others back.
         if self.source == SOURCE_SWITCH:
-
-            async def switch(entity_id: str) -> bool:
-                # Noted before the call: the switch may report before it returns.
-                before = self.sent.last.get(entity_id)
-                self.sent.set_last(entity_id, {"state": STATE_ON if want else STATE_OFF})
-                sent = await self._call(
-                    entity_id.split(".", 1)[0],
-                    SERVICE_TURN_ON if want else SERVICE_TURN_OFF,
-                    {ATTR_ENTITY_ID: entity_id},
-                )
-                if not sent:
-                    if before is None:
-                        self.sent.last.pop(entity_id, None)
-                    else:
-                        self.sent.set_last(entity_id, before)
-                return sent
-
-            ok = all(await _at_once(*(switch(e) for e in self.switches)))
+            ok = all(await _at_once(*(self._async_switch(e, want) for e in self.switches)))
         else:
 
             async def climate(entity_id: str) -> bool:
@@ -1088,6 +1060,34 @@ class RoomDevices:
                 # Kept open is no start of the room: no minimum on time after it.
                 self._relay_changed = now
         return ok
+
+    async def _async_switch(self, entity_id: str, on: bool) -> bool:
+        """Turn a relay on or off; False when the call fails."""
+        state = STATE_ON if on else STATE_OFF
+        now = dt_util.utcnow()
+        # Noted before the call: the switch may report before it returns. As
+        # for a thermostat, the command waits for its report (a Zigbee relay
+        # may confirm seconds later): the room takes the relay as sent meanwhile.
+        before = self.sent.last.get(entity_id)
+        waiting = self.pending_command.setdefault(entity_id, {})
+        pending = waiting.get("state")
+        self.sent.set_last(entity_id, {"state": state})
+        waiting["state"] = (SERVICE_TURN_ON if on else SERVICE_TURN_OFF, state, now)
+        sent = await self._call(
+            entity_id.split(".", 1)[0],
+            SERVICE_TURN_ON if on else SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+        )
+        if not sent:
+            if before is None:
+                self.sent.last.pop(entity_id, None)
+            else:
+                self.sent.set_last(entity_id, before)
+            if pending is None:
+                waiting.pop("state", None)
+            else:
+                waiting["state"] = pending
+        return sent
 
     async def _async_heat_to_max(self, entity_id: str, *, turned_on: bool = False) -> None:
         """An on / off thermostat that is on heats as far as it can: its own
@@ -1158,13 +1158,74 @@ class RoomDevices:
         return False
 
     def _relay_actual(self) -> bool | None:
-        """True when a relay (or on / off thermostat) is on now."""
-        entities = self.switches if self.source == SOURCE_SWITCH else self.climates
-        states = [self.hass.states.get(eid) for eid in entities]
-        usable = [s for s in states if valid(s)]
-        if not usable:
+        """True when a relay (or on / off thermostat) is on now.
+
+        A device sent on or off that has not reported it yet (a Zigbee TRV or
+        relay may confirm seconds later) is taken as sent, until it reports a
+        change of its state (also a person's) or the verification delay ends:
+        its older state read back is not the room's (#44).
+        """
+        now = dt_util.utcnow()
+        found: list[bool] = []
+        for entity_id in self.switches if self.source == SOURCE_SWITCH else self.climates:
+            state = self.hass.states.get(entity_id)
+            if not valid(state):
+                continue
+            pending = self.pending_command.get(entity_id, {}).get("state")
+            if pending is not None and now - pending[2] < timedelta(seconds=VERIFY_DELAY):
+                found.append(pending[1] != STATE_OFF)
+            else:
+                found.append(state.state != STATE_OFF)  # type: ignore[union-attr]
+        if not found:
             return None
-        return any(s.state not in (STATE_OFF,) for s in usable)  # type: ignore[union-attr]
+        return any(found)
+
+    async def _async_verify_relay(self, expected: Target) -> None:
+        """The relays (or on / off thermostats) that never reported the state sent
+        to them get it once more, then an alert."""
+        mismatched: list[tuple[str, str]] = []
+        for entity_id in self.switches if self.source == SOURCE_SWITCH else self.climates:
+            state = self.hass.states.get(entity_id)
+            pending = self.pending_command.get(entity_id, {}).get("state")
+            # Reported (the command, or a person's change) or there already: fine.
+            if pending is None or not valid(state):
+                continue
+            if (state.state != STATE_OFF) == (pending[1] != STATE_OFF):  # type: ignore[union-attr]
+                continue
+            mismatched.append((entity_id, pending[1]))
+        if not mismatched:
+            self._verify_attempts = 0
+            self.house.clear_alert(f"verify_{self.id}")
+            return
+        self._verify_attempts += 1
+        if self._verify_attempts == 1:
+            sent = False
+            for entity_id, value in mismatched:
+                if self.source == SOURCE_SWITCH:
+                    sent = await self._async_switch(entity_id, value != STATE_OFF) or sent
+                else:
+                    sent = (
+                        await self._send(
+                            entity_id, "set_hvac_mode", "hvac_mode", value, "state", force=True
+                        )
+                        or sent
+                    )
+            if sent:
+                self._schedule_verify(expected)
+            else:
+                self._verify_attempts = 0
+            return
+        self._verify_attempts = 0
+        on = mismatched[0][1] != STATE_OFF
+        entities = [entity_id for entity_id, _ in mismatched]
+        self.house.notify(
+            f"verify_{self.id}",
+            f"{self.name}: {', '.join(entities)} did not turn {'on' if on else 'off'}.",
+            repeat=timedelta(hours=6),
+            code="not_turned_on" if on else "not_turned_off",
+            params={"entities": entities},
+            room=self.id,
+        )
 
     def _schedule_verify(self, target: Target) -> None:
         """Check later that the devices accepted the command; retry once, then alert."""
@@ -1191,7 +1252,7 @@ class RoomDevices:
                 self._verify_attempts = 0
                 return
             if self.source == SOURCE_SWITCH or self.command_mode == COMMAND_HVAC:
-                self._verify_attempts = 0
+                await self._async_verify_relay(expected)
                 return
             mismatched = []
             for eid in self.climates:

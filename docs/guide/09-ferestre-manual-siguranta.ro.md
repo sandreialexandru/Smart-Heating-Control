@@ -243,8 +243,17 @@ Dacă senzorii de temperatură ai camerei sunt indisponibili:
 Cu *Verifică comenzile* (pornit implicit), la 2 minute după o comandă integrarea
 verifică dacă dispozitivul a acceptat-o (și pentru o modificare manuală din
 card). Dacă nu, o retrimite o dată; dacă nici atunci, dă alerta *… nu a acceptat
-…*. Verificarea se oprește doar dacă un dispozitiv își raportează starea foarte
-încet.
+…*. O cameră pornit / oprit (un releu sau un termostat pornit și oprit) se
+verifică la fel: un dispozitiv care nu a raportat starea trimisă o primește
+încă o dată, apoi vine alerta *… nu a pornit* sau *… nu s-a oprit*. Verificarea
+se oprește doar dacă un dispozitiv își raportează starea foarte încet.
+
+Până când un dispozitiv pornit / oprit raportează starea trimisă (un TRV sau un
+releu Zigbee poate confirma după câteva secunde), camera îl consideră în starea
+trimisă: starea lui veche, citită între timp, nu pornește din nou cererea de
+căldură a camerei și nici sursa de căldură. Orice schimbare a stării lui (și a
+unei persoane) încheie asta imediat; un dispozitiv care nu raportează în cele 2
+minute e citit din nou așa cum este.
 
 ## Mișcarea robinetelor
 
@@ -302,6 +311,7 @@ pentru avertizări.
 | Încălzește de … h, dar temperatura a crescut doar cu …° | vezi *Încălzire fără efect* mai jos |
 | Baterie descărcată la … | sub *Baterie descărcată sub* (implicit 20 %) |
 | … nu a acceptat … | verificarea comenzilor a eșuat de două ori |
+| … nu a pornit / nu s-a oprit | verificarea comenzilor unei camere pornit / oprit a eșuat de două ori: dispozitivul nu a raportat starea trimisă |
 | … a primit … comenzi în … min, ceva îl tot schimbă înapoi … | un aparat e schimbat înapoi iar și iar (programul lui, o automatizare, un TRV care nu păstrează valoarea): fără comenzi către el 15 min, ca să-i cruțe bateria; alerta se încheie după o oră liniștită |
 | … acceptă cel puțin …, așa că camera e ținută la … | entitatea termostatului nu coboară sub acel minim (mai sus, *Intervalul entității*) |
 | … acceptă cel mult / cel puțin … | TRV-ul ține propria limită *Max / Min temperature* de pe dispozitiv (mai sus, *Limitele dispozitivului*) |

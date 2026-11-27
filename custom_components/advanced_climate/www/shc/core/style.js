@@ -552,7 +552,17 @@ export const STYLE = `
   .gauge svg { display: block; }
   .gauge .gtrack { fill: none; stroke: var(--ac-line); stroke-linecap: round; }
   .gauge .gvalue { fill: none; stroke: var(--c); stroke-linecap: round; }
-  .gauge .gmark { fill: var(--primary-text-color); stroke: var(--ac-opaque, var(--card-background-color)); }
+  /* The levels across the arc, cut out of it in the card colour; "now" an open ring. */
+  .gauge .gcut { stroke: var(--ac-opaque, var(--card-background-color)); }
+  .gauge .gtick line { stroke-linecap: butt; }
+  .gauge .gring { fill: none; stroke: var(--primary-text-color); }
+  /* From now to the target while the room heats: warm, breathing. */
+  .gauge .gwarm { fill: none; stroke: var(--ac-hot); stroke-linecap: butt; animation: shc-breathe 2.4s ease-in-out infinite; }
+  @keyframes shc-breathe { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.85; } }
+  /* The room may not heat (a window, a pause, off, summer, warm outside): the arc in grey, and why. */
+  .gauge.blocked .gvalue { stroke: color-mix(in srgb, var(--ac-muted) 55%, transparent); }
+  .gsub.why { color: var(--ac-muted); max-width: calc(var(--gs) * 0.62); text-align: center; line-height: 1.2;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .gcenter { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   /* In the opening of the arc, under the number. */
   .gtrend { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: inline-flex; line-height: 0; }
@@ -663,6 +673,6 @@ export const STYLE = `
   .tile-info .tval { font-size: 1.15em; font-weight: 600; }
   .tile-info .muted { font-size: 0.8em; line-height: 1.35; overflow-wrap: anywhere; max-width: 100%; }
 
-  :host([offscreen]) .pulse, :host([offscreen]) .flame.on ha-icon, :host([offscreen]) .flame.glow { animation-play-state: paused; }
-  @media (prefers-reduced-motion: reduce) { .pulse, .flame.on ha-icon, .flame.glow { animation: none; } * { transition: none !important; } }
+  :host([offscreen]) .pulse, :host([offscreen]) .flame.on ha-icon, :host([offscreen]) .flame.glow, :host([offscreen]) .gwarm { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) { .pulse, .flame.on ha-icon, .flame.glow { animation: none; } .gauge .gwarm { animation: none; opacity: 0.55; } * { transition: none !important; } }
 `;

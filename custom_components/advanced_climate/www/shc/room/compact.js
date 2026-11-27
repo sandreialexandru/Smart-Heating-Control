@@ -15,7 +15,7 @@ export const CompactMixin = (Base) =>
       const icons = this._statusIcons(a);
       return `<section class="block room folded ${this._alertLevel(a)}" style="--c:${color}">
           <button class="frow" data-action="fold" data-key="room-${esc(a.room_id)}" aria-expanded="false">
-            ${this._gauge(a, null, 60, false)}
+            ${this._gauge(a, null, 60, false, stateObj)}
             <span class="ftext"><span class="fname"><span class="name">${esc(a.room_name)}</span></span>
               <span class="freason"><span class="dot"></span><span>${esc(line)}</span></span></span>
             ${icons ? `<span class="ficons">${icons}</span>` : ""}
@@ -44,7 +44,7 @@ export const CompactMixin = (Base) =>
           <span class="tile-head"><span class="tname"><span class="cname">${esc(a.room_name)}</span></span>${
             status ? `<span class="tstats">${status}</span>` : ""
           }</span>
-          <span class="tile-body">${this._gauge(a, null, 84, false)}
+          <span class="tile-body">${this._gauge(a, null, 84, false, stateObj)}
             <span class="tile-info"><span class="tsub">${esc(this._t("target_tag"))}</span>
               <span class="tval">${this._temp(a.target_temperature)}</span>
               ${line ? `<span class="muted">${esc(line)}</span>` : ""}</span>

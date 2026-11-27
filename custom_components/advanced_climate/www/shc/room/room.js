@@ -252,7 +252,7 @@ export const RoomMixin = (Base) =>
           )}</span>
           ${badges.length ? `<div class="decision">${badges.join("")}</div>` : ""}
         </div>`;
-      const hero = `<div class="hero">${this._gauge(a, e, 168)}<div class="chips">${this._chipsHtml(
+      const hero = `<div class="hero">${this._gauge(a, e, 168, true, stateObj)}<div class="chips">${this._chipsHtml(
         a,
         e,
         stateObj,

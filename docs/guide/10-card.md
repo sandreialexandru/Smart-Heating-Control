@@ -107,7 +107,7 @@ The header shows the name, the level and the decision (e.g. *Home ·
 Schedule*, with a dot in the colour of the level), the flame, the open window
 badge, and *Mold risk* (a drop) while the mold risk alert of the room is
 active. The rooms are neutral: the colour of the level is only on the arc and
-its dots. A room with an alert is outlined: red when something does not work
+its lines. A room with an alert is outlined: red when something does not work
 (a device, a sensor or the heat source unavailable, a temperature not
 accepted, an invalid schedule, a missing level), amber for the other alerts.
 
@@ -129,9 +129,19 @@ header:
 
 - an **arc** with the room temperature and the target under it; the arc is
   empty at the frost protection and full at the maximum temperature of the room
-  (it only shows the temperature, it does not change anything); a dot on the
-  arc shows the target on the same scale (also on the small arcs); within
-  0.3 °C (0.5 °F) of the target the arc ends exactly on the dot;
+  (it only shows the temperature, it does not change anything), filled up to
+  the temperature now, marked by an open ring; every level of the room is a
+  line across the arc in its colour, at its temperature (its name and value on
+  hover), and the target is the thicker line: in the colour of its level, in
+  the colour of the text for a manual change, and open (outlined) during an
+  optimal start, when it is the level that comes next; a small arc (folded
+  row, compact tile) shows only the target and the ring; within 0.3 °C
+  (0.5 °F) of the target the arc ends exactly on the target, the ring around
+  its line;
+- while the room heats, the part of the arc from the ring to the target is
+  warm and breathes slowly; while the room may not heat (window open, pause,
+  mode *Off* or *Summer*, out of season, warm outside) the arc is grey and the
+  reason stands under the temperature instead of the target;
   an **arrow** in the opening of the arc (also on the small arcs) shows that
   the room is warming (↑) or cooling (↓): a change of at least 0.2 °C per hour
   over the last 30 minutes, one step of a usual sensor (0.1 °C) in 30 minutes;
@@ -296,6 +306,14 @@ device), until when, *applies after: …* or *returns after: …*.
 
 Almost every value, state or badge opens the entity's more-info dialog when
 tapped.
+
+## Motion
+
+Only what changes moves: a new temperature or target moves the arc, the ring
+and the number to their new value; a chart draws itself from the left when it
+opens; the flame flickers and the warm part of the arc breathes while the room
+heats. With *reduce motion* set in the system, or while the card is not on the
+screen, nothing moves.
 
 ## Times
 

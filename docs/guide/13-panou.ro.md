@@ -31,7 +31,7 @@ Sus este casa (prezența, modul, pauza, oaspeții, vacanța, temperatura de afar
 cu o bară în culoarea de accent a temei) este deschisă la mijloc, cu tot ce
 arată și face cardul.
 
-- O atingere pe o cameră din listă o deschide. Camera se păstrează în adresă
+- O atingere pe o cameră din listă o deschide, cu o estompare scurtă. Camera se păstrează în adresă
   (`/shc#<cameră>`), așa că un link sau un semn de carte deschide acea cameră,
   și în browser.
 - Pe telefon camerele sunt o listă; o cameră se deschide pe tot ecranul, cu
@@ -115,7 +115,8 @@ pentru azi și următoarele 7 zile, la fiecare oră.
 Timpul de încălzire și temperaturile casei și ale fiecărei camere, pe **zile**,
 **săptămâni** sau **luni**: ultimele 14 zile, 12 săptămâni sau 12 luni. Vin din
 statisticile pe termen lung ale Home Assistant (recorderul), deci se păstrează
-cât timp le păstrează Home Assistant.
+cât timp le păstrează Home Assistant. Barele cresc de la bază când se arată o
+perioadă (nu și cu *mișcare redusă*).
 
 - **Casa**: o bară pentru fiecare zi, săptămână sau lună, cu timpul de
   încălzire, iar peste bare o linie cu media temperaturii de afară în fiecare

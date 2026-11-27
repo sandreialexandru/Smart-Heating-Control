@@ -9,6 +9,16 @@ GitHub releases.
 
 ### New
 
+- 🎯 **A new arc for the room**: the levels of the room are lines across the
+  arc in their colours, the target the thicker one, and the temperature now an
+  open ring; while the room heats, the part from the ring to the target glows
+  warm, and while it may not heat (window, pause, Off, Summer, warm outside)
+  the arc goes grey with the reason under the temperature. During an optimal
+  start the line of the coming level is outlined.
+- ✨ **Motion where something changes**: the arc, the ring and the number move
+  to a new value, a chart draws itself from the left when it opens, another
+  room fades in in the panel and the statistics bars grow; nothing moves with
+  *reduce motion* or while the card is off screen.
 - 🔔 **On / off rooms checked too**: with *Verify commands*, a relay or an on /
   off thermostat that never reported the state sent to it gets it once more,
   then the alert *… did not turn on* or *… did not turn off*.

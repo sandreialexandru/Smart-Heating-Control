@@ -393,7 +393,7 @@ type: custom:smart-heating-control-card
 
 Every room also shows its decision, a flame (outlined while it asks for heat, full and flickering
 while it heats; also on the house and on folded rooms) / window / manual change badges, an arc with the room temperature (empty at the frost protection, full at
-the maximum; it only shows the value), the target as a dot on it (the arc ends on the dot within 0.3 °C / 0.5 °F of the target), an arrow ↑ / ↓ in its opening while the room warms or cools (`temperature_trend`: at least 0.2 °C/h over the last 30 minutes) and the target, the reason, the time to
+the maximum; it only shows the value; filled up to an open ring at the temperature now; grey, with the reason under the temperature, while the room may not heat), the levels of the room as lines across it and the target as the thicker line (the arc ends on it within 0.3 °C / 0.5 °F of the target; warm and breathing from the ring to the target while the room heats), an arrow ↑ / ↓ in its opening while the room warms or cools (`temperature_trend`: at least 0.2 °C/h over the last 30 minutes) and the target, the reason, the time to
 target, heating by the room sensor when it is on, what the device itself measures, today's
 profile as a bar, and while there is a manual change a band with its end and an *Automatic* button (back to automatic) first in the row of buttons. Buttons under the arc (three per row) open *For a while* (set for
 a while; a manual change with an end shows the time it has left), *Schedule* (each profile with its days and an on / off switch; its

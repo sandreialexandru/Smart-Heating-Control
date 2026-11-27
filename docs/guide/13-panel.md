@@ -30,7 +30,7 @@ temperature and the heating), the rooms are listed on the side and the chosen
 room (marked in the list by a bar in the accent colour of the theme) is open in
 the middle, with everything the card shows and does.
 
-- A tap on a room in the list opens it. The room is kept in the address
+- A tap on a room in the list opens it, with a short fade. The room is kept in the address
   (`/shc#<room>`), so a link or a bookmark opens that room, and in the browser.
 - On a phone the rooms are a list; a room opens on the whole screen, with
   **Back** in the top bar.
@@ -112,7 +112,8 @@ the next 7 days, every hour.
 The heating time and the temperatures of the house and of every room, by
 **day**, **week** or **month**: the last 14 days, 12 weeks or 12 months. They
 come from the long-term statistics of Home Assistant (the recorder), so they
-are kept for as long as Home Assistant keeps those.
+are kept for as long as Home Assistant keeps those. The bars grow from their
+foot when a period is shown (not with *reduce motion*).
 
 - **The house**: a bar for each day, week or month with its heating time, and
   over the bars a line of the mean outdoor temperature of each period, on a

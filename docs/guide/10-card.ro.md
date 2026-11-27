@@ -107,7 +107,7 @@ collapsed: true
 Antetul arată numele, nivelul și decizia (de exemplu *Acasă · Program*, cu un
 punct în culoarea nivelului), flacăra, insigna pentru fereastră deschisă și
 *Risc de mucegai* (o picătură) cât e activă alerta de mucegai a camerei.
-Camerele sunt neutre: culoarea nivelului e doar pe arc și pe punctele lui. O
+Camerele sunt neutre: culoarea nivelului e doar pe arc și pe liniile lui. O
 cameră cu alertă e conturată: roșu când ceva nu funcționează (un dispozitiv, un
 senzor sau sursa de căldură indisponibile, o temperatură neacceptată, un
 program invalid, un nivel lipsă), chihlimbar pentru celelalte alerte.
@@ -130,8 +130,18 @@ deschisă. Sub antet:
 
 - un **arc** cu temperatura camerei și ținta sub ea; arcul e gol la antiîngheț
   și plin la temperatura maximă a camerei (doar arată temperatura, nu schimbă
-  nimic); un punct pe arc arată ținta pe aceeași scară (și pe arcurile mici);
-  la cel mult 0,3 °C (0,5 °F) de țintă arcul se oprește exact în punct; o **săgeată** în deschiderea arcului (și pe arcurile
+  nimic), umplut până la temperatura de acum, marcată de un cerc gol; fiecare
+  nivel al camerei e o linie de-a curmezișul arcului, în culoarea lui, la
+  temperatura lui (numele și valoarea apar la mouse), iar ținta e linia mai
+  groasă: în culoarea nivelului ei, în culoarea textului la o modificare
+  manuală și goală (doar conturul) în timpul unei porniri anticipate, când e
+  nivelul care urmează; un arc mic (rândul pliat, placa compactă) arată doar
+  ținta și cercul; la cel mult 0,3 °C (0,5 °F) de țintă arcul se oprește exact
+  la țintă, cu cercul în jurul liniei ei;
+- cât camera încălzește, partea arcului de la cerc la țintă e caldă și
+  „respiră” încet; cât camera nu are voie să încălzească (fereastră deschisă,
+  pauză, modul *Oprit* sau *Vară*, în afara sezonului, cald afară) arcul e gri,
+  iar sub temperatură apare motivul în locul țintei; o **săgeată** în deschiderea arcului (și pe arcurile
   mici) arată că camera se încălzește (↑) sau se răcește (↓): o schimbare de
   cel puțin 0,2 °C pe oră în ultimele 30 de minute, adică un pas al unui
   senzor obișnuit (0,1 °C) în 30 de minute; fără săgeată cât e stabilă sau nu
@@ -294,6 +304,14 @@ dispozitiv), până când, *se aplică după: …* sau *revine după: …*.
 
 Aproape orice valoare, stare sau insignă deschide la atingere fereastra cu
 detaliile entității.
+
+## Mișcarea
+
+Se mișcă doar ce se schimbă: o temperatură sau o țintă nouă mută arcul, cercul
+și cifra la noua valoare; un grafic se desenează de la stânga când se deschide;
+flacăra pâlpâie și partea caldă a arcului „respiră” cât camera încălzește. Cu
+*mișcare redusă* setată în sistem, sau cât cardul nu e pe ecran, nu se mișcă
+nimic.
 
 ## Orele
 

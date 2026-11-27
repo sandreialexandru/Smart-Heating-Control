@@ -756,6 +756,19 @@ class ShcPanel extends ShcBase {
     this._patch(this._popHolder, popup ? [popup] : []);
     this._tipColor();
     this._chartModal();
+    // Another room chosen: it fades in (not the first one shown).
+    if (room !== this._shownRoom) {
+      if (this._shownRoom !== undefined && chosen) this._fadeIn(this._card);
+      this._shownRoom = room;
+    }
+    // The bars of the statistics grow once a period is shown (not on every update).
+    // (Drawn again while they grow, e.g. as more comes in: they go on from where they were.)
+    const bars = tab === "stats" ? [...this._extra.querySelectorAll(".ps-bar")].filter((b) => !b.__grown) : [];
+    const period = tab === "stats" && this._extra.querySelector(".ps-bar") ? this._statsPeriod() : null;
+    if (period && period !== this._statsGrown) this._statsGrowAt = performance.now();
+    if (period && bars.length) this._growBars(bars, performance.now() - this._statsGrowAt);
+    this._statsGrown = period;
+    this._afterDraw();
   }
 
   /** A row of the list opens its room; the title of the open room does not fold it. */

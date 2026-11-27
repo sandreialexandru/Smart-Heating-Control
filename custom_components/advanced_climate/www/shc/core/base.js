@@ -25,6 +25,7 @@ import { FormatMixin } from "./format.js";
 import { HaMixin } from "./ha.js";
 import { HostMixin } from "./host.js";
 import { IconMixin } from "./icons.js";
+import { MotionMixin } from "./motion.js";
 
 const MIXINS = [
   FormatMixin,
@@ -50,6 +51,7 @@ const MIXINS = [
   DevicesMixin,
   HistoryMixin,
   EventsMixin,
+  MotionMixin,
   HostMixin,
 ];
 

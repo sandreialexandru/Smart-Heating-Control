@@ -158,6 +158,7 @@ class SmartHeatingControlCard extends ShcBase {
     this._patch(this._card, blocks);
     this._tipColor();
     this._chartModal();
+    this._afterDraw();
   }
 
   /** The card element and the styles, made once. */

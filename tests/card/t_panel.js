@@ -899,3 +899,20 @@ test("stats: how the optimal starts ended, in the range", async (p) => {
   ok(/4 starts · in time 2, on average 16 min early · late 1, on average 8 min · not reached 1/.test(text), text);
   eq(await p.evaluate(() => panel.shadowRoot.querySelectorAll(".ps-pre").length), 1, "only the room with some");
 });
+
+// ---------------------------------------------------------------- motion
+test("motion: another room fades in; the bars of the statistics grow once a period is shown", async (p) => {
+  await p.evaluate(() => { localStorage.removeItem("shc-panel-tab"); localStorage.removeItem("shc-panel-room"); });
+  await openPanel(p, { rooms: R4 });
+  eq(await inPanel(p, (sr) => sr.querySelector(".pmain").getAnimations().length), 0, "the first room: no fade");
+  await clickIn(p, '.pside .frow[data-key="room-r2"]'); await p.waitForTimeout(30);
+  eq(await inPanel(p, (sr) => sr.querySelector(".pmain").getAnimations().length), 1, "another room fades in");
+  await tab(p, "stats");
+  const grow = await inPanel(p, (sr) => [...sr.querySelectorAll(".ps-bar")].filter((b) => b.getAnimations().length).length);
+  ok(grow > 0, "bars grow: " + grow);
+  await p.waitForTimeout(700);
+  await p.evaluate(() => { panel.hass = makeHass({ rooms: [{ id: "r1", name: "Bedroom", current: 20.6 }, { id: "r2", name: "Kid", preset: "sleep" }, { id: "r3", name: "Living" }] }); });
+  await p.waitForTimeout(50);
+  eq(await inPanel(p, (sr) => [...sr.querySelectorAll(".ps-bar")].filter((b) => b.getAnimations().length).length), 0, "not again on an update");
+  await p.evaluate(() => { localStorage.removeItem("shc-panel-tab"); localStorage.removeItem("shc-panel-room"); });
+});

@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 
 import pytest
 from freezegun.api import FrozenDateTimeFactory
-from homeassistant.core import Context, HomeAssistant, State, SupportsResponse
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import Context, CoreState, HomeAssistant, State, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1929,12 +1930,9 @@ async def test_card_attributes_not_heating_alerts_cutoff(
     assert outdoor["cutoff_resume_temperature"] == 17.0  # default hysteresis 1 °C
     assert outdoor["forecast"] == []
 
-    # The temperature sensor fails: an alert for the room, with a code for the card
-    # (from the first periodic evaluation since the start, #48).
+    # The temperature sensor fails: an alert for the room, with a code for the card.
     hass.states.async_set("sensor.room_temp", "unavailable")
     await _tick(hass, freezer, 5)
-    assert hass.states.get("sensor.bedroom_decision").attributes["alerts"] == []
-    await _tick(hass, freezer, 5 * 60)
     alerts = hass.states.get("sensor.bedroom_decision").attributes["alerts"]
     assert [a["code"] for a in alerts] == ["sensor_unavailable"]
     hass.states.async_set("sensor.room_temp", "20.8", {"unit_of_measurement": "°C"})
@@ -3511,20 +3509,28 @@ async def test_room_returns_from_eco_at_once_by_default(
     await hass.async_block_till_done()
 
 
-async def test_no_temperature_right_after_a_start_raises_no_alert_until_the_first_periodic_evaluation(
+async def _started(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Home Assistant has started (the entry was set up while it was starting)."""
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await _tick(hass, freezer, 15)
+
+
+async def test_no_temperature_right_after_a_start_raises_no_alert_until_the_first_periodic_check(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Sensors that have not reported yet after a restart are no failure (#48): eco at
-    once, the alert only if they still have no value at the first periodic evaluation."""
-    hass.states.async_set("sensor.room_temp", "unavailable")
+    """Sensors that have not reported yet after Home Assistant starts are no failure
+    (#48): eco at once, the alert only if they still have no value at the first
+    periodic check."""
+    hass.set_state(CoreState.not_running)
     entry = await _setup(hass, freezer)
     hass.states.async_set("sensor.room_temp", "unavailable")
-    await _tick(hass, freezer, 15)
+    await _started(hass, freezer)
     house = entry.runtime_data
     room = next(iter(house.rooms.values()))
     assert hass.states.get("sensor.bedroom_decision").state == "sensor_fallback"
     assert f"sensor_{room.id}" not in house.active_alerts
-    # It reports before the first periodic evaluation: no alert at all.
+    # It reports before the first periodic check: no alert at all.
     hass.states.async_set("sensor.room_temp", "18.0", {"unit_of_measurement": "°C"})
     await _tick(hass, freezer, 60)
     assert hass.states.get("sensor.bedroom_decision").state != "sensor_fallback"
@@ -3534,18 +3540,87 @@ async def test_no_temperature_right_after_a_start_raises_no_alert_until_the_firs
     await hass.async_block_till_done()
 
 
-async def test_a_sensor_that_never_comes_back_after_a_start_is_told_at_the_first_periodic_evaluation(
+async def test_a_sensor_that_never_comes_back_after_a_start_is_told_at_the_first_periodic_check(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """A sensor dead before the restart still gets its alert, at the first periodic evaluation."""
+    """A sensor dead before the restart still gets its alert, at the first periodic check;
+    set up while Home Assistant runs, at once."""
+    hass.set_state(CoreState.not_running)
     entry = await _setup(hass, freezer)
     hass.states.async_set("sensor.room_temp", "unavailable")
-    await _tick(hass, freezer, 15)
+    await _started(hass, freezer)
     house = entry.runtime_data
     room = next(iter(house.rooms.values()))
     assert f"sensor_{room.id}" not in house.active_alerts
     await _tick(hass, freezer, 5 * 60)
     assert house.active_alerts[f"sensor_{room.id}"]["code"] == "sensor_unavailable"
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_the_heat_source_is_not_started_by_a_restored_state_after_a_start(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A TRV still showing its old "heating" after Home Assistant starts does not start
+    the heat source for a few seconds (#48): it stays as found until the first
+    periodic check, and follows the rooms from then on."""
+    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 22.0, "temperature": 21.0}
+    hass.set_state(CoreState.not_running)
+    hass.states.async_set("climate.trv", "heat", {**trv, "hvac_action": "heating"})
+    entry = await _trv_house(hass, freezer)
+    await _started(hass, freezer)
+    house = entry.runtime_data
+    room = next(iter(house.rooms.values()))
+    assert room.heat_demand  # from the restored state
+    assert hass.states.get("input_boolean.boiler").state == "off"
+    # It reports: idle. Nothing ever started.
+    hass.states.async_set("climate.trv", "heat", {**trv, "hvac_action": "idle"})
+    await _tick(hass, freezer, 60)
+    assert hass.states.get("input_boolean.boiler").state == "off"
+    # Really heating later: the heat source follows, from the first periodic check.
+    hass.states.async_set("climate.trv", "heat", {**trv, "hvac_action": "heating"})
+    await _tick(hass, freezer, 60)
+    assert hass.states.get("input_boolean.boiler").state == "off"
+    await _tick(hass, freezer, 5 * 60)
+    assert hass.states.get("input_boolean.boiler").state == "on"
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_a_heat_source_found_running_after_a_start_is_left_until_the_first_periodic_check(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Found running and no room asking (yet): not stopped before the first periodic
+    check; then stopped as usual."""
+    trv = {"hvac_modes": ["heat", "off"], "current_temperature": 22.0, "temperature": 21.0}
+    hass.set_state(CoreState.not_running)
+    hass.states.async_set("climate.trv", "heat", {**trv, "hvac_action": "idle"})
+    entry = await _trv_house(hass, freezer)
+    await hass.services.async_call(
+        "input_boolean", "turn_on", {"entity_id": "input_boolean.boiler"}, blocking=True
+    )
+    await _started(hass, freezer)
+    assert hass.states.get("input_boolean.boiler").state == "on"
+    await _tick(hass, freezer, 5 * 60)
+    assert hass.states.get("input_boolean.boiler").state == "off"
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_frost_protection_starts_the_heat_source_right_after_a_start(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Frost protection does not wait for the first periodic check."""
+    cold = {"hvac_modes": ["heat", "off"], "current_temperature": 5.0, "temperature": 7.0}
+    hass.set_state(CoreState.not_running)
+    hass.states.async_set("climate.trv", "heat", {**cold, "hvac_action": "heating"})
+    entry = await _trv_house(hass, freezer)
+    # Mode off: only frost protection asks for heat.
+    await hass.services.async_call(
+        "select", "select_option", {"entity_id": "select.home_mode", "option": "off"}, blocking=True
+    )
+    await _started(hass, freezer)
+    assert hass.states.get("input_boolean.boiler").state == "on"
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 

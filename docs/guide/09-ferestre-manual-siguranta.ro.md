@@ -238,7 +238,8 @@ Dacă senzorii de temperatură ai camerei sunt indisponibili:
 În ambele cazuri apare o alertă. Imediat după o pornire a Home Assistant, alerta
 așteaptă prima verificare periodică (*Verificare periodică la*): senzorii care
 doar n-au raportat încă nu dau alertă, iar senzorul dispozitivului sau `eco` se
-aplică oricum imediat. O valoare a senzorului care nu e număr (`nan`, `inf`) e
+aplică oricum imediat (adăugată sau reîncărcată cât Home Assistant rulează,
+alerta vine imediat). O valoare a senzorului care nu e număr (`nan`, `inf`) e
 tratată ca indisponibilă.
 
 ## Verificarea comenzilor

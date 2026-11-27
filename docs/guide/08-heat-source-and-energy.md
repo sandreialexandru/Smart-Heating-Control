@@ -167,6 +167,13 @@ of the room and the source and turns them off again when no longer needed (also
 after a restart during the pause). A circuit already on or off when the pause
 began is left as it is.
 
+**Right after Home Assistant starts**, until the first periodic check
+(*Periodic check every*), the source and the circuit relays stay as they were
+found, again except for frost protection: the devices show their restored state
+until they report again, and an old *heating* of a TRV would start the source
+for a few seconds. The rooms get their commands at once all the same. Added or
+reloaded while Home Assistant runs, the integration controls the source at once.
+
 **Rooms needed example.** You have four TRV rooms and *Rooms needed* 2. Only the
 bedroom asks for heat: the boiler does not start, and the card shows in the
 bedroom *Not heating: waiting for other rooms: 1 of 2 ask for heat*. When the

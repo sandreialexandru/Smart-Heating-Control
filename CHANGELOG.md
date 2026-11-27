@@ -64,9 +64,13 @@ GitHub releases.
 
 - 🔕 **No sensor alerts at each restart** ([#48](https://github.com/sandreialexandru/Smart-Heating-Control/issues/48)):
   right after Home Assistant starts, the alert for unavailable temperature
-  sensors waits for the first periodic evaluation (*Periodic check every*), so
+  sensors waits for the first periodic check (*Periodic check every*), so
   sensors that simply have not reported yet raise none. The device sensor or
   eco still applies at once; a sensor still without a value then gets its alert.
+- 🔥 **No short start of the heat source after a restart** ([#48](https://github.com/sandreialexandru/Smart-Heating-Control/issues/48)):
+  until that first periodic check, the heat source and the circuit relays stay
+  as they were found (frost protection aside), so the restored "heating" of a
+  TRV that has not reported yet no longer starts the boiler for a few seconds.
 - 🚪 **An empty room heated again after each restart** ([#46](https://github.com/sandreialexandru/Smart-Heating-Control/issues/46)):
   the last time someone was seen in a room with occupancy sensors is kept over
   a restart, so an empty room stays in eco instead of following its schedule

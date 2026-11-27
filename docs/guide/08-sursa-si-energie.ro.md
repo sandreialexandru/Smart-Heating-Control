@@ -171,6 +171,13 @@ singură excepție: antiînghețul, pentru care pornește circuitul camerei și 
 și le oprește din nou când nu mai e nevoie (și după o repornire în timpul
 pauzei). Un circuit deja pornit sau oprit la începutul pauzei rămâne cum e.
 
+**Imediat după pornirea Home Assistant**, până la prima verificare periodică
+(*Verificare periodică la*), sursa și releele circuitelor rămân cum au fost
+găsite, tot cu excepția antiînghețului: dispozitivele arată starea restaurată
+până raportează din nou, iar un *heating* vechi al unui TRV ar porni sursa
+pentru câteva secunde. Camerele primesc oricum comenzile imediat. Adăugată sau
+reîncărcată cât Home Assistant rulează, integrarea comandă sursa imediat.
+
 **Exemplu cu camere necesare.** Patru camere cu TRV și *Camere necesare*
 2. Doar dormitorul cere căldură: centrala nu pornește, iar cardul arată în
 dormitor *Nu încălzește: așteaptă alte camere: 1 din 2 cer căldură*. Când cere

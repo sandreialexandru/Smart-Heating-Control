@@ -237,7 +237,8 @@ If the room temperature sensors are unavailable:
 In both cases you get an alert. Right after a start of Home Assistant, the
 alert waits for the first periodic evaluation (*Periodic check every*): sensors
 that simply have not reported yet raise none, while the device sensor or `eco`
-applies at once all the same. A sensor value that is not a number (`nan`,
+applies at once all the same (added or reloaded while Home Assistant runs, the
+alert comes at once). A sensor value that is not a number (`nan`,
 `inf`) counts as unavailable.
 
 ## Command checks

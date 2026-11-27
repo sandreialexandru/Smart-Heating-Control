@@ -138,8 +138,8 @@ deschisă. Sub antet:
   nivelul care urmează; un arc mic (rândul pliat, placa compactă) arată doar
   ținta și cercul; la cel mult 0,3 °C (0,5 °F) de țintă arcul se oprește exact
   la țintă, cu cercul în jurul liniei ei;
-- cât camera încălzește, partea arcului de la cerc la țintă e caldă și
-  „respiră” încet; cât camera nu are voie să încălzească (fereastră deschisă,
+- cât camera încălzește, cercul e în culoarea căldurii, cu un halou care iese
+  din el pe arcul mare; cât camera nu are voie să încălzească (fereastră deschisă,
   pauză, modul *Oprit* sau *Vară*, în afara sezonului, cald afară) arcul e gri,
   iar sub temperatură apare motivul în locul țintei; o **săgeată** în deschiderea arcului (și pe arcurile
   mici) arată că camera se încălzește (↑) sau se răcește (↓): o schimbare de
@@ -309,7 +309,7 @@ detaliile entității.
 
 Se mișcă doar ce se schimbă: o temperatură sau o țintă nouă mută arcul, cercul
 și cifra la noua valoare; un grafic se desenează de la stânga când se deschide;
-flacăra pâlpâie și partea caldă a arcului „respiră” cât camera încălzește. Cu
+flacăra pâlpâie și un halou iese din cercul arcului cât camera încălzește. Cu
 *mișcare redusă* setată în sistem, sau cât cardul nu e pe ecran, nu se mișcă
 nimic.
 

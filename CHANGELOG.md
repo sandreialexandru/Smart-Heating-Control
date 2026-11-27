@@ -11,8 +11,8 @@ GitHub releases.
 
 - 🎯 **A new arc for the room**: the levels of the room are lines across the
   arc in their colours, the target the thicker one, and the temperature now an
-  open ring; while the room heats, the part from the ring to the target glows
-  warm, and while it may not heat (window, pause, Off, Summer, warm outside)
+  open ring, in the colour of heat with a halo while the room heats; while it
+  may not heat (window, pause, Off, Summer, warm outside)
   the arc goes grey with the reason under the temperature. During an optimal
   start the line of the coming level is outlined.
 - ✨ **Motion where something changes**: the arc, the ring and the number move

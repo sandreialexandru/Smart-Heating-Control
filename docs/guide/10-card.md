@@ -138,8 +138,8 @@ header:
   row, compact tile) shows only the target and the ring; within 0.3 °C
   (0.5 °F) of the target the arc ends exactly on the target, the ring around
   its line;
-- while the room heats, the part of the arc from the ring to the target is
-  warm and breathes slowly; while the room may not heat (window open, pause,
+- while the room heats, the ring is in the colour of heat, with a halo going
+  out of it on the big arc; while the room may not heat (window open, pause,
   mode *Off* or *Summer*, out of season, warm outside) the arc is grey and the
   reason stands under the temperature instead of the target;
   an **arrow** in the opening of the arc (also on the small arcs) shows that
@@ -311,8 +311,8 @@ tapped.
 
 Only what changes moves: a new temperature or target moves the arc, the ring
 and the number to their new value; a chart draws itself from the left when it
-opens; the flame flickers and the warm part of the arc breathes while the room
-heats. With *reduce motion* set in the system, or while the card is not on the
+opens; the flame flickers and a halo goes out of the ring of the arc while the
+room heats. With *reduce motion* set in the system, or while the card is not on the
 screen, nothing moves.
 
 ## Times

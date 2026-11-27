@@ -3615,6 +3615,10 @@ async def test_frost_protection_starts_the_heat_source_right_after_a_start(
     hass.set_state(CoreState.not_running)
     hass.states.async_set("climate.trv", "heat", {**cold, "hvac_action": "heating"})
     entry = await _trv_house(hass, freezer)
+    # Mode off: only frost protection asks for heat.
+    await hass.services.async_call(
+        "select", "select_option", {"entity_id": "select.home_mode", "option": "off"}, blocking=True
+    )
     await _started(hass, freezer)
     assert hass.states.get("input_boolean.boiler").state == "on"
     assert await hass.config_entries.async_unload(entry.entry_id)

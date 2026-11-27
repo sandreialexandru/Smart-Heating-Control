@@ -184,9 +184,11 @@ class House:
         self.device_id: str | None = None
         self.config_snapshot: tuple | None = None
         self.started = False
-        # The first periodic evaluation since the start has run: until then a room
-        # without a temperature raises no alert (the sensors may simply not have
-        # reported yet after a restart, #48); its eco applies at once all the same.
+        # After a start of Home Assistant, the first periodic check has run: until
+        # then the devices may still show their restored state (#48), so a room
+        # without a temperature raises no alert (its fallback applies at once all the
+        # same) and the heat source stays as it was found. Set up while Home
+        # Assistant runs (added, reloaded), the states are live: settled at once.
         self.settled = False
 
         # Persisted state
@@ -318,6 +320,7 @@ class House:
             room.async_start()
 
         if self.hass.is_running:
+            self.settled = True
             self._unsubs.append(async_call_later(self.hass, STARTUP_DELAY, self._async_start))
         else:
             self._started_unsub = self.hass.bus.async_listen_once(
@@ -1364,6 +1367,12 @@ class House:
             or frost
             or any(room.heat_demand for room in self.rooms.values() if not room.uses_house_source)
         )
+        # Right after a start, until the first periodic check, the heat source and
+        # its circuits stay as they were found (frost protection aside): the devices
+        # show their restored state until they report again, and an old "heating"
+        # would start the heat source for a few seconds (#48). The rooms get their
+        # commands at once all the same.
+        held = not self.settled and not frost and bool(self.source_entity)
         # Circuits: the relay of a circuit opens before the heat source starts for
         # a room of it, and closes after the heat source stops. A room of a closed
         # circuit does not start the heat source (its water would have nowhere
@@ -1389,7 +1398,7 @@ class House:
                     )
                 )
             }
-            opened = await self._async_switch_circuits(sorted(wanted), True)
+            opened = [] if held else await self._async_switch_circuits(sorted(wanted), True)
             if self.paused:
                 self._pause_circuits |= set(opened)
 
@@ -1416,15 +1425,15 @@ class House:
         self.source_waiting = None
         self._source_wait_until = None
         other_runs = False
-        if self.secondary_source and not self.paused:
+        if self.secondary_source and not self.paused and not held:
             # The source not in use stays stopped, before the other one starts.
             # In a pause something else controls the heating: left alone.
             for entity_id in self.source_entities:
                 if entity_id != self.source_entity:
                     other_runs |= not await self._async_stop_source(entity_id, now)
-        if not other_runs:
+        if not other_runs and not held:
             await self._async_switch_source(now, demand, frost)
-        if circuits:
+        if circuits and not held:
             # Closed only once the heat source is off, or while another one stays
             # open; without a heat source at once (the boiler stops with its valves).
             configured, running = self.heat_source_state()

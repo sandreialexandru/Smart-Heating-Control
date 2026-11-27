@@ -79,8 +79,9 @@ jobs:
       - name: pytest
         run: |
           set +e
-          pytest -v -p no:cacheprovider tests/ha/test_mutation_gaps.py tests/ha/test_ha_setup.py 2>&1 | tee pytest.log
-          status=${PIPESTATUS[0]}
+          pytest -v -p no:cacheprovider ${{ matrix.coverage }} > pytest.log 2>&1
+          status=$?
+          cat pytest.log
           if [ $status -ne 0 ]; then
             summary=$(grep -E "^(FAILED|ERROR)|Error|error:|assert" pytest.log | head -40 | sed ':a;N;$!ba;s/\n/%0A/g')
             echo "::error title=pytest failed::${summary}"

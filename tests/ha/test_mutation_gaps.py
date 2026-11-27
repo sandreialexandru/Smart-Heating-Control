@@ -203,8 +203,6 @@ async def test_unavailable_sensor_of_a_relay_room_goes_to_eco(
     house = entry.runtime_data
     room = next(iter(house.rooms.values()))
     hass.states.async_set("sensor.room_temp", "unavailable")
-    # The alert from the first periodic check since the start (#48).
-    await _tick(hass, freezer, 310)
     await _tick(hass, freezer, 310)
     alert = house.active_alerts[f"sensor_{room.id}"]
     assert alert["params"]["fallback"] == "eco"

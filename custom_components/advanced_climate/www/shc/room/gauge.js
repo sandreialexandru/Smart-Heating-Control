@@ -12,7 +12,8 @@ export const GaugeMixin = (Base) =>
      * Arc of the room temperature: full at the maximum temperature, empty at the
      * frost protection (the limits of the targets). The levels of the room are lines
      * across it, the target the thicker one; "now" is an open ring at the end of the
-     * arc. A small dial (a tile, a row) shows only the target and the ring.
+     * arc, in the colour of heat while the room heats. A small dial (a tile, a row) shows only
+     * the target and the ring.
      * ``stateObj``: the decision (its rule greys the arc while the room may not heat).
      */
     _gauge(a, e, size, withTarget = true, stateObj = null) {
@@ -87,23 +88,19 @@ export const GaugeMixin = (Base) =>
           })
         );
       }
-      // Warm, breathing, from now to the target while the room heats (not past it).
-      const warm =
-        a.heating && !blocked && shown !== null && tgt !== null && tgt > shown
-          ? `<circle cx="${mid}" cy="${mid}" r="${r.toFixed(2)}" class="gwarm" stroke-width="${sw}" stroke-dasharray="${(
-              arc * (frac(tgt) - f)
-            ).toFixed(1)} ${c.toFixed(1)}" stroke-dashoffset="${(-arc * f).toFixed(1)}" transform="rotate(135 ${mid} ${mid})"></circle>`
-          : "";
-      // Now: an open ring, turned to its place (so it can turn to a new one).
+      // Now: an open ring, turned to its place (so it can turn to a new one). While the room
+      // heats it is in the colour of heat, with a halo on a big dial (too small on a tile).
       const rr = Math.max(4, sw * 0.75);
+      const hot = !!a.heating && !blocked;
+      const rw = Math.max(1.5, sw * 0.25).toFixed(1);
+      const at = `cx="${(mid + r).toFixed(2)}" cy="${mid}" r="${rr.toFixed(1)}"`;
       const now =
         cur !== null
           ? `<g class="gnow" style="transform-box:view-box;transform-origin:${mid}px ${mid}px;transform:rotate(${(135 + 270 * f).toFixed(
               2
-            )}deg)"><circle cx="${(mid + r).toFixed(2)}" cy="${mid}" r="${rr.toFixed(1)}" class="gring" stroke-width="${Math.max(
-              1.5,
-              sw * 0.25
-            ).toFixed(1)}"></circle></g>`
+            )}deg)">${hot && withTarget ? `<circle ${at} class="ghalo" stroke-width="${rw}"></circle>` : ""}<circle ${at} class="gring${
+              hot ? " hot" : ""
+            }" stroke-width="${rw}"></circle></g>`
           : "";
       // Warming or cooling over the last 30 minutes (the decision sensor; 0 = steady or not known).
       const trend = cur === null ? 0 : Number(a.temperature_trend) || 0;
@@ -129,7 +126,7 @@ export const GaugeMixin = (Base) =>
             1
           )}" data-deg="${(135 + 270 * f).toFixed(2)}" data-cur="${cur ?? ""}">
           <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
-            ${ring("gtrack", arc)}${cur !== null ? ring("gvalue", len) : ""}${warm}${ticks.join("")}${now}
+            ${ring("gtrack", arc)}${cur !== null ? ring("gvalue", len) : ""}${ticks.join("")}${now}
           </svg>
           ${arrow}<span class="gcenter"><span class="gnum">${this._temp(cur)}</span>${withTarget ? sub : ""}</span>
         </span>`;

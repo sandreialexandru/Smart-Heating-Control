@@ -1,4 +1,4 @@
-// The dial of a room (the levels across the arc, the ring of now, the warm part, a room
+// The dial of a room (the levels across the arc, the ring of now, hot while heating, a room
 // that may not heat) and the motion after a drawing.
 const mount = async (p, config, hass) => { await p.evaluate(([c, h]) => mount(c, h), [config, hass]); await p.waitForTimeout(200); };
 const update = async (p, hass) => { await p.evaluate((h) => { card.hass = makeHass(h); }, hass); await p.waitForTimeout(50); };
@@ -38,13 +38,19 @@ test("arc: a small dial shows only the target and the ring", async (p) => {
   ok(t[0].cls.includes("target"), "target");
 });
 
-test("arc: warm from now to the target while the room heats, not when it does not or is past it", async (p) => {
+test("arc: the ring in the colour of heat while the room heats, a halo only on the big dial", async (p) => {
+  const ring = (p) => p.evaluate(() => {
+    const g = card.shadowRoot.querySelector(".gauge");
+    return { hot: g.querySelector(".gring").classList.contains("hot"), halo: !!g.querySelector(".ghalo") };
+  });
   await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom", current: 19, heating: true }] });
-  ok(await p.evaluate(() => !!card.shadowRoot.querySelector(".hero .gwarm")), "heating below the target");
+  eq(await ring(p), { hot: true, halo: true }, "heating");
   await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom", current: 19, heating: false, demand: false }] });
-  ok(await p.evaluate(() => !card.shadowRoot.querySelector(".hero .gwarm")), "not heating");
-  await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom", current: 22, heating: true }] });
-  ok(await p.evaluate(() => !card.shadowRoot.querySelector(".hero .gwarm")), "past the target");
+  eq(await ring(p), { hot: false, halo: false }, "not heating");
+  await mount(p, { collapsed: true }, { rooms: [{ id: "r1", name: "Bedroom", current: 19, heating: true }] });
+  eq(await ring(p), { hot: true, halo: false }, "a small dial: no halo");
+  await mount(p, {}, { rooms: [{ id: "r1", name: "Living", window: true, state: "window_open", reasonKey: "window_open", heating: true }] });
+  eq(await ring(p), { hot: false, halo: false }, "a room that may not heat");
 });
 
 test("arc: grey with the reason while the room may not heat (a window open)", async (p) => {

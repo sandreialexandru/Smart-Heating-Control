@@ -556,9 +556,10 @@ export const STYLE = `
   .gauge .gcut { stroke: var(--ac-opaque, var(--card-background-color)); }
   .gauge .gtick line { stroke-linecap: butt; }
   .gauge .gring { fill: none; stroke: var(--primary-text-color); }
-  /* From now to the target while the room heats: warm, breathing. */
-  .gauge .gwarm { fill: none; stroke: var(--ac-hot); stroke-linecap: butt; animation: shc-breathe 2.4s ease-in-out infinite; }
-  @keyframes shc-breathe { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.85; } }
+  /* While the room heats: the ring in the colour of heat, a halo going out of it. */
+  .gauge .gring.hot { stroke: var(--ac-hot); }
+  .gauge .ghalo { fill: none; stroke: var(--ac-hot); transform-box: fill-box; transform-origin: center; animation: shc-halo 1.8s ease-out infinite; }
+  @keyframes shc-halo { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.1); opacity: 0; } }
   /* The room may not heat (a window, a pause, off, summer, warm outside): the arc in grey, and why. */
   .gauge.blocked .gvalue { stroke: color-mix(in srgb, var(--ac-muted) 55%, transparent); }
   .gsub.why { color: var(--ac-muted); max-width: calc(var(--gs) * 0.62); text-align: center; line-height: 1.2;
@@ -673,6 +674,6 @@ export const STYLE = `
   .tile-info .tval { font-size: 1.15em; font-weight: 600; }
   .tile-info .muted { font-size: 0.8em; line-height: 1.35; overflow-wrap: anywhere; max-width: 100%; }
 
-  :host([offscreen]) .pulse, :host([offscreen]) .flame.on ha-icon, :host([offscreen]) .flame.glow, :host([offscreen]) .gwarm { animation-play-state: paused; }
-  @media (prefers-reduced-motion: reduce) { .pulse, .flame.on ha-icon, .flame.glow { animation: none; } .gauge .gwarm { animation: none; opacity: 0.55; } * { transition: none !important; } }
+  :host([offscreen]) .pulse, :host([offscreen]) .flame.on ha-icon, :host([offscreen]) .flame.glow, :host([offscreen]) .ghalo { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) { .pulse, .flame.on ha-icon, .flame.glow { animation: none; } .gauge .ghalo { animation: none; opacity: 0; } * { transition: none !important; } }
 `;

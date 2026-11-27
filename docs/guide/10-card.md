@@ -107,7 +107,7 @@ The header shows the name, the level and the decision (e.g. *Home ·
 Schedule*, with a dot in the colour of the level), the flame, the open window
 badge, and *Mold risk* (a drop) while the mold risk alert of the room is
 active. The rooms are neutral: the colour of the level is only on the arc and
-its lines. A room with an alert is outlined: red when something does not work
+its target line. A room with an alert is outlined: red when something does not work
 (a device, a sensor or the heat source unavailable, a temperature not
 accepted, an invalid schedule, a missing level), amber for the other alerts.
 
@@ -130,14 +130,12 @@ header:
 - an **arc** with the room temperature and the target under it; the arc is
   empty at the frost protection and full at the maximum temperature of the room
   (it only shows the temperature, it does not change anything), filled up to
-  the temperature now, marked by an open ring; every level of the room is a
-  line across the arc in its colour, at its temperature (its name and value on
-  hover), and the target is the thicker line: in the colour of its level, in
-  the colour of the text for a manual change, and open (outlined) during an
-  optimal start, when it is the level that comes next; a small arc (folded
-  row, compact tile) shows only the target and the ring; within 0.3 °C
-  (0.5 °F) of the target the arc ends exactly on the target, the ring around
-  its line;
+  the temperature now, marked by an open ring; the target is a line across the
+  arc (its value on hover): in the colour of its level, in the colour of the
+  text for a manual change, and open (outlined) during an optimal start, when
+  it is the level that comes next; the temperatures of all the levels are
+  under *Levels*; within 0.3 °C (0.5 °F) of the target the arc ends exactly
+  on the target, the ring around its line;
 - while the room heats, the ring is in the colour of heat, with a halo going
   out of it on the big arc; while the room may not heat (window open, pause,
   mode *Off* or *Summer*, out of season, warm outside) the arc is grey and the

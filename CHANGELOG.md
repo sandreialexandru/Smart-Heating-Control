@@ -9,12 +9,11 @@ GitHub releases.
 
 ### New
 
-- 🎯 **A new arc for the room**: the levels of the room are lines across the
-  arc in their colours, the target the thicker one, and the temperature now an
-  open ring, in the colour of heat with a halo while the room heats; while it
-  may not heat (window, pause, Off, Summer, warm outside)
-  the arc goes grey with the reason under the temperature. During an optimal
-  start the line of the coming level is outlined.
+- 🎯 **A clearer arc for the room**: the target is a line across the arc in
+  the colour of its level and the temperature now an open ring, in the colour
+  of heat with a halo while the room heats; while it may not heat (window,
+  pause, Off, Summer, warm outside) the arc goes grey with the reason under the
+  temperature. During an optimal start the target line is outlined.
 - ✨ **Motion where something changes**: the arc, the ring and the number move
   to a new value, a chart draws itself from the left when it opens, another
   room fades in in the panel and the statistics bars grow; nothing moves with

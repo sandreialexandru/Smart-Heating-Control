@@ -107,7 +107,7 @@ collapsed: true
 Antetul arată numele, nivelul și decizia (de exemplu *Acasă · Program*, cu un
 punct în culoarea nivelului), flacăra, insigna pentru fereastră deschisă și
 *Risc de mucegai* (o picătură) cât e activă alerta de mucegai a camerei.
-Camerele sunt neutre: culoarea nivelului e doar pe arc și pe liniile lui. O
+Camerele sunt neutre: culoarea nivelului e doar pe arc și pe linia țintei. O
 cameră cu alertă e conturată: roșu când ceva nu funcționează (un dispozitiv, un
 senzor sau sursa de căldură indisponibile, o temperatură neacceptată, un
 program invalid, un nivel lipsă), chihlimbar pentru celelalte alerte.
@@ -130,13 +130,11 @@ deschisă. Sub antet:
 
 - un **arc** cu temperatura camerei și ținta sub ea; arcul e gol la antiîngheț
   și plin la temperatura maximă a camerei (doar arată temperatura, nu schimbă
-  nimic), umplut până la temperatura de acum, marcată de un cerc gol; fiecare
-  nivel al camerei e o linie de-a curmezișul arcului, în culoarea lui, la
-  temperatura lui (numele și valoarea apar la mouse), iar ținta e linia mai
-  groasă: în culoarea nivelului ei, în culoarea textului la o modificare
-  manuală și goală (doar conturul) în timpul unei porniri anticipate, când e
-  nivelul care urmează; un arc mic (rândul pliat, placa compactă) arată doar
-  ținta și cercul; la cel mult 0,3 °C (0,5 °F) de țintă arcul se oprește exact
+  nimic), umplut până la temperatura de acum, marcată de un cerc gol; ținta e
+  o linie de-a curmezișul arcului (valoarea ei apare la mouse): în culoarea
+  nivelului ei, în culoarea textului la o modificare manuală și goală (doar
+  conturul) în timpul unei porniri anticipate, când e nivelul care urmează;
+  temperaturile tuturor nivelurilor sunt la *Niveluri*; la cel mult 0,3 °C (0,5 °F) de țintă arcul se oprește exact
   la țintă, cu cercul în jurul liniei ei;
 - cât camera încălzește, cercul e în culoarea căldurii, cu un halou care iese
   din el pe arcul mare; cât camera nu are voie să încălzească (fereastră deschisă,

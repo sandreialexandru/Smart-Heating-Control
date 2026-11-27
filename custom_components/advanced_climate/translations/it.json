@@ -859,6 +859,18 @@
       "heating_runtime": {
         "name": "Tempo di riscaldamento"
       },
+      "time_away": {
+        "name": "Tempo fuori casa"
+      },
+      "time_unoccupied": {
+        "name": "Tempo con stanze vuote"
+      },
+      "time_optimal_stop": {
+        "name": "Tempo in spegnimento ottimale"
+      },
+      "time_window": {
+        "name": "Tempo con una finestra aperta"
+      },
       "decision": {
         "name": "Decisione",
         "state": {

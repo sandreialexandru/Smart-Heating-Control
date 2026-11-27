@@ -859,6 +859,18 @@
       "heating_runtime": {
         "name": "Timp de încălzire"
       },
+      "time_away": {
+        "name": "Timp plecați"
+      },
+      "time_unoccupied": {
+        "name": "Timp cu camere goale"
+      },
+      "time_optimal_stop": {
+        "name": "Timp în oprire anticipată"
+      },
+      "time_window": {
+        "name": "Timp cu fereastra deschisă"
+      },
       "decision": {
         "name": "Decizie",
         "state": {

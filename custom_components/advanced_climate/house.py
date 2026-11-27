@@ -120,6 +120,12 @@ from .const import (
     OVERRIDE_SCOPE_HOUSE,
     PRESENCE_FAR,
     PRESENCE_HOME,
+    RULE_FAR,
+    RULE_HOUSE_AWAY,
+    RULE_OPTIMAL_STOP,
+    RULE_UNOCCUPIED,
+    RULE_VACATION,
+    RULE_WINDOW,
     SEASON_AUTO,
     SIGNAL_UPDATE,
     STARTUP_DELAY,
@@ -169,6 +175,16 @@ CALENDAR_DAYS = 8
 AT_HOME_MINUTES = 1.0
 
 
+# The rules that keep the house lower than its schedule, each counted as the time
+# at least one room is under it (the time of the house, not added up per room).
+RULE_TIME_GROUPS: dict[str, tuple[str, ...]] = {
+    "away": (RULE_HOUSE_AWAY, RULE_VACATION, RULE_FAR),
+    "unoccupied": (RULE_UNOCCUPIED,),
+    "optimal_stop": (RULE_OPTIMAL_STOP,),
+    "window": (RULE_WINDOW,),
+}
+
+
 class House:
     """Controller for one Smart Heating Control config entry (the house)."""
 
@@ -207,6 +223,9 @@ class House:
         self.presence = PresenceDebouncer()
         self.outdoor = OutdoorTracker()
         self.boiler_runtime_s = 0.0
+        # Time of the house under each rule of RULE_TIME_GROUPS (seconds) and since when now.
+        self.rule_time_s: dict[str, float] = dict.fromkeys(RULE_TIME_GROUPS, 0.0)
+        self._rule_since: dict[str, datetime] = {}
         self.workday_cache: dict[str, bool] = {}
 
         # Runtime state
@@ -294,6 +313,8 @@ class House:
         # temperature is unknown.
         self.outdoor.max_age = timedelta(hours=self.average_hours)
         self.boiler_runtime_s = float(house.get("boiler_runtime_s", 0.0))
+        saved = house.get("rule_time_s") or {}
+        self.rule_time_s = {k: float(saved.get(k, 0.0)) for k in RULE_TIME_GROUPS}
         self._frost_started = bool(house.get("frost_started", False))
         # When each heat source last started or stopped (its minimum on / off times).
         self.source_changed: dict[str, datetime] = {
@@ -449,6 +470,7 @@ class House:
                 "presence": self.presence.as_dict(),
                 "outdoor": self.outdoor.as_dict(),
                 "boiler_runtime_s": round(self.boiler_runtime_s, 1),
+                "rule_time_s": {k: round(v, 1) for k, v in self.rule_time_s.items()},
                 # Kept over a restart: a heat source started for frost protection
                 # in a pause is stopped again, and the minimum on / off time holds.
                 "frost_started": self._frost_started,
@@ -1421,6 +1443,13 @@ class House:
             self._source_running_since = None
         if running:
             self._source_running_since = now
+        # The time of the house under each rule that keeps it lower.
+        for key, rules in RULE_TIME_GROUPS.items():
+            since = self._rule_since.pop(key, None)
+            if since is not None:
+                self.rule_time_s[key] += (now - since).total_seconds()
+            if any(room.rule in rules for room in self.rooms.values()):
+                self._rule_since[key] = now
 
         self.source_waiting = None
         self._source_wait_until = None

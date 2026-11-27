@@ -33,7 +33,7 @@ from .const import (
     RULES,
 )
 from .entity import HOUSE_ENTITY_KEYS, ROOM_ENTITY_KEYS, HouseEntity, RoomEntity, entity_map
-from .house import House
+from .house import RULE_TIME_GROUPS, House
 from .learning import LEARNED_WINDOWS, WINDOW_MINUTES
 from .room import Room
 from .schedule import profiles_to_dict
@@ -52,6 +52,7 @@ async def async_setup_entry(
             PresenceSensor(house),
             OutdoorAverageSensor(house),
             HouseRuntimeSensor(house),
+            *(HouseRuleTimeSensor(house, key) for key in RULE_TIME_GROUPS),
         ]
     )
     for room in house.rooms.values():
@@ -217,6 +218,25 @@ class HouseRuntimeSensor(HouseEntity, SensorEntity):
         return round(self.house.boiler_runtime_s / 3600, 3)
 
 
+class HouseRuleTimeSensor(HouseEntity, SensorEntity):
+    """Total time the house was under a rule that keeps it lower (away, empty rooms, …)."""
+
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.HOURS
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_suggested_display_precision = 2
+
+    def __init__(self, house: House, key: str) -> None:
+        """Initialize."""
+        super().__init__(house, f"time_{key}")
+        self._key = key
+
+    @property
+    def native_value(self) -> float:
+        """Hours."""
+        return round(self.house.rule_time_s[self._key] / 3600, 3)
+
+
 class DecisionSensor(RoomEntity, SensorEntity):
     """The rule that decides the room right now, with the reason."""
 
@@ -240,6 +260,7 @@ class DecisionSensor(RoomEntity, SensorEntity):
             "entities",
             "house_entities",
             "house_name",
+            "preheat",
             "source",
             "custom_levels",
             "device_levels",
@@ -315,6 +336,8 @@ class DecisionSensor(RoomEntity, SensorEntity):
             "stop_forecast": _forecast(room, unit),
             "next_estimate": _estimate(room, unit),
             "no_heat_reason": room.no_heat_reason(),
+            # How the optimal start got to the level: early (until its time), late (while it heats), reached late.
+            "preheat": _preheat(room, unit),
             "hold_until": iso(room.hold_until(dt_util.utcnow())),
             "alerts": room.house.alerts_for(room),
             "optimal_stop_cancelled": room.stop_cancelled,
@@ -518,6 +541,14 @@ def _boost(room: Room, unit: str) -> dict[str, Any] | None:
     base = room.target_temperature
     temperature = room.boost_temperature(base) if base is not None else None
     return {"temperature": _t(temperature, unit, 1), "active": room.boost_active}
+
+
+def _preheat(room: Room, unit: str) -> dict[str, Any] | None:
+    """The optimal start of the room as shown (its target in the unit of the house)."""
+    shown = room.preheats.status(dt_util.utcnow())
+    if shown is None:
+        return None
+    return {**shown, "target": _t(shown["target"], unit, 1)}
 
 
 def _forecast(room: Room, unit: str) -> dict[str, Any] | None:

@@ -859,6 +859,18 @@
       "heating_runtime": {
         "name": "Verwarmingstijd"
       },
+      "time_away": {
+        "name": "Tijd afwezig"
+      },
+      "time_unoccupied": {
+        "name": "Tijd met lege kamers"
+      },
+      "time_optimal_stop": {
+        "name": "Tijd in optimale stop"
+      },
+      "time_window": {
+        "name": "Tijd met een open raam"
+      },
       "decision": {
         "name": "Beslissing",
         "state": {

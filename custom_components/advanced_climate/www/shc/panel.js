@@ -133,6 +133,13 @@ const PANEL_STYLE = `
   .ps-track { height: 10px; border-radius: 5px; background: var(--ac-surface-2); overflow: hidden; }
   .ps-fill { display: block; height: 100%; background: var(--c); border-radius: 5px; }
   .ps-h, .ps-pct { font-size: 0.9em; text-align: right; white-space: nowrap; }
+  /* What SHC did: a row per rule, its icon in its colour. */
+  .ps-rules { display: grid; grid-template-columns: auto minmax(70px, 160px) minmax(40px, 1fr) auto; gap: 8px 10px; }
+  .ps-rule { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; }
+  .ps-rule ha-icon { --mdc-icon-size: 18px; color: var(--c); }
+  /* A period against the one before, for the same cold (less heating in green). */
+  .ps-weather { margin: 4px 0 0; font-size: 0.9em; }
+  .ps-weather.less { color: color-mix(in srgb, var(--ac-ok) 75%, var(--primary-text-color)); }
   .ps-pct { color: var(--ac-muted); }
   /* On a phone: narrower bars without their values (the title of a bar has it), a room on two lines. */
   :host([narrow]) .ps-col { flex-basis: 19px; padding: 0 1.5px; }

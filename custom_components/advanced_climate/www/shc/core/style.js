@@ -578,6 +578,10 @@ export const STYLE = `
   .chip.line .cval { font-weight: 500; display: inline-flex; align-items: baseline; gap: 6px; }
   .chip.line .cval .dot { width: 8px; height: 8px; align-self: center; }
   .chip.line .csub { font-size: 0.88em; color: var(--ac-muted); }
+  /* The optimal start got there early: a tick in green; late: plain. */
+  .chip.line .csub.preheat { display: inline-flex; align-items: center; gap: 4px; }
+  .chip.line .csub.preheat ha-icon { --mdc-icon-size: 15px; flex: none; }
+  .chip.line .csub.preheat.ok ha-icon { color: var(--ac-ok); }
   .chip ha-icon { --mdc-icon-size: 17px; color: var(--c); flex: none; }
   .chip small { display: block; }
   .chip.soft { align-self: flex-start; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 0.82em;

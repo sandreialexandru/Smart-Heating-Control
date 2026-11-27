@@ -534,7 +534,6 @@ export const STYLE = `
   .room-title .name { font-size: 1.15em; }
   .pill.rule .dot { width: 8px; height: 8px; }
   .pill ha-icon { --mdc-icon-size: 15px; }
-  .pulse { animation: shc-pulse 1.8s ease-out infinite; }
   @keyframes shc-pulse {
     0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ac-hot) 55%, transparent); }
     70% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--ac-hot) 0%, transparent); }
@@ -552,9 +551,9 @@ export const STYLE = `
   .gauge svg { display: block; }
   .gauge .gtrack { fill: none; stroke: var(--ac-line); stroke-linecap: round; }
   .gauge .gvalue { fill: none; stroke: var(--c); stroke-linecap: round; }
-  /* The levels across the arc, cut out of it in the card colour; "now" an open ring. */
+  /* The target across the arc, cut out of it in the card colour; "now" an open ring. */
   .gauge .gcut { stroke: var(--ac-opaque, var(--card-background-color)); }
-  .gauge .gtick line { stroke-linecap: butt; }
+  .gauge .gtarget line { stroke-linecap: butt; }
   .gauge .gring { fill: none; stroke: var(--primary-text-color); }
   /* While the room heats: the ring in the colour of heat, a halo going out of it. */
   .gauge .gring.hot { stroke: var(--ac-hot); }
@@ -674,6 +673,6 @@ export const STYLE = `
   .tile-info .tval { font-size: 1.15em; font-weight: 600; }
   .tile-info .muted { font-size: 0.8em; line-height: 1.35; overflow-wrap: anywhere; max-width: 100%; }
 
-  :host([offscreen]) .pulse, :host([offscreen]) .flame.on ha-icon, :host([offscreen]) .flame.glow, :host([offscreen]) .ghalo { animation-play-state: paused; }
-  @media (prefers-reduced-motion: reduce) { .pulse, .flame.on ha-icon, .flame.glow { animation: none; } .gauge .ghalo { animation: none; opacity: 0; } * { transition: none !important; } }
+  :host([offscreen]) .flame.on ha-icon, :host([offscreen]) .flame.glow, :host([offscreen]) .ghalo { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) { .flame.on ha-icon, .flame.glow { animation: none; } .gauge .ghalo { animation: none; opacity: 0; } * { transition: none !important; } }
 `;

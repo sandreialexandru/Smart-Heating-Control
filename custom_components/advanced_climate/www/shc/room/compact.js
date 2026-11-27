@@ -28,7 +28,7 @@ export const CompactMixin = (Base) =>
     _compactRow(stateObj, color) {
       const a = stateObj.attributes;
       const heating = !!a.heating;
-      // Every state that applies, as small round icons (heating pulses).
+      // Every state that applies, as small round icons (the flame flickers while heating).
       const status = [
         a.heat_demand ? this._flame(heating, null, false, false) : "",
         this._alertIcon(a),

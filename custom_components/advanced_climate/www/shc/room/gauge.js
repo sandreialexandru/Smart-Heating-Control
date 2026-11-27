@@ -1,4 +1,4 @@
-// The dial of a room: temperature, target, arc, the levels on it.
+// The dial of a room: temperature, target, arc.
 
 import { PRESET_COLORS } from "../core/constants.js";
 import { esc, num } from "../core/format.js";
@@ -10,10 +10,9 @@ export const GaugeMixin = (Base) =>
   class extends Base {
     /**
      * Arc of the room temperature: full at the maximum temperature, empty at the
-     * frost protection (the limits of the targets). The levels of the room are lines
-     * across it, the target the thicker one; "now" is an open ring at the end of the
-     * arc, in the colour of heat while the room heats. A small dial (a tile, a row) shows only
-     * the target and the ring.
+     * frost protection (the limits of the targets). The target is a line across it; "now"
+     * is an open ring at the end of the arc, in the colour of heat while the room heats.
+     * ``withTarget``: the target in words under the number (not on a small dial).
      * ``stateObj``: the decision (its rule greys the arc while the room may not heat).
      */
     _gauge(a, e, size, withTarget = true, stateObj = null) {
@@ -41,52 +40,32 @@ export const GaugeMixin = (Base) =>
       const deg = (t) => 135 + 270 * frac(t);
       // The round end of a line reaches half its width past its length: the value arc is
       // drawn that much shorter, so it ends exactly at the temperature (the centre of the ring).
-      const ring = (cls, len, extra = "") =>
+      const ring = (cls, len) =>
         `<circle cx="${mid}" cy="${mid}" r="${r.toFixed(2)}" class="${cls}" stroke-width="${sw}" stroke-dasharray="${len.toFixed(
           1
-        )} ${c.toFixed(1)}" transform="rotate(135 ${mid} ${mid})"${extra}></circle>`;
-      // A line across the arc at a temperature, with a cut of the card colour on each side
-      // (seen also over the arc of its own colour).
-      const tw = Math.max(2, sw * 0.3);
-      const cut = Math.max(1.5, sw * 0.15);
-      const across = (t, color, { thick = false, open = false, title = "" } = {}) => {
-        const ang = (deg(t) * Math.PI) / 180;
-        const cs = Math.cos(ang);
-        const sn = Math.sin(ang);
+        )} ${c.toFixed(1)}" transform="rotate(135 ${mid} ${mid})"></circle>`;
+      // The target: a line across the arc, in the colour of its level (a manual value, or no
+      // level, in the colour of the text), with a cut of the card colour on each side (seen
+      // also over the arc of its own colour). Before a change (the optimal start) it is open:
+      // the level that comes is not the level of the time yet.
+      let mark = "";
+      if (tgt !== null) {
+        const color = (!a.override && a.preset && PRESET_COLORS[a.preset]) || "var(--primary-text-color)";
+        const open = rule === "optimal_start";
+        const w = Math.max(2, sw * 0.3) * 1.45;
+        const cut = Math.max(1.5, sw * 0.15);
+        const ang = (deg(tgt) * Math.PI) / 180;
         // From the inner edge of the arc to the outer one.
-        const [x1, y1] = [(mid + (r - sw / 2) * cs).toFixed(1), (mid + (r - sw / 2) * sn).toFixed(1)];
-        const [x2, y2] = [(mid + (r + sw / 2) * cs).toFixed(1), (mid + (r + sw / 2) * sn).toFixed(1)];
-        const w = thick ? tw * 1.45 : tw;
+        const end = (rad) => [(mid + rad * Math.cos(ang)).toFixed(1), (mid + rad * Math.sin(ang)).toFixed(1)];
+        const [x1, y1] = end(r - sw / 2);
+        const [x2, y2] = end(r + sw / 2);
         const xy = `x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"`;
-        const inner = open ? `<line ${xy} class="gcut" stroke-width="${(w / 3).toFixed(1)}"></line>` : "";
-        return `<g class="gtick${thick ? " target" : ""}${open ? " next" : ""}">${title ? `<title>${esc(title)}</title>` : ""}<line ${xy} class="gcut" stroke-width="${(
+        mark = `<g class="gtarget${open ? " next" : ""}"><title>${esc(`${this._t("target_tag")} ${this._temp(tgt)}`)}</title><line ${xy} class="gcut" stroke-width="${(
           w +
           2 * cut
-        ).toFixed(1)}"></line><line ${xy} stroke="${color}" stroke-width="${w.toFixed(1)}"></line>${inner}</g>`;
-      };
-      const ticks = [];
-      if (tgt !== null) {
-        // The target in the colour of its level (the thicker line); a manual value, or none
-        // of the levels, in the colour of the text. Before a change (the optimal start) the
-        // line of the coming level is open: it is not the level of the time yet.
-        const level = !a.override && a.preset ? PRESET_COLORS[a.preset] : null;
-        const levels = a.levels || {};
-        if (withTarget) {
-          for (const [p, t] of Object.entries(levels)) {
-            const v = num(t);
-            if (v === null || !PRESET_COLORS[p] || v < lo || v > hi) continue;
-            // The level of the target is drawn as the target (unless the target was moved off it).
-            if (level && p === a.preset && Math.abs(v - tgt) < 0.05) continue;
-            ticks.push(across(v, PRESET_COLORS[p], { title: `${this._presetName(a, p)} ${this._temp(v)}` }));
-          }
-        }
-        ticks.push(
-          across(tgt, level || "var(--primary-text-color)", {
-            thick: true,
-            open: rule === "optimal_start",
-            title: `${this._t("target_tag")} ${this._temp(tgt)}`,
-          })
-        );
+        ).toFixed(1)}"></line><line ${xy} stroke="${color}" stroke-width="${w.toFixed(1)}"></line>${
+          open ? `<line ${xy} class="gcut" stroke-width="${(w / 3).toFixed(1)}"></line>` : ""
+        }</g>`;
       }
       // Now: an open ring, turned to its place (so it can turn to a new one). While the room
       // heats it is in the colour of heat, with a halo on a big dial (too small on a tile).
@@ -126,7 +105,7 @@ export const GaugeMixin = (Base) =>
             1
           )}" data-deg="${(135 + 270 * f).toFixed(2)}" data-cur="${cur ?? ""}">
           <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
-            ${ring("gtrack", arc)}${cur !== null ? ring("gvalue", len) : ""}${ticks.join("")}${now}
+            ${ring("gtrack", arc)}${cur !== null ? ring("gvalue", len) : ""}${mark}${now}
           </svg>
           ${arrow}<span class="gcenter"><span class="gnum">${this._temp(cur)}</span>${withTarget ? sub : ""}</span>
         </span>`;

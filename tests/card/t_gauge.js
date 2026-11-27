@@ -1,41 +1,34 @@
-// The dial of a room (the levels across the arc, the ring of now, hot while heating, a room
+// The dial of a room (the target across the arc, the ring of now, hot while heating, a room
 // that may not heat) and the motion after a drawing.
 const mount = async (p, config, hass) => { await p.evaluate(([c, h]) => mount(c, h), [config, hass]); await p.waitForTimeout(200); };
 const update = async (p, hass) => { await p.evaluate((h) => { card.hass = makeHass(h); }, hass); await p.waitForTimeout(50); };
-const ticks = (p, sel = ".hero .gauge") =>
-  p.evaluate((s) => [...card.shadowRoot.querySelector(s).querySelectorAll(".gtick")].map((g) => ({
+const target = (p, sel = ".hero .gauge") =>
+  p.evaluate((s) => [...card.shadowRoot.querySelector(s).querySelectorAll(".gtarget")].map((g) => ({
     cls: g.getAttribute("class"),
     color: g.querySelectorAll("line")[1].getAttribute("stroke"),
     title: g.querySelector("title")?.textContent || "",
   })), sel);
 
-test("arc: a line for every level of the room, the target the thicker one in the colour of its level", async (p) => {
-  // Fixture levels: home 21, eco 18, away 16, sleep 18.5, comfort 22, activity 19; the target home 21.
+test("arc: only the target across it, in the colour of its level, and the ring of now", async (p) => {
+  // Fixture: the target home 21, six levels.
   await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom" }] });
-  const t = await ticks(p);
-  eq(t.length, 6, "five levels and the target (home drawn once, as the target)");
-  const target = t.filter((x) => x.cls.includes("target"));
-  eq(target.length, 1, "one target");
-  eq(target[0].color, "#f2a900", "home colour");
-  ok(target[0].title.includes("21"), target[0].title);
-  ok(t.some((x) => x.title.startsWith("Comfort") && x.color === "#c2255c"), "comfort: " + JSON.stringify(t));
+  const t = await target(p);
+  eq(t.length, 1, "one line: the target, no other level");
+  eq(t[0].color, "#f2a900", "home colour");
+  ok(t[0].title.includes("21"), t[0].title);
   ok(await p.evaluate(() => !!card.shadowRoot.querySelector(".hero .gauge .gring")), "the ring of now");
 });
 
-test("arc: a manual target in the colour of the text, the level of the time drawn as a level", async (p) => {
+test("arc: a manual target in the colour of the text", async (p) => {
   const override = { temperature: 23, until: null, origin: "card", preset: null, applied: true };
   await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom", target: 23, override, state: "manual_override" }] });
-  const t = await ticks(p);
-  const target = t.find((x) => x.cls.includes("target"));
-  eq(target.color, "var(--primary-text-color)", "manual");
-  ok(t.some((x) => !x.cls.includes("target") && x.color === "#f2a900"), "home still on the arc");
+  eq((await target(p))[0].color, "var(--primary-text-color)", "manual");
 });
 
-test("arc: a small dial shows only the target and the ring", async (p) => {
+test("arc: a small dial has the target and the ring too", async (p) => {
   await mount(p, { collapsed: true }, { rooms: [{ id: "r1", name: "Bedroom" }] });
-  const t = await ticks(p, ".gauge");
-  eq(t.length, 1, "the target only");
-  ok(t[0].cls.includes("target"), "target");
+  eq((await target(p, ".gauge")).length, 1, "the target");
+  ok(await p.evaluate(() => !!card.shadowRoot.querySelector(".gauge .gring")), "the ring");
 });
 
 test("arc: the ring in the colour of heat while the room heats, a halo only on the big dial", async (p) => {
@@ -66,12 +59,11 @@ test("arc: grey with the reason while the room may not heat (a window open)", as
   ok(await p.evaluate(() => !card.shadowRoot.querySelector(".hero .gauge.blocked .gsub.why")), "a room that heats: the target");
 });
 
-test("arc: before a change (the optimal start) the line of the coming level is open", async (p) => {
+test("arc: before a change (the optimal start) the target line of the coming level is open", async (p) => {
   await mount(p, {}, { rooms: [{ id: "r1", name: "Bedroom", state: "optimal_start", preset: "comfort", target: 22, current: 19 }] });
-  const t = await ticks(p);
-  const target = t.find((x) => x.cls.includes("target"));
-  ok(target.cls.includes("next"), target.cls);
-  eq(target.color, "#c2255c", "comfort");
+  const t = (await target(p))[0];
+  ok(t.cls.includes("next"), t.cls);
+  eq(t.color, "#c2255c", "comfort");
 });
 
 test("motion: a new temperature moves the arc, the ring and the number; nothing the first time", async (p) => {

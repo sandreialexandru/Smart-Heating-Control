@@ -35,7 +35,7 @@ export const HostMixin = (Base) =>
       this.shadowRoot.addEventListener("keydown", (ev) => this._keyDown(ev));
     }
 
-    /** The animations (flame, pulse) stop while the card is not on the screen. */
+    /** The animations (the flame, the halo of the arc) stop while the card is not on the screen. */
     connectedCallback() {
       window.addEventListener("pointerup", this._onWindowUp, true);
       window.addEventListener("pointercancel", this._onWindowUp, true);

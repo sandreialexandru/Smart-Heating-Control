@@ -21,6 +21,7 @@ the house or the room, e.g. `sensor.bedroom_decision`.
 | *Heat demand* (binary sensor) | Whether heat is asked for now. |
 | *Outdoor average* (sensor) | The outdoor average over *Average over* hours; attributes: the latest value, the cutoff reason (`cutoff_reason`: `measured`, `forecast_warm`, `forecast_cold`), the forecast mean (`forecast_mean`), the thresholds, the forecast, the expected sun signal every 15 minutes (`sun_forecast`, with a weather entity). |
 | *Heating time* (sensor) | Total heating hours of the house. |
+| *Time away*, *Time with empty rooms*, *Time in optimal stop*, *Time with a window open* (sensors) | Total hours the house was kept below its schedule by each rule (away, vacation or far; a room empty; the optimal stop; a window open), while at least one room was under it: the time of the house, not added up per room. Shown in the statistics of the panel. |
 | *Clear manual changes* (button) | Clears the manual changes of every room. |
 | *Clear vacation* (button) | Clears the vacation. |
 | *Reevaluate* (button) | Works everything out again now. |

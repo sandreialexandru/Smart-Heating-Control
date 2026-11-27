@@ -147,7 +147,10 @@ header:
   attribute of the *Decision* sensor);
 - next to it, under **Now**, the **reason** (in the card language), the **time to target**
   (e.g. *~35 min*) or, during an optimal stop, the **expected temperature at
-  the change** (*~21.5° at 22:00*), guest mode while it is on, **By the room sensor** when it is on for the
+  the change** (*~21.5° at 22:00*), how an **optimal start** got to its level
+  (reached early, with a tick, until the time of the level: *21.0° at 06:58,
+  2 min early*; late, while it still heats: *~8 min · late*, then plain while
+  that level holds: *21.0° at 07:12, 12 min late*), guest mode while it is on, **By the room sensor** when it is on for the
   room, and what the device itself measures (rooms with TRVs / climate
   devices); under **Next**, the next level, its temperature and when (e.g.
   *Sleep 18.5° at 22:00*);

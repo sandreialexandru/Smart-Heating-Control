@@ -127,6 +127,20 @@ foot when a period is shown (not with *reduce motion*).
   house, the outdoor temperature (mean, lowest and highest) and the number of
   starts asked; the rooms below then show that period only. A tap on the same
   bar again, or on ✕, shows the whole range.
+- **For the same cold**: under the bars, the last whole period (or the chosen
+  one) against the one before it, as heating hours per degree between the
+  mean target of the rooms and the outdoor mean (e.g. *Thursday, 26 November:
+  −8% against Wednesday, 25 November, for the same cold*; the hours per degree
+  of both when hovered). A colder period needs more heating; this takes it
+  out, so what is left is the house and its schedule (and the sun, the wind,
+  who was home). Nothing for the period now (not whole yet), without an
+  outdoor sensor or when it was not colder outside than the targets.
+- **What SHC did**: the hours the house was kept below its schedule by each
+  rule in the range shown (or the chosen period): away (also vacation and
+  far), empty rooms, the optimal stop and a window open, each counted while at
+  least one room was under it (the time of the house, not added up per room).
+  They come from the house sensors *Time away* and the others, counted from
+  version 2.7.1.
 - **The rooms**: each room with its heating time, its share of the time of
   all rooms, its mean temperature and mean target (the lowest and highest when
   hovered), sorted by time.

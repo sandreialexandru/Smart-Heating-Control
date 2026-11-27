@@ -207,7 +207,9 @@ fotovoltaic, câștig solar) și limitele de siguranță.
 Casă: *Mod* (select), *Prezență* (acasă / aproape / departe), *Pauză* și
 *Mod oaspeți* (comutatoare), *Început / Sfârșit vacanță* (dată și oră), *Heating
 season*, *Cald afară* și *Cerere de căldură* (senzori binari), *Medie afară*,
-*Timp de încălzire*, butoane pentru anularea modificărilor manuale, anularea
+*Timp de încălzire*, *Timp plecați*, *Timp cu camere goale*, *Timp în oprire
+anticipată*, *Timp cu fereastra deschisă* (orele casei sub fiecare regulă, cât cel
+puțin o cameră e sub ea), butoane pentru anularea modificărilor manuale, anularea
 vacanței și reevaluare.
 
 Cameră: *Decizie* (enum, cu motivul în atribute), *Temperatură țintă*, *Room
@@ -495,7 +497,7 @@ active). Taburi (ultimul se păstrează în browser):
   atingere deschide camera cu editorul programului; butonul de copiere, cu
   *Copiază în alte camere*.
 - **Statistici**: `recorder/statistics_during_period` (`change` al senzorilor
-  *Timp de încălzire*, `mean` / `min` / `max` ai senzorilor *Medie afară*,
+  *Timp de încălzire* și *Timp plecați* (și ai celorlalte reguli), `mean` / `min` / `max` ai senzorilor *Medie afară*,
   *Temperatura camerei* și *Temperatură țintă*) pentru ultimele 14 zile, 12
   săptămâni sau 12 luni; pornirile cerute pe zi din
   `history/history_during_period` al senzorului *Cerere de căldură* al casei.

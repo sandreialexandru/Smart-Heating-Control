@@ -146,7 +146,10 @@ deschisă. Sub antet:
   se știe încă (atributul `temperature_trend` al senzorului *Decizie*);
 - lângă el, la **Acum**, **motivul** (în limba cardului), **timpul până la țintă** (de exemplu
   *~35 min*) sau, în timpul unei opriri anticipate, **temperatura estimată la
-  schimbare** (*~21.5° la 22:00*), modul oaspeți cât e pornit, **După senzorul camerei** când e pornită pentru
+  schimbare** (*~21.5° la 22:00*), cum a ajuns o **pornire anticipată** la nivelul
+  ei (devreme, cu o bifă, până la ora nivelului: *21.0° la 06:58, cu 2 min mai
+  devreme*; cu întârziere, cât încă încălzește: *~8 min · în întârziere*, apoi
+  simplu cât ține nivelul: *21.0° la 07:12, cu 12 min întârziere*), modul oaspeți cât e pornit, **După senzorul camerei** când e pornită pentru
   cameră și ce măsoară dispozitivul însuși (camerele cu TRV / dispozitive
   climate); la **Următor**, nivelul următor, temperatura lui și ora (de
   exemplu *Somn 18.5° la 22:00*);

@@ -9,6 +9,16 @@ GitHub releases.
 
 ### New
 
+- 📊 **What SHC did**, in the statistics of the panel: the hours the house was
+  kept below its schedule by each rule (away, empty rooms, optimal stop, a
+  window open), from four new house sensors (*Time away* and the others),
+  counted while at least one room is under the rule.
+- 🌡️ **For the same cold**, in the statistics: a period against the one
+  before, as heating hours per degree between the targets and outside, so a
+  colder week does not look like a worse one.
+- ✅ **How the optimal start did, in the room**: reached early, with a tick,
+  until the time of the level; late, beside the time to the target while it
+  still heats, then how late while that level holds.
 - 🎯 **A clearer arc for the room**: the target is a line across the arc in
   the colour of its level and the temperature now an open ring, in the colour
   of heat with a halo while the room heats; while it may not heat (window,

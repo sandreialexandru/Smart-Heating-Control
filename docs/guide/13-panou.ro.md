@@ -129,6 +129,20 @@ perioadă (nu și cu *mișcare redusă*).
   temperatura de afară (media, minimul și maximul) și numărul de porniri
   cerute; camerele de dedesubt arată atunci doar perioada aceea. O nouă
   atingere pe aceeași bară, sau pe ✕, arată din nou tot intervalul.
+- **La același frig**: sub bare, ultima perioadă întreagă (sau cea aleasă)
+  față de cea dinainte, ca ore de încălzire pe grad între ținta medie a
+  camerelor și media de afară (de exemplu *joi, 26 noiembrie: −8% față de
+  miercuri, 25 noiembrie, la același frig*; orele pe grad ale amândurora la
+  trecerea cu mouse-ul). O perioadă mai rece cere mai multă încălzire; asta o
+  scoate din calcul, așa că rămân casa și programul ei (și soarele, vântul,
+  cine a fost acasă). Nimic pentru perioada de acum (încă neîntreagă), fără
+  senzor de afară sau când afară n-a fost mai frig decât țintele.
+- **Ce a făcut SHC**: orele în care casa a fost ținută sub program de fiecare
+  regulă în intervalul arătat (sau în perioada aleasă): plecați (și vacanță
+  sau departe), camere goale, oprirea anticipată și fereastră deschisă,
+  fiecare numărată cât cel puțin o cameră a fost sub ea (timpul casei, nu
+  adunat pe camere). Vin din senzorii casei *Timp plecați* și ceilalți,
+  numărați de la versiunea 2.7.1.
 - **Camerele**: fiecare cameră cu timpul ei de încălzire, partea ei din timpul
   tuturor camerelor, temperatura medie și ținta medie (minimul și maximul la
   trecerea cu mouse-ul), în ordinea timpului.

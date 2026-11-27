@@ -195,6 +195,8 @@ the safety limits.
 House: *Mode* (select), *Heat source* (select, only with a secondary heat source), *Presence* (home / nearby / far), *Pause* and *Guest
 mode* (switches), *Vacation start / end* (datetime), *Heating season*, *Outdoor
 cutoff* and *Heat demand* (binary sensors), *Outdoor average*, *Heating time*,
+*Time away*, *Time with empty rooms*, *Time in optimal stop*, *Time with a window
+open* (hours of the house under each rule, while at least one room is under it),
 buttons to clear manual changes, clear the vacation and reevaluate.
 
 Room: *Decision* (enum with the reason in the attributes), *Target temperature*,
@@ -468,7 +470,7 @@ kept in the browser):
   day no active profile covers. A tap opens the room with its schedule editor;
   the copy button, with *Copy to other rooms*.
 - **Statistics**: `recorder/statistics_during_period` (`change` of the
-  *Heating time* sensors, `mean` / `min` / `max` of *Outdoor average*,
+  *Heating time* and *Time away* (and the other rule) sensors, `mean` / `min` / `max` of *Outdoor average*,
   *Room temperature* and *Target temperature*) for the last 14 days, 12
   weeks or 12 months; starts asked per day from `history/history_during_period`
   of the house *Heat demand*. Refreshed every 5 minutes while shown.

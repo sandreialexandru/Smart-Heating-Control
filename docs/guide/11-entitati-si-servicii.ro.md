@@ -21,6 +21,7 @@ Numele entităților sunt date ca în interfața în română. ID-urile încep c
 | *Cerere de căldură* (senzor binar) | Dacă se cere acum căldură. |
 | *Medie afară* (senzor) | Media de afară pe *Medie pe* ore; atribute: ultima valoare, motivul opririi (`cutoff_reason`: `measured`, `forecast_warm`, `forecast_cold`), media prognozei (`forecast_mean`), pragurile, prognoza, semnalul solar așteptat la fiecare 15 minute (`sun_forecast`, cu entitate meteo). |
 | *Timp de încălzire* (senzor) | Ore totale de încălzire ale casei. |
+| *Timp plecați*, *Timp cu camere goale*, *Timp în oprire anticipată*, *Timp cu fereastra deschisă* (senzori) | Orele totale în care casa a fost ținută sub program de fiecare regulă (plecat, vacanță sau departe; o cameră goală; oprirea anticipată; o fereastră deschisă), cât cel puțin o cameră a fost sub ea: timpul casei, nu adunat pe camere. Apar în statisticile panoului. |
 | *Anulează modificările manuale* (buton) | Anulează modificările manuale din toate camerele. |
 | *Șterge vacanța* (buton) | Anulează vacanța. |
 | *Reevaluează* (buton) | Recalculează totul acum. |

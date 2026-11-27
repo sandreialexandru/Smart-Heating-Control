@@ -9,15 +9,18 @@ export const RoomMixin = (Base) =>
     _chipsHtml(a, e, stateObj, eta) {
       // Now: why the room is at this level, and the time to the target.
       const sub = eta && eta === this._t("eta_learning") ? this._heatDefault(e) : "";
-      const etaLine = eta
-        ? `<span class="csub" title="${esc(this._t(a.stop_forecast ? "stop_help" : "eta_help"))}">${esc(eta)}${
+      // An optimal start that is late: said beside the time to the target.
+      const late = a.preheat?.state === "late" ? this._t("pre_late_now") : "";
+      const etaText = [eta, late].filter(Boolean).join(" · ");
+      const etaLine = etaText
+        ? `<span class="csub" title="${esc(this._t(a.stop_forecast ? "stop_help" : "eta_help"))}">${esc(etaText)}${
             sub ? ` · ${esc(sub)}` : ""
           }</span>`
         : "";
       const chips = [
         `<span class="chip line"><span class="clabel">${esc(this._t("now_tag"))}</span><span class="cval">${esc(
           this._reasonText(a)
-        )}</span>${etaLine}</span>`,
+        )}</span>${etaLine}${this._preheatLine(a)}</span>`,
       ];
       // Next: the next change of level and when.
       if (a.next_change) {
@@ -161,6 +164,26 @@ export const RoomMixin = (Base) =>
       return { buttons: `<div class="sbtns" style="--cols:${cols}">${buttons}</div>`, bodies };
     }
 
+    /**
+     * How the optimal start got to the level: early (a tick, until the time of the
+     * level) or late (plain, while that level holds); "late" while it still heats is
+     * said beside the time to the target.
+     */
+    _preheatLine(a) {
+      const p = a.preheat;
+      if (!p || !p.reached || !["early", "reached_late"].includes(p.state)) return "";
+      const at = Date.parse(p.at);
+      const reached = Date.parse(p.reached);
+      if (!Number.isFinite(at) || !Number.isFinite(reached)) return "";
+      const minutes = Math.max(1, Math.round(Math.abs(at - reached) / 60000));
+      const early = p.state === "early";
+      const text = this._t(early ? "pre_early" : "pre_late")
+        .replace("{temp}", this._temp(p.target))
+        .replace("{time}", this._fmtTime(p.reached))
+        .replace("{m}", this._duration(minutes));
+      return `<span class="csub preheat ${early ? "ok" : ""}">${early ? this._icon("check-circle-outline") : ""}<span>${esc(text)}</span></span>`;
+    }
+
     /** The colour of the level of a room (its name, arc and marks). */
     _roomColor(a) {
       return PRESET_COLORS[a.preset] || "var(--secondary-text-color)";
@@ -252,7 +275,7 @@ export const RoomMixin = (Base) =>
           )}</span>
           ${badges.length ? `<div class="decision">${badges.join("")}</div>` : ""}
         </div>`;
-      const hero = `<div class="hero">${this._gauge(a, e, 168)}<div class="chips">${this._chipsHtml(
+      const hero = `<div class="hero">${this._gauge(a, e, 168, true, stateObj)}<div class="chips">${this._chipsHtml(
         a,
         e,
         stateObj,

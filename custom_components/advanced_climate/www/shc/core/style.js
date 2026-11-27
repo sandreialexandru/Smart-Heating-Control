@@ -534,7 +534,6 @@ export const STYLE = `
   .room-title .name { font-size: 1.15em; }
   .pill.rule .dot { width: 8px; height: 8px; }
   .pill ha-icon { --mdc-icon-size: 15px; }
-  .pulse { animation: shc-pulse 1.8s ease-out infinite; }
   @keyframes shc-pulse {
     0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ac-hot) 55%, transparent); }
     70% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--ac-hot) 0%, transparent); }
@@ -552,7 +551,18 @@ export const STYLE = `
   .gauge svg { display: block; }
   .gauge .gtrack { fill: none; stroke: var(--ac-line); stroke-linecap: round; }
   .gauge .gvalue { fill: none; stroke: var(--c); stroke-linecap: round; }
-  .gauge .gmark { fill: var(--primary-text-color); stroke: var(--ac-opaque, var(--card-background-color)); }
+  /* The target across the arc, cut out of it in the card colour; "now" an open ring. */
+  .gauge .gcut { stroke: var(--ac-opaque, var(--card-background-color)); }
+  .gauge .gtarget line { stroke-linecap: butt; }
+  .gauge .gring { fill: none; stroke: var(--primary-text-color); }
+  /* While the room heats: the ring in the colour of heat, a halo going out of it. */
+  .gauge .gring.hot { stroke: var(--ac-hot); }
+  .gauge .ghalo { fill: none; stroke: var(--ac-hot); transform-box: fill-box; transform-origin: center; animation: shc-halo 1.8s ease-out infinite; }
+  @keyframes shc-halo { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(2.1); opacity: 0; } }
+  /* The room may not heat (a window, a pause, off, summer, warm outside): the arc in grey, and why. */
+  .gauge.blocked .gvalue { stroke: color-mix(in srgb, var(--ac-muted) 55%, transparent); }
+  .gsub.why { color: var(--ac-muted); max-width: calc(var(--gs) * 0.62); text-align: center; line-height: 1.2;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .gcenter { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   /* In the opening of the arc, under the number. */
   .gtrend { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: inline-flex; line-height: 0; }
@@ -568,6 +578,10 @@ export const STYLE = `
   .chip.line .cval { font-weight: 500; display: inline-flex; align-items: baseline; gap: 6px; }
   .chip.line .cval .dot { width: 8px; height: 8px; align-self: center; }
   .chip.line .csub { font-size: 0.88em; color: var(--ac-muted); }
+  /* The optimal start got there early: a tick in green; late: plain. */
+  .chip.line .csub.preheat { display: inline-flex; align-items: center; gap: 4px; }
+  .chip.line .csub.preheat ha-icon { --mdc-icon-size: 15px; flex: none; }
+  .chip.line .csub.preheat.ok ha-icon { color: var(--ac-ok); }
   .chip ha-icon { --mdc-icon-size: 17px; color: var(--c); flex: none; }
   .chip small { display: block; }
   .chip.soft { align-self: flex-start; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 0.82em;
@@ -663,6 +677,6 @@ export const STYLE = `
   .tile-info .tval { font-size: 1.15em; font-weight: 600; }
   .tile-info .muted { font-size: 0.8em; line-height: 1.35; overflow-wrap: anywhere; max-width: 100%; }
 
-  :host([offscreen]) .pulse, :host([offscreen]) .flame.on ha-icon, :host([offscreen]) .flame.glow { animation-play-state: paused; }
-  @media (prefers-reduced-motion: reduce) { .pulse, .flame.on ha-icon, .flame.glow { animation: none; } * { transition: none !important; } }
+  :host([offscreen]) .flame.on ha-icon, :host([offscreen]) .flame.glow, :host([offscreen]) .ghalo { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) { .flame.on ha-icon, .flame.glow { animation: none; } .gauge .ghalo { animation: none; opacity: 0; } * { transition: none !important; } }
 `;

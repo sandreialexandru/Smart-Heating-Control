@@ -859,6 +859,18 @@
       "heating_runtime": {
         "name": "Temps de chauffe"
       },
+      "time_away": {
+        "name": "Temps absent"
+      },
+      "time_unoccupied": {
+        "name": "Temps avec des pièces vides"
+      },
+      "time_optimal_stop": {
+        "name": "Temps en arrêt optimal"
+      },
+      "time_window": {
+        "name": "Temps avec une fenêtre ouverte"
+      },
       "decision": {
         "name": "Décision",
         "state": {

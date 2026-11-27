@@ -4,7 +4,7 @@
 // maximum), and how many times a day the heat source was asked to start (the
 // history of the house demand).
 
-import { stale } from "../core/constants.js";
+import { PRESET_COLORS, stale } from "../core/constants.js";
 import { esc, num } from "../core/format.js";
 
 // How many days, weeks or months are shown.
@@ -12,6 +12,14 @@ export const STATS_RANGE = { day: 14, week: 12, month: 12 };
 const PERIOD_MS = { day: 864e5, week: 7 * 864e5, month: 31 * 864e5 };
 // The statistics and the history are asked for again after this long.
 const STATS_REFRESH_MS = 5 * 60e3;
+// The rules that kept the house lower than its schedule (house sensors time_<key>), with
+// their colour (of the level they keep: away, eco, sleep; the window as its badge) and icon.
+const RULE_TIMES = [
+  ["away", PRESET_COLORS.away, "home-export-outline"],
+  ["unoccupied", PRESET_COLORS.eco, "door-open"],
+  ["optimal_stop", PRESET_COLORS.sleep, "calendar-clock"],
+  ["window", "var(--warning-color, #f0ad4e)", "window-open-variant"],
+];
 
 export const StatsMixin = (Base) =>
   class extends Base {
@@ -27,7 +35,13 @@ export const StatsMixin = (Base) =>
     _statsSeries(house) {
       const out = [];
       if (house.entities?.heating_runtime) {
-        out.push({ id: house.entities.heating_runtime, house: true, name: house.name, outdoor: house.entities.outdoor_average });
+        out.push({
+          id: house.entities.heating_runtime,
+          house: true,
+          name: house.name,
+          outdoor: house.entities.outdoor_average,
+          rules: RULE_TIMES.map(([key]) => [key, house.entities[`time_${key}`]]).filter(([, id]) => id),
+        });
       }
       for (const r of house.rooms) {
         const a = r.attributes;
@@ -41,7 +55,9 @@ export const StatsMixin = (Base) =>
 
     /** Every statistic asked for: the heating times and the temperatures. */
     _statsIds(houses) {
-      return houses.flatMap((h) => this._statsSeries(h).flatMap((s) => [s.id, s.outdoor, s.temp, s.target])).filter(Boolean);
+      return houses
+        .flatMap((h) => this._statsSeries(h).flatMap((s) => [s.id, s.outdoor, s.temp, s.target, ...(s.rules || []).map(([, id]) => id)]))
+        .filter(Boolean);
     }
 
     /** The statistics of a period, fetched when missing or old (drawn again when they come). */
@@ -84,7 +100,7 @@ export const StatsMixin = (Base) =>
      * it when the period now has no row yet (its first hour).
      */
     async _fetchNow(data, period, houses) {
-      const ids = houses.flatMap((h) => this._statsSeries(h).map((x) => x.id));
+      const ids = houses.flatMap((h) => this._statsSeries(h).flatMap((x) => [x.id, ...(x.rules || []).map(([, id]) => id)]));
       const ms = (v) => (typeof v === "number" ? v : Date.parse(v));
       const now = Date.now();
       await Promise.all(
@@ -336,6 +352,61 @@ export const StatsMixin = (Base) =>
         : "";
     }
 
+    /**
+     * The time the house was kept below its schedule by each rule, in the chosen
+     * period or over the range shown (a row for each rule with a sensor).
+     */
+    _statsRules(data, own, period, picked) {
+      const rules = own?.rules || [];
+      if (!rules.length) return "";
+      const rows = rules.map(([key, id]) => {
+        const values = this._statsValues(data, id, period);
+        const hours = picked === null ? values.reduce((a, [, v]) => a + v, 0) : (values.find(([t]) => t === picked)?.[1] ?? 0);
+        return { key, hours, known: values.length > 0 };
+      });
+      if (!rows.some((r) => r.known)) return "";
+      const max = Math.max(0, ...rows.map((r) => r.hours));
+      const color = Object.fromEntries(RULE_TIMES.map(([k, c, i]) => [k, [c, i]]));
+      return `<h3 class="ps-title">${esc(this._t("st_rules"))}</h3><div class="ps-rules">${rows
+        .map(
+          (r) => `<div class="ps-rule" style="--c:${color[r.key][0]}">${this._icon(color[r.key][1])}<span class="ps-name">${esc(
+            this._t(`st_rule_${r.key}`)
+          )}</span><span class="ps-track"><span class="ps-fill" style="width:${
+            max > 0 ? ((r.hours / max) * 100).toFixed(1) : 0
+          }%"></span></span><span class="ps-h">${esc(this._hours(r.hours))}</span></div>`
+        )
+        .join("")}</div><p class="muted">${esc(this._t("st_rules_note"))}</p>`;
+    }
+
+    /**
+     * A period against the one before it, for the same cold: the heating hours per
+     * degree between the mean target of the rooms and the outdoor mean. The chosen
+     * period, else the last whole one (a period is whole once the next one began).
+     * Nothing without both values, or with the outdoor not below the targets.
+     */
+    _statsWeather(total, outdoor, targets, period, picked) {
+      const i = picked === null ? total.length - 2 : total.findIndex(([t]) => t === picked);
+      if (i < 1 || i >= total.length - 1) return "";
+      const per = (j) => {
+        const [t, hours] = total[j];
+        const out = outdoor.get(t)?.mean;
+        const ins = targets.map((m) => m.get(t)?.mean).filter((v) => v !== null && v !== undefined);
+        if (!(hours > 0) || out === null || out === undefined || !ins.length) return null;
+        const diff = ins.reduce((a, b) => a + b, 0) / ins.length - out;
+        return diff > 0 ? hours / diff : null;
+      };
+      const now = per(i);
+      const before = per(i - 1);
+      if (now === null || before === null) return "";
+      const pct = Math.round((now / before - 1) * 100);
+      const text = this._t("st_weather")
+        .replace("{when}", this._statsLong(total[i][0], period))
+        .replace("{pct}", `${pct > 0 ? "+" : pct < 0 ? "−" : "±"}${Math.abs(pct)}%`)
+        .replace("{prev}", this._statsLong(total[i - 1][0], period));
+      const tip = this._t("st_weather_tip").replace("{a}", `${now.toFixed(2)} h/°`).replace("{b}", `${before.toFixed(2)} h/°`);
+      return `<p class="ps-weather ${pct < 0 ? "less" : ""}" title="${esc(tip)}">${esc(text)}</p>`;
+    }
+
     /** The statistics of every house. */
     _statsHtml(houses) {
       const period = this._statsPeriod();
@@ -449,6 +520,8 @@ export const StatsMixin = (Base) =>
               : `<p class="muted">${esc(this._t("st_none"))}</p>`
           }
           ${detail}
+          ${total.length && outdoor.size ? this._statsWeather(total, outdoor, rooms.filter((r) => r.target).map((r) => this._statsTemps(stats.data, r.target)), period, picked) : ""}
+          ${this._statsRules(stats.data, own, period, picked)}
           <h3 class="ps-title">${esc(this._t("st_rooms"))} · ${esc(when)}</h3>
           ${roomRows ? `<div class="ps-rows">${roomRows}</div>` : `<p class="muted">${esc(this._t("st_none"))}</p>`}
           ${requests}

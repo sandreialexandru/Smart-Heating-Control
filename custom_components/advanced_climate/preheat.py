@@ -28,6 +28,8 @@ class PreheatTracker:
         self.results: deque[dict[str, Any]] = deque(stored or [], maxlen=keep)
         # The one running or waiting for the room to get there.
         self._active: dict[str, Any] | None = None
+        # One that got there late: shown while its level still holds.
+        self._late: dict[str, Any] | None = None
 
     def observe(
         self,
@@ -45,6 +47,8 @@ class PreheatTracker:
         ``preset`` (``target`` °C) of ``change_at``. Else ``holding`` is the
         level the schedule holds now (None when another rule decides).
         """
+        if self._late is not None and holding != self._late["preset"]:
+            self._late = None
         active = self._active
         if preheating and change_at is not None and preset is not None and target is not None:
             if active is None or active["at"] != change_at:
@@ -75,8 +79,37 @@ class PreheatTracker:
         if current is not None and current >= active["target"]:
             self._note(active, now)
 
+    def status(self, now: datetime) -> dict[str, Any] | None:
+        """What the room shows of its optimal start now, or None.
+
+        - ``early``: it got there before the time of the level (until that time);
+        - ``late``: the time of the level is past and it still heats to it;
+        - ``reached_late``: it got there late (while that level holds).
+        """
+        active = self._active
+        if active is not None:
+            if active["reached"] is not None and now < active["at"]:
+                return self._shown("early", active, active["reached"])
+            if active["reached"] is None and now >= active["at"]:
+                return self._shown("late", active, None)
+            return None
+        late = self._late
+        return self._shown("reached_late", late, late["reached"]) if late else None
+
+    @staticmethod
+    def _shown(state: str, item: dict[str, Any], reached: datetime | None) -> dict[str, Any]:
+        return {
+            "state": state,
+            "at": item["at"].astimezone(UTC).isoformat(),
+            "preset": item["preset"],
+            "target": item["target"],
+            "reached": reached.astimezone(UTC).isoformat() if reached else None,
+        }
+
     def _note(self, active: dict[str, Any], reached: datetime | None) -> None:
         self._active = None
+        if reached is not None and reached > active["at"]:
+            self._late = {**active, "reached": reached}
         self.results.append(
             {
                 "at": active["at"].astimezone(UTC).isoformat(),

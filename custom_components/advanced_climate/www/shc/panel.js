@@ -133,6 +133,13 @@ const PANEL_STYLE = `
   .ps-track { height: 10px; border-radius: 5px; background: var(--ac-surface-2); overflow: hidden; }
   .ps-fill { display: block; height: 100%; background: var(--c); border-radius: 5px; }
   .ps-h, .ps-pct { font-size: 0.9em; text-align: right; white-space: nowrap; }
+  /* What SHC did: a row per rule, its icon in its colour. */
+  .ps-rules { display: grid; grid-template-columns: auto minmax(70px, 160px) minmax(40px, 1fr) auto; gap: 8px 10px; }
+  .ps-rule { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; }
+  .ps-rule ha-icon { --mdc-icon-size: 18px; color: var(--c); }
+  /* A period against the one before, for the same cold (less heating in green). */
+  .ps-weather { margin: 4px 0 0; font-size: 0.9em; }
+  .ps-weather.less { color: color-mix(in srgb, var(--ac-ok) 75%, var(--primary-text-color)); }
   .ps-pct { color: var(--ac-muted); }
   /* On a phone: narrower bars without their values (the title of a bar has it), a room on two lines. */
   :host([narrow]) .ps-col { flex-basis: 19px; padding: 0 1.5px; }
@@ -756,6 +763,19 @@ class ShcPanel extends ShcBase {
     this._patch(this._popHolder, popup ? [popup] : []);
     this._tipColor();
     this._chartModal();
+    // Another room chosen: it fades in (not the first one shown).
+    if (room !== this._shownRoom) {
+      if (this._shownRoom !== undefined && chosen) this._fadeIn(this._card);
+      this._shownRoom = room;
+    }
+    // The bars of the statistics grow once a period is shown (not on every update).
+    // (Drawn again while they grow, e.g. as more comes in: they go on from where they were.)
+    const bars = tab === "stats" ? [...this._extra.querySelectorAll(".ps-bar")].filter((b) => !b.__grown) : [];
+    const period = tab === "stats" && this._extra.querySelector(".ps-bar") ? this._statsPeriod() : null;
+    if (period && period !== this._statsGrown) this._statsGrowAt = performance.now();
+    if (period && bars.length) this._growBars(bars, performance.now() - this._statsGrowAt);
+    this._statsGrown = period;
+    this._afterDraw();
   }
 
   /** A row of the list opens its room; the title of the open room does not fold it. */

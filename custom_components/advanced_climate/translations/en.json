@@ -859,6 +859,18 @@
       "heating_runtime": {
         "name": "Heating time"
       },
+      "time_away": {
+        "name": "Time away"
+      },
+      "time_unoccupied": {
+        "name": "Time with empty rooms"
+      },
+      "time_optimal_stop": {
+        "name": "Time in optimal stop"
+      },
+      "time_window": {
+        "name": "Time with a window open"
+      },
       "decision": {
         "name": "Decision",
         "state": {

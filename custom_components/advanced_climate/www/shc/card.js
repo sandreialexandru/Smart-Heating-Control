@@ -26,7 +26,7 @@ import { esc } from "./core/format.js";
 import { TEXT } from "./core/i18n.js";
 import { STYLE } from "./core/style.js";
 
-const CARD_VERSION = "2.7.1rc11";
+const CARD_VERSION = "2.7.1rc14";
 
 class SmartHeatingControlCard extends ShcBase {
   /** Visual editor of the card (Home Assistant form). */
@@ -158,6 +158,7 @@ class SmartHeatingControlCard extends ShcBase {
     this._patch(this._card, blocks);
     this._tipColor();
     this._chartModal();
+    this._afterDraw();
   }
 
   /** The card element and the styles, made once. */

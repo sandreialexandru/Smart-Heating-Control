@@ -235,7 +235,7 @@ test("alerts: title, text and count in the open room; the room outlined by the m
   eq(outline, ["al-error", "", "al-warn"], "outlines (rooms by name: Bedroom, Kid, Office)");
 });
 
-test("arc: ends on the target dot when the room is within 0.3° of it", async (p) => {
+test("arc: ends on the target line when the room is within 0.3° of it", async (p) => {
   await mount(p, { collapsed: true }, { rooms: [{ id: "r1", name: "Bedroom", current: 20.8, target: 21 }, { id: "r2", name: "Office", current: 20.5, target: 21 }] });
   const dash = await p.evaluate(() => [...card.shadowRoot.querySelectorAll(".gvalue")].map((c) => parseFloat(c.getAttribute("stroke-dasharray"))));
   // 7–25° scale, r = 60/2 − 5/2 − 1 = 26.5, 270° of it = 124.9; the round end (2.5) taken off.

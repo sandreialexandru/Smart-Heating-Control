@@ -84,3 +84,40 @@ class PreheatTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PreheatShownTest(unittest.TestCase):
+    """What the room shows: early until the time, late while it heats, then reached late."""
+
+    def test_early_until_the_time_of_the_level(self) -> None:
+        t = preheat.PreheatTracker(None, 10)
+        _run(t, [(-60, True, 19.0, None), (-12, True, 21.0, None)])
+        shown = t.status(_at(-5))
+        self.assertEqual(shown["state"], "early")
+        self.assertEqual(shown["reached"], _at(-12).isoformat())
+        self.assertEqual(shown["at"], T.isoformat())
+        _run(t, [(0, False, 21.1, "home")])
+        self.assertIsNone(t.status(_at(1)), "gone at the time of the level")
+
+    def test_nothing_while_it_heats_before_the_time(self) -> None:
+        t = preheat.PreheatTracker(None, 10)
+        _run(t, [(-60, True, 19.0, None)])
+        self.assertIsNone(t.status(_at(-30)))
+
+    def test_late_while_it_heats_then_reached_late_while_the_level_holds(self) -> None:
+        t = preheat.PreheatTracker(None, 10)
+        _run(t, [(-40, True, 19.0, None), (0, False, 20.5, "home")])
+        self.assertEqual(t.status(_at(5))["state"], "late")
+        _run(t, [(12, False, 21.0, "home")])
+        shown = t.status(_at(13))
+        self.assertEqual(shown["state"], "reached_late")
+        self.assertEqual(shown["reached"], _at(12).isoformat())
+        _run(t, [(90, False, 21.0, "home")])
+        self.assertEqual(t.status(_at(90))["state"], "reached_late", "while its level holds")
+        _run(t, [(300, False, 20.0, "eco")])
+        self.assertIsNone(t.status(_at(300)), "gone with the next level")
+
+    def test_not_reached_shows_nothing_after(self) -> None:
+        t = preheat.PreheatTracker(None, 10)
+        _run(t, [(-40, True, 19.0, None), (0, False, 20.0, "home"), (60, False, 20.5, "eco")])
+        self.assertIsNone(t.status(_at(61)))

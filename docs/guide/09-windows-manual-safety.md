@@ -234,7 +234,10 @@ If the room temperature sensors are unavailable:
 2. if that does not work either, the room goes to `eco`, but never above the
    schedule: if the schedule asks for a lower level (e.g. `away`), that stays.
 
-In both cases you get an alert. A sensor value that is not a number (`nan`,
+In both cases you get an alert. Right after a start of Home Assistant, the
+alert waits for the first periodic evaluation (*Periodic check every*): sensors
+that simply have not reported yet raise none, while the device sensor or `eco`
+applies at once all the same. A sensor value that is not a number (`nan`,
 `inf`) counts as unavailable.
 
 ## Command checks

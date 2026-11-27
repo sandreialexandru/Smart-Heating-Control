@@ -184,6 +184,10 @@ class House:
         self.device_id: str | None = None
         self.config_snapshot: tuple | None = None
         self.started = False
+        # The first periodic evaluation since the start has run: until then a room
+        # without a temperature raises no alert (the sensors may simply not have
+        # reported yet after a restart, #48); its eco applies at once all the same.
+        self.settled = False
 
         # Persisted state
         self.mode = MODE_AUTO
@@ -480,6 +484,7 @@ class House:
 
     async def _async_periodic(self, _now: datetime) -> None:
         """Periodic evaluation, in addition to the events."""
+        self.settled = True
         await self.async_evaluate()
 
     async def _async_hourly(self, _now: datetime) -> None:

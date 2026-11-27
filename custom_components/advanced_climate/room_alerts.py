@@ -325,8 +325,11 @@ class RoomAlerts:
                     params={"entity": entity_id, "minutes": round(limit.total_seconds() / 60)},
                     room=self.id,
                 )
-        # External sensors.
-        if self.external_failed:
+        # External sensors. Right after a start, only from the first periodic evaluation:
+        # sensors that have not reported yet are no failure (#48).
+        if self.external_failed and not house.settled:
+            pass
+        elif self.external_failed:
             fallback = "the device sensor" if not self.sensor_failed else "eco"
             house.notify(
                 f"sensor_{self.id}",

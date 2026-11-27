@@ -220,7 +220,7 @@ simplă.
 decât `eco`: o cameră goală nu ajunge niciodată mai caldă decât ar fi după
 program. Ultima prezență se păstrează la o repornire, deci o cameră goală
 rămâne goală; cineva prezent imediat după o repornire contează pe loc, fără
-*Înapoi din eco după o prezență de*.
+*Revenire din eco după prezență de*.
 
 ## Pasul 6: Ferestre și uși
 

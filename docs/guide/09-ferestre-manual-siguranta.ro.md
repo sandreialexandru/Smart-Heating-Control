@@ -235,8 +235,11 @@ Dacă senzorii de temperatură ai camerei sunt indisponibili:
 2. dacă nici acela nu merge, camera trece pe `eco`, dar niciodată peste program:
    dacă programul cere un nivel mai jos (de exemplu `away`), rămâne acela.
 
-În ambele cazuri apare o alertă. O valoare a senzorului care nu e număr
-(`nan`, `inf`) e tratată ca indisponibilă.
+În ambele cazuri apare o alertă. Imediat după o pornire a Home Assistant, alerta
+așteaptă prima verificare periodică (*Verificare periodică la*): senzorii care
+doar n-au raportat încă nu dau alertă, iar senzorul dispozitivului sau `eco` se
+aplică oricum imediat. O valoare a senzorului care nu e număr (`nan`, `inf`) e
+tratată ca indisponibilă.
 
 ## Verificarea comenzilor
 

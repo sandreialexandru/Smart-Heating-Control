@@ -1929,9 +1929,12 @@ async def test_card_attributes_not_heating_alerts_cutoff(
     assert outdoor["cutoff_resume_temperature"] == 17.0  # default hysteresis 1 °C
     assert outdoor["forecast"] == []
 
-    # The temperature sensor fails: an alert for the room, with a code for the card.
+    # The temperature sensor fails: an alert for the room, with a code for the card
+    # (from the first periodic evaluation since the start, #48).
     hass.states.async_set("sensor.room_temp", "unavailable")
     await _tick(hass, freezer, 5)
+    assert hass.states.get("sensor.bedroom_decision").attributes["alerts"] == []
+    await _tick(hass, freezer, 5 * 60)
     alerts = hass.states.get("sensor.bedroom_decision").attributes["alerts"]
     assert [a["code"] for a in alerts] == ["sensor_unavailable"]
     hass.states.async_set("sensor.room_temp", "20.8", {"unit_of_measurement": "°C"})
@@ -3504,6 +3507,45 @@ async def test_room_returns_from_eco_at_once_by_default(
     hass.states.async_set("binary_sensor.motion", "on")
     await _tick(hass, freezer, 1)
     assert hass.states.get("sensor.bedroom_decision").state == "schedule"
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_no_temperature_right_after_a_start_raises_no_alert_until_the_first_periodic_evaluation(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Sensors that have not reported yet after a restart are no failure (#48): eco at
+    once, the alert only if they still have no value at the first periodic evaluation."""
+    hass.states.async_set("sensor.room_temp", "unavailable")
+    entry = await _setup(hass, freezer)
+    hass.states.async_set("sensor.room_temp", "unavailable")
+    await _tick(hass, freezer, 15)
+    house = entry.runtime_data
+    room = next(iter(house.rooms.values()))
+    assert hass.states.get("sensor.bedroom_decision").state == "sensor_fallback"
+    assert f"sensor_{room.id}" not in house.active_alerts
+    # It reports before the first periodic evaluation: no alert at all.
+    hass.states.async_set("sensor.room_temp", "18.0", {"unit_of_measurement": "°C"})
+    await _tick(hass, freezer, 60)
+    assert hass.states.get("sensor.bedroom_decision").state != "sensor_fallback"
+    await _tick(hass, freezer, 5 * 60)
+    assert f"sensor_{room.id}" not in house.active_alerts
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_a_sensor_that_never_comes_back_after_a_start_is_told_at_the_first_periodic_evaluation(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """A sensor dead before the restart still gets its alert, at the first periodic evaluation."""
+    entry = await _setup(hass, freezer)
+    hass.states.async_set("sensor.room_temp", "unavailable")
+    await _tick(hass, freezer, 15)
+    house = entry.runtime_data
+    room = next(iter(house.rooms.values()))
+    assert f"sensor_{room.id}" not in house.active_alerts
+    await _tick(hass, freezer, 5 * 60)
+    assert house.active_alerts[f"sensor_{room.id}"]["code"] == "sensor_unavailable"
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
